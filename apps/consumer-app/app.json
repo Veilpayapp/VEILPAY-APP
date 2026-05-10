@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Veilpay",
+    "slug": "veilpay",
+    "version": "1.0.0",
+    "entryPoint": "./index.ts",
+    "orientation": "portrait",
+    "icon": "./assets/logo-icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 30000
+    },
+    "splash": {
+      "image": "./assets/logo-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0B"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.veilpay.consumer"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo-icon.png",
+        "backgroundImage": "./assets/android-icon-background.png"
+      },
+      "package": "com.veilpay.consumer",
+      "versionCode": 1,
+      "permissions": ["CAMERA", "INTERNET", "VIBRATE", "POST_NOTIFICATIONS"],
+      "googleServicesFile": "./google-services.json"
+    },
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#6366F1",
+      "androidMode": "default",
+      "androidCollapsedTitle": "Veilpay"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-camera",
+      "expo-secure-store",
+      "expo-font",
+      "expo-notifications",
+      "expo-updates",
+      "@sentry/react-native/expo"
+    ],
+    "scheme": "veilpay",
+    "extra": {
+      "eas": {}
+    }
+  }
+}

@@ -1,0 +1,16 @@
+# Settings flow
+# Flow: launch → home → settings → toggle options
+
+appId: com.veilpay.consumer
+---
+- launchApp
+- assertVisible: "Home"
+- tapOn: "Settings"
+- assertVisible: "Settings"
+- assertVisible: "Biometric"
+- tapOn:
+    id: "settings-biometrics-toggle"
+- assertVisible: "enabled"
+- tapOn:
+    id: "settings-analytics-toggle"
+- assertNotVisible: "Analytics"

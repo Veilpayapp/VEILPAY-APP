@@ -1,0 +1,31 @@
+{
+  "name": "veilpay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Multi-Chain Privacy Payment Protocol",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "typecheck": "turbo run typecheck",
+    "db:up": "docker-compose up -d",
+    "db:down": "docker-compose down",
+    "db:migrate": "pnpm --filter @veilpay/backend db:migrate",
+    "backend:dev": "pnpm --filter @veilpay/backend dev",
+    "indexer:dev": "pnpm --filter @veilpay/indexer dev",
+    "consumer:dev": "pnpm --filter @veilpay/consumer-app start"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "~19.2.10",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

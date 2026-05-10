@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Merchant {
+  id            String             @id @default(uuid())
+  businessName  String             @map("business_name") @db.VarChar(100)
+  email         String             @unique @db.VarChar(255)
+  webhookUrl    String?            @map("webhook_url") @db.VarChar(500)
+  apiKeyHash String @map("api_key_hash") @db.VarChar(255)
+  tier MerchantTier @default(basic) @map("tier")
+  status MerchantStatus @default(active)
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  viewingKeys   ChainViewingKey[]
+  invoices      Invoice[]
+  payments      Payment[]
+  webhookDeliveries WebhookDelivery[]
+
+  @@index([email])
+  @@index([status])
+  @@map("merchants")
+}
+
+model ChainViewingKey {
+  id               String    @id @default(uuid())
+  merchantId       String    @map("merchant_id")
+  chainType        ChainType @map("chain_type")
+  chainKey         String    @map("chain_key") @db.VarChar(50)
+  viewingKey       String    @map("viewing_key") @db.Text
+  settlementAddress String   @map("settlement_address") @db.VarChar(100)
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  merchant         Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@unique([merchantId, chainKey])
+  @@index([merchantId])
+  @@map("chain_viewing_keys")
+}
+
+model Invoice {
+  id              String        @id @default(uuid())
+  merchantId      String        @map("merchant_id")
+  chainKey        String        @map("chain_key") @db.VarChar(50)
+  tokenSymbol     String        @map("token_symbol") @db.VarChar(20)
+  amount          String        @db.VarChar(50)
+  amountUsd       String?       @map("amount_usd") @db.VarChar(50)
+  memo            String?       @db.Text
+  expiresAt       DateTime      @map("expires_at")
+  status          InvoiceStatus @default(pending)
+  privacyLevel    PrivacyLevel  @default(standard) @map("privacy_level")
+  paymentAddress  String?       @map("payment_address") @db.VarChar(100)
+  paymentTxHash   String?       @map("payment_tx_hash") @db.VarChar(100)
+  paidAt DateTime? @map("paid_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  payments Payment[]
+
+  @@index([merchantId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("invoices")
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  invoiceId     String?       @map("invoice_id")
+  merchantId    String        @map("merchant_id")
+  chainKey      String        @map("chain_key") @db.VarChar(50)
+  txHash        String        @map("tx_hash") @db.VarChar(100)
+  fromAddress   String        @map("from_address") @db.VarChar(100)
+  toAddress     String        @map("to_address") @db.VarChar(100)
+  amount        String        @db.VarChar(50)
+  tokenSymbol   String        @map("token_symbol") @db.VarChar(20)
+  privacyLevel  PrivacyLevel  @map("privacy_level")
+  nullifier     String?       @db.VarChar(100)
+  commitment    String?       @db.VarChar(100)
+  status        PaymentStatus @default(pending)
+  blockNumber   Int?          @map("block_number")
+  timestamp     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  merchant      Merchant      @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  invoice       Invoice?      @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@unique([chainKey, txHash])
+  @@index([merchantId])
+  @@index([invoiceId])
+  @@index([status])
+  @@index([timestamp])
+  @@map("payments")
+}
+
+model ProcessedBlock {
+  id        String   @id @default(uuid())
+  chainKey  String   @unique @map("chain_key") @db.VarChar(50)
+  blockNumber BigInt @map("block_number")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("processed_blocks")
+}
+
+model WebhookDelivery {
+  id String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  eventType String @map("event_type") @db.VarChar(50)
+  payload Json
+  status WebhookDeliveryStatus @default(pending)
+  statusCode Int? @map("status_code")
+  error String? @db.Text
+  retryCount Int @default(0) @map("retry_count")
+  nextRetryAt DateTime? @map("next_retry_at")
+  completedAt DateTime? @map("completed_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@index([merchantId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([nextRetryAt])
+  @@map("webhook_deliveries")
+}
+
+enum MerchantStatus {
+  pending
+  active
+  suspended
+  deleted
+}
+
+enum MerchantTier {
+  basic
+  pro
+  enterprise
+}
+
+enum InvoiceStatus {
+  pending
+  paid
+  expired
+  cancelled
+}
+
+enum PaymentStatus {
+  pending
+  confirmed
+  failed
+}
+
+enum ChainType {
+  evm
+  svm
+  mvm
+}
+
+enum PrivacyLevel {
+  standard
+  max
+}
+
+enum WebhookDeliveryStatus {
+  pending
+  retrying
+  delivered
+  failed
+}
+
+model FiatOrder {
+  id              String          @id @default(uuid())
+  orderId         String?         @unique @map("order_id") // Provider's internal order ID
+  provider        String          @db.VarChar(50)          // e.g., "onramp_money"
+  userAddress     String          @map("user_address")    @db.VarChar(100)
+  fiatAmount      String          @map("fiat_amount")    @db.VarChar(50)
+  fiatCurrency    String          @map("fiat_currency")  @db.VarChar(10)
+  cryptoAmount    String?         @map("crypto_amount")  @db.VarChar(50)
+  cryptoToken     String          @map("crypto_token")   @db.VarChar(20)
+  chainKey        String          @map("chain_key")      @db.VarChar(50)
+  status          FiatOrderStatus @default(pending)
+  flow            FiatFlow        // "buy" or "sell"
+  txHash          String?         @map("tx_hash")        @db.VarChar(100)
+  createdAt       DateTime        @default(now())        @map("created_at")
+  updatedAt       DateTime        @updatedAt             @map("updated_at")
+
+  @@index([userAddress])
+  @@index([status])
+  @@map("fiat_orders")
+}
+
+enum FiatOrderStatus {
+  pending
+  processing
+  completed
+  failed
+  cancelled
+}
+
+enum FiatFlow {
+  buy
+  sell
+}

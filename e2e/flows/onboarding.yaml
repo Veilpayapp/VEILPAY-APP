@@ -1,0 +1,18 @@
+# Onboarding flow
+# Flow: launch → welcome → create/import wallet
+
+appId: com.veilpay.consumer
+---
+- launchApp
+- assertVisible: "Welcome"
+- assertVisible: "VeilPay"
+- tapOn: "Create Wallet"
+- assertVisible: "Set.*PIN"
+- tapOn: "Continue"
+- assertVisible: "Wallet"
+- tapOn: ".*import.*wallet.*"
+- assertVisible: "Phrase"
+- inputText:
+    text: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+- tapOn: "Import"
+- assertVisible: "Home"

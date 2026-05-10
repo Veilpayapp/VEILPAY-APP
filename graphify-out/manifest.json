@@ -1,0 +1,1834 @@
+{
+  "D:\\Veilpay\\fetch-figma-v2.js": {
+    "mtime": 1778210192.0,
+    "hash": "c95d0896fbb8ed84706b262811f8e3df"
+  },
+  "D:\\Veilpay\\fetch-figma-v3.js": {
+    "mtime": 1778210192.0,
+    "hash": "98432f4ed2c385e1678f8dfe73a7c145"
+  },
+  "D:\\Veilpay\\fetch-figma.js": {
+    "mtime": 1778210192.0,
+    "hash": "b3ac073baab610d8780f66e541ea6b9e"
+  },
+  "D:\\Veilpay\\graphify-ast.py": {
+    "mtime": 1778210192.0,
+    "hash": "59095338a78a9b0526037cac025c99e1"
+  },
+  "D:\\Veilpay\\graphify-build.py": {
+    "mtime": 1778210192.0,
+    "hash": "ecf2a9334cd00c646ec248709e162910"
+  },
+  "D:\\Veilpay\\graphify-detect.py": {
+    "mtime": 1778210192.0,
+    "hash": "d9154d410ddc83e5b57e0edaf3c457b6"
+  },
+  "D:\\Veilpay\\graphify-report.py": {
+    "mtime": 1778210192.0,
+    "hash": "396f2ce08b2d367fa578fa39747e9cbc"
+  },
+  "D:\\Veilpay\\graphify-semantic.py": {
+    "mtime": 1778210192.0,
+    "hash": "92edbb5d3968967fcbf444b629c4f7d6"
+  },
+  "D:\\Veilpay\\list-mcp-tools.js": {
+    "mtime": 1778210192.0,
+    "hash": "c74b720d35ed77c4335ace14d41c327a"
+  },
+  "D:\\Veilpay\\migrate_ui.py": {
+    "mtime": 1778210192.0,
+    "hash": "003d3c0a11d936a8656315d3cfec323b"
+  },
+  "D:\\Veilpay\\tmp_update_imports.js": {
+    "mtime": 1778337737.436544,
+    "hash": "8b7d1db5789a45aec5e8f068537155cf"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\index.ts": {
+    "mtime": 1778435715.110773,
+    "hash": "f4d672536b919621099d32bc26c82153"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\config\\index.ts": {
+    "mtime": 1778210192.0,
+    "hash": "888dc90124fe4437a836ff5e3d179ecd"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\jobs\\webhookDelivery.ts": {
+    "mtime": 1778210192.0,
+    "hash": "af251631f7990e80e9a8dee602badaf2"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\jobs\\webhookQueue.ts": {
+    "mtime": 1778398843.814772,
+    "hash": "71ab85342c05458d67460e5eaa4118e4"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\lib\\invoiceExpiry.ts": {
+    "mtime": 1778210192.0,
+    "hash": "3933e6345a57554ebaf6894b86fd2308"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\lib\\onramp.ts": {
+    "mtime": 1778437848.702415,
+    "hash": "a6010574c2632fb1b8d9ba868717f68c"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\lib\\prisma.ts": {
+    "mtime": 1778210192.0,
+    "hash": "33625f0c9c96530a4736070b9ea9a876"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\lib\\__tests__\\onramp.test.ts": {
+    "mtime": 1778436573.3747487,
+    "hash": "d577f8757174ba53af8425c7248bc4a4"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\middleware\\auth.ts": {
+    "mtime": 1778210192.0,
+    "hash": "3649c56a56c8dbcb1ef341f26b8f0dfe"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\middleware\\errorHandler.ts": {
+    "mtime": 1778210192.0,
+    "hash": "70c003b98f30ce83f95bbf68f2ba1458"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\middleware\\rateLimiter.ts": {
+    "mtime": 1778210192.0,
+    "hash": "0eb5cbe3fb5b5d315c203a5dfe765ab2"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\middleware\\requestLogger.ts": {
+    "mtime": 1778210192.0,
+    "hash": "d1dbadbcb1e1e9d2eb2505a416fe0dd9"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\middleware\\__tests__\\auth.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "cd0087f104d6861911f5d1b257c5df69"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\middleware\\__tests__\\rateLimiter.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "23796b3357e5aa8246943ffb3e3cd4fe"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\routes\\docs.ts": {
+    "mtime": 1778210192.0,
+    "hash": "aa08c7e1972d37f17788a77777f05571"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\routes\\health.ts": {
+    "mtime": 1778210192.0,
+    "hash": "2318208779ce559451d8318981a8a804"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\routes\\invoice.ts": {
+    "mtime": 1778398595.0876553,
+    "hash": "070257b6c93920ad46a5e7df778f93ec"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\routes\\merchant.ts": {
+    "mtime": 1778210192.0,
+    "hash": "7a36d0698d3d45ad5887109e61925a0d"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\routes\\onramp.ts": {
+    "mtime": 1778437848.7117805,
+    "hash": "2b6218301ad0ac9c75b472f955e10527"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\routes\\payment.ts": {
+    "mtime": 1778399315.448548,
+    "hash": "b6ef396a2d4f1d0315a9d463492b1c1d"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\routes\\webhook.ts": {
+    "mtime": 1778210192.0,
+    "hash": "e67b12ba76814f7425068a8c4d0f719f"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\routes\\__tests__\\invoice.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "d541ef63bf23c5e6d52253ad289dd562"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\routes\\__tests__\\merchant.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "3b811c883ffd4e3c5defb63eff816e87"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\types\\index.ts": {
+    "mtime": 1778398570.894907,
+    "hash": "a6a427f173de63bbd233f486e00e5fdc"
+  },
+  "D:\\Veilpay\\apps\\backend\\src\\utils\\openapi.ts": {
+    "mtime": 1778210192.0,
+    "hash": "80dc2dc1748f34fb45460da01cc0b9ec"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\app.config.js": {
+    "mtime": 1778210192.0,
+    "hash": "edfcacb427e75b34d7a0978440040fd2"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\App.tsx": {
+    "mtime": 1778414226.238572,
+    "hash": "46ee93fb7098731c52e3e385230bb19c"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\babel.config.js": {
+    "mtime": 1778210192.0,
+    "hash": "b89fffa65f2b1137b72ea4b9fc5d6550"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\index.ts": {
+    "mtime": 1778210192.0,
+    "hash": "33caa6d28d87fc7e637c033d0d7124b1"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\jest.config.js": {
+    "mtime": 1778399340.9173062,
+    "hash": "f2c267e9a61b30c97cda2eb021d6bf11"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\jest.setup.ts": {
+    "mtime": 1778210192.0,
+    "hash": "4625a8a845ac84ca8f49e4bc0a2e1863"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\metro.config.js": {
+    "mtime": 1778210192.0,
+    "hash": "8d9c23adaf2f3a62a8ae378209c4e9e3"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\write-onboarding-neopop.js": {
+    "mtime": 1778413964.2175317,
+    "hash": "0471b1d814b4cbb6c92724b0e7ef1f52"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\write-onboarding-neopop2.js": {
+    "mtime": 1778413964.2175317,
+    "hash": "49d2456bcabc17b5cc8aa2a1f9e12df3"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\write-onboarding.js": {
+    "mtime": 1778413964.2180574,
+    "hash": "fa41df0d214adcce79082373d00c0119"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\write-walletconnect-neopop.js": {
+    "mtime": 1778413964.2186418,
+    "hash": "b8b9349d43883d25c0f14b2e2b462dcd"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\scripts\\build-android-emulator-safe.ps1": {
+    "mtime": 1778210192.0,
+    "hash": "67f41c1f5880913acfa9ad40b46917e7"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\scripts\\build-android-safe.ps1": {
+    "mtime": 1778210192.0,
+    "hash": "028397e1de6561fb760859393aa8f812"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\scripts\\generate-assetlinks-json.ps1": {
+    "mtime": 1778210192.0,
+    "hash": "089b4fef644f56c7d1691e5b408a2ad6"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\scripts\\run-android-emulator.ps1": {
+    "mtime": 1778210192.0,
+    "hash": "23cc2b4caa9f3db68df3ed63200e8a91"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\scripts\\verify-app-links.ps1": {
+    "mtime": 1778210192.0,
+    "hash": "49388e1741e4b2f458d41da93a77ed1f"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\BiometricPrompt.tsx": {
+    "mtime": 1778403696.5678375,
+    "hash": "3c62ef9fa9e671f5ce25fcb17b9bc2b6"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\BottomNavBar.tsx": {
+    "mtime": 1778413964.1964383,
+    "hash": "7476ebb61becbe031c0e86fa02d67e97"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\EmptyState.tsx": {
+    "mtime": 1778403732.6344671,
+    "hash": "280e840418184dd00ba4cdf0596ccd3f"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\ErrorBoundary.tsx": {
+    "mtime": 1778413964.1969552,
+    "hash": "315bd0a7c7d87cee57b59916ab539f69"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\FeatureCard.tsx": {
+    "mtime": 1778403740.6970663,
+    "hash": "24ecb6806874838258292e42534493eb"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\FiatGatewayModal.tsx": {
+    "mtime": 1778439731.4592342,
+    "hash": "85252d097cf612857c41c507b77b61d6"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\FiatGatewayWebViewShell.tsx": {
+    "mtime": 1778437835.007887,
+    "hash": "44d752990a50669362180966667217d9"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\HybridButton.tsx": {
+    "mtime": 1778340143.5456972,
+    "hash": "cf7350a90b9d3b5b2b6063d20dbc2e0e"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\HybridCard.tsx": {
+    "mtime": 1778340142.39001,
+    "hash": "77b607a5e9053299216c40b4c7e8da7f"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\HybridInput.tsx": {
+    "mtime": 1778403856.4808142,
+    "hash": "39351a4432206c2a54fd00c5f9037c29"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\Icon.tsx": {
+    "mtime": 1778413964.1974738,
+    "hash": "aa3871a0d6e565ad94c2fde8e4d2d7f1"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\Logo.tsx": {
+    "mtime": 1778413290.4844615,
+    "hash": "3c61e27a7cc876b36d85f85950ee5e68"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\NeoPop.tsx": {
+    "mtime": 1778326499.1818793,
+    "hash": "87d469364e274c383df91f2fc5bc53f4"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\NeoPopButton.tsx": {
+    "mtime": 1778412302.781385,
+    "hash": "67e592eb62a899bc99e02fcd090ed5be"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\NeoPopCard.tsx": {
+    "mtime": 1778403918.1411142,
+    "hash": "0c295c700c55985b06ecf7c02c12c589"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\NetworkSelectorModal.tsx": {
+    "mtime": 1778439720.5750358,
+    "hash": "96fb572e6dc1d21b34278a24f7e749ed"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\NetworkStatusBanner.tsx": {
+    "mtime": 1778403777.8609414,
+    "hash": "d109b7db73249e9d4d96d7e6f6b7f34a"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\ScreenBackButton.tsx": {
+    "mtime": 1778403781.1047392,
+    "hash": "17d60242035e301ca315150f6c122934"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\SelectableControls.tsx": {
+    "mtime": 1778403893.1407473,
+    "hash": "ff432804aca4cb2a6e0ae5364f0258fa"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\Skeleton.tsx": {
+    "mtime": 1778403784.3754356,
+    "hash": "edc57a5d3abe00cba7d01f7ea531c2e6"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\SovereignButton.tsx": {
+    "mtime": 1778439720.565468,
+    "hash": "4a4c20728a340c03d478df4e17bea8f5"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\SovereignCard.tsx": {
+    "mtime": 1778403803.4251351,
+    "hash": "8ba0dd2c42c3da34fbdd2160f1618932"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\Toast.tsx": {
+    "mtime": 1778413964.1995685,
+    "hash": "55a6aeaff9f4ac504b1d29ebfbdb744e"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\components\\WalletIcons.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "c99aa0d45feab7aa871423293348c2c9"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\constants\\screens.ts": {
+    "mtime": 1778435781.682876,
+    "hash": "dffda51414c901c09e922747f377e477"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\features\\fiat-gateway\\index.ts": {
+    "mtime": 1778438569.737348,
+    "hash": "278d019baee22e98b9d06b0faa306daa"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\features\\fiat-gateway\\screens\\index.ts": {
+    "mtime": 1778438569.7794602,
+    "hash": "873e40269fe7e7a9d6bb8c85b5284ee9"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\hooks\\useBalance.ts": {
+    "mtime": 1778210192.0,
+    "hash": "d02ff039acf349d32f4f9e7124acced4"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\hooks\\useBalancePolling.ts": {
+    "mtime": 1778413964.2006142,
+    "hash": "2a866842797df36ee6b3965bb6de7b76"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\hooks\\useBiometrics.ts": {
+    "mtime": 1778210192.0,
+    "hash": "9b3713e497051c6e1614ec5c41187f96"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\hooks\\useMarketData.ts": {
+    "mtime": 1778210192.0,
+    "hash": "43dcec77a563def9752a5064cc3f32b3"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\hooks\\useNetworkStatus.ts": {
+    "mtime": 1778210192.0,
+    "hash": "47eb70b3c9faf2ffdd1a82e12e7db3c7"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\hooks\\useOnramp.ts": {
+    "mtime": 1778436767.530888,
+    "hash": "e6c1feedd2ffae45d446929817c1677d"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\hooks\\useOTAUpdates.ts": {
+    "mtime": 1778210192.0,
+    "hash": "bf32297f1e3a21ce96a8d5e6ae744230"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\hooks\\usePushNotifications.ts": {
+    "mtime": 1778413964.2016647,
+    "hash": "8883f09b35d6b7c4c4bbaa57b9ef8323"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\hooks\\useTransakQuote.ts": {
+    "mtime": 1778210192.0,
+    "hash": "405a8613c3c7dfccb1dc587af9dc736a"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\navigation\\AppNavigator.tsx": {
+    "mtime": 1778438569.6513157,
+    "hash": "fac28a6ecba49b97b357cbf655bebab2"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\navigation\\transitions.ts": {
+    "mtime": 1778413964.2021883,
+    "hash": "f599c6ae1f7eeef1df70cff692df2cf0"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\navigation\\__tests__\\transitions.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "f2dfeb895a56d2211e85334e4e5fdac3"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\AddCustomNetworkScreen.tsx": {
+    "mtime": 1778403983.3390725,
+    "hash": "0173bcdfc9be6c60442fb2261ca57dff"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\BackupWalletScreen.tsx": {
+    "mtime": 1778413759.4447012,
+    "hash": "ae8f132fe602d87ece491ecec714c527"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\CreateWalletScreen.tsx": {
+    "mtime": 1778413964.2032747,
+    "hash": "938ab1041c49ab49f078fdfe574bdde8"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\DepositCryptoScreen.tsx": {
+    "mtime": 1778439720.5760932,
+    "hash": "ceeff9daf59e5492987d6d50562477a4"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\ExportPrivateKeyScreen.tsx": {
+    "mtime": 1778413775.6701417,
+    "hash": "c754da72ace4420acc5e3defdf49600b"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\HomeDashboardScreen.tsx": {
+    "mtime": 1778438569.6538591,
+    "hash": "5ecfaa12af665661db6f4f410b75574c"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\ImportWalletScreen.tsx": {
+    "mtime": 1778413964.2048502,
+    "hash": "7d0551fd31298b66383b6ad69d8d6247"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\OnboardingScreen.tsx": {
+    "mtime": 1778413964.2048502,
+    "hash": "086c84d1114978dab939b026a34bc155"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\OnrampAmountScreen.tsx": {
+    "mtime": 1778438569.6589508,
+    "hash": "e4d15fb60f95142a225df8f32c4030d5"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\OnrampWidgetScreen.tsx": {
+    "mtime": 1778438569.6604612,
+    "hash": "286e1427ca1e99df3c9cf0c6942641ce"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\PaymentConfirmationScreen.tsx": {
+    "mtime": 1778414651.898293,
+    "hash": "8752d90529abe098653a22de9fff0baa"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\PrivacyLevelScreen.tsx": {
+    "mtime": 1778413964.2058942,
+    "hash": "a74b90db913b475640dbdcbd8e8cfdc1"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\QRScannerScreen.tsx": {
+    "mtime": 1778413964.206416,
+    "hash": "ba184eaa9f8bbfd2084fb9b51912a45d"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\ReceiveQRScreen.tsx": {
+    "mtime": 1778414645.7048163,
+    "hash": "43acc27bada51d182c3821887d66fce1"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\SendPaymentScreen.tsx": {
+    "mtime": 1778413284.120834,
+    "hash": "06c342ba9512526353a0dd28489c50bf"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\SettingsScreen.tsx": {
+    "mtime": 1778439720.581707,
+    "hash": "5b3ce8a465069022fded5e1a67d4fff6"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\TokenSelectorScreen.tsx": {
+    "mtime": 1778413964.2080157,
+    "hash": "848bc5d02bc1803da083834fe72ca04e"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\TransactionDetailsScreen.tsx": {
+    "mtime": 1778413964.2085354,
+    "hash": "d70acaf178ff583936891340b91fbc8c"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx": {
+    "mtime": 1778413964.2085354,
+    "hash": "3815489f0a8e74b39509c5ca2e35736b"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\TransakWebViewScreen.tsx": {
+    "mtime": 1778439720.581707,
+    "hash": "ea9d5befccf5e6fbd667539c6f838722"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\WalletConnectScreen.tsx": {
+    "mtime": 1778407573.1558673,
+    "hash": "5320a51cbca11fb694652f697051b5c7"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\WithdrawFiatScreen.tsx": {
+    "mtime": 1778439720.5760932,
+    "hash": "2b39efb299cac18d9b9651cae37d67dd"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\__tests__\\DepositCryptoScreen.test.tsx": {
+    "mtime": 1778404908.8396666,
+    "hash": "1a006a56b18c9bc8696158e9b3c41e11"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\__tests__\\HomeDashboardScreen.test.tsx": {
+    "mtime": 1778404888.3188214,
+    "hash": "0b06165cd91637375ceb93b8d708e7ec"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\__tests__\\OnboardingScreen.test.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "f74dbc540e20230b71d526393d011bb6"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\__tests__\\SettingsScreen.test.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "656628243518979b4cab080511e88189"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\__tests__\\WalletConnectScreen.test.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "9e9f2fd74da2ddddc49291f101ca2306"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\screens\\__tests__\\WithdrawFiatScreen.test.tsx": {
+    "mtime": 1778404916.105992,
+    "hash": "8ccfc3aedd9208699d734f45bf23f0eb"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\stores\\walletStore.ts": {
+    "mtime": 1778436771.0484061,
+    "hash": "7a5acd70659b8d6d4773d82032fa2c23"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\stores\\__tests__\\walletStore.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "2285fc71e11b8cde1410cf1f0869aa6f"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\types\\transactions.ts": {
+    "mtime": 1778210192.0,
+    "hash": "7e95ad95356ce0bb901ba34c60d70f31"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\analytics.ts": {
+    "mtime": 1778210192.0,
+    "hash": "7b6bc115251f1a789fab1f42df692ee1"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\analyticsEvents.ts": {
+    "mtime": 1778210192.0,
+    "hash": "86b2e49b5dbba480254f64d73333adcd"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\balanceFetcher.ts": {
+    "mtime": 1778210192.0,
+    "hash": "2277f1345acba47602b65296f40de3f2"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\bip39.ts": {
+    "mtime": 1778210192.0,
+    "hash": "a52af4f2752c856c18a96a2a7835b2fe"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\clipboard.ts": {
+    "mtime": 1778210192.0,
+    "hash": "fc12bbd4b89bd89465567aa1e9eec9e0"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\deepLinking.ts": {
+    "mtime": 1778210192.0,
+    "hash": "b901429cc81430f11a7370484d9e9afe"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\demoWallet.ts": {
+    "mtime": 1778210192.0,
+    "hash": "c2234e0d0912ae789d40d55a756f18c3"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\envValidation.ts": {
+    "mtime": 1778413964.2117765,
+    "hash": "3a9a0abe29025380de6eb0f26015d0bf"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\externalLink.ts": {
+    "mtime": 1778210192.0,
+    "hash": "f712e2c127cbaf595882118db996c549"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\fiatGateway.ts": {
+    "mtime": 1778436613.1201663,
+    "hash": "4c91985ef6d874551d26f25ecb8e724b"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\formatters.ts": {
+    "mtime": 1778398707.7140713,
+    "hash": "ba1a85d741a4a32749f50b815ef9cb30"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\gasEstimator.ts": {
+    "mtime": 1778413964.2122965,
+    "hash": "9c8bb95adb3f04402e7bc8aec5ab175c"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\haptics.ts": {
+    "mtime": 1778210192.0,
+    "hash": "c7f83ba9fd5ffecbc568570ead58f715"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\marketData.ts": {
+    "mtime": 1778413240.6446059,
+    "hash": "8bfdb9ec61eb72af57126a6a12000d76"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\multiChainDerivation.ts": {
+    "mtime": 1778414205.306527,
+    "hash": "ce102713ca9a4822d321cd6be53dfd2a"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\onramp.ts": {
+    "mtime": 1778435724.480505,
+    "hash": "73458bf88820df784a70b45c4c78ba99"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\priceFeed.ts": {
+    "mtime": 1778413181.8893278,
+    "hash": "8e9e7a74e60713d86516bffada1e015d"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\pushNotifications.ts": {
+    "mtime": 1778413993.5926876,
+    "hash": "5f40cb57c7ac0db348243cac441be8a4"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\rpc.ts": {
+    "mtime": 1778413964.2133312,
+    "hash": "c5d1df4f1848970bdbc57235d256ae95"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\rpcPool.ts": {
+    "mtime": 1778413964.2138603,
+    "hash": "497d65aae610300be53712a91933e243"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\secureSigner.ts": {
+    "mtime": 1778413964.2138603,
+    "hash": "90bf1bcbda291c4547af6db3bd3cf8d5"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\secureStateStorage.ts": {
+    "mtime": 1778210192.0,
+    "hash": "63232f785527beae90c1360936e2bf75"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\sentry.ts": {
+    "mtime": 1778439720.581707,
+    "hash": "d684a7b0e271a389741aefbf1c1040a6"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\transactionHistory.ts": {
+    "mtime": 1778210192.0,
+    "hash": "67bf9e58328c8ee371e12b472f854022"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\transactions.ts": {
+    "mtime": 1778210192.0,
+    "hash": "3c37c1afa67ddc286e08de4af4b73ea9"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\transak.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "dd581e42270cd9dd8178202dbb9e7ad4"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\transak.ts": {
+    "mtime": 1778413964.2149134,
+    "hash": "2206579550bfa52793317c94313b8473"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\transakQuote.ts": {
+    "mtime": 1778210192.0,
+    "hash": "ea18bf74accc4860af8583933ffa6bb9"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\txStatusPoller.ts": {
+    "mtime": 1778413964.2154405,
+    "hash": "1216d9fd50bb6963d19f67adf8f154df"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\walletConnectSession.ts": {
+    "mtime": 1778413964.2159638,
+    "hash": "f998d99d37d35ccf128b999fe98b5c22"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\balanceFetcher.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "91cff3eec212c07e929a60e061e1e264"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\bip39.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "a15501aa40b1ffd8f516d796f4733405"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\deepLinking.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "abaca70c1144f454daa4dc44d35f01e9"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\demoWallet.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "b12247221d080ff40096ad792c4becb8"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\envValidation.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "2395be7bc84b41b7e313fc5d1af845d1"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\externalLink.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "fa58e08a13f2858cb54e06008eac7abd"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\gasEstimator.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "aebb28960405e56ad4094523c1b2b933"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\rpcPool.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "afafd2b4bdd8c07aa29e02ef5229900b"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\secureSigner.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "29a1d13434403356ca0f506712c0d40f"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\transactionHistory.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "c0562dfff6a3415123e5f757d0e2ffaf"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\transactions.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "a29b04c08716d5e00a8ed9db4a4d1982"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\src\\utils\\__tests__\\transakQuote.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "06858f0917c6ba4c4def4fac2a2947c3"
+  },
+  "D:\\Veilpay\\apps\\frontend\\next.config.js": {
+    "mtime": 1778210192.0,
+    "hash": "23b3af28d3035a49d51713db2651654a"
+  },
+  "D:\\Veilpay\\apps\\frontend\\postcss.config.js": {
+    "mtime": 1778210192.0,
+    "hash": "8640f9b2e6475cc3f5b1ff4548925765"
+  },
+  "D:\\Veilpay\\apps\\frontend\\tailwind.config.js": {
+    "mtime": 1778210192.0,
+    "hash": "e574cf05b5da7ea1c3209f4052be75f4"
+  },
+  "D:\\Veilpay\\apps\\frontend\\src\\app\\layout.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "c0b41a0372043f48d7ef0cf3a270c9d2"
+  },
+  "D:\\Veilpay\\apps\\frontend\\src\\app\\page.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "7575ec84b1f3e9446f1e393143da2185"
+  },
+  "D:\\Veilpay\\apps\\indexer\\src\\index.ts": {
+    "mtime": 1778210192.0,
+    "hash": "f4101f19d9de9a16af4c3f02b6fd17fa"
+  },
+  "D:\\Veilpay\\apps\\indexer\\src\\config\\index.ts": {
+    "mtime": 1778210192.0,
+    "hash": "df7d8eb90484cdfbd9486ec1984d961e"
+  },
+  "D:\\Veilpay\\apps\\indexer\\src\\indexers\\index.ts": {
+    "mtime": 1778210192.0,
+    "hash": "b2a0bd37d923546fce0a5e26031cabb5"
+  },
+  "D:\\Veilpay\\apps\\indexer\\src\\indexers\\websocket.ts": {
+    "mtime": 1778210192.0,
+    "hash": "01fcf5758b3744120fad48602e78afb0"
+  },
+  "D:\\Veilpay\\apps\\indexer\\src\\lib\\prisma.ts": {
+    "mtime": 1778210192.0,
+    "hash": "e6848ce5ff7e9cb3a45e00562244c064"
+  },
+  "D:\\Veilpay\\apps\\indexer\\src\\queue\\index.ts": {
+    "mtime": 1778210192.0,
+    "hash": "8ebf3dcf721c9382596d321652dd22a7"
+  },
+  "D:\\Veilpay\\apps\\indexer\\src\\stealth\\crypto.ts": {
+    "mtime": 1778210192.0,
+    "hash": "8368c921918ab5f5087be5da6d39e26d"
+  },
+  "D:\\Veilpay\\apps\\indexer\\src\\stealth\\scanner.ts": {
+    "mtime": 1778210192.0,
+    "hash": "48500b4adb69753ce4155e8982ca5765"
+  },
+  "D:\\Veilpay\\apps\\indexer\\src\\webhook\\dispatcher.ts": {
+    "mtime": 1778210192.0,
+    "hash": "ee95b1aabcd917d84a565bb181a91ec3"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\eslint.config.js": {
+    "mtime": 1778210192.0,
+    "hash": "49c8473bcfcec3aef596a5fb04a6df06"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\postcss.config.js": {
+    "mtime": 1778210192.0,
+    "hash": "4bf27959249b059f32e1f49202336ee5"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\refresh-skills-plugin.js": {
+    "mtime": 1778210192.0,
+    "hash": "9b6f54af08185e6d7872d9aa8cfe1dc3"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\vite.config.ts": {
+    "mtime": 1778210192.0,
+    "hash": "9e7ee7b958dc067d06b8f2e30cc011c8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\vitest.config.ts": {
+    "mtime": 1778210192.0,
+    "hash": "8e83f63ce93d07d2c5b9eddced05be58"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\scripts\\generate-sitemap.js": {
+    "mtime": 1778210192.0,
+    "hash": "1d32a237a1a71b115de7f23a72a8547d"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\scripts\\generate-sitemap.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "9ae49ce6b2e985493114ea184d9ac0b0"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\scripts\\prerender-routes.js": {
+    "mtime": 1778210192.0,
+    "hash": "a909cac764a1858ace1ad42f059395ee"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\scripts\\verify-seo-assets.js": {
+    "mtime": 1778210192.0,
+    "hash": "e4dd1574b656368a271f97fec78f267d"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\scripts\\verify-seo-assets.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "2733a51b074e0a47daf4d7171aac345f"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\App.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "b8a522739bae4788446646239e507fb5"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\main.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "6ede484f2c3eece30e31ba20465be4bd"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\vite-env.d.ts": {
+    "mtime": 1778210192.0,
+    "hash": "0352474ba2918efe13895edbc3780d94"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\components\\SkillCard.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "f9bf29fea50fd2be5299b1a7330acb55"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\components\\SkillStarButton.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "774cdcc0f4066b35ce4e03c7c1e470b7"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\context\\SkillContext.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "e19257e38dbe86053d8eab9ec70da3f1"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\context\\__tests__\\SkillContext.test.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "1194ce0825a34b5cfedd3ba636df9141"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\factories\\skill.ts": {
+    "mtime": 1778210192.0,
+    "hash": "703494d2c286ffdcdca222c60dfe76d8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\hooks\\usePageMeta.ts": {
+    "mtime": 1778210192.0,
+    "hash": "99371160f3b2e718edf78b9b09367a04"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\hooks\\useSkillStars.ts": {
+    "mtime": 1778210192.0,
+    "hash": "374ac865234ec3639089b41bd0273ee0"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\hooks\\__tests__\\useSkillStars.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "a57a67a935462bb77685981edfbdac93"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\hooks\\__tests__\\useSkillStarsSecurity.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "924a1ad22071aedc18a8c392c86fdbc2"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\lib\\supabase.ts": {
+    "mtime": 1778210192.0,
+    "hash": "143f232ba780d2ad2ac70523e6196b7a"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\pages\\Home.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "b8469aa7a60bab0ea2213e5a04259f34"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\pages\\SkillDetail.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "ee7dd57c350cb11de573b484dfeabbb7"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\pages\\__tests__\\Home.test.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "13b329f3f7163f6382dcb5b7c64fa0f9"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\pages\\__tests__\\SkillDetail.security.test.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "4c880f77be49f88b4176b240f50025f6"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\pages\\__tests__\\SkillDetail.test.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "cbc922a01fa272b85032d206542d5d60"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\test\\setup.ts": {
+    "mtime": 1778210192.0,
+    "hash": "bf5b5aacefe06e98e48f725bbd21ffdc"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\types\\index.ts": {
+    "mtime": 1778210192.0,
+    "hash": "b47863fe0acc20655a8d711d4289300f"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\utils\\seo.ts": {
+    "mtime": 1778210192.0,
+    "hash": "e5fb625ac2744f2cfef25a67d1cd053f"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\utils\\testUtils.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "f7b489866137fa65c2b075c416b4deaf"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\utils\\__tests__\\seo.test.ts": {
+    "mtime": 1778210192.0,
+    "hash": "91d3164acd6f086169061849732cdb46"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\__tests__\\App.performance.test.tsx": {
+    "mtime": 1778210192.0,
+    "hash": "379aff56244f02f9911d5f72f5b96402"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\__tests__\\refresh-skills-plugin.security.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "92cce83a86995fa5f166a3410a33e95a"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\integrations\\jetski-gemini-loader\\loader.ts": {
+    "mtime": 1778210192.0,
+    "hash": "fb1d573f7e3fb7c2851914fb122364fc"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\skill_categorization\\tools\\scripts\\generate_index.py": {
+    "mtime": 1778210192.0,
+    "hash": "bf11c48d130091c9ed939fbab50013d2"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\skill_categorization\\tools\\scripts\\tests\\test_generate_index_categorization.py": {
+    "mtime": 1778210192.0,
+    "hash": "dfb2745fbb87c602aaf3a62b50fce019"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\bin\\install.js": {
+    "mtime": 1778210192.0,
+    "hash": "6de4d90c39f060aa3ff0c9b5dc2f8c77"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\lib\\project-root.js": {
+    "mtime": 1778210192.0,
+    "hash": "068a0abc2fe04a5803036d74e6b0a210"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\lib\\skill-filter.js": {
+    "mtime": 1778210192.0,
+    "hash": "f35cf9f3316a79880c92b9a43deab501"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\lib\\skill-utils.js": {
+    "mtime": 1778210192.0,
+    "hash": "99cd8ec59cc90d20d38d74d8432d22ee"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\lib\\symlink-safety.js": {
+    "mtime": 1778210192.0,
+    "hash": "11eda663481c9806dfaaf9f142022985"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\lib\\workflow-contract.js": {
+    "mtime": 1778210192.0,
+    "hash": "b46e8d558633d5ee4ee15dec4397f944"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\audit_consistency.py": {
+    "mtime": 1778210192.0,
+    "hash": "16877ae6ff9a976e817f2bd8101292f9"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\audit_skills.py": {
+    "mtime": 1778210192.0,
+    "hash": "d0c37c6341e4dffa8b2eefccc53fa63c"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\auto_categorize_skills.py": {
+    "mtime": 1778210192.0,
+    "hash": "cd5ac2d357a1243877bc6b1b86b52001"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\build-catalog.js": {
+    "mtime": 1778210192.0,
+    "hash": "d6b0fe66c7e65783c135cb5fbdab7061"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\check_stale_claims.py": {
+    "mtime": 1778210192.0,
+    "hash": "70bd0748520640dabf646170ca237602"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\check_validation_warning_budget.py": {
+    "mtime": 1778210192.0,
+    "hash": "f4326079ade998b42ae3b3691675e668"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\cleanup_synthetic_skill_sections.py": {
+    "mtime": 1778210192.0,
+    "hash": "6c7a9ffb0e30ed2fea02d0bfe965f71a"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\copy-file.js": {
+    "mtime": 1778210192.0,
+    "hash": "67fad81875a6caeacc7829909d341a4d"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\fix_dangling_links.py": {
+    "mtime": 1778210192.0,
+    "hash": "3b83e69e60b70e0ca9f7963819017834"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\fix_missing_skill_metadata.py": {
+    "mtime": 1778210192.0,
+    "hash": "194bd1cb8375e74f74e7fc5dc6671799"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\fix_missing_skill_sections.py": {
+    "mtime": 1778210192.0,
+    "hash": "44851cf9d3a8fbe3d0306d28ae174c0c"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\fix_skills_metadata.py": {
+    "mtime": 1778210192.0,
+    "hash": "7e98c8f29f5f597bc923867340a6d596"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\fix_truncated_descriptions.py": {
+    "mtime": 1778210192.0,
+    "hash": "81f13ab09acb091ba49404b4fa9eb0cd"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\fix_yaml_quotes.py": {
+    "mtime": 1778210192.0,
+    "hash": "37bdf26842816d9e2d976032bf6399e5"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\fix_year_2025_to_2026.py": {
+    "mtime": 1778210192.0,
+    "hash": "011ebc677a478d2fb838a3276e3bd40a"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\generated_files.js": {
+    "mtime": 1778210192.0,
+    "hash": "ca9ef366e94ec0e9e088c5a9e791d246"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\generate_index.py": {
+    "mtime": 1778210192.0,
+    "hash": "a885d0be343524a864378851b961c47b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\generate_skills_report.py": {
+    "mtime": 1778210192.0,
+    "hash": "d2043ec5e41fc262d11ba400bc5a4bd0"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\get-bundle-skills.py": {
+    "mtime": 1778210192.0,
+    "hash": "dbd4b8c29ac52b2870347db344785b6d"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\maintainer_audit.py": {
+    "mtime": 1778210192.0,
+    "hash": "0730fef28c5ab7033ff0f4fe857a00de"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\manage_skill_dates.py": {
+    "mtime": 1778210192.0,
+    "hash": "eeb2b13a168b7ed64eac288e608f6a94"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\normalize-frontmatter.js": {
+    "mtime": 1778210192.0,
+    "hash": "9d6f9657239b11ccd5c0c46a9ee7b7fd"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\release_workflow.js": {
+    "mtime": 1778210192.0,
+    "hash": "31bf79f32717dbef00445c7014fe1f72"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\repair_description_usage_summaries.py": {
+    "mtime": 1778210192.0,
+    "hash": "d2e72c5d7668d8e2c59973dae9d6e9ac"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\run-python.js": {
+    "mtime": 1778210192.0,
+    "hash": "655578999e50b343a941e1588dacdc20"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\setup_web.js": {
+    "mtime": 1778210192.0,
+    "hash": "9b3066c694801869c24909d2b69d25bf"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\skills_manager.py": {
+    "mtime": 1778210192.0,
+    "hash": "ea42a7ff8c8837df2d6e953dc02617c6"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\sync_contributors.py": {
+    "mtime": 1778210192.0,
+    "hash": "9cbc62e1e94356304d26b93dcf1eb65b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\sync_microsoft_skills.py": {
+    "mtime": 1778210192.0,
+    "hash": "2d13145bb4358765267f1a38eb060560"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\sync_repo_metadata.py": {
+    "mtime": 1778210192.0,
+    "hash": "0d4a1ce73972dfbe275d84d3b74a2616"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\update_readme.py": {
+    "mtime": 1778210192.0,
+    "hash": "c0fecff0c92b05f24ba052e1af878493"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\validate-skills.js": {
+    "mtime": 1778210192.0,
+    "hash": "66e654f89cc6328711e5f8b63b999bb2"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\validate_references.py": {
+    "mtime": 1778210192.0,
+    "hash": "3079cba3d965c75964dcba3cb665d3d5"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\validate_skills.py": {
+    "mtime": 1778210192.0,
+    "hash": "83f9307e5a5269fc68a1e71406a5b82a"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\_project_paths.py": {
+    "mtime": 1778210192.0,
+    "hash": "a5f9abf313b5a0d8e053058cc2e7ddf7"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\_safe_files.py": {
+    "mtime": 1778210192.0,
+    "hash": "7d16a9e6e34656653a91b7070debf13b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\activate_skills_batch_security.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "389cf80245847db5f96b5993b31edcc6"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\automation_workflows.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "8e924bd9df09d369a5d50ba9624ad17d"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\build_catalog_bundles.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "2fdd8874e9ff10c02dc9a3bbc614d43c"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\claude_plugin_marketplace.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "279b19ef912976d0196422c3c710fb4d"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\copy_security.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "88c1353183cf0376c392d7a7926f765e"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\docs_security_content.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "22000220fb469f4fb64e1efe436b0cc8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\inspect_microsoft_repo.py": {
+    "mtime": 1778210192.0,
+    "hash": "8433ae3b72b09f641b4a336ba68055db"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\local_temp_safety.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "2ba2848824fcaf43a468752275946486"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\npm_package_contents.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "ad8e1c2214ef127190b3a4b2f7c6d776"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\repo_hygiene_security.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "c2d7727d3679846154802939ba8d12ca"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\run-test-suite.js": {
+    "mtime": 1778210192.0,
+    "hash": "5aaace140ff350100e4c78f4b6272804"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\setup_web_sync.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "edc63f4ae027e0b413113309afbd20e8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\skill_filter.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "4406d8ab0d3f4ac31a46bbd123a8de7d"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\skill_utils_security.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "cea6e4a180b593ab2cff49004eea2863"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\symlink_safety.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "e1fba1565a9e131eb572432a92127174"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_audit_consistency.py": {
+    "mtime": 1778210192.0,
+    "hash": "dcb193e6dc24009a6067d89a0bd17eb7"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_audit_skills.py": {
+    "mtime": 1778210192.0,
+    "hash": "40677fdfd193ae2b7bcd8952fe0e5b3b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_bundle_activation_security.py": {
+    "mtime": 1778210192.0,
+    "hash": "5b28166a39e6d39d8b319f3c67c81a8b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_cleanup_synthetic_skill_sections.py": {
+    "mtime": 1778210192.0,
+    "hash": "2b482527b95323eca9d3c4f53446f3f7"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_comprehensive_coverage.py": {
+    "mtime": 1778210192.0,
+    "hash": "046681ee5241cbbb79e48c8f7a87039c"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_fix_missing_skill_metadata.py": {
+    "mtime": 1778210192.0,
+    "hash": "3caff0ff1b55fd6e269c8b8e38bac01e"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_fix_missing_skill_sections.py": {
+    "mtime": 1778210192.0,
+    "hash": "2b0d8144e8a4b5c5aecff7fcce6b3375"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_fix_skills_metadata_security.py": {
+    "mtime": 1778210192.0,
+    "hash": "a8b5b76a8936a8c34a11042a44552d96"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_fix_truncated_descriptions.py": {
+    "mtime": 1778210192.0,
+    "hash": "4808ba28bdd36311386321ee5b9a1818"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_frontmatter_parsing_security.py": {
+    "mtime": 1778210192.0,
+    "hash": "1e45c9cd6a5c95c87c9dc83530fc8c95"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_generate_index_categories.py": {
+    "mtime": 1778210192.0,
+    "hash": "93b191fcd10ca877f7955f9835869c17"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_generate_index_security.py": {
+    "mtime": 1778210192.0,
+    "hash": "1d291e330999843929b2c66133f136c7"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_junta_tls_security.py": {
+    "mtime": 1778210192.0,
+    "hash": "838f8fce6c6eae62781fb6b5e8f869c8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_last30days_skill_security.py": {
+    "mtime": 1778210192.0,
+    "hash": "8e87410e10a37cc8fa25b1720aa7ee62"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_maintainer_audit.py": {
+    "mtime": 1778210192.0,
+    "hash": "7d365472c105abbf5b1ae2d01238011e"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_office_unpack_security.py": {
+    "mtime": 1778210192.0,
+    "hash": "5f4c3a237187a32a0c7c134b464214be"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_repair_description_usage_summaries.py": {
+    "mtime": 1778210192.0,
+    "hash": "7619a2adcb695a16b69f275976cf3dd4"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_skills_manager_security.py": {
+    "mtime": 1778210192.0,
+    "hash": "7eabafc6c898b6aa0df1dfe16021efb2"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_sync_contributors.py": {
+    "mtime": 1778210192.0,
+    "hash": "c6e646413ac8e6e2d43dd83cdd2dc62a"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_sync_microsoft_skills_security.py": {
+    "mtime": 1778210192.0,
+    "hash": "539b3adf6aa47ddb96eb6755f96b867d"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_sync_repo_metadata.py": {
+    "mtime": 1778210192.0,
+    "hash": "73b1b2ada31b749f1cf138cd4b0a06ae"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_validate_skills_headings.py": {
+    "mtime": 1778210192.0,
+    "hash": "be383db74b586e06433c0a99297d28f1"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_validation_warning_budget.py": {
+    "mtime": 1778210192.0,
+    "hash": "cbd8a87d9d12e8b75400458dd900d786"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\test_ws_listener_security.py": {
+    "mtime": 1778210192.0,
+    "hash": "bde1278135eccb473d2bc9cbc949fc11"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\validate_skills_headings.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "7e7291e62214ace7bd5e54449786f2a5"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\scripts\\tests\\workflow_contracts.test.js": {
+    "mtime": 1778210192.0,
+    "hash": "9e976553416d34374b82d83d90cf308a"
+  },
+  "D:\\Veilpay\\packages\\contracts-solana\\programs\\veil_pool\\src\\lib.rs": {
+    "mtime": 1778210192.0,
+    "hash": "0afe93f9b392602cb20828b9aaa763eb"
+  },
+  "D:\\Veilpay\\packages\\shared\\src\\chains.ts": {
+    "mtime": 1778210192.0,
+    "hash": "b3a27d4f102a4190dd37ebd52d9542dc"
+  },
+  "D:\\Veilpay\\packages\\shared\\src\\common.ts": {
+    "mtime": 1778210192.0,
+    "hash": "f50102c48ece1788332b4a4a70aeca72"
+  },
+  "D:\\Veilpay\\packages\\shared\\src\\index.ts": {
+    "mtime": 1778210192.0,
+    "hash": "085fd2cc2960f3deb6945a41630d01df"
+  },
+  "D:\\Veilpay\\packages\\shared\\src\\types.ts": {
+    "mtime": 1778210192.0,
+    "hash": "030db64d41ad261839d37d73f39c8df6"
+  },
+  "D:\\Veilpay\\scripts\\setup-doppler.ps1": {
+    "mtime": 1778210192.0,
+    "hash": "248ca881380f410835697d1c3e0ae863"
+  },
+  "D:\\Veilpay\\AGENTS.md": {
+    "mtime": 1778210192.0,
+    "hash": "6ddab2f3aff6c4e004ab09012a9434bb"
+  },
+  "D:\\Veilpay\\buy_crypto_design.html": {
+    "mtime": 1778210192.0,
+    "hash": "0706d0703457ae20f4b340433c1f5486"
+  },
+  "D:\\Veilpay\\docker-compose.yml": {
+    "mtime": 1778210192.0,
+    "hash": "03a7b578fe159c0c761cbc0472670bea"
+  },
+  "D:\\Veilpay\\GRAPHIFY.md": {
+    "mtime": 1778210192.0,
+    "hash": "48433dd9848e4ee63f3aa595d85dd8e8"
+  },
+  "D:\\Veilpay\\kilo_result.txt": {
+    "mtime": 1778210192.0,
+    "hash": "246e61875b77d374a249de547e331407"
+  },
+  "D:\\Veilpay\\pnpm-workspace.yaml": {
+    "mtime": 1778210192.0,
+    "hash": "de6b9e7bb156f8dc12f68dc3d1a0b649"
+  },
+  "D:\\Veilpay\\QUICKSTART.md": {
+    "mtime": 1778210192.0,
+    "hash": "d1d984115d8862b5dfbebc3972ec6bf3"
+  },
+  "D:\\Veilpay\\README.md": {
+    "mtime": 1778210192.0,
+    "hash": "dbb19be69589f5b01d5b1798b7d44655"
+  },
+  "D:\\Veilpay\\UI_AUDIT_PLAN.md": {
+    "mtime": 1778210192.0,
+    "hash": "07051b08a7ddf7cd3a2097797922f5fa"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\APP_LINKS_SETUP.md": {
+    "mtime": 1778210192.0,
+    "hash": "c332efa33d0efbb63e5cdcdcdd9e6a5f"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\ENV_SETUP.md": {
+    "mtime": 1778413964.1922393,
+    "hash": "4eeb8fdc5b0e42417f5ef9c175c88e58"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\tsc_output.txt": {
+    "mtime": 1778210192.0,
+    "hash": "66aac56dc5850beb135713ed36f7ca13"
+  },
+  "D:\\Veilpay\\e2e\\config.yaml": {
+    "mtime": 1778210192.0,
+    "hash": "91e153c4d0457837f9e2124b6cac2602"
+  },
+  "D:\\Veilpay\\e2e\\README.md": {
+    "mtime": 1778210192.0,
+    "hash": "a09bdcfa554eb6b09a9637046ec293d5"
+  },
+  "D:\\Veilpay\\e2e\\flows\\custom_network.yaml": {
+    "mtime": 1778353738.037565,
+    "hash": "4b4809364b2e0f8317441253459c8918"
+  },
+  "D:\\Veilpay\\e2e\\flows\\deep_link.yaml": {
+    "mtime": 1778353742.493885,
+    "hash": "36016fa15b407900acf808f7b0638b7d"
+  },
+  "D:\\Veilpay\\e2e\\flows\\network_switching.yaml": {
+    "mtime": 1778353735.308361,
+    "hash": "5a5b0b3a5f49f6d0a3f3a72e5750b7ef"
+  },
+  "D:\\Veilpay\\e2e\\flows\\onboarding.yaml": {
+    "mtime": 1778353729.854369,
+    "hash": "27fd5a33ca99688d96170d4c972553a2"
+  },
+  "D:\\Veilpay\\e2e\\flows\\send_payment.yaml": {
+    "mtime": 1778353732.7391987,
+    "hash": "a0b35b379a88335954d9d59680f12a42"
+  },
+  "D:\\Veilpay\\e2e\\flows\\settings.yaml": {
+    "mtime": 1778353740.30116,
+    "hash": "ad91a5dadb52698b90ad561efbc449e8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\CATALOG.md": {
+    "mtime": 1778210192.0,
+    "hash": "72516df19c599802f66a8c35898360fc"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\CHANGELOG.md": {
+    "mtime": 1778210192.0,
+    "hash": "3d8bc7cf8ff317ea90e6f2678f0fb36f"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\CODE_OF_CONDUCT.md": {
+    "mtime": 1778210192.0,
+    "hash": "4b3d9f142167af175d58ed1a93408ce8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\CONTRIBUTING.md": {
+    "mtime": 1778210192.0,
+    "hash": "18d3ff0cd9ee6f1082883f2119cb4963"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\README.md": {
+    "mtime": 1778210192.0,
+    "hash": "78233635437b147163fba0c6cd16b5d0"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\SECURITY.md": {
+    "mtime": 1778210192.0,
+    "hash": "ef198aefd11d904beee4ca7a86517350"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\walkthrough.md": {
+    "mtime": 1778210192.0,
+    "hash": "646dec4202e69510aedd226e9a53aed6"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\index.html": {
+    "mtime": 1778210192.0,
+    "hash": "a9e294c73d50cb13f66baa1b4f28c057"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\README.md": {
+    "mtime": 1778210192.0,
+    "hash": "3f01850e9fce601d04d6dba39204c1d8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\public\\robots.txt": {
+    "mtime": 1778210192.0,
+    "hash": "a7f352d4132b840208f7e25b7e707961"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\AUDIT.md": {
+    "mtime": 1778210192.0,
+    "hash": "574a53a1ef590cfa89a5e8765f819867"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\BUNDLES.md": {
+    "mtime": 1778210192.0,
+    "hash": "f73b1cc6267c717dddd5a97ef40c076b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\CATEGORIZATION_IMPLEMENTATION.md": {
+    "mtime": 1778210192.0,
+    "hash": "44ded3e998e76c78efa319b9ecf5acf1"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\CI_DRIFT_FIX.md": {
+    "mtime": 1778210192.0,
+    "hash": "70947ce7418620bcb0aa646c49e55060"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\COMMUNITY_GUIDELINES.md": {
+    "mtime": 1778210192.0,
+    "hash": "ac9e44cb8157304aabc7d2db1533e54f"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\DATE_TRACKING_IMPLEMENTATION.md": {
+    "mtime": 1778210192.0,
+    "hash": "7c348b0d93d1d8ad0f81282b1191d4d2"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\EXAMPLES.md": {
+    "mtime": 1778210192.0,
+    "hash": "7b08f517101b18f7db223d9408f0164c"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\FAQ.md": {
+    "mtime": 1778210192.0,
+    "hash": "28c1a2933be6bde6ccb5377f442f037b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\GETTING_STARTED.md": {
+    "mtime": 1778210192.0,
+    "hash": "02b11865f7d12523b1a7ec92bd908ebb"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\KIRO_INTEGRATION.md": {
+    "mtime": 1778210192.0,
+    "hash": "f0655ea0307737582a702068efeba2ea"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\QUALITY_BAR.md": {
+    "mtime": 1778210192.0,
+    "hash": "235691ee497cfeb95bec97394710ba4e"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\README.md": {
+    "mtime": 1778210192.0,
+    "hash": "dd01e649efb4e00a290991676f34d6cd"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\SECURITY_GUARDRAILS.md": {
+    "mtime": 1778210192.0,
+    "hash": "e1f9158a763932e64c7c30ab4d34417a"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\SEC_SKILLS.md": {
+    "mtime": 1778210192.0,
+    "hash": "295e755b4eba014d9ed017b1e3e944b0"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\SKILLS_DATE_TRACKING.md": {
+    "mtime": 1778210192.0,
+    "hash": "a44469bff3dc1bc2207dc3ab84bfc20a"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\SKILL_ANATOMY.md": {
+    "mtime": 1778210192.0,
+    "hash": "1cf4b9a30bd49e2b352ee8d90fe4bac8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\SKILL_TEMPLATE.md": {
+    "mtime": 1778210192.0,
+    "hash": "5b6697c619c02955f1aaa2217681f4d9"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\SMART_AUTO_CATEGORIZATION.md": {
+    "mtime": 1778210192.0,
+    "hash": "0f516ac3aa24a746a6c1f421fb4cc163"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\SOURCES.md": {
+    "mtime": 1778210192.0,
+    "hash": "0b673dffae33c603f628416691f30fdf"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\USAGE.md": {
+    "mtime": 1778210192.0,
+    "hash": "c2659d21da7b3bfa67a165a401a65ab6"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\VISUAL_GUIDE.md": {
+    "mtime": 1778210192.0,
+    "hash": "19d756afb16e9c9a8dfc5dcdc8ed0d83"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\walkthrough.md": {
+    "mtime": 1778210192.0,
+    "hash": "773bee427f4f6a4cd15a27e499faafeb"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\WORKFLOWS.md": {
+    "mtime": 1778210192.0,
+    "hash": "9112a09d8ce6066f283f826e950bf548"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\contributors\\community-guidelines.md": {
+    "mtime": 1778210192.0,
+    "hash": "8b1656f9311596accb2da19526817a7a"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\contributors\\examples.md": {
+    "mtime": 1778210192.0,
+    "hash": "7fd6d116d17e2b7f60dc13914e381fec"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\contributors\\quality-bar.md": {
+    "mtime": 1778210192.0,
+    "hash": "9913478e08c503639f1b5f681e1e7d27"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\contributors\\security-guardrails.md": {
+    "mtime": 1778210192.0,
+    "hash": "78db4c0af2775b98e666064c14a33f29"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\contributors\\skill-anatomy.md": {
+    "mtime": 1778210192.0,
+    "hash": "cf8e1fd3cd6257fddc34a23fc6ee3268"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\contributors\\skill-template.md": {
+    "mtime": 1778210192.0,
+    "hash": "9bfd19df90eea4053c58ae239c6a80c6"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\integrations\\jetski-cortex.md": {
+    "mtime": 1778210192.0,
+    "hash": "a2f7b63b3fc2985db6d3fb4fa548bc6f"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\integrations\\jetski-gemini-loader\\README.md": {
+    "mtime": 1778210192.0,
+    "hash": "05e99a65f07ab309661ac624127bb68e"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\audit.md": {
+    "mtime": 1778210192.0,
+    "hash": "7d1f6d3745dd93e7e43f296d9c3ce666"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\categorization-implementation.md": {
+    "mtime": 1778210192.0,
+    "hash": "5820395958a9f94fd452d5f286e17007"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\ci-drift-fix.md": {
+    "mtime": 1778210192.0,
+    "hash": "4787d9afe9eb72deeee8e64dfa505f25"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\date-tracking-implementation.md": {
+    "mtime": 1778210192.0,
+    "hash": "d30800309d6f06ff24b5fdabefc7b09a"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\merging-prs.md": {
+    "mtime": 1778210192.0,
+    "hash": "e171d2df57a7351213ac3cd3a54ab2d2"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\release-notes-7.2.0.md": {
+    "mtime": 1778210192.0,
+    "hash": "be7695fd4e20b4f5c9db07c204798a96"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\release-process.md": {
+    "mtime": 1778210192.0,
+    "hash": "0e726d41940804536290e8400aa57d8f"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\repo-growth-seo.md": {
+    "mtime": 1778210192.0,
+    "hash": "17559ed041a6a16c25ddfc96c727bdf3"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\rollback-procedure.md": {
+    "mtime": 1778210192.0,
+    "hash": "640c71e73cbff9b78d921e73669adbf2"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\security-findings-triage-2026-03-15.md": {
+    "mtime": 1778210192.0,
+    "hash": "dc1c185a4daf5e9cb9b79c38a1bbd4fc"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\security-findings-triage-2026-03-18-addendum.md": {
+    "mtime": 1778210192.0,
+    "hash": "fd5ed1cb44f2496b43ce11ff2fcfab8d"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\skills-date-tracking.md": {
+    "mtime": 1778210192.0,
+    "hash": "c2e07a509a408d428280512d03492bab"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\skills-import-2026-03-21.md": {
+    "mtime": 1778210192.0,
+    "hash": "cea5eeb4a095bc7d80949a6ddce0f883"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\skills-update-guide.md": {
+    "mtime": 1778210192.0,
+    "hash": "4c02f9314a34c5f91767b5793394a232"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\maintainers\\smart-auto-categorization.md": {
+    "mtime": 1778210192.0,
+    "hash": "db2580e7f24177810de4dccb74d15e5b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\sources\\sources.md": {
+    "mtime": 1778210192.0,
+    "hash": "04158aa3b6280a2a16bd5e322594c167"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\ai-agent-skills.md": {
+    "mtime": 1778210192.0,
+    "hash": "bf145413559f55019584a1d344070164"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\antigravity-awesome-skills-vs-awesome-claude-skills.md": {
+    "mtime": 1778210192.0,
+    "hash": "900562e63d5fdcdc56e3013ad3c849e9"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\best-claude-code-skills-github.md": {
+    "mtime": 1778210192.0,
+    "hash": "4fa399545e83ad142202bd8e2af3fcd5"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\best-cursor-skills-github.md": {
+    "mtime": 1778210192.0,
+    "hash": "f0345df2851b1e39b1ff1a584bc07453"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\bundles.md": {
+    "mtime": 1778210192.0,
+    "hash": "1c787c5f30d6ca27a326867cb75a602b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\claude-code-skills.md": {
+    "mtime": 1778210192.0,
+    "hash": "3adb3f2ea8521acf2dd63a17c81ac5a4"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\codex-cli-skills.md": {
+    "mtime": 1778210192.0,
+    "hash": "8165046c28ffcad2c1e38cd76df02a7b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\cursor-skills.md": {
+    "mtime": 1778210192.0,
+    "hash": "9329e84e8f6d85c8631a381aba50bcd1"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\faq.md": {
+    "mtime": 1778210192.0,
+    "hash": "ae77fa0a32a65946abc150a18a311fe8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\gemini-cli-skills.md": {
+    "mtime": 1778210192.0,
+    "hash": "8941753723cc717086f20c2979215318"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\getting-started.md": {
+    "mtime": 1778210192.0,
+    "hash": "81dc6b57e4797af924961764b69fc291"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\kiro-integration.md": {
+    "mtime": 1778210192.0,
+    "hash": "0177ec0e673f48354285459a2b7a64c6"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\local-config.md": {
+    "mtime": 1778210192.0,
+    "hash": "f422c5bc35ed4067a3861c2c0f3fb6e1"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\security-skills.md": {
+    "mtime": 1778210192.0,
+    "hash": "09e62cafea41109ef0084e710650cde6"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\usage.md": {
+    "mtime": 1778210192.0,
+    "hash": "c64ea565a9146daf1da270a7b39c1b6e"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\visual-guide.md": {
+    "mtime": 1778210192.0,
+    "hash": "4c3cbb7f407592ef141423ca953386ee"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\walkthrough.md": {
+    "mtime": 1778210192.0,
+    "hash": "01ea70f0f4e859ab6eeebe9e56a0f2df"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\windows-truncation-recovery.md": {
+    "mtime": 1778210192.0,
+    "hash": "c519fe0237e504bec6e041923bb356e8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\users\\workflows.md": {
+    "mtime": 1778210192.0,
+    "hash": "45e2a798bca213ffbbb6ac7146ceb972"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\BUNDLES.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "d128aafb504fd66301278b00aa445ff8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\CONTRIBUTING.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "cd07a068fac63d081eb1d338d58cac68"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\EXAMPLES.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "2799b8ddc00b263056d34712e8fbe986"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\FAQ.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "b13ef4c613f6d8a78573b3131cbd59ec"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\GETTING_STARTED.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "570af2e165caff5bd37010d78ff263d9"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\QUALITY_BAR.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "0901465c5aa5428ee39d5e19645a4c8e"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\README.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "5413f9992b093818268af07e969f64df"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\SECURITY.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "c074242c73d4630034a9d1a90d8ddfec"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\SECURITY_GUARDRAILS.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "809bd10d339673487f93af646ba9fb36"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\SKILLS_README.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "f8c338e030ae83ba2a2965f3e7733c41"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\SKILL_ANATOMY.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "ca1393b64d3e3cf6fe43e15f0dc2d668"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\SOURCES.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "ad7b97a5d27f50e6168b078d65a60060"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\TRANSLATION_PLAN.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "57f82fe6866f45633b0ff5f274463601"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs\\vietnamese\\VISUAL_GUIDE.vi.md": {
+    "mtime": 1778210192.0,
+    "hash": "65f83790ac02201387861d25ffac7d4b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\quality-bar.md": {
+    "mtime": 1778210192.0,
+    "hash": "fd3329a9a3aeeafcd8040b6d1153dee1"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\README.md": {
+    "mtime": 1778210192.0,
+    "hash": "ab6ba831d0c1b56e15325f2eac3dae98"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\skill-anatomy.md": {
+    "mtime": 1778210192.0,
+    "hash": "86a6356de085c5c7af0d20cbe97457a0"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\contributors\\community-guidelines.md": {
+    "mtime": 1778210192.0,
+    "hash": "39ce572e3cc77eb8402552e59accd267"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\contributors\\examples.md": {
+    "mtime": 1778210192.0,
+    "hash": "cef019888dc8036eb7d74855b04accbe"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\contributors\\skill-template.md": {
+    "mtime": 1778210192.0,
+    "hash": "476558acf121e76042d30afd8137337e"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\maintainers\\audit.md": {
+    "mtime": 1778210192.0,
+    "hash": "130ba9773233fbd045025eb6cfd491c0"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\maintainers\\ci-drift-fix.md": {
+    "mtime": 1778210192.0,
+    "hash": "38a1acf06063e294b30a3774f5bd297a"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\maintainers\\release-process.md": {
+    "mtime": 1778210192.0,
+    "hash": "f3586f3828140f190fc99ded32844b9b"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\sources\\sources.md": {
+    "mtime": 1778210192.0,
+    "hash": "0eb1aa592ed353d75fa130786bc247e8"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\users\\bundles.md": {
+    "mtime": 1778210192.0,
+    "hash": "f06897c8b3e26a4b2ded4b7de8c2ef39"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\users\\faq.md": {
+    "mtime": 1778210192.0,
+    "hash": "f3a505656045f68ba5f5784bb907c8f9"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\users\\getting-started.md": {
+    "mtime": 1778210192.0,
+    "hash": "03f190a95d594508058d117ee1430495"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\users\\usage.md": {
+    "mtime": 1778210192.0,
+    "hash": "7d2aa6cbf99dbdffa6593ccf29506628"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\users\\visual-guide.md": {
+    "mtime": 1778210192.0,
+    "hash": "43e045ba82dbcfb4fbb13bfb7689843f"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\docs_zh-CN\\users\\workflows.md": {
+    "mtime": 1778210192.0,
+    "hash": "3b153de6e5198e6872f0b9a99639392d"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\skills\\andrej-karpathy\\SKILL.md": {
+    "mtime": 1778210192.0,
+    "hash": "7f1908138a9908c87d508fa52db880f6"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\skill_categorization\\docs\\maintainers\\smart-auto-categorization.md": {
+    "mtime": 1778210192.0,
+    "hash": "b46c19e573eb46eeeeb1be722a91ccdf"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\tools\\requirements.txt": {
+    "mtime": 1778210192.0,
+    "hash": "4dc7b870138f3f12910c4992ac99d028"
+  },
+  "D:\\Veilpay\\packages\\contracts-evm\\DEPLOYMENT.md": {
+    "mtime": 1778210192.0,
+    "hash": "3d2dc87395d59ec50751ac9a5c115ba3"
+  },
+  "D:\\Veilpay\\plans\\AUDIT_REPORT.md": {
+    "mtime": 1778354256.4093885,
+    "hash": "058ad8147a5ad009eaf064df39b743b8"
+  },
+  "D:\\Veilpay\\plans\\consumer-app-production-audit.md": {
+    "mtime": 1778210192.0,
+    "hash": "6f53bc0f6a6ad9fdd91ec26b28ee5c04"
+  },
+  "D:\\Veilpay\\plans\\full_stack_audit.md": {
+    "mtime": 1778210192.0,
+    "hash": "a560d2fe3f41c5ea9a3f583f696d34fc"
+  },
+  "D:\\Veilpay\\plans\\implementation_plan.md": {
+    "mtime": 1778210192.0,
+    "hash": "310d200d7fb583185099b564b754816e"
+  },
+  "D:\\Veilpay\\plans\\ROADMAP.md": {
+    "mtime": 1778356080.1222513,
+    "hash": "bd1347a54572c031076bf15c830f12d5"
+  },
+  "D:\\Veilpay\\Logo.png": {
+    "mtime": 1778210192.0,
+    "hash": "83b9bb843b8779260ed464d2046f273c"
+  },
+  "D:\\Veilpay\\VeilPay Workflow.svg": {
+    "mtime": 1778210192.0,
+    "hash": "6ac87a3f589826492495a651c888f11b"
+  },
+  "D:\\Veilpay\\VeilPay.png": {
+    "mtime": 1778210192.0,
+    "hash": "03803d6b0bc459781b8c2e8940b6895c"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\mm.svg": {
+    "mtime": 1778210192.0,
+    "hash": "d206794f79a670efe19d23659fe7ccec"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\tw.svg": {
+    "mtime": 1778210192.0,
+    "hash": "8745be19ad9b2e048f71b430c6c66d04"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\wc.svg": {
+    "mtime": 1778210192.0,
+    "hash": "b6ec25f7571dbf17f24c11ca9b06e8b8"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\assets\\android-icon-background.png": {
+    "mtime": 1778210192.0,
+    "hash": "2d65569cc0e2afdcea0af9f9902d4173"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\assets\\android-icon-foreground.png": {
+    "mtime": 1778210192.0,
+    "hash": "72e71a9c846c6aa4ae32476641a00e18"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\assets\\android-icon-monochrome.png": {
+    "mtime": 1778210192.0,
+    "hash": "1e097dab989759fc0b69440092ca22cd"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\assets\\favicon.png": {
+    "mtime": 1778210192.0,
+    "hash": "d9f444efbdfbe7931aa93beada07318a"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\assets\\icon.png": {
+    "mtime": 1778210192.0,
+    "hash": "cb975bba2216ce10a60e6c0ffe9941a2"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\assets\\logo-full.png": {
+    "mtime": 1778210192.0,
+    "hash": "03803d6b0bc459781b8c2e8940b6895c"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\assets\\logo-icon.png": {
+    "mtime": 1778210192.0,
+    "hash": "83b9bb843b8779260ed464d2046f273c"
+  },
+  "D:\\Veilpay\\apps\\consumer-app\\assets\\splash-icon.png": {
+    "mtime": 1778210192.0,
+    "hash": "97dae5a0e62ad8551d8a31897b425e63"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\public\\social-card.svg": {
+    "mtime": 1778210192.0,
+    "hash": "6a59cebf1c59cc53a5c1189850a54da2"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\public\\vite.svg": {
+    "mtime": 1778210192.0,
+    "hash": "8e3a10e157f75ada21ab742c022d5430"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\apps\\web-app\\src\\assets\\react.svg": {
+    "mtime": 1778210192.0,
+    "hash": "f0402b67b6ce880f65666bb49e841696"
+  },
+  "D:\\Veilpay\\packages\\antigravity-utils\\assets\\star-history.png": {
+    "mtime": 1778210192.0,
+    "hash": "9084847b4e818892767b409f49998ac7"
+  }
+}

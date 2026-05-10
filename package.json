@@ -15,6 +15,8 @@
     "db:up": "docker-compose up -d",
     "db:down": "docker-compose down",
     "db:migrate": "pnpm --filter @veilpay/backend db:migrate",
+    "build:backend": "turbo run build --filter=@veilpay/backend...",
+    "build:indexer": "turbo run build --filter=@veilpay/indexer...",
     "backend:dev": "pnpm --filter @veilpay/backend dev",
     "indexer:dev": "pnpm --filter @veilpay/indexer dev",
     "consumer:dev": "pnpm --filter @veilpay/consumer-app start"

@@ -25,6 +25,7 @@
     "@types/node-fetch": "^2.6.11",
     "@types/ws": "^8.5.10",
     "typescript": "^5.4.0",
-    "tsx": "^4.7.0"
+    "tsx": "^4.7.0",
+    "prisma": "^5.22.0"
   }
 }

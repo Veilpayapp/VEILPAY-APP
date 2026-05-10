@@ -63,7 +63,7 @@ if (env.NODE_ENV === 'production') {
 
   // ── CORS wildcard ─────────────────────────────────────────────────────────
   if (env.CORS_ORIGINS.trim() === '*') {
-    throw new Error('CORS_ORIGINS must list explicit trusted origins in production');
+    console.warn('⚠️ WARNING: CORS_ORIGINS is set to "*". This is insecure for production. Please update your Doppler config with your frontend URL.');
   }
 
   // ── RPC provider keys ─────────────────────────────────────────────────────

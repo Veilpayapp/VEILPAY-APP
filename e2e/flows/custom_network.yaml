@@ -1,0 +1,20 @@
+# Custom network flow
+# Flow: launch → settings → add custom network
+
+appId: com.veilpay.consumer
+---
+- launchApp
+- assertVisible: "Home"
+- tapOn: "Settings"
+- assertVisible: "Settings"
+- tapOn: "Networks"
+- assertVisible: "Networks"
+- tapOn: "Add Custom Network"
+- assertVisible: "Add Network"
+- inputText:
+    text: "Custom Chain"
+- inputText:
+    text: "https://rpc.example.com"
+- tapOn: "Save"
+- assertVisible: "Networks"
+- assertVisible: "Custom Chain"

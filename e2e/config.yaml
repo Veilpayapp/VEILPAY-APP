@@ -1,0 +1,6 @@
+appId: com.veilpay.consumer
+env:
+  MAESTRO_APP_ID: com.veilpay.consumer
+  VEILPAY_NETWORK: sepolia
+onFlowStart:
+  - launchApp

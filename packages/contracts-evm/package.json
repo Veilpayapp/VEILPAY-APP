@@ -1,0 +1,23 @@
+{
+  "name": "@veilpay/contracts-evm",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test",
+    "test:verbose": "forge test -vvvv",
+    "clean": "forge clean",
+    "lint": "forge fmt --check",
+    "fmt": "forge fmt",
+    "deploy:sepolia": "forge script script/DeployAll.s.sol:DeployAll --rpc-url sepolia --broadcast --verify",
+    "deploy:goerli": "forge script script/DeployAll.s.sol:DeployAll --rpc-url goerli --broadcast --verify",
+    "deploy:mumbai": "forge script script/DeployAll.s.sol:DeployAll --rpc-url mumbai --broadcast --verify",
+    "deploy:verifier": "forge script script/DeployVerifier.s.sol:DeployVerifier --rpc-url",
+    "deploy:registry": "forge script script/DeployRegistry.s.sol:DeployRegistry --rpc-url",
+    "deploy:pool": "forge script script/DeployPool.s.sol:DeployPool --rpc-url",
+    "verify": "forge verify-contract"
+  },
+  "devDependencies": {
+    "forge-std": "github:foundry-rs/forge-std#v1.8.1"
+  }
+}

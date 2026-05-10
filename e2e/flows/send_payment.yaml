@@ -1,0 +1,19 @@
+# Payment flow
+# Flow: launch → home → send → input recipient/amount
+
+appId: com.veilpay.consumer
+---
+- launchApp
+- assertVisible: "Home"
+- tapOn: "Send"
+- assertVisible: "Send Payment"
+- assertVisible: "Enter.*address"
+- inputText:
+    text: "0x1111111111111111111111111111111111111111"
+- assertNotVisible: "Enter a valid"
+- assertVisible: "Amount"
+- inputText:
+    text: "0.01"
+- assertNotVisible: "greater than 0"
+- tapOn: "Next"
+- assertVisible: "Confirm"

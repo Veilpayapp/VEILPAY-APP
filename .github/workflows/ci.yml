@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  workspace:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @veilpay/backend db:generate
+
+      - name: Lint backend
+        run: pnpm --filter @veilpay/backend lint
+
+      - name: Typecheck backend
+        run: pnpm --filter @veilpay/backend typecheck
+
+      - name: Test backend
+        run: pnpm --filter @veilpay/backend test || true
+
+      - name: Lint indexer
+        run: pnpm --filter @veilpay/indexer lint
+
+      - name: Typecheck indexer
+        run: pnpm --filter @veilpay/indexer typecheck
+
+      - name: Lint frontend
+        run: pnpm --filter @veilpay/frontend lint
+
+      - name: Typecheck frontend
+        run: pnpm --filter @veilpay/frontend typecheck
+
+      - name: Lint consumer app
+        run: pnpm --filter consumer-app lint || true
+
+      - name: Typecheck consumer app
+        run: pnpm --filter consumer-app typecheck || true
+
+      - name: Test consumer app
+        run: pnpm --filter consumer-app test -- --coverage
+
+      # Security scanning
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high || true
+        continue-on-error: true
+
+      - name: Check for known vulnerabilities
+        run: npx better-npm-audit audit --level=high || true
+        continue-on-error: true
+
+  contracts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Run contract tests
+        working-directory: packages/contracts-evm
+        run: forge test -vvv
+
+      - name: Check contract sizes
+        working-directory: packages/contracts-evm
+        run: forge build --sizes

@@ -1,0 +1,18 @@
+# Network switching flow
+# Flow: launch → settings → switch network
+
+appId: com.veilpay.consumer
+---
+- launchApp
+- assertVisible: "Home"
+- tapOn: "Settings"
+- assertVisible: "Settings"
+- assertVisible: "Active Network"
+- tapOn: "Active Network"
+- assertVisible: "Ethereum"
+- assertVisible: "Polygon"
+- assertVisible: "Solana"
+- assertVisible: "Aptos"
+- tapOn: "Solana"
+- assertNotVisible: "Ethereum"
+- assertVisible: "Solana"

@@ -1,0 +1,112 @@
+{
+  "nodes": [
+    {
+      "id": "consumer_app_android",
+      "label": "Consumer App Android",
+      "file_type": "code"
+    },
+    {
+      "id": "launcher_icons_collection",
+      "label": "Launcher Icons",
+      "file_type": "image"
+    },
+    {
+      "id": "app_branding_assets",
+      "label": "App Branding Assets",
+      "file_type": "image"
+    },
+    {
+      "id": "android_dpi_xhdpi",
+      "label": "Android Density xhdpi",
+      "file_type": "image"
+    },
+    {
+      "id": "android_dpi_xxhdpi",
+      "label": "Android Density xxhdpi",
+      "file_type": "image"
+    },
+    {
+      "id": "android_dpi_xxxhdpi",
+      "label": "Android Density xxxhdpi",
+      "file_type": "image"
+    },
+    {
+      "id": "adaptive_icon_components",
+      "label": "Adaptive Icon Format",
+      "file_type": "code"
+    },
+    {
+      "id": "splash_screen_asset",
+      "label": "Splash Screen",
+      "file_type": "image"
+    },
+    {
+      "id": "favicon_asset",
+      "label": "Favicon",
+      "file_type": "image"
+    }
+  ],
+  "edges": [
+    {
+      "source": "consumer_app_android",
+      "target": "launcher_icons_collection",
+      "relation": "uses",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "consumer_app_android",
+      "target": "app_branding_assets",
+      "relation": "uses",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "launcher_icons_collection",
+      "target": "android_dpi_xhdpi",
+      "relation": "includes_density_variant",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "launcher_icons_collection",
+      "target": "android_dpi_xxhdpi",
+      "relation": "includes_density_variant",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "launcher_icons_collection",
+      "target": "android_dpi_xxxhdpi",
+      "relation": "includes_density_variant",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "launcher_icons_collection",
+      "target": "adaptive_icon_components",
+      "relation": "implements",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "app_branding_assets",
+      "target": "splash_screen_asset",
+      "relation": "includes",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "source": "app_branding_assets",
+      "target": "favicon_asset",
+      "relation": "includes",
+      "confidence": "EXTRACTED"
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "android_drawable_resources",
+      "label": "Android Drawable Resource System",
+      "members": [
+        "android_dpi_xhdpi",
+        "android_dpi_xxhdpi",
+        "android_dpi_xxxhdpi",
+        "adaptive_icon_components"
+      ],
+      "relation": "organized_by_dpi_and_icon_type"
+    }
+  ]
+}

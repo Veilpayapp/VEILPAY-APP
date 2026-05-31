@@ -37,12 +37,12 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-  healthcheck:
-    # Fix: use redis-cli with -a flag when password is set
-    test: ["CMD-SHELL", "redis-cli $${REDIS_PASSWORD:+-a $$REDIS_PASSWORD} ping"]
-    interval: 10s
-    timeout: 5s
-    retries: 5
+    healthcheck:
+      # Fix: use redis-cli with -a flag when password is set
+      test: ["CMD-SHELL", "redis-cli $${REDIS_PASSWORD:+-a $$REDIS_PASSWORD} ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   anvil:
     image: ghcr.io/foundry-rs/foundry:latest

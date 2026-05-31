@@ -8,14 +8,12 @@
 import React from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  Text,  StyleSheet,  TouchableOpacity,
   StatusBar,
   ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme, useStyles, typography } from '../styles/design-tokens';
+import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 import { SCREENS } from '../constants/screens';
 import { Logo } from '../components/Logo';
 import { SovereignCard } from "../components/SovereignCard";
@@ -56,7 +54,7 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.surfaceScreen} />
 
-      <Animated.View entering={FadeInDown.duration(260)} style={styles.animatedContent}>
+      <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={styles.animatedContent}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <Logo variant="manual" size="small" />
@@ -106,7 +104,7 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surfaceScreen },
   animatedContent: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 48, paddingTop: 12 },

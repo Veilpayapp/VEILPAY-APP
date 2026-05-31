@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import { withRedisLock } from "./redisLock";
 
 const EXPIRY_CHECK_INTERVAL_MS = 60 * 1000;
 
@@ -11,12 +12,20 @@ export function startInvoiceExpiryWorker(): void {
 
   console.log("[InvoiceExpiry] Starting invoice expiry worker");
 
-  intervalHandle = setInterval(async () => {
-    try {
-      await expirePendingInvoices();
-    } catch (error) {
-      console.error("[InvoiceExpiry] Error during expiry sweep:", error);
-    }
+  // setInterval expects `() => void`; an `async` callback returns a
+  // Promise that no caller awaits, so we wrap the async work in a
+  // synchronous handler that swallows rejections (and logs them) to
+  // satisfy `no-misused-promises`.
+  intervalHandle = setInterval(() => {
+    void (async () => {
+      try {
+        await withRedisLock('invoice_expiry', 50000, async () => {
+          await expirePendingInvoices();
+        });
+      } catch (error) {
+        console.error("[InvoiceExpiry] Error during expiry sweep:", error);
+      }
+    })();
   }, EXPIRY_CHECK_INTERVAL_MS);
 }
 

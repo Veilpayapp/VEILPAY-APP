@@ -1,0 +1,34 @@
+    // ---- VeilPay Groth16Verifier wrapper (injected by compile.sh) ----
+    // Public inputs: [merkleRoot, nullifierHash, recipient, amount]
+    //   — see design.md §Public input ordering contract.
+    //
+    // The snarkjs-generated `verifyProof(uint[2],uint[2][2],uint[2],uint[N])`
+    // is renamed `_verifyProofRaw` by the post-process step so this wrapper
+    // can take the canonical public ABI name `verifyProof(bytes, bytes32[])`.
+
+    function verifyProof(
+        bytes calldata proof,
+        bytes32[] calldata publicInputs
+    ) external view returns (bool) {
+        if (publicInputs.length != 4) return false;
+        if (proof.length == 0) return false;
+        try this._decodeAndVerify(proof, publicInputs) returns (bool ok) {
+            return ok;
+        } catch {
+            return false;
+        }
+    }
+
+    function _decodeAndVerify(
+        bytes calldata proof,
+        bytes32[] calldata publicInputs
+    ) external view returns (bool) {
+        (uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c) =
+            abi.decode(proof, (uint256[2], uint256[2][2], uint256[2]));
+        uint256[4] memory pub;
+        pub[0] = uint256(publicInputs[0]); // merkleRoot
+        pub[1] = uint256(publicInputs[1]); // nullifierHash
+        pub[2] = uint256(publicInputs[2]); // recipient
+        pub[3] = uint256(publicInputs[3]); // amount
+        return _verifyProofRaw(a, b, c, pub);
+    }

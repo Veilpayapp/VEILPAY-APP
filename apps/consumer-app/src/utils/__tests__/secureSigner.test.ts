@@ -1,42 +1,30 @@
-jest.mock('ethers', () => {
-  const mockSendTransaction = jest.fn();
-  const mockConnectedWallet = { sendTransaction: mockSendTransaction };
-  const mockWallet = {
-    address: '0x3333333333333333333333333333333333333333',
-    connect: jest.fn(() => mockConnectedWallet),
-  };
+import { signAndSendTransaction, deriveAddressFromStoredMnemonic, replaceTransaction, generateBiometricToken, _biometricTokenCount } from '../secureSigner';
+import { getStoredMnemonic, TransactionError } from '../transactions';
+import { poolCall, getPoolProvider } from '../rpcPool';
+import { estimateTransactionGas } from '../gasEstimator';
+import { createWalletClient, parseEther, formatEther } from 'viem';
+import { mnemonicToAccount } from 'viem/accounts';
 
-  return {
-    ethers: {
-      parseEther: jest.fn((value: string) => {
-        if (value === '1') return 1_000_000_000_000_000_000n;
-        return BigInt(Math.floor(Number(value) * 1e18));
-      }),
-      formatEther: jest.fn((value: bigint) => (Number(value) / 1e18).toString()),
-    },
-    Mnemonic: {
-      fromPhrase: jest.fn(() => ({ phrase: 'mock mnemonic phrase' })),
-    },
-    HDNodeWallet: {
-      fromMnemonic: jest.fn(() => mockWallet),
-    },
-    Wallet: {},
-    TransactionResponse: {},
-    __mockWallet: mockWallet,
-    __mockConnectedWallet: mockConnectedWallet,
-    __mockSendTransaction: mockSendTransaction,
-  };
-});
+jest.mock('viem', () => ({
+  parseEther: jest.fn((val: string) => BigInt(Math.floor(Number(val) * 1e18))),
+  formatEther: jest.fn((val: bigint) => (Number(val) / 1e18).toString()),
+  createWalletClient: jest.fn(),
+  custom: jest.fn(() => 'custom_transport'),
+}));
+
+jest.mock('viem/accounts', () => ({
+  mnemonicToAccount: jest.fn(),
+}));
 
 jest.mock('../rpcPool', () => ({
   poolCall: jest.fn(),
+  getPoolProvider: jest.fn(),
 }));
 
 jest.mock('../transactions', () => ({
   getStoredMnemonic: jest.fn(),
-  TransactionError: class TransactionError extends Error {
+  TransactionError: class extends Error {
     code: string;
-
     constructor(message: string, code: string) {
       super(message);
       this.name = 'TransactionError';
@@ -44,8 +32,7 @@ jest.mock('../transactions', () => ({
     }
   },
   NETWORKS: {
-    ethereum: { chainId: 1 },
-    sepolia: { chainId: 11155111 },
+    ethereum: { chainId: 1, name: 'Ethereum', symbol: 'ETH', rpcUrl: 'https://eth.rpc' },
   },
 }));
 
@@ -58,16 +45,12 @@ jest.mock('../sentry', () => ({
   addBreadcrumb: jest.fn(),
 }));
 
-const { HDNodeWallet, Mnemonic, __mockSendTransaction, __mockWallet } = require('ethers');
-const { poolCall } = require('../rpcPool');
-const { getStoredMnemonic, TransactionError } = require('../transactions');
-const { estimateTransactionGas } = require('../gasEstimator');
-const {
-  signAndSendTransaction,
-  deriveAddressFromStoredMnemonic,
-} = require('../secureSigner');
-
 describe('secureSigner', () => {
+  const mockAccount = { address: '0x3333333333333333333333333333333333333333' };
+  const mockWalletClient = {
+    sendTransaction: jest.fn(),
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -76,70 +59,219 @@ describe('secureSigner', () => {
       'abandon', 'abandon', 'abandon', 'abandon', 'abandon', 'about',
     ]);
 
-    (poolCall as jest.Mock).mockImplementation(async (_chainKey: string, fn: (provider: unknown) => Promise<unknown>) => {
+    (mnemonicToAccount as jest.Mock).mockReturnValue(mockAccount);
+    (createWalletClient as jest.Mock).mockReturnValue(mockWalletClient);
+
+    (poolCall as jest.Mock).mockImplementation(async (chainKey: string, fn: any) => {
       const provider = {
-        getBalance: jest.fn().mockResolvedValue(2_000_000_000_000_000_000n),
+        getBalance: jest.fn().mockResolvedValue(2000000000000000000n), // 2 ETH
       };
-      return fn(provider as never);
+      return fn(provider);
     });
 
     (estimateTransactionGas as jest.Mock).mockResolvedValue({
-      gasLimit: 21_000n,
+      gasLimit: 21000n,
       maxFeePerGas: 2n,
       maxPriorityFeePerGas: 1n,
       gasPrice: 2n,
-      estimatedCostWei: 42n,
-      estimatedCostEth: '0.000000000000000042',
-      estimatedCostUsd: '0.00',
+      estimatedCostWei: 42000n,
+      estimatedCostEth: '0.000042',
+      estimatedCostUsd: '0.10',
       isStale: false,
       fetchedAt: Date.now(),
     });
 
-    __mockSendTransaction.mockResolvedValue({ hash: '0xabc123' });
+    mockWalletClient.sendTransaction.mockResolvedValue('0xabc123');
   });
 
-  it('derives the stored wallet address without exposing mnemonic material', async () => {
-    const address = await deriveAddressFromStoredMnemonic();
-
-    expect(address).toBe('0x3333333333333333333333333333333333333333');
-    expect(Mnemonic.fromPhrase).toHaveBeenCalledTimes(1);
-    expect(HDNodeWallet.fromMnemonic).toHaveBeenCalledTimes(1);
-  });
-
-  it('signs and broadcasts a transaction using a scope-local mnemonic', async () => {
-    const result = await signAndSendTransaction(
-      {
-        to: '0x1111111111111111111111111111111111111111',
-        value: '1',
-      },
-      'ethereum',
-      3200
-    );
-
-    expect(result.hash).toBe('0xabc123');
-    expect(result.chainId).toBe(1);
-    expect(result.gasEstimate.estimatedCostUsd).toBe('0.00');
-    expect(getStoredMnemonic).toHaveBeenCalledTimes(1);
-    expect(estimateTransactionGas).toHaveBeenCalledTimes(1);
-    expect(__mockWallet.connect).toHaveBeenCalledTimes(1);
-    expect(__mockSendTransaction).toHaveBeenCalledTimes(1);
-  });
-
-  it('rejects invalid recipient addresses before touching mnemonic storage', async () => {
-    await expect(
-      signAndSendTransaction(
-        {
-          to: 'not-an-address',
-          value: '1',
-        },
-        'ethereum'
-      )
-    ).rejects.toMatchObject({
-      name: 'TransactionError',
-      code: 'INVALID_ADDRESS',
+  describe('deriveAddressFromStoredMnemonic', () => {
+    it('returns the derived address', async () => {
+      const address = await deriveAddressFromStoredMnemonic();
+      expect(address).toBe(mockAccount.address);
+      expect(mnemonicToAccount).toHaveBeenCalledWith('abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about', { path: "m/44'/60'/0'/0/0" });
     });
 
-    expect(getStoredMnemonic).not.toHaveBeenCalled();
-    expect(poolCall).not.toHaveBeenCalled();
+    it('returns null if no mnemonic', async () => {
+      (getStoredMnemonic as jest.Mock).mockResolvedValueOnce(null);
+      const address = await deriveAddressFromStoredMnemonic();
+      expect(address).toBeNull();
+    });
+  });
+
+  describe('signAndSendTransaction', () => {
+    it('signs and broadcasts a transaction', async () => {
+      const result = await signAndSendTransaction(
+        { to: '0x1111111111111111111111111111111111111111', value: '1' },
+        'ethereum'
+      );
+      expect(result.hash).toBe('0xabc123');
+      expect(result.chainId).toBe(1);
+      expect(mockWalletClient.sendTransaction).toHaveBeenCalled();
+    });
+
+    it('rejects invalid recipient address', async () => {
+      await expect(
+        signAndSendTransaction({ to: 'not-an-address', value: '1' }, 'ethereum')
+      ).rejects.toThrow('Invalid recipient address');
+    });
+
+    it('rejects unsupported network', async () => {
+      await expect(
+        signAndSendTransaction({ to: '0x1111111111111111111111111111111111111111', value: '1' }, 'unknown')
+      ).rejects.toThrow('Unsupported network: unknown');
+    });
+
+    it('throws insufficient funds if balance is too low', async () => {
+      (poolCall as jest.Mock).mockImplementation(async (chainKey: string, fn: any) => {
+        const provider = {
+          getBalance: jest.fn().mockResolvedValue(10n), // Very low balance
+        };
+        return fn(provider);
+      });
+
+      await expect(
+        signAndSendTransaction({ to: '0x1111111111111111111111111111111111111111', value: '1' }, 'ethereum')
+      ).rejects.toThrow(/Insufficient funds/);
+    });
+
+    it('throws if amount is zero or invalid', async () => {
+      (parseEther as jest.Mock).mockReturnValueOnce(0n);
+      await expect(
+        signAndSendTransaction({ to: '0x1111111111111111111111111111111111111111', value: '0' }, 'ethereum')
+      ).rejects.toThrow('Transaction value must be greater than zero');
+
+      (parseEther as jest.Mock).mockImplementationOnce(() => { throw new Error('invalid'); });
+      await expect(
+        signAndSendTransaction({ to: '0x1111111111111111111111111111111111111111', value: 'invalid' }, 'ethereum')
+      ).rejects.toThrow('Invalid ETH amount: invalid');
+    });
+
+    it('throws if no mnemonic found', async () => {
+      (getStoredMnemonic as jest.Mock).mockResolvedValueOnce([]);
+      await expect(
+        signAndSendTransaction({ to: '0x1111111111111111111111111111111111111111', value: '1' }, 'ethereum')
+      ).rejects.toThrow('No wallet found');
+    });
+
+    it('handles unexpected error in signing', async () => {
+      (poolCall as jest.Mock).mockRejectedValueOnce(new Error('Unexpected poolCall error'));
+      await expect(
+        signAndSendTransaction({ to: '0x1111111111111111111111111111111111111111', value: '1' }, 'ethereum')
+      ).rejects.toThrow('Unexpected poolCall error');
+    });
+
+    it('uses biometric token and checks count', async () => {
+      const token = generateBiometricToken();
+      expect(_biometricTokenCount()).toBe(1);
+      const result = await signAndSendTransaction(
+        { to: '0x1111111111111111111111111111111111111111', value: '1' },
+        'ethereum',
+        undefined,
+        token
+      );
+      expect(result.hash).toBe('0xabc123');
+      expect(_biometricTokenCount()).toBe(0);
+    });
+  });
+
+  describe('replaceTransaction', () => {
+    it('speeds up a transaction', async () => {
+      (poolCall as jest.Mock).mockImplementation(async (chainKey: string, fn: any) => {
+        const provider = {
+          getTransaction: jest.fn().mockResolvedValue({
+            hash: '0xold',
+            blockNumber: null,
+            nonce: 1,
+            to: '0x1111111111111111111111111111111111111111',
+            value: 1000n,
+            gas: 21000n,
+            maxFeePerGas: 100n,
+            maxPriorityFeePerGas: 10n,
+          }),
+          estimateFeesPerGas: jest.fn().mockResolvedValue({
+            maxFeePerGas: 150n,
+            maxPriorityFeePerGas: 15n,
+          }),
+        };
+        return fn(provider);
+      });
+
+      const result = await replaceTransaction({
+        originalTxHash: '0xold',
+        chainKey: 'ethereum',
+        mode: 'speedup',
+      });
+      expect(result.hash).toBe('0xabc123');
+      expect(mockWalletClient.sendTransaction).toHaveBeenCalled();
+    });
+
+    it('cancels a transaction', async () => {
+      (poolCall as jest.Mock).mockImplementation(async (chainKey: string, fn: any) => {
+        const provider = {
+          getTransaction: jest.fn().mockResolvedValue({
+            hash: '0xold',
+            blockNumber: null,
+            nonce: 1,
+            to: '0x1111111111111111111111111111111111111111',
+            value: 1000n,
+            gas: 21000n,
+          }),
+          estimateFeesPerGas: jest.fn().mockResolvedValue({
+            maxFeePerGas: 150n,
+            maxPriorityFeePerGas: 15n,
+          }),
+        };
+        return fn(provider);
+      });
+
+      const result = await replaceTransaction({
+        originalTxHash: '0xold',
+        chainKey: 'ethereum',
+        mode: 'cancel',
+      });
+      expect(result.hash).toBe('0xabc123');
+      const txArgs = mockWalletClient.sendTransaction.mock.calls[0][0];
+      expect(txArgs.to).toBe(mockAccount.address);
+      expect(txArgs.value).toBe(0n);
+    });
+
+    it('throws if transaction already confirmed', async () => {
+      (poolCall as jest.Mock).mockImplementation(async (chainKey: string, fn: any) => {
+        const provider = {
+          getTransaction: jest.fn().mockResolvedValue({
+            hash: '0xold',
+            blockNumber: 1234,
+          }),
+        };
+        return fn(provider);
+      });
+
+      await expect(
+        replaceTransaction({
+          originalTxHash: '0xold',
+          chainKey: 'ethereum',
+          mode: 'speedup',
+        })
+      ).rejects.toThrow('Original transaction already confirmed');
+    });
+
+    it('throws if original tx not found', async () => {
+      (poolCall as jest.Mock).mockImplementation(async (chainKey: string, fn: any) => {
+        const provider = { getTransaction: jest.fn().mockResolvedValue(null) };
+        return fn(provider);
+      });
+      await expect(replaceTransaction({ originalTxHash: '0xold', chainKey: 'ethereum', mode: 'speedup' }))
+        .rejects.toThrow('Original transaction not found');
+    });
+
+    it('throws if no wallet is stored', async () => {
+      (getStoredMnemonic as jest.Mock).mockResolvedValueOnce([]);
+      (poolCall as jest.Mock).mockImplementation(async (chainKey: string, fn: any) => {
+        const provider = { getTransaction: jest.fn().mockResolvedValue({ hash: '0xold', blockNumber: null }) };
+        return fn(provider);
+      });
+      await expect(replaceTransaction({ originalTxHash: '0xold', chainKey: 'ethereum', mode: 'speedup' }))
+        .rejects.toThrow('No wallet found');
+    });
   });
 });

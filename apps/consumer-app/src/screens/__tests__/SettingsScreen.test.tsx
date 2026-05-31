@@ -32,6 +32,7 @@ jest.mock('../../stores/walletStore', () => ({
       disconnect: mockDisconnect,
     }),
   SUPPORTED_CHAINS: mockSupportedChains,
+  useThemeState: () => 'dark',
 }));
 
 jest.mock('../../hooks/useBiometrics', () => ({
@@ -84,13 +85,19 @@ jest.mock('../../components/ScreenBackButton', () => {
   };
 });
 
-jest.mock('../../components/NeoPop', () => {
+jest.mock('../../components/SovereignCard', () => {
   const React = require('react');
   const { View } = require('react-native');
-
   return {
-    NeoPopCard: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
-    NeoPopButton: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
+    SovereignCard: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
+  };
+});
+
+jest.mock('../../components/SovereignButton', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    SovereignButton: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
   };
 });
 
@@ -131,64 +138,29 @@ describe('SettingsScreen', () => {
     jest.restoreAllMocks();
   });
 
-  it('backs up the stored recovery phrase and shows a warning dialog', async () => {
-    const navigation = { goBack: jest.fn(), reset: jest.fn() };
+  it('navigates to the backup wallet screen', async () => {
+    const navigation = { goBack: jest.fn(), reset: jest.fn(), navigate: jest.fn() };
     const route = { key: 'Settings', name: 'Settings', params: undefined };
 
     const screen = render(<SettingsScreen navigation={navigation} route={route as any} />);
 
     fireEvent.press(screen.getByText('Backup Wallet'));
 
-    // C2 fix: biometric auth is required before exposing the mnemonic
     await waitFor(() => {
-      expect(mockAuthenticate).toHaveBeenCalledTimes(1);
-      expect(mockGetStoredMnemonic).toHaveBeenCalledTimes(1);
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Recovery Phrase',
-        expect.stringContaining('apple banana candy'),
-        expect.any(Array)
-      );
-    });
-
-    // C2 fix: clipboard copy only happens on explicit "Copy" button press
-    const alertButtons = (Alert.alert as jest.Mock).mock.calls[0][2];
-    await alertButtons[1].onPress();
-
-    await waitFor(() => {
-      expect(mockSetClipboardString).toHaveBeenCalledWith('apple banana candy');
-      expect(mockShowToast).toHaveBeenCalledWith('Recovery phrase copied', 'success');
+      expect(navigation.navigate).toHaveBeenCalledWith('BackupWallet');
     });
   });
 
-  it('exports the derived private key and shows a warning dialog', async () => {
-    const navigation = { goBack: jest.fn(), reset: jest.fn() };
+  it('navigates to the export private key screen', async () => {
+    const navigation = { goBack: jest.fn(), reset: jest.fn(), navigate: jest.fn() };
     const route = { key: 'Settings', name: 'Settings', params: undefined };
 
     const screen = render(<SettingsScreen navigation={navigation} route={route as any} />);
 
     fireEvent.press(screen.getByText('Export Private Key'));
 
-    // C2 fix: biometric auth is required before exposing the private key
     await waitFor(() => {
-      expect(mockAuthenticate).toHaveBeenCalledTimes(1);
-      expect(mockGetStoredMnemonic).toHaveBeenCalledTimes(1);
-      expect(mockDeriveWalletFromMnemonic).toHaveBeenCalledWith(['apple', 'banana', 'candy']);
-      expect(Alert.alert).toHaveBeenCalledWith(
-        'Private Key',
-        expect.stringContaining('0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef'),
-        expect.any(Array)
-      );
-    });
-
-    // C2 fix: clipboard copy only happens on explicit "Copy" button press
-    const alertButtons = (Alert.alert as jest.Mock).mock.calls[0][2];
-    await alertButtons[1].onPress();
-
-    await waitFor(() => {
-      expect(mockSetClipboardString).toHaveBeenCalledWith(
-        '0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef'
-      );
-      expect(mockShowToast).toHaveBeenCalledWith('Private key copied', 'success');
+      expect(navigation.navigate).toHaveBeenCalledWith('ExportPrivateKey');
     });
   });
 

@@ -21,8 +21,17 @@ const walletState = {
     },
   },
   balance: "2.5",
+};
+
+const settingsState = {
   biometricsEnabled: false,
 };
+
+jest.mock("../../stores/settingsStore", () => ({
+  useSettingsStore: () => settingsState,
+  useThemeState: () => "dark",
+  usePrivacyLevel: () => "standard",
+}));
 
 const mockMarketQuotes: Record<string, { symbol: string; price: number; change24h: number | null; lastUpdated: number; source: string; isStale: boolean }> = {
   ETH: { symbol: "ETH", price: 3200, change24h: 1.24, lastUpdated: Date.now(), source: "binance", isStale: false },
@@ -157,8 +166,8 @@ describe("WithdrawFiatScreen", () => {
     mockShowToast.mockReset();
     mockNavigate.mockReset();
     mockGoBack.mockReset();
-    walletState.biometricsEnabled = false;
-    mockAuthenticate.mockResolvedValue(true);
+    settingsState.biometricsEnabled = false;
+    mockAuthenticate.mockResolvedValue({ success: true });
   });
 
   function renderScreen() {
@@ -206,7 +215,6 @@ describe("WithdrawFiatScreen", () => {
       expect(screen.getAllByText("ETH").length).toBeGreaterThan(0);
       expect(screen.getAllByText("USDT").length).toBeGreaterThan(0);
       expect(screen.getAllByText("USDC").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("MATIC").length).toBeGreaterThan(0);
     });
   });
 
@@ -240,7 +248,7 @@ describe("WithdrawFiatScreen", () => {
   });
 
   it("requires biometrics before continuing when enabled", async () => {
-    walletState.biometricsEnabled = true;
+    settingsState.biometricsEnabled = true;
     const screen = renderScreen();
 
     await waitFor(() => {

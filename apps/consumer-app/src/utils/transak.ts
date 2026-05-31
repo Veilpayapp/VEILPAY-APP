@@ -230,10 +230,7 @@ export function estimateFiatPayout(cryptoAmount: number, cryptoPriceUsd: number,
 
 // ---------------------------------------------------------------------------
 // Formatters
-// ---------------------------------------------------------------------------
-
-export function formatFiat(amount: number, currency: FiatCurrency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+// ---------------------------------------------------------------------------export function formatFiat(amount: number, currency: FiatCurrency = 'USD'): string {  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,

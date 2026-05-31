@@ -1,0 +1,20 @@
+appId: com.veilpay.consumer
+---
+- launchApp:
+    clearState: true
+- stopApp
+# Simulate network degradation/offline
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - runScript: 'adb shell svc wifi disable; adb shell svc data disable'
+- launchApp
+- assertVisible: 'Retrying connection'
+# Re-enable network
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - runScript: 'adb shell svc wifi enable; adb shell svc data enable'
+- assertVisible: 'SEND'

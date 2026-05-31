@@ -1,0 +1,14 @@
+appId: com.veilpay.consumer
+---
+- launchApp
+- assertVisible: 'BUY CRYPTO'
+- tapOn: 'BUY CRYPTO'
+- assertVisible: 'Select Provider'
+- tapOn: 'Transak'
+- assertVisible: 'You Pay'
+- tapOn: '100'
+- hideKeyboard
+- tapOn: 'CONTINUE TO PAYMENT'
+- extendedWaitUntil:
+    visible: 'Transak Checkout'
+    timeout: 10000

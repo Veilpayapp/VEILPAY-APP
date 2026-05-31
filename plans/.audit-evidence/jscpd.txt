@@ -1,0 +1,1618 @@
+Clone found (tsx):
+ - [1m[32mpackages\antigravity-utils\apps\web-app\src\pages\__tests__\SkillDetail.test.tsx[39m[22m [191:10 - 213:19] (22 lines, 164 tokens)
+   [1m[32mpackages\antigravity-utils\apps\web-app\src\pages\__tests__\SkillDetail.test.tsx[39m[22m [186:28 - 198:20]
+
+Clone found (tsx):
+ - [1m[32mpackages\antigravity-utils\apps\web-app\src\pages\__tests__\SkillDetail.test.tsx[39m[22m [287:86 - 301:38] (14 lines, 107 tokens)
+   [1m[32mpackages\antigravity-utils\apps\web-app\src\pages\__tests__\SkillDetail.test.tsx[39m[22m [257:80 - 271:35]
+
+Clone found (tsx):
+ - [1m[32mpackages\antigravity-utils\apps\web-app\src\pages\__tests__\SkillDetail.security.test.tsx[39m[22m [40:5 - 50:67] (10 lines, 83 tokens)
+   [1m[32mpackages\antigravity-utils\apps\web-app\src\pages\__tests__\SkillDetail.test.tsx[39m[22m [257:80 - 267:36]
+
+Clone found (tsx):
+ - [1m[32mpackages\antigravity-utils\apps\web-app\src\pages\__tests__\Home.test.tsx[39m[22m [84:58 - 97:24] (13 lines, 93 tokens)
+   [1m[32mpackages\antigravity-utils\apps\web-app\src\pages\__tests__\Home.test.tsx[39m[22m [60:58 - 73:22]
+
+Clone found (tsx):
+ - [1m[32mpackages\antigravity-utils\apps\web-app\src\context\__tests__\SkillContext.test.tsx[39m[22m [132:57 - 152:4] (20 lines, 148 tokens)
+   [1m[32mpackages\antigravity-utils\apps\web-app\src\context\__tests__\SkillContext.test.tsx[39m[22m [89:20 - 110:10]
+
+Clone found (javascript):
+ - [1m[32mpackages\antigravity-utils\apps\web-app\src\__tests__\refresh-skills-plugin.security.test.js[39m[22m [129:37 - 140:68] (11 lines, 80 tokens)
+   [1m[32mpackages\antigravity-utils\apps\web-app\src\__tests__\refresh-skills-plugin.security.test.js[39m[22m [109:37 - 120:93]
+
+Clone found (javascript):
+ - [1m[32mpackages\antigravity-utils\apps\web-app\src\__tests__\refresh-skills-plugin.security.test.js[39m[22m [161:5 - 176:36] (15 lines, 110 tokens)
+   [1m[32mpackages\antigravity-utils\apps\web-app\src\__tests__\refresh-skills-plugin.security.test.js[39m[22m [142:5 - 157:36]
+
+Clone found (javascript):
+ - [1m[32mpackages\antigravity-utils\apps\web-app\src\__tests__\refresh-skills-plugin.security.test.js[39m[22m [189:29 - 200:62] (11 lines, 80 tokens)
+   [1m[32mpackages\antigravity-utils\apps\web-app\src\__tests__\refresh-skills-plugin.security.test.js[39m[22m [169:35 - 180:73]
+
+Clone found (tsx):
+ - [1m[32mpackages\antigravity-utils\apps\web-app\src\context\SkillContext.tsx[39m[22m [22:1 - 35:9] (13 lines, 128 tokens)
+   [1m[32mpackages\antigravity-utils\apps\web-app\src\pages\SkillDetail.tsx[39m[22m [22:1 - 35:7]
+
+Clone found (rust):
+ - [1m[32mpackages\contracts-solana\programs\veil_pool\src\lib.rs[39m[22m [112:19 - 118:28] (6 lines, 76 tokens)
+   [1m[32mpackages\contracts-solana\programs\veil_pool\src\lib.rs[39m[22m [102:17 - 108:27]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\synthesis\security.property.test.ts[39m[22m [77:30 - 94:4] (17 lines, 103 tokens)
+   [1m[32mpackages\auditor\src\passes\synthesis\security.ts[39m[22m [289:27 - 302:6]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\synthesis\security.property.test.ts[39m[22m [162:45 - 173:4] (11 lines, 90 tokens)
+   [1m[32mpackages\auditor\src\passes\synthesis\thresholds.property.test.ts[39m[22m [81:45 - 92:4]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\synthesis\security.property.test.ts[39m[22m [376:75 - 385:40] (9 lines, 86 tokens)
+   [1m[32mpackages\auditor\src\passes\synthesis\security.property.test.ts[39m[22m [356:54 - 365:72]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\staticAnalysis\strictMode.ts[39m[22m [268:48 - 276:13] (8 lines, 115 tokens)
+   [1m[32mpackages\auditor\src\passes\staticAnalysis\strictMode.ts[39m[22m [228:1 - 236:73]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\staticAnalysis\security.ts[39m[22m [433:7 - 440:40] (7 lines, 106 tokens)
+   [1m[32mpackages\auditor\src\passes\staticAnalysis\security.ts[39m[22m [361:5 - 368:12]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\staticAnalysis\probes.success.test.ts[39m[22m [1:1 - 13:21] (12 lines, 116 tokens)
+   [1m[32mpackages\auditor\src\passes\staticAnalysis\security.success.test.ts[39m[22m [1:1 - 13:22]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\staticAnalysis\probes.success.test.ts[39m[22m [5:1 - 23:6] (18 lines, 121 tokens)
+   [1m[32mpackages\auditor\src\passes\staticAnalysis\probes.test.ts[39m[22m [26:1 - 43:7]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\staticAnalysis\probes.success.test.ts[39m[22m [31:79 - 40:11] (9 lines, 115 tokens)
+   [1m[32mpackages\auditor\src\passes\staticAnalysis\security.success.test.ts[39m[22m [24:81 - 33:11]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\staticAnalysis\graphify.success.test.ts[39m[22m [1:1 - 14:21] (13 lines, 128 tokens)
+   [1m[32mpackages\auditor\src\passes\staticAnalysis\security.success.test.ts[39m[22m [1:1 - 14:23]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\staticAnalysis\graphify.success.test.ts[39m[22m [26:85 - 33:10] (7 lines, 109 tokens)
+   [1m[32mpackages\auditor\src\passes\staticAnalysis\security.success.test.ts[39m[22m [24:81 - 31:4]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\staticAnalysis\graphify.success.test.ts[39m[22m [85:7 - 92:37] (7 lines, 89 tokens)
+   [1m[32mpackages\auditor\src\passes\staticAnalysis\graphify.success.test.ts[39m[22m [53:7 - 60:37]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\staticAnalysis\graphify.property.test.ts[39m[22m [149:89 - 162:53] (13 lines, 114 tokens)
+   [1m[32mpackages\auditor\src\passes\staticAnalysis\graphify.property.test.ts[39m[22m [127:75 - 141:50]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_validation_warning_budget.py[39m[22m [60:61 - 66:45] (6 lines, 98 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_validation_warning_budget.py[39m[22m [32:62 - 38:45]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_validation_warning_budget.py[39m[22m [66:45 - 85:47] (19 lines, 85 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_validation_warning_budget.py[39m[22m [38:45 - 57:47]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_repo_metadata.py[39m[22m [2:1 - 24:19] (22 lines, 189 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_validation_warning_budget.py[39m[22m [3:1 - 25:15]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_microsoft_skills_security.py[39m[22m [71:65 - 81:25] (10 lines, 94 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_microsoft_skills_security.py[39m[22m [44:62 - 54:20]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_contributors.py[39m[22m [3:1 - 23:18] (20 lines, 181 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_validation_warning_budget.py[39m[22m [5:1 - 25:15]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_skills_manager_security.py[39m[22m [1:1 - 11:22] (10 lines, 75 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_microsoft_skills_security.py[39m[22m [1:1 - 11:29]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_repair_description_usage_summaries.py[39m[22m [1:1 - 24:20] (23 lines, 195 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_repo_metadata.py[39m[22m [1:1 - 25:15]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_maintainer_audit.py[39m[22m [1:1 - 25:17] (24 lines, 199 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_validation_warning_budget.py[39m[22m [1:1 - 25:15]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_maintainer_audit.py[39m[22m [66:47 - 89:72] (23 lines, 166 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_maintainer_audit.py[39m[22m [32:53 - 55:72]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_junta_tls_security.py[39m[22m [5:1 - 16:8] (11 lines, 103 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_office_unpack_security.py[39m[22m [6:1 - 17:9]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_junta_tls_security.py[39m[22m [11:1 - 21:13] (10 lines, 101 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_validation_warning_budget.py[39m[22m [15:1 - 25:15]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_generate_index_categories.py[39m[22m [2:1 - 19:92] (17 lines, 141 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_generate_index_security.py[39m[22m [3:1 - 20:81]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_frontmatter_parsing_security.py[39m[22m [1:1 - 19:9] (18 lines, 167 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_repo_metadata.py[39m[22m [1:1 - 20:8]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_frontmatter_parsing_security.py[39m[22m [14:1 - 23:15] (9 lines, 89 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_office_unpack_security.py[39m[22m [12:1 - 21:6]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_fix_truncated_descriptions.py[39m[22m [1:1 - 24:27] (23 lines, 195 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_repo_metadata.py[39m[22m [1:1 - 25:15]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_fix_skills_metadata_security.py[39m[22m [1:1 - 11:27] (10 lines, 75 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_microsoft_skills_security.py[39m[22m [1:1 - 11:29]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_fix_missing_skill_sections.py[39m[22m [1:1 - 24:27] (23 lines, 195 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_repo_metadata.py[39m[22m [1:1 - 25:15]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_fix_missing_skill_metadata.py[39m[22m [1:1 - 24:27] (23 lines, 195 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_repo_metadata.py[39m[22m [1:1 - 25:15]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_cleanup_synthetic_skill_sections.py[39m[22m [10:1 - 26:33] (16 lines, 167 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_validation_warning_budget.py[39m[22m [9:1 - 25:15]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_audit_skills.py[39m[22m [1:1 - 24:13] (23 lines, 195 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_sync_repo_metadata.py[39m[22m [1:1 - 25:15]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_audit_skills.py[39m[22m [129:4 - 136:68] (7 lines, 71 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_audit_skills.py[39m[22m [87:4 - 94:70]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_audit_consistency.py[39m[22m [1:1 - 25:18] (24 lines, 199 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_validation_warning_budget.py[39m[22m [1:1 - 25:15]
+
+Clone found (javascript):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\skill_utils_security.test.js[39m[22m [39:1 - 46:45] (7 lines, 98 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\skill_utils_security.test.js[39m[22m [17:1 - 24:49]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\inspect_microsoft_repo.py[39m[22m [17:1 - 83:17] (66 lines, 518 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_comprehensive_coverage.py[39m[22m [18:1 - 84:28]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\inspect_microsoft_repo.py[39m[22m [85:64 - 106:34] (21 lines, 162 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_comprehensive_coverage.py[39m[22m [89:66 - 110:34]
+
+Clone found (javascript):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\tests\copy_security.test.js[39m[22m [43:11 - 53:4] (10 lines, 78 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\setup_web_sync.test.js[39m[22m [26:50 - 36:4]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\render\renderAuditReport.ts[39m[22m [539:7 - 549:44] (10 lines, 129 tokens)
+   [1m[32mpackages\auditor\src\render\renderAuditReport.ts[39m[22m [515:9 - 524:4]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\reporting.test.ts[39m[22m [123:31 - 135:17] (12 lines, 116 tokens)
+   [1m[32mpackages\auditor\src\render\renderAuditReport.property.test.ts[39m[22m [355:5 - 367:19]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\reporting.modset.property.test.ts[39m[22m [88:37 - 101:7] (13 lines, 108 tokens)
+   [1m[32mpackages\auditor\src\passes\reporting.test.ts[39m[22m [37:43 - 51:79]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\reporting.modset.property.test.ts[39m[22m [340:40 - 354:19] (14 lines, 127 tokens)
+   [1m[32mpackages\auditor\src\passes\reporting.test.ts[39m[22m [99:17 - 113:19]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\reporting.modset.property.test.ts[39m[22m [428:1 - 436:79] (8 lines, 84 tokens)
+   [1m[32mpackages\auditor\src\render\renderAuditReport.property.test.ts[39m[22m [100:1 - 113:4]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\discovery.ts[39m[22m [232:40 - 243:9] (11 lines, 93 tokens)
+   [1m[32mpackages\auditor\src\passes\synthesis\specCoherence.ts[39m[22m [771:41 - 782:12]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\passes\discovery.test.ts[39m[22m [41:1 - 49:6] (8 lines, 104 tokens)
+   [1m[32mpackages\auditor\src\passes\staticAnalysis\probes.test.ts[39m[22m [52:1 - 64:4]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\models\finding.property.test.ts[39m[22m [81:45 - 90:4] (9 lines, 87 tokens)
+   [1m[32mpackages\auditor\src\passes\synthesis\thresholds.property.test.ts[39m[22m [81:45 - 92:4]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\cli\index.test.ts[39m[22m [8:14 - 13:11] (5 lines, 96 tokens)
+   [1m[32mpackages\auditor\src\cli\inProcess.test.ts[39m[22m [47:20 - 52:12]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\cli\cli.smoke.test.ts[39m[22m [131:1 - 137:72] (6 lines, 91 tokens)
+   [1m[32mpackages\auditor\src\cli\inProcess.test.ts[39m[22m [9:1 - 11:88]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\cli\cli.smoke.test.ts[39m[22m [315:3 - 321:82] (6 lines, 129 tokens)
+   [1m[32mpackages\auditor\src\cli\inProcess.test.ts[39m[22m [32:3 - 36:83]
+
+Clone found (typescript):
+ - [1m[32mpackages\auditor\src\cli\cli.smoke.test.ts[39m[22m [358:19 - 366:4] (8 lines, 124 tokens)
+   [1m[32mpackages\auditor\src\render\renderAuditReport.property.test.ts[39m[22m [623:18 - 630:11]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\validate_skills.py[39m[22m [17:5 - 33:21] (16 lines, 122 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\tests\test_comprehensive_coverage.py[39m[22m [45:5 - 64:4]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\update_readme.py[39m[22m [21:1 - 43:19] (22 lines, 157 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\validate_skills.py[39m[22m [12:1 - 64:23]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\sync_microsoft_skills.py[39m[22m [386:40 - 397:62] (11 lines, 85 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\sync_microsoft_skills.py[39m[22m [346:66 - 357:54]
+
+Clone found (javascript):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\pr_preflight.cjs[39m[22m [61:68 - 70:36] (9 lines, 95 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\release_workflow.js[39m[22m [27:57 - 36:32]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\manage_skill_dates.py[39m[22m [18:1 - 27:4] (9 lines, 78 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\tools\scripts\generate_index.py[39m[22m [6:1 - 16:18]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\manage_skill_dates.py[39m[22m [170:9 - 182:26] (12 lines, 137 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\manage_skill_dates.py[39m[22m [107:9 - 119:29]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\manage_skill_dates.py[39m[22m [201:5 - 212:8] (11 lines, 90 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\manage_skill_dates.py[39m[22m [157:5 - 167:18]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\manage_skill_dates.py[39m[22m [210:19 - 220:19] (10 lines, 108 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\manage_skill_dates.py[39m[22m [167:19 - 177:21]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\generate_skills_report.py[39m[22m [38:17 - 52:27] (14 lines, 148 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\manage_skill_dates.py[39m[22m [103:26 - 117:26]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\generate_index.py[39m[22m [8:1 - 18:15] (10 lines, 79 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\tools\scripts\generate_index.py[39m[22m [6:1 - 16:18]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\generate_index.py[39m[22m [799:35 - 810:31] (11 lines, 118 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\validate_skills.py[39m[22m [40:75 - 51:31]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\generate_index.py[39m[22m [810:1 - 839:15] (29 lines, 227 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\tools\scripts\generate_index.py[39m[22m [164:1 - 193:15]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\generate_index.py[39m[22m [845:5 - 859:15] (14 lines, 137 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\tools\scripts\generate_index.py[39m[22m [194:5 - 208:21]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\generate_index.py[39m[22m [862:13 - 872:23] (10 lines, 119 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\tools\scripts\generate_index.py[39m[22m [208:13 - 218:38]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\generate_index.py[39m[22m [872:17 - 889:58] (17 lines, 123 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\tools\scripts\generate_index.py[39m[22m [220:17 - 237:17]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\generate_index.py[39m[22m [887:49 - 896:95] (9 lines, 120 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\tools\scripts\generate_index.py[39m[22m [240:55 - 249:80]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\generate_index.py[39m[22m [917:17 - 944:45] (27 lines, 275 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\tools\scripts\generate_index.py[39m[22m [257:17 - 284:45]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\fix_year_2025_to_2026.py[39m[22m [10:1 - 18:17] (8 lines, 76 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\tools\scripts\generate_index.py[39m[22m [7:1 - 27:21]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\fix_truncated_descriptions.py[39m[22m [174:5 - 184:43] (10 lines, 104 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\repair_description_usage_summaries.py[39m[22m [187:5 - 197:41]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\fix_truncated_descriptions.py[39m[22m [192:77 - 207:103] (15 lines, 108 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\repair_description_usage_summaries.py[39m[22m [201:27 - 217:92]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\fix_truncated_descriptions.py[39m[22m [207:103 - 222:11] (15 lines, 151 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\repair_description_usage_summaries.py[39m[22m [218:5 - 233:16]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\fix_truncated_descriptions.py[39m[22m [238:9 - 257:21] (19 lines, 115 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\repair_description_usage_summaries.py[39m[22m [243:9 - 262:21]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\fix_missing_skill_sections.py[39m[22m [166:14 - 178:11] (12 lines, 142 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\repair_description_usage_summaries.py[39m[22m [226:13 - 227:20]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\fix_missing_skill_metadata.py[39m[22m [191:104 - 208:25] (17 lines, 161 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\fix_missing_skill_sections.py[39m[22m [160:5 - 226:17]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\cleanup_synthetic_skill_sections.py[39m[22m [93:125 - 110:24] (17 lines, 165 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\fix_missing_skill_metadata.py[39m[22m [190:117 - 225:16]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\auto_categorize_skills.py[39m[22m [16:1 - 25:28] (9 lines, 78 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\tools\scripts\generate_index.py[39m[22m [6:1 - 16:18]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\auto_categorize_skills.py[39m[22m [138:18 - 151:47] (13 lines, 142 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\fix_year_2025_to_2026.py[39m[22m [20:19 - 33:61]
+
+Clone found (python):
+ - [1m[32mpackages\antigravity-utils\tools\scripts\auto_categorize_skills.py[39m[22m [194:25 - 200:38] (6 lines, 76 tokens)
+   [1m[32mpackages\antigravity-utils\tools\scripts\fix_skills_metadata.py[39m[22m [49:17 - 53:22]
+
+Clone found (markdown):
+ - [1m[32mpackages\antigravity-utils\docs\sources\sources.md[39m[22m [63:1 - 75:3] (12 lines, 111 tokens)
+   [1m[32mpackages\antigravity-utils\docs_zh-CN\sources\sources.md[39m[22m [69:1 - 81:4]
+
+Clone found (markdown):
+ - [1m[32mpackages\antigravity-utils\docs\maintainers\smart-auto-categorization.md[39m[22m [7:1 - 48:4] (41 lines, 505 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\docs\maintainers\smart-auto-categorization.md[39m[22m [11:1 - 52:5]
+
+Clone found (markdown):
+ - [1m[32mpackages\antigravity-utils\docs\maintainers\smart-auto-categorization.md[39m[22m [59:1 - 210:3] (151 lines, 784 tokens)
+   [1m[32mpackages\antigravity-utils\skill_categorization\docs\maintainers\smart-auto-categorization.md[39m[22m [70:1 - 221:4]
+
+Clone found (typescript):
+ - [1m[32mpackages\antigravity-utils\docs\integrations\jetski-cortex.md[39m[22m [99:1 - 113:6] (14 lines, 119 tokens)
+   [1m[32mpackages\antigravity-utils\docs\integrations\jetski-gemini-loader\loader.ts[39m[22m [46:8 - 58:7]
+
+Clone found (markdown):
+ - [1m[32mpackages\antigravity-utils\docs\contributors\skill-anatomy.md[39m[22m [110:1 - 176:19] (66 lines, 184 tokens)
+   [1m[32mpackages\antigravity-utils\docs\contributors\skill-template.md[39m[22m [13:1 - 57:27]
+
+Clone found (yaml):
+ - [1m[32mpackages\antigravity-utils\.github\workflows\ci.yml[39m[22m [120:5 - 139:23] (19 lines, 124 tokens)
+   [1m[32mpackages\antigravity-utils\.github\workflows\ci.yml[39m[22m [69:5 - 88:21]
+
+Clone found (yaml):
+ - [1m[32mpackages\antigravity-utils\.github\workflows\ci.yml[39m[22m [177:5 - 207:34] (30 lines, 163 tokens)
+   [1m[32mpackages\antigravity-utils\.github\workflows\repo-hygiene.yml[39m[22m [14:5 - 97:30]
+
+Clone found (typescript):
+ - [1m[32mpackages\contracts-solana\tests\veil_pool.ts[39m[22m [165:48 - 181:8] (16 lines, 110 tokens)
+   [1m[32mpackages\contracts-solana\tests\veil_pool.ts[39m[22m [138:19 - 154:151]
+
+Clone found (typescript):
+ - [1m[32mpackages\contracts-solana\tests\veil_pool.ts[39m[22m [221:57 - 235:39] (14 lines, 88 tokens)
+   [1m[32mpackages\contracts-solana\tests\veil_pool.ts[39m[22m [179:12 - 194:60]
+
+Clone found (typescript):
+ - [1m[32mpackages\contracts-solana\tests\veil_pool.ts[39m[22m [246:15 - 257:41] (11 lines, 80 tokens)
+   [1m[32mpackages\contracts-solana\tests\veil_pool.ts[39m[22m [205:13 - 216:40]
+
+Clone found (typescript):
+ - [1m[32mpackages\contracts-solana\tests\veil_pool.ts[39m[22m [338:43 - 355:48] (17 lines, 118 tokens)
+   [1m[32mpackages\contracts-solana\tests\veil_pool.ts[39m[22m [304:12 - 322:52]
+
+Clone found (javascript):
+ - [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [138:42 - 152:21] (14 lines, 199 tokens)
+   [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [111:45 - 125:24]
+
+Clone found (javascript):
+ - [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [154:53 - 165:47] (11 lines, 97 tokens)
+   [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [127:53 - 138:42]
+
+Clone found (javascript):
+ - [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [165:47 - 179:19] (14 lines, 199 tokens)
+   [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [111:45 - 125:24]
+
+Clone found (javascript):
+ - [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [181:86 - 192:49] (11 lines, 88 tokens)
+   [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [127:92 - 138:42]
+
+Clone found (javascript):
+ - [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [192:49 - 206:29] (14 lines, 199 tokens)
+   [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [111:45 - 125:24]
+
+Clone found (javascript):
+ - [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [208:107 - 218:2] (10 lines, 81 tokens)
+   [1m[32mpackages\circuits\test\withdraw.test.js[39m[22m [127:107 - 138:5]
+
+Clone found (typescript):
+ - [1m[32mapps\indexer\src\indexers\__tests__\websocket.test.ts[39m[22m [304:48 - 309:83] (5 lines, 95 tokens)
+   [1m[32mapps\indexer\src\indexers\__tests__\websocket.test.ts[39m[22m [289:46 - 294:82]
+
+Clone found (typescript):
+ - [1m[32mapps\indexer\src\indexers\__tests__\index.test.ts[39m[22m [186:7 - 192:47] (6 lines, 67 tokens)
+   [1m[32mapps\indexer\src\indexers\__tests__\index.test.ts[39m[22m [159:7 - 165:47]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.test.ts[39m[22m [9:24 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\stealthEngine.test.ts[39m[22m [9:25 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\solanaSigner.test.ts[39m[22m [3:50 - 11:21] (8 lines, 101 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\stellarSigner.test.ts[39m[22m [2:70 - 10:22]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\solanaSigner.test.ts[39m[22m [42:22 - 53:24] (11 lines, 99 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\stellarSigner.test.ts[39m[22m [39:32 - 50:25]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\solanaRpcPool.test.ts[39m[22m [9:25 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\sentry.test.ts[39m[22m [9:18 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\secureSigner.test.ts[39m[22m [208:31 - 218:12] (10 lines, 111 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\secureSigner.test.ts[39m[22m [178:33 - 188:25]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\secureSigner.test.ts[39m[22m [217:23 - 230:23] (13 lines, 93 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\secureSigner.test.ts[39m[22m [189:37 - 202:24]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\rpcPool.test.ts[39m[22m [117:54 - 129:27] (12 lines, 120 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\rpcPool.test.ts[39m[22m [90:37 - 102:27]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\marketData.test.ts[39m[22m [6:1 - 30:9] (24 lines, 255 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\priceFeed.test.ts[39m[22m [6:1 - 29:7]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\marketData.test.ts[39m[22m [233:20 - 242:103] (9 lines, 93 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\marketData.test.ts[39m[22m [218:20 - 227:13]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\marketData.test.ts[39m[22m [307:78 - 314:20] (7 lines, 74 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\marketData.test.ts[39m[22m [221:44 - 227:19]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\marketData.test.ts[39m[22m [325:86 - 331:106] (6 lines, 78 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\marketData.test.ts[39m[22m [306:75 - 313:13]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\marketData.test.ts[39m[22m [346:90 - 356:4] (10 lines, 117 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\marketData.test.ts[39m[22m [325:85 - 317:7]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\envValidation.test.ts[39m[22m [7:25 - 19:58] (12 lines, 102 tokens)
+   [1m[32mapps\indexer\src\config\__tests__\index.test.ts[39m[22m [1:25 - 13:48]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\encryption.test.ts[39m[22m [9:22 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\directory.test.ts[39m[22m [9:21 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\chains.test.ts[39m[22m [9:18 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\balanceFetcher.test.ts[39m[22m [5:1 - 13:26] (8 lines, 85 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transactions.test.ts[39m[22m [1:1 - 9:24]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\balanceFetcher.test.ts[39m[22m [22:98 - 32:16] (10 lines, 79 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transactions.test.ts[39m[22m [9:49 - 19:2]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\balanceFetcher.test.ts[39m[22m [36:22 - 42:14] (6 lines, 101 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transactions.test.ts[39m[22m [18:15 - 24:2]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\aptosSigner.test.ts[39m[22m [1:61 - 10:20] (9 lines, 117 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\stellarSigner.test.ts[39m[22m [1:65 - 10:22]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\__tests__\analyticsEvents.test.ts[39m[22m [9:27 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\stores\__tests__\transactionStore.test.ts[39m[22m [9:28 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\stores\__tests__\settingsStore.test.ts[39m[22m [9:25 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\stores\__tests__\pendingCommitmentQueue.test.ts[39m[22m [9:34 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\stores\__tests__\commitmentStore.property.test.ts[39m[22m [80:1 - 92:6] (12 lines, 165 tokens)
+   [1m[32mapps\consumer-app\src\stores\__tests__\sensitiveKeyIsolation.property.test.ts[39m[22m [207:1 - 219:85]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\stores\__tests__\commitmentStore.property.test.ts[39m[22m [94:3 - 101:24] (7 lines, 115 tokens)
+   [1m[32mapps\consumer-app\src\stores\__tests__\sensitiveKeyIsolation.property.test.ts[39m[22m [221:3 - 228:22]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\stores\__tests__\commitmentStore.property.test.ts[39m[22m [102:76 - 113:32] (11 lines, 132 tokens)
+   [1m[32mapps\consumer-app\src\stores\__tests__\sensitiveKeyIsolation.property.test.ts[39m[22m [226:53 - 237:17]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\stores\__tests__\commitmentStore.property.test.ts[39m[22m [184:80 - 193:21] (9 lines, 95 tokens)
+   [1m[32mapps\consumer-app\src\stores\__tests__\commitmentStore.property.test.ts[39m[22m [146:71 - 154:21]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\stores\__tests__\addressBookStore.test.ts[39m[22m [9:28 - 21:4] (12 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\utils\__tests__\transak.test.ts[39m[22m [9:19 - 21:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\services\__tests__\relayerClient.property.test.ts[39m[22m [157:32 - 165:31] (8 lines, 132 tokens)
+   [1m[32mapps\consumer-app\src\stores\__tests__\sensitiveKeyIsolation.property.test.ts[39m[22m [220:30 - 228:22]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\WithdrawFiatScreen.test.tsx[39m[22m [252:5 - 261:30] (9 lines, 76 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WithdrawFiatScreen.test.tsx[39m[22m [230:5 - 239:26]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\WalletConnectScreen.test.tsx[39m[22m [108:55 - 113:55] (5 lines, 83 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WalletConnectScreen.test.tsx[39m[22m [98:55 - 103:57]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\WalletConnectScreen.test.tsx[39m[22m [118:95 - 123:48] (5 lines, 81 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WalletConnectScreen.test.tsx[39m[22m [98:57 - 103:57]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\TransactionHistoryScreen.test.tsx[39m[22m [127:30 - 132:5] (5 lines, 92 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\TransactionHistoryScreen.test.tsx[39m[22m [120:13 - 125:7]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\SettingsScreen.test.tsx[39m[22m [52:24 - 66:34] (14 lines, 108 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WalletConnectScreen.test.tsx[39m[22m [25:24 - 38:41]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\SettingsScreen.test.tsx[39m[22m [62:44 - 75:46] (13 lines, 95 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WalletConnectScreen.test.tsx[39m[22m [56:80 - 68:19]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\SettingsScreen.test.tsx[39m[22m [154:50 - 160:58] (6 lines, 123 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SettingsScreen.test.tsx[39m[22m [141:45 - 147:53]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\ReceiveQRScreen.test.tsx[39m[22m [9:27 - 19:25] (10 lines, 90 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SendPaymentScreen.test.tsx[39m[22m [9:29 - 19:27]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\PrivacyLevelScreen.test.tsx[39m[22m [3:46 - 22:30] (19 lines, 237 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx[39m[22m [3:45 - 22:29]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\PrivacyLevelScreen.test.tsx[39m[22m [22:30 - 32:68] (10 lines, 122 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx[39m[22m [22:29 - 32:67]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\PaymentSuccessScreen.test.tsx[39m[22m [3:48 - 22:32] (19 lines, 237 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx[39m[22m [3:45 - 22:29]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\PaymentSuccessScreen.test.tsx[39m[22m [22:32 - 32:70] (10 lines, 122 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx[39m[22m [22:29 - 32:67]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\PaymentConfirmationScreen.test.tsx[39m[22m [3:53 - 22:37] (19 lines, 237 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx[39m[22m [3:45 - 22:29]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\PaymentConfirmationScreen.test.tsx[39m[22m [22:37 - 32:75] (10 lines, 122 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx[39m[22m [22:29 - 32:67]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\OnrampWidgetScreen.test.tsx[39m[22m [3:72 - 22:7] (19 lines, 235 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx[39m[22m [3:45 - 22:9]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\OnrampQuotesScreen.test.tsx[39m[22m [3:72 - 10:37] (7 lines, 85 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx[39m[22m [3:45 - 9:30]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\OnrampAmountScreen.test.tsx[39m[22m [3:72 - 16:46] (13 lines, 149 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx[39m[22m [3:45 - 16:40]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\OnboardingScreen.test.tsx[39m[22m [2:66 - 20:43] (18 lines, 165 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WalletConnectScreen.test.tsx[39m[22m [28:4 - 68:19]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\OnboardingScreen.test.tsx[39m[22m [16:40 - 28:45] (12 lines, 111 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WalletConnectScreen.test.tsx[39m[22m [48:53 - 60:34]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\ImportWalletScreen.test.tsx[39m[22m [14:33 - 27:47] (13 lines, 178 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\TransactionHistoryScreen.test.tsx[39m[22m [15:42 - 28:38]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\ImportWalletScreen.test.tsx[39m[22m [48:114 - 67:43] (19 lines, 249 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\TransactionHistoryScreen.test.tsx[39m[22m [59:111 - 78:34]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\ImportWalletScreen.test.tsx[39m[22m [64:143 - 73:45] (9 lines, 95 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\TransactionHistoryScreen.test.tsx[39m[22m [106:61 - 115:34]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\ImportWalletScreen.test.tsx[39m[22m [173:61 - 178:31] (5 lines, 78 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\ImportWalletScreen.test.tsx[39m[22m [162:48 - 167:26]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\ImportWalletScreen.test.tsx[39m[22m [189:5 - 197:22] (8 lines, 131 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\ImportWalletScreen.test.tsx[39m[22m [173:5 - 181:27]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\HomeDashboardScreen.test.tsx[39m[22m [72:16 - 91:53] (19 lines, 177 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SettingsScreen.test.tsx[39m[22m [41:35 - 34:45]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\HomeDashboardScreen.test.tsx[39m[22m [97:66 - 103:53] (6 lines, 76 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WalletConnectScreen.test.tsx[39m[22m [57:3 - 64:45]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\HomeDashboardScreen.test.tsx[39m[22m [234:51 - 244:47] (10 lines, 140 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\HomeDashboardScreen.test.tsx[39m[22m [193:56 - 203:44]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\HomeDashboardScreen.test.tsx[39m[22m [247:47 - 256:5] (9 lines, 75 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SettingsScreen.test.tsx[39m[22m [176:54 - 184:2]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\HomeDashboardScreen.test.tsx[39m[22m [267:5 - 273:34] (6 lines, 100 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\HomeDashboardScreen.test.tsx[39m[22m [194:5 - 200:20]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\ExportPrivateKeyScreen.test.tsx[39m[22m [1:1 - 11:18] (10 lines, 110 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SettingsScreen.test.tsx[39m[22m [1:1 - 10:21]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\ExportPrivateKeyScreen.test.tsx[39m[22m [41:36 - 63:34] (22 lines, 160 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SettingsScreen.test.tsx[39m[22m [35:30 - 57:34]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\ExportPrivateKeyScreen.test.tsx[39m[22m [61:3 - 93:15] (32 lines, 331 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WalletConnectScreen.test.tsx[39m[22m [58:2 - 98:15]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\ExportPrivateKeyScreen.test.tsx[39m[22m [87:63 - 103:5] (16 lines, 157 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\OnboardingScreen.test.tsx[39m[22m [24:51 - 41:6]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\ExportPrivateKeyScreen.test.tsx[39m[22m [174:73 - 184:20] (10 lines, 92 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\ExportPrivateKeyScreen.test.tsx[39m[22m [157:84 - 167:30]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\DepositCryptoScreen.test.tsx[39m[22m [1:1 - 15:12] (14 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WithdrawFiatScreen.test.tsx[39m[22m [1:1 - 15:14]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\DepositCryptoScreen.test.tsx[39m[22m [33:39 - 44:6] (11 lines, 113 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\ExportPrivateKeyScreen.test.tsx[39m[22m [33:39 - 44:5]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\DepositCryptoScreen.test.tsx[39m[22m [41:36 - 52:25] (11 lines, 282 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WithdrawFiatScreen.test.tsx[39m[22m [33:36 - 44:20]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\DepositCryptoScreen.test.tsx[39m[22m [51:37 - 58:16] (7 lines, 84 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\ExportPrivateKeyScreen.test.tsx[39m[22m [20:37 - 27:2]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\DepositCryptoScreen.test.tsx[39m[22m [58:30 - 102:40] (44 lines, 371 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WithdrawFiatScreen.test.tsx[39m[22m [44:36 - 88:42]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\DepositCryptoScreen.test.tsx[39m[22m [103:95 - 116:20] (13 lines, 95 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WithdrawFiatScreen.test.tsx[39m[22m [89:95 - 102:20]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\DepositCryptoScreen.test.tsx[39m[22m [118:27 - 175:28] (57 lines, 520 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WithdrawFiatScreen.test.tsx[39m[22m [104:28 - 161:27]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\DepositCryptoScreen.test.tsx[39m[22m [217:42 - 225:50] (8 lines, 119 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WithdrawFiatScreen.test.tsx[39m[22m [204:49 - 212:46]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\DepositCryptoScreen.test.tsx[39m[22m [241:39 - 258:22] (17 lines, 134 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WithdrawFiatScreen.test.tsx[39m[22m [225:43 - 242:23]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\DepositCryptoScreen.test.tsx[39m[22m [260:61 - 280:46] (20 lines, 157 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WithdrawFiatScreen.test.tsx[39m[22m [244:62 - 264:47]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\DepositCryptoScreen.test.tsx[39m[22m [280:68 - 306:4] (26 lines, 212 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\WithdrawFiatScreen.test.tsx[39m[22m [264:70 - 290:4]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\CreateWalletScreen.test.tsx[39m[22m [2:42 - 33:5] (31 lines, 404 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\ImportWalletScreen.test.tsx[39m[22m [2:37 - 33:6]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\CreateWalletScreen.test.tsx[39m[22m [45:55 - 56:16] (11 lines, 127 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\ImportWalletScreen.test.tsx[39m[22m [38:75 - 49:2]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\CreateWalletScreen.test.tsx[39m[22m [56:30 - 84:20] (28 lines, 370 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\TransactionHistoryScreen.test.tsx[39m[22m [59:111 - 87:31]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\CreateWalletScreen.test.tsx[39m[22m [84:121 - 106:86] (22 lines, 271 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\TransactionHistoryScreen.test.tsx[39m[22m [106:57 - 86:86]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\BiometricSetupScreen.test.tsx[39m[22m [3:48 - 22:32] (19 lines, 237 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx[39m[22m [3:45 - 22:29]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\BiometricSetupScreen.test.tsx[39m[22m [22:32 - 32:70] (10 lines, 122 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx[39m[22m [22:29 - 32:67]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\BackupWalletScreen.test.tsx[39m[22m [1:1 - 8:23] (7 lines, 83 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SettingsScreen.test.tsx[39m[22m [1:1 - 8:35]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\BackupWalletScreen.test.tsx[39m[22m [23:36 - 93:6] (70 lines, 671 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\SettingsScreen.test.tsx[39m[22m [35:30 - 111:5]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\BackupWalletScreen.test.tsx[39m[22m [106:5 - 118:41] (12 lines, 110 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\ExportPrivateKeyScreen.test.tsx[39m[22m [130:72 - 142:45]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\BackupWalletScreen.test.tsx[39m[22m [149:73 - 159:20] (10 lines, 92 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\BackupWalletScreen.test.tsx[39m[22m [132:95 - 142:30]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\BackupWalletScreen.test.tsx[39m[22m [165:49 - 174:80] (9 lines, 70 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\ExportPrivateKeyScreen.test.tsx[39m[22m [190:49 - 199:79]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\__tests__\BackupWalletScreen.test.tsx[39m[22m [176:78 - 191:4] (15 lines, 122 tokens)
+   [1m[32mapps\consumer-app\src\screens\__tests__\ExportPrivateKeyScreen.test.tsx[39m[22m [201:83 - 216:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useStealthScanner.test.ts[39m[22m [1:47 - 29:29] (28 lines, 305 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [1:45 - 29:27]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useStealthScanner.test.ts[39m[22m [29:29 - 41:4] (12 lines, 161 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [29:27 - 41:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\usePaymentTransaction.test.ts[39m[22m [1:51 - 29:33] (28 lines, 305 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [1:45 - 29:27]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\usePaymentTransaction.test.ts[39m[22m [29:33 - 41:4] (12 lines, 161 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [29:27 - 41:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\usePaymentTransaction.dispatch.property.test.ts[39m[22m [327:10 - 340:2] (13 lines, 162 tokens)
+   [1m[32mapps\consumer-app\src\stores\__tests__\sensitiveKeyIsolation.property.test.ts[39m[22m [97:15 - 110:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useOTAUpdates.test.ts[39m[22m [1:43 - 29:25] (28 lines, 305 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [1:45 - 29:27]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useOTAUpdates.test.ts[39m[22m [29:25 - 41:4] (12 lines, 161 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [29:27 - 41:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useNetworkStatus.test.ts[39m[22m [1:46 - 29:28] (28 lines, 305 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [1:45 - 29:27]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useNetworkStatus.test.ts[39m[22m [29:28 - 41:4] (12 lines, 161 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [29:27 - 41:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useNetworkPrivacySupport.test.ts[39m[22m [1:54 - 29:36] (28 lines, 305 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [1:45 - 29:27]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useNetworkPrivacySupport.test.ts[39m[22m [29:36 - 41:4] (12 lines, 161 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [29:27 - 41:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useMarketData.test.ts[39m[22m [1:43 - 29:25] (28 lines, 305 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [1:45 - 29:27]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useMarketData.test.ts[39m[22m [29:25 - 41:4] (12 lines, 161 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [29:27 - 41:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useDepositPersistenceRecovery.test.ts[39m[22m [1:59 - 29:41] (28 lines, 305 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [1:45 - 29:27]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useDepositPersistenceRecovery.test.ts[39m[22m [29:41 - 41:4] (12 lines, 161 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [29:27 - 41:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useBiometrics.test.ts[39m[22m [1:43 - 29:25] (28 lines, 305 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [1:45 - 29:27]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useBiometrics.test.ts[39m[22m [29:25 - 41:4] (12 lines, 161 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [29:27 - 41:4]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useBalance.test.ts[39m[22m [1:40 - 29:22] (28 lines, 305 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [1:45 - 29:27]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\__tests__\useBalance.test.ts[39m[22m [29:22 - 41:4] (12 lines, 161 tokens)
+   [1m[32mapps\consumer-app\src\hooks\__tests__\useTransakQuote.test.ts[39m[22m [29:27 - 41:4]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\components\payment\PaymentStatusCard.tsx[39m[22m [57:57 - 78:41] (21 lines, 267 tokens)
+   [1m[32mapps\consumer-app\src\components\payment\TransactionStatusCard.tsx[39m[22m [44:191 - 67:41]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\payment\PaymentStatusCard.tsx[39m[22m [57:85 - 85:36] (28 lines, 299 tokens)
+   [1m[32mapps\consumer-app\src\components\payment\TransactionStatusCard.tsx[39m[22m [46:9 - 74:33]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\components\payment\PaymentDetailsCard.tsx[39m[22m [27:18 - 72:49] (45 lines, 559 tokens)
+   [1m[32mapps\consumer-app\src\components\payment\TransactionDetailsCard.tsx[39m[22m [34:18 - 79:49]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\payment\PaymentDetailsCard.tsx[39m[22m [21:120 - 82:36] (61 lines, 662 tokens)
+   [1m[32mapps\consumer-app\src\components\payment\TransactionDetailsCard.tsx[39m[22m [28:31 - 89:33]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\payment\PaymentDetailsCard.tsx[39m[22m [76:9 - 91:17] (15 lines, 101 tokens)
+   [1m[32mapps\consumer-app\src\components\payment\PaymentFeeBreakdown.tsx[39m[22m [38:9 - 53:13]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\components\payment\FeeBreakdownCard.tsx[39m[22m [25:35 - 40:45] (15 lines, 237 tokens)
+   [1m[32mapps\consumer-app\src\components\payment\PaymentFeeBreakdown.tsx[39m[22m [21:37 - 36:47]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\payment\FeeBreakdownCard.tsx[39m[22m [25:5 - 44:4] (19 lines, 270 tokens)
+   [1m[32mapps\consumer-app\src\components\payment\PaymentFeeBreakdown.tsx[39m[22m [21:7 - 40:6]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\dashboard\RecentTransactionsList.tsx[39m[22m [70:75 - 90:9] (20 lines, 139 tokens)
+   [1m[32mapps\consumer-app\src\components\dashboard\TokenAssetsList.tsx[39m[22m [166:61 - 186:15]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\dashboard\FiatGatewayCard.tsx[39m[22m [85:46 - 97:74] (12 lines, 145 tokens)
+   [1m[32mapps\consumer-app\src\components\dashboard\FiatGatewayCard.tsx[39m[22m [55:48 - 67:75]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\components\dashboard\AddressBookModal.tsx[39m[22m [330:35 - 349:44] (19 lines, 136 tokens)
+   [1m[32mapps\consumer-app\src\components\dashboard\AddressBookModal.tsx[39m[22m [320:45 - 335:50]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\routes\__tests__\relayer.test.ts[39m[22m [5:33 - 12:54] (7 lines, 87 tokens)
+   [1m[32mapps\backend\src\routes\__tests__\webhook.test.ts[39m[22m [5:33 - 12:50]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\routes\__tests__\payment.test.ts[39m[22m [5:33 - 12:53] (7 lines, 87 tokens)
+   [1m[32mapps\backend\src\routes\__tests__\webhook.test.ts[39m[22m [5:33 - 12:50]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\routes\__tests__\onramp.test.ts[39m[22m [5:32 - 12:49] (7 lines, 87 tokens)
+   [1m[32mapps\backend\src\routes\__tests__\webhook.test.ts[39m[22m [5:33 - 12:50]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\routes\__tests__\merchant.test.ts[39m[22m [5:34 - 12:54] (7 lines, 87 tokens)
+   [1m[32mapps\backend\src\routes\__tests__\webhook.test.ts[39m[22m [5:33 - 12:50]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\routes\__tests__\invoice.test.ts[39m[22m [5:33 - 12:46] (7 lines, 87 tokens)
+   [1m[32mapps\backend\src\routes\__tests__\webhook.test.ts[39m[22m [5:33 - 12:50]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\routes\__tests__\health.test.ts[39m[22m [5:32 - 13:51] (8 lines, 112 tokens)
+   [1m[32mapps\backend\src\routes\__tests__\webhook.test.ts[39m[22m [5:33 - 13:52]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\routes\__tests__\docs.test.ts[39m[22m [5:30 - 13:48] (8 lines, 112 tokens)
+   [1m[32mapps\backend\src\routes\__tests__\webhook.test.ts[39m[22m [5:33 - 13:52]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\routes\__tests__\directory.test.ts[39m[22m [5:35 - 12:49] (7 lines, 87 tokens)
+   [1m[32mapps\backend\src\routes\__tests__\webhook.test.ts[39m[22m [5:33 - 12:50]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\middleware\__tests__\auth.test.ts[39m[22m [1:1 - 13:2] (12 lines, 96 tokens)
+   [1m[32mapps\backend\src\middleware\__tests__\rateLimiter.test.ts[39m[22m [1:1 - 13:24]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\middleware\__tests__\auth.test.ts[39m[22m [196:55 - 210:10] (14 lines, 109 tokens)
+   [1m[32mapps\backend\src\middleware\__tests__\auth.test.ts[39m[22m [162:58 - 176:6]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\jobs\__tests__\webhookQueue.test.ts[39m[22m [79:62 - 93:25] (14 lines, 101 tokens)
+   [1m[32mapps\backend\src\jobs\__tests__\webhookQueue.test.ts[39m[22m [53:61 - 67:27]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\jobs\__tests__\webhookDelivery.test.ts[39m[22m [48:65 - 64:38] (16 lines, 112 tokens)
+   [1m[32mapps\backend\src\jobs\__tests__\webhookDelivery.test.ts[39m[22m [24:18 - 40:37]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\webhookController.test.ts[39m[22m [165:68 - 177:24] (12 lines, 91 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\webhookController.test.ts[39m[22m [94:67 - 106:22]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\relayerController.revert.property.test.ts[39m[22m [138:7 - 145:65] (7 lines, 85 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\relayerController.revert.property.test.ts[39m[22m [111:5 - 118:7]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\relayerController.revert.property.test.ts[39m[22m [191:1 - 206:73] (15 lines, 192 tokens)
+   [1m[32mapps\consumer-app\src\services\__tests__\relayerClient.property.test.ts[39m[22m [133:1 - 148:72]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\relayerController.revert.property.test.ts[39m[22m [209:1 - 219:77] (10 lines, 177 tokens)
+   [1m[32mapps\consumer-app\src\services\__tests__\relayerClient.property.test.ts[39m[22m [151:1 - 224:77]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\relayerController.revert.property.test.ts[39m[22m [219:78 - 238:24] (19 lines, 193 tokens)
+   [1m[32mapps\consumer-app\src\services\__tests__\relayerClient.property.test.ts[39m[22m [161:78 - 180:38]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\relayerController.forwarding.property.test.ts[39m[22m [93:1 - 101:75] (8 lines, 99 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\relayerController.revert.property.test.ts[39m[22m [92:1 - 100:5]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\relayerController.forwarding.property.test.ts[39m[22m [117:31 - 135:58] (18 lines, 165 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\relayerController.revert.property.test.ts[39m[22m [107:63 - 125:68]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\relayerController.forwarding.property.test.ts[39m[22m [147:33 - 164:68] (17 lines, 178 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\relayerController.revert.property.test.ts[39m[22m [137:65 - 154:53]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\relayerController.forwarding.property.test.ts[39m[22m [165:3 - 181:19] (16 lines, 151 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\relayerController.revert.property.test.ts[39m[22m [155:3 - 170:2]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\relayerController.forwarding.property.test.ts[39m[22m [226:1 - 258:34] (32 lines, 424 tokens)
+   [1m[32mapps\consumer-app\src\services\__tests__\relayerClient.property.test.ts[39m[22m [133:1 - 223:31]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\relayerController.forwarding.property.test.ts[39m[22m [259:41 - 276:49] (17 lines, 157 tokens)
+   [1m[32mapps\consumer-app\src\services\__tests__\relayerClient.property.test.ts[39m[22m [163:53 - 180:38]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\onrampController.replay.property.test.ts[39m[22m [182:34 - 190:2] (8 lines, 81 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\onrampController.replay.property.test.ts[39m[22m [168:38 - 177:5]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\onrampController.replay.property.test.ts[39m[22m [210:26 - 217:41] (7 lines, 82 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\onrampController.replay.property.test.ts[39m[22m [138:26 - 145:39]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\onrampController.replay.property.test.ts[39m[22m [231:5 - 241:11] (10 lines, 112 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\onrampController.replay.property.test.ts[39m[22m [136:5 - 146:4]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\invoiceController.test.ts[39m[22m [74:29 - 82:31] (8 lines, 86 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\paymentController.test.ts[39m[22m [31:29 - 39:57]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\invoiceController.test.ts[39m[22m [169:46 - 179:78] (10 lines, 85 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\invoiceController.test.ts[39m[22m [124:44 - 134:75]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\invoiceController.test.ts[39m[22m [226:30 - 235:30] (9 lines, 96 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\invoiceController.test.ts[39m[22m [196:29 - 205:29]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\invoiceController.test.ts[39m[22m [273:54 - 280:26] (7 lines, 78 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\invoiceController.test.ts[39m[22m [196:58 - 205:29]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\invoiceController.test.ts[39m[22m [280:26 - 286:87] (6 lines, 93 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\invoiceController.test.ts[39m[22m [235:30 - 243:37]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\healthController.test.ts[39m[22m [64:87 - 76:27] (12 lines, 126 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\healthController.test.ts[39m[22m [42:67 - 54:21]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\__tests__\healthController.test.ts[39m[22m [88:82 - 101:32] (13 lines, 130 tokens)
+   [1m[32mapps\backend\src\controllers\__tests__\healthController.test.ts[39m[22m [44:58 - 79:35]
+
+Clone found (typescript):
+ - [1m[32mapps\indexer\src\__tests__\setup.ts[39m[22m [112:22 - 120:21] (8 lines, 87 tokens)
+   [1m[32mapps\indexer\src\__tests__\setup.ts[39m[22m [101:20 - 109:14]
+
+Clone found (typescript):
+ - [1m[32mapps\indexer\src\stealth\crypto.ts[39m[22m [169:31 - 183:54] (14 lines, 97 tokens)
+   [1m[32mapps\indexer\src\stealth\crypto.ts[39m[22m [132:33 - 146:75]
+
+Clone found (typescript):
+ - [1m[32mapps\indexer\src\indexers\index.ts[39m[22m [60:3 - 77:74] (17 lines, 178 tokens)
+   [1m[32mapps\indexer\src\indexers\websocket.ts[39m[22m [449:11 - 466:72]
+
+Clone found (typescript):
+ - [1m[32mapps\indexer\src\indexers\index.ts[39m[22m [79:5 - 90:8] (11 lines, 97 tokens)
+   [1m[32mapps\indexer\src\indexers\websocket.ts[39m[22m [469:5 - 480:10]
+
+Clone found (typescript):
+ - [1m[32mapps\indexer\src\indexers\index.ts[39m[22m [90:30 - 98:73] (8 lines, 88 tokens)
+   [1m[32mapps\indexer\src\indexers\websocket.ts[39m[22m [480:41 - 488:64]
+
+Clone found (typescript):
+ - [1m[32mapps\indexer\src\indexers\index.ts[39m[22m [101:5 - 110:8] (9 lines, 107 tokens)
+   [1m[32mapps\indexer\src\indexers\websocket.ts[39m[22m [492:5 - 501:10]
+
+Clone found (typescript):
+ - [1m[32mapps\indexer\src\indexers\index.ts[39m[22m [155:39 - 164:29] (9 lines, 102 tokens)
+   [1m[32mapps\indexer\src\indexers\index.ts[39m[22m [135:39 - 144:29]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\transak.ts[39m[22m [399:3 - 411:2] (12 lines, 210 tokens)
+   [1m[32mapps\consumer-app\src\utils\transak.ts[39m[22m [344:3 - 356:2]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\transactionHistory.ts[39m[22m [269:3 - 282:59] (13 lines, 118 tokens)
+   [1m[32mapps\consumer-app\src\utils\transakQuote.ts[39m[22m [294:3 - 307:65]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\secureStateStorage.ts[39m[22m [61:1 - 67:23] (6 lines, 99 tokens)
+   [1m[32mapps\consumer-app\src\utils\transactions.ts[39m[22m [182:1 - 188:34]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\secureSigner.ts[39m[22m [97:16 - 109:18] (12 lines, 110 tokens)
+   [1m[32mapps\consumer-app\src\utils\solanaSigner.ts[39m[22m [46:17 - 58:15]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\secureSigner.ts[39m[22m [236:89 - 252:22] (16 lines, 146 tokens)
+   [1m[32mapps\consumer-app\src\utils\solanaSigner.ts[39m[22m [47:77 - 114:24]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\secureSigner.ts[39m[22m [252:23 - 262:44] (10 lines, 123 tokens)
+   [1m[32mapps\consumer-app\src\utils\secureSigner.ts[39m[22m [114:16 - 124:46]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\rpcPool.ts[39m[22m [1:62 - 21:29] (20 lines, 126 tokens)
+   [1m[32mapps\consumer-app\src\utils\solanaRpcPool.ts[39m[22m [1:45 - 21:30]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\rpcPool.ts[39m[22m [90:3 - 131:46] (41 lines, 364 tokens)
+   [1m[32mapps\consumer-app\src\utils\solanaRpcPool.ts[39m[22m [48:3 - 89:52]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\rpcPool.ts[39m[22m [154:31 - 160:78] (6 lines, 84 tokens)
+   [1m[32mapps\consumer-app\src\utils\solanaRpcPool.ts[39m[22m [109:31 - 115:84]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\rpcPool.ts[39m[22m [169:44 - 175:62] (6 lines, 96 tokens)
+   [1m[32mapps\consumer-app\src\utils\solanaRpcPool.ts[39m[22m [124:44 - 130:68]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\rpcPool.ts[39m[22m [185:60 - 204:56] (19 lines, 150 tokens)
+   [1m[32mapps\consumer-app\src\utils\solanaRpcPool.ts[39m[22m [140:62 - 159:62]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\rpcPool.ts[39m[22m [239:26 - 252:7] (13 lines, 119 tokens)
+   [1m[32mapps\consumer-app\src\utils\solanaRpcPool.ts[39m[22m [171:28 - 184:9]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\multiChainDerivation.ts[39m[22m [65:19 - 70:28] (5 lines, 91 tokens)
+   [1m[32mapps\consumer-app\src\utils\multiChainDerivation.ts[39m[22m [54:18 - 59:28]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\marketData.ts[39m[22m [23:35 - 38:6] (15 lines, 109 tokens)
+   [1m[32mapps\consumer-app\src\utils\marketStreamer.ts[39m[22m [3:82 - 18:77]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\marketData.ts[39m[22m [202:14 - 219:5] (17 lines, 168 tokens)
+   [1m[32mapps\consumer-app\src\utils\priceFeed.ts[39m[22m [90:10 - 106:8]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [127:3 - 136:44] (9 lines, 94 tokens)
+   [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [83:3 - 93:31]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [211:45 - 218:92] (7 lines, 85 tokens)
+   [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [109:45 - 116:93]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [218:92 - 228:30] (10 lines, 124 tokens)
+   [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [116:93 - 126:6]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [229:35 - 235:19] (6 lines, 81 tokens)
+   [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [189:33 - 195:22]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [254:43 - 261:94] (7 lines, 85 tokens)
+   [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [109:45 - 116:93]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [261:94 - 271:34] (10 lines, 128 tokens)
+   [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [116:93 - 126:33]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [272:3 - 277:29] (5 lines, 83 tokens)
+   [1m[32mapps\consumer-app\src\utils\balanceFetcher.ts[39m[22m [231:3 - 237:24]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\aptosSigner.ts[39m[22m [22:19 - 34:28] (12 lines, 114 tokens)
+   [1m[32mapps\consumer-app\src\utils\solanaSigner.ts[39m[22m [46:17 - 109:38]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\utils\aptosSigner.ts[39m[22m [93:59 - 100:61] (7 lines, 92 tokens)
+   [1m[32mapps\consumer-app\src\utils\solanaSigner.ts[39m[22m [156:60 - 163:62]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\stores\walletStore.ts[39m[22m [16:57 - 70:53] (54 lines, 386 tokens)
+   [1m[32mapps\consumer-app\src\utils\chains.ts[39m[22m [1:34 - 55:95]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\stores\walletStore.ts[39m[22m [71:3 - 206:3] (135 lines, 1198 tokens)
+   [1m[32mapps\consumer-app\src\utils\chains.ts[39m[22m [56:3 - 191:3]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [443:61 - 457:45] (14 lines, 168 tokens)
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [416:57 - 428:62]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [470:63 - 488:67] (18 lines, 219 tokens)
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [416:64 - 461:67]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [497:61 - 515:67] (18 lines, 219 tokens)
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [416:64 - 461:67]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [524:62 - 542:67] (18 lines, 219 tokens)
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [416:64 - 461:67]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [551:55 - 569:64] (18 lines, 221 tokens)
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [416:57 - 461:58]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [578:62 - 590:74] (12 lines, 149 tokens)
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [416:57 - 428:70]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [590:74 - 608:21] (18 lines, 183 tokens)
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [561:120 - 577:29]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [341:7 - 357:25] (16 lines, 117 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [460:7 - 476:25]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [346:7 - 362:22] (16 lines, 119 tokens)
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [612:5 - 628:69]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\TokenSelectorScreen.tsx[39m[22m [293:5 - 308:25] (15 lines, 118 tokens)
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [613:3 - 362:25]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\SettingsScreen.tsx[39m[22m [481:24 - 491:55] (10 lines, 129 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [259:24 - 268:55]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\SettingsScreen.tsx[39m[22m [536:7 - 562:13] (26 lines, 183 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [339:93 - 484:14]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\SendPaymentScreen.tsx[39m[22m [592:7 - 609:15] (17 lines, 130 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [339:7 - 356:9]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [294:40 - 312:42] (18 lines, 204 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionDetailsScreen.tsx[39m[22m [290:71 - 302:42]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [363:36 - 380:30] (17 lines, 133 tokens)
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [617:33 - 630:89]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [379:18 - 395:10] (16 lines, 125 tokens)
+   [1m[32mapps\consumer-app\src\screens\TokenSelectorScreen.tsx[39m[22m [314:32 - 330:15]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [496:21 - 531:14] (35 lines, 273 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionDetailsScreen.tsx[39m[22m [510:25 - 545:16]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\PrivacyLevelScreen.tsx[39m[22m [365:7 - 390:10] (25 lines, 184 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [460:7 - 366:20]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\PrivacyLevelScreen.tsx[39m[22m [388:3 - 416:13] (28 lines, 213 tokens)
+   [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [375:3 - 403:12]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\OnrampQuotesScreen.tsx[39m[22m [215:19 - 228:26] (13 lines, 87 tokens)
+   [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [359:27 - 372:26]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\OnrampAmountScreen.tsx[39m[22m [55:24 - 66:41] (11 lines, 206 tokens)
+   [1m[32mapps\consumer-app\src\screens\OnrampQuotesScreen.tsx[39m[22m [149:24 - 160:45]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\OnrampAmountScreen.tsx[39m[22m [115:13 - 143:15] (28 lines, 208 tokens)
+   [1m[32mapps\consumer-app\src\screens\OnrampQuotesScreen.tsx[39m[22m [213:19 - 241:19]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\ImportWalletScreen.tsx[39m[22m [191:62 - 204:110] (13 lines, 164 tokens)
+   [1m[32mapps\consumer-app\src\screens\SettingsScreen.tsx[39m[22m [309:78 - 268:105]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\ImportWalletScreen.tsx[39m[22m [199:61 - 211:40] (12 lines, 133 tokens)
+   [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [197:46 - 208:40]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\ImportWalletScreen.tsx[39m[22m [307:27 - 328:18] (21 lines, 162 tokens)
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [613:17 - 314:32]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\ImportWalletScreen.tsx[39m[22m [322:25 - 352:12] (30 lines, 227 tokens)
+   [1m[32mapps\consumer-app\src\screens\PrivacyLevelScreen.tsx[39m[22m [386:25 - 403:12]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [498:41 - 507:91] (9 lines, 83 tokens)
+   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [450:11 - 456:91]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [515:37 - 523:91] (8 lines, 78 tokens)
+   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [450:11 - 456:91]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [533:55 - 541:91] (8 lines, 78 tokens)
+   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [450:11 - 456:91]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [548:33 - 556:91] (8 lines, 78 tokens)
+   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [450:11 - 456:91]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [407:31 - 422:8] (15 lines, 212 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [98:20 - 112:20]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [183:34 - 200:4] (17 lines, 120 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [345:31 - 628:69]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [270:24 - 286:32] (16 lines, 266 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [259:24 - 275:34]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [312:52 - 434:45] (122 lines, 1295 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [301:47 - 423:44]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [435:54 - 459:23] (24 lines, 320 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [424:53 - 444:30]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [455:46 - 476:31] (21 lines, 174 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [444:41 - 464:31]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [1:1 - 23:25] (22 lines, 292 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [1:1 - 23:26]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [73:85 - 80:23] (7 lines, 113 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [71:77 - 78:25]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [155:74 - 189:18] (34 lines, 357 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [150:68 - 184:20]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [220:84 - 242:39] (22 lines, 161 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [207:40 - 229:40]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [314:42 - 343:53] (29 lines, 192 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [303:59 - 332:54]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [347:11 - 361:41] (14 lines, 212 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [336:11 - 350:47]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [363:82 - 372:15] (9 lines, 108 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [352:143 - 361:40]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [372:15 - 430:45] (58 lines, 602 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [361:40 - 419:44]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [441:13 - 457:11] (16 lines, 229 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [428:13 - 444:12]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [456:17 - 629:4] (173 lines, 1347 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [444:112 - 618:25]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [629:3 - 740:35] (111 lines, 875 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [619:3 - 730:34]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\CreateWalletScreen.tsx[39m[22m [165:24 - 178:34] (13 lines, 192 tokens)
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [259:24 - 208:30]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\CreateWalletScreen.tsx[39m[22m [283:9 - 338:17] (55 lines, 405 tokens)
+   [1m[32mapps\consumer-app\src\screens\PrivacyLevelScreen.tsx[39m[22m [361:9 - 403:12]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\BiometricSetupScreen.tsx[39m[22m [204:39 - 216:14] (12 lines, 93 tokens)
+   [1m[32mapps\consumer-app\src\screens\QRScannerScreen.tsx[39m[22m [376:24 - 386:4]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [81:35 - 108:74] (27 lines, 396 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [89:35 - 115:74]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [108:102 - 116:71] (8 lines, 169 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [122:97 - 131:82]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [119:49 - 171:38] (52 lines, 409 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [132:51 - 182:38]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [6:1 - 18:27] (12 lines, 139 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [6:1 - 18:26]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [20:59 - 29:35] (9 lines, 110 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [22:55 - 31:39]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [52:52 - 72:38] (20 lines, 168 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [60:51 - 80:40]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [73:44 - 86:48] (13 lines, 144 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [81:49 - 94:48]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [86:55 - 99:55] (13 lines, 186 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [94:60 - 107:57]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [106:64 - 112:162] (6 lines, 125 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [121:60 - 127:55]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [136:41 - 153:20] (17 lines, 149 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [147:32 - 164:19]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [169:122 - 239:18] (70 lines, 539 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [180:136 - 250:14]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [244:21 - 269:12] (25 lines, 191 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [269:38 - 294:23]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\screens\BackupWalletScreen.tsx[39m[22m [296:25 - 320:4] (24 lines, 178 tokens)
+   [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [307:24 - 331:4]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\navigation\AppNavigator.tsx[39m[22m [315:9 - 357:10] (42 lines, 260 tokens)
+   [1m[32mapps\consumer-app\src\navigation\AppNavigator.tsx[39m[22m [310:9 - 335:10]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\navigation\AppNavigator.tsx[39m[22m [379:45 - 405:9] (26 lines, 184 tokens)
+   [1m[32mapps\consumer-app\src\navigation\AppNavigator.tsx[39m[22m [309:40 - 335:10]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\useSessionBootstrap.ts[39m[22m [90:9 - 97:51] (7 lines, 86 tokens)
+   [1m[32mapps\consumer-app\src\hooks\useSessionBootstrap.ts[39m[22m [43:11 - 50:52]
+
+Clone found (typescript):
+ - [1m[32mapps\consumer-app\src\hooks\usePaymentTransaction.ts[39m[22m [247:45 - 259:17] (12 lines, 87 tokens)
+   [1m[32mapps\consumer-app\src\hooks\usePaymentTransaction.ts[39m[22m [218:23 - 230:18]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [75:57 - 91:46] (16 lines, 184 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [211:48 - 223:29]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [91:57 - 105:51] (14 lines, 171 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [222:49 - 235:53]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [15:1 - 32:19] (17 lines, 245 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [97:3 - 424:21]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [95:28 - 112:18] (17 lines, 169 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [225:21 - 242:25]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [127:3 - 149:18] (22 lines, 138 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [419:3 - 441:15]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [147:20 - 201:21] (54 lines, 363 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [444:23 - 498:17]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\Skeleton.tsx[39m[22m [79:30 - 90:10] (11 lines, 169 tokens)
+   [1m[32mapps\consumer-app\src\components\Skeleton.tsx[39m[22m [53:36 - 64:9]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\components\NetworkSelectorModal.tsx[39m[22m [113:35 - 139:45] (26 lines, 228 tokens)
+   [1m[32mapps\consumer-app\src\components\NetworkSelectorModal.tsx[39m[22m [99:87 - 120:42]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\Icon.tsx[39m[22m [173:45 - 178:19] (5 lines, 66 tokens)
+   [1m[32mapps\consumer-app\src\components\Icon.tsx[39m[22m [105:67 - 110:11]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\FiatGatewayWebViewShell.tsx[39m[22m [62:1 - 73:22] (11 lines, 100 tokens)
+   [1m[32mapps\consumer-app\src\screens\OnrampQuotesScreen.tsx[39m[22m [219:1 - 230:4]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\components\FiatGatewayModal.tsx[39m[22m [66:30 - 85:30] (19 lines, 200 tokens)
+   [1m[32mapps\consumer-app\src\components\FiatGatewayModal.tsx[39m[22m [47:29 - 66:30]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\types\index.ts[39m[22m [118:42 - 135:45] (17 lines, 187 tokens)
+   [1m[32mapps\backend\src\types\index.ts[39m[22m [36:28 - 53:7]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\types\index.ts[39m[22m [189:5 - 195:9] (6 lines, 77 tokens)
+   [1m[32mapps\backend\src\types\index.ts[39m[22m [38:13 - 44:12]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\types\index.ts[39m[22m [226:40 - 234:9] (8 lines, 78 tokens)
+   [1m[32mapps\backend\src\types\index.ts[39m[22m [56:30 - 64:12]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\types\index.ts[39m[22m [240:42 - 249:78] (9 lines, 83 tokens)
+   [1m[32mapps\backend\src\types\index.ts[39m[22m [203:42 - 212:78]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\services\paymentProcessor.ts[39m[22m [20:30 - 33:7] (13 lines, 108 tokens)
+   [1m[32mapps\backend\src\services\__tests__\paymentProcessor.test.ts[39m[22m [42:55 - 56:6]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\schemas\withdrawRequest.ts[39m[22m [2:1 - 25:69] (23 lines, 273 tokens)
+   [1m[32mapps\consumer-app\src\schemas\withdrawRequest.ts[39m[22m [3:1 - 26:69]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\webhookController.ts[39m[22m [49:5 - 65:18] (16 lines, 158 tokens)
+   [1m[32mapps\backend\src\middleware\auth.ts[39m[22m [68:3 - 84:14]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\merchantController.ts[39m[22m [19:24 - 25:13] (6 lines, 90 tokens)
+   [1m[32mapps\backend\src\types\index.ts[39m[22m [160:45 - 166:12]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\merchantController.ts[39m[22m [146:31 - 155:72] (9 lines, 130 tokens)
+   [1m[32mapps\backend\src\controllers\merchantController.ts[39m[22m [110:26 - 120:21]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\merchantController.ts[39m[22m [190:16 - 206:6] (16 lines, 102 tokens)
+   [1m[32mapps\backend\src\controllers\paymentController.ts[39m[22m [96:26 - 112:13]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\merchantController.ts[39m[22m [238:29 - 247:15] (9 lines, 107 tokens)
+   [1m[32mapps\backend\src\controllers\merchantController.ts[39m[22m [110:26 - 119:19]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\invoiceController.ts[39m[22m [67:17 - 81:27] (14 lines, 89 tokens)
+   [1m[32mapps\backend\src\controllers\paymentController.ts[39m[22m [117:17 - 131:31]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\invoiceController.ts[39m[22m [176:32 - 182:6] (6 lines, 89 tokens)
+   [1m[32mapps\backend\src\controllers\invoiceController.ts[39m[22m [144:31 - 150:13]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\invoiceController.ts[39m[22m [217:28 - 223:37] (6 lines, 100 tokens)
+   [1m[32mapps\backend\src\controllers\invoiceController.ts[39m[22m [144:31 - 152:15]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\invoiceController.ts[39m[22m [223:58 - 236:7] (13 lines, 95 tokens)
+   [1m[32mapps\backend\src\controllers\invoiceController.ts[39m[22m [181:19 - 194:8]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\invoiceController.ts[39m[22m [288:53 - 302:61] (14 lines, 124 tokens)
+   [1m[32mapps\backend\src\controllers\invoiceController.ts[39m[22m [181:19 - 237:77]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\src\controllers\directoryController.ts[39m[22m [9:5 - 19:7] (10 lines, 87 tokens)
+   [1m[32mapps\backend\src\controllers\merchantController.ts[39m[22m [119:5 - 129:8]
+
+Clone found (powershell):
+ - [1m[32mapps\consumer-app\scripts\run-android-emulator.ps1[39m[22m [1:1 - 20:70] (19 lines, 153 tokens)
+   [1m[32mapps\consumer-app\scripts\verify-app-links.ps1[39m[22m [7:1 - 26:19]
+
+Clone found (powershell):
+ - [1m[32mapps\consumer-app\scripts\run-android-emulator.ps1[39m[22m [170:1 - 186:13] (16 lines, 105 tokens)
+   [1m[32mapps\consumer-app\scripts\verify-app-links.ps1[39m[22m [32:3 - 48:10]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\scripts\generateBoilerplateTests.js[39m[22m [4:86 - 13:57] (9 lines, 120 tokens)
+   [1m[32mapps\consumer-app\scripts\generateHookTests.js[39m[22m [4:26 - 13:55]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\scripts\generateBoilerplateTests.js[39m[22m [81:2 - 92:7] (11 lines, 130 tokens)
+   [1m[32mapps\consumer-app\scripts\generateHookTests.js[39m[22m [63:2 - 74:12]
+
+Clone found (powershell):
+ - [1m[32mapps\consumer-app\scripts\build-android-safe.ps1[39m[22m [34:7 - 51:12] (17 lines, 127 tokens)
+   [1m[32mapps\consumer-app\scripts\generate-assetlinks-json.ps1[39m[22m [27:7 - 44:7]
+
+Clone found (powershell):
+ - [1m[32mapps\consumer-app\scripts\build-android-safe.ps1[39m[22m [77:31 - 110:15] (33 lines, 236 tokens)
+   [1m[32mapps\consumer-app\scripts\generate-assetlinks-json.ps1[39m[22m [26:39 - 66:16]
+
+Clone found (powershell):
+ - [1m[32mapps\consumer-app\scripts\build-android-emulator-safe.ps1[39m[22m [19:1 - 67:114] (48 lines, 324 tokens)
+   [1m[32mapps\consumer-app\scripts\build-android-safe.ps1[39m[22m [21:1 - 113:110]
+
+Clone found (powershell):
+ - [1m[32mapps\consumer-app\scripts\build-android-emulator-safe.ps1[39m[22m [69:3 - 76:11] (7 lines, 94 tokens)
+   [1m[32mapps\consumer-app\scripts\build-android-safe.ps1[39m[22m [115:3 - 122:9]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\scripts\e2e-smoke-test.ts[39m[22m [216:5 - 221:13] (5 lines, 87 tokens)
+   [1m[32mpackages\circuits\test\merkleTree.ts[39m[22m [129:5 - 136:77]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\scripts\e2e-smoke-test.ts[39m[22m [225:9 - 236:7] (11 lines, 107 tokens)
+   [1m[32mpackages\circuits\test\merkleTree.ts[39m[22m [145:9 - 158:86]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\scripts\e2e-smoke-test.ts[39m[22m [241:5 - 255:10] (14 lines, 211 tokens)
+   [1m[32mpackages\circuits\test\merkleTree.ts[39m[22m [189:5 - 207:74]
+
+Clone found (typescript):
+ - [1m[32mapps\backend\scripts\e2e-smoke-test.ts[39m[22m [370:1 - 380:81] (10 lines, 111 tokens)
+   [1m[32mapps\consumer-app\src\utils\pushNotifications.ts[39m[22m [45:1 - 58:4]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\fix_tests.js[39m[22m [8:57 - 17:24] (9 lines, 81 tokens)
+   [1m[32mapps\consumer-app\fix_tests_2.js[39m[22m [6:66 - 15:10]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\fix-errors-3.js[39m[22m [3:20 - 11:27] (8 lines, 81 tokens)
+   [1m[32mapps\consumer-app\fix-errors.js[39m[22m [3:13 - 11:27]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\fix-errors-2.js[39m[22m [4:7 - 14:10] (10 lines, 115 tokens)
+   [1m[32mapps\consumer-app\precise-fix.js[39m[22m [3:45 - 15:26]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\fix-array.js[39m[22m [63:98 - 68:73] (5 lines, 77 tokens)
+   [1m[32mapps\consumer-app\fix-array.js[39m[22m [31:78 - 36:61]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\clean_sentry_app.js[39m[22m [10:67 - 22:27] (12 lines, 117 tokens)
+   [1m[32mapps\consumer-app\fix_tests.js[39m[22m [5:68 - 15:10]
+
+[32mJSON report saved to .audit-evidence\jscpd-report.json[39m
+[3m[90mtime[39m[23m: 11.662s
+
+[90m💡 Auto-refactor with AI: npx skills add kucherenko/jscpd[39m
+[90m🎩 New: Gangsta Agents — discipline your AI coding → gangsta.page[39m
+[90m💖 Support jscpd project → https://opencollective.com/jscpd[39m

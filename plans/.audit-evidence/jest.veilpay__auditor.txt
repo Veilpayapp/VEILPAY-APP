@@ -1,0 +1,188 @@
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in D:/Veilpay/packages/auditor/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in D:/Veilpay/packages/auditor/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in D:/Veilpay/packages/auditor/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in D:/Veilpay/packages/auditor/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in D:/Veilpay/packages/auditor/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in D:/Veilpay/packages/auditor/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in D:/Veilpay/packages/auditor/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in D:/Veilpay/packages/auditor/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in D:/Veilpay/packages/auditor/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in D:/Veilpay/packages/auditor/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in D:/Veilpay/packages/auditor/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+PASS src/render/annotatePlans.property.test.ts
+PASS src/passes/synthesis/rubric.property.test.ts
+PASS src/passes/synthesis/security.property.test.ts
+FAIL src/render/renderAuditReport.property.test.ts
+  ● renderAuditReport — Property 1: required sections and links › every section title in SECTION_TITLES appears as an H2 with a matching anchor
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at eval (eval at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:484:23), <anonymous>:3:15)
+      at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:491:5)
+
+  ● renderAuditReport — Property 1: required sections and links › intra-document links from the lead paragraph resolve to existing anchors
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at eval (eval at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:484:23), <anonymous>:3:15)
+      at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:491:5)
+
+  ● renderAuditReport — Property 2: Run Metadata + executive summary budget › Run Metadata timestamps parse via Date.parse and Workspace SHA is non-empty
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at eval (eval at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:484:23), <anonymous>:3:15)
+      at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:491:5)
+
+  ● renderAuditReport — Property 2: Run Metadata + executive summary budget › executive summary word count is <= EXECUTIVE_SUMMARY_WORD_LIMIT
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at eval (eval at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:484:23), <anonymous>:3:15)
+      at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:491:5)
+
+  ● renderAuditReport — negative: oversized executive summary throws › throws when executive_summary exceeds EXECUTIVE_SUMMARY_WORD_LIMIT
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at eval (eval at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:484:23), <anonymous>:3:15)
+      at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:491:5)
+
+PASS src/passes/reporting.test.ts
+PASS src/passes/synthesis/codeQuality.property.test.ts
+PASS src/passes/synthesis/thresholds.property.test.ts
+PASS src/passes/staticAnalysis/probes.test.ts
+PASS src/models/finding.property.test.ts
+PASS src/passes/synthesis/networkIcons.property.test.ts
+PASS src/passes/synthesis/verdict.property.test.ts
+PASS src/passes/discovery.test.ts (5.132 s)
+PASS src/passes/synthesis/plans.property.test.ts
+PASS src/passes/staticAnalysis/graphify.property.test.ts
+FAIL src/passes/staticAnalysis/graphify.success.test.ts
+  ● Test suite failed to run
+
+    [96msrc/passes/staticAnalysis/graphify.success.test.ts[0m:[93m73[0m:[93m72[0m - [91merror[0m[90m TS1127: [0mInvalid character.
+
+    [7m73[0m       await fs.writeFile(path.join(graphifyOutDir, 'GRAPH_REPORT.md'), \`
+    [7m  [0m [91m                                                                       [0m
+    [96msrc/passes/staticAnalysis/graphify.success.test.ts[0m:[93m103[0m:[93m1[0m - [91merror[0m[90m TS1160: [0mUnterminated template literal.
+
+    [7m103[0m 
+    [7m   [0m [91m[0m
+
+PASS src/passes/staticAnalysis/probes.success.test.ts
+FAIL src/passes/staticAnalysis/routes.success.test.ts
+  ● Test suite failed to run
+
+    [96msrc/passes/staticAnalysis/routes.success.test.ts[0m:[93m48[0m:[93m87[0m - [91merror[0m[90m TS1127: [0mInvalid character.
+
+    [7m48[0m     await fs.writeFile(path.join(workspaceRoot, 'apps', 'backend', 'src', 'auth.ts'), \`
+    [7m  [0m [91m                                                                                      [0m
+    [96msrc/passes/staticAnalysis/routes.success.test.ts[0m:[93m90[0m:[93m1[0m - [91merror[0m[90m TS1160: [0mUnterminated template literal.
+
+    [7m90[0m 
+    [7m  [0m [91m[0m
+
+PASS src/util/walk.test.ts
+PASS src/passes/staticAnalysis/security.success.test.ts
+PASS src/passes/staticAnalysis/strictMode.test.ts
+PASS src/passes/synthesis/frontendPolish.property.test.ts (5.561 s)
+PASS src/passes/synthesis/specCoherence.property.test.ts (5.704 s)
+PASS src/passes/staticAnalysis/runner.test.ts
+PASS src/passes/reporting.modset.property.test.ts (6.203 s)
+PASS src/cli/index.test.ts
+PASS src/cli/cli.smoke.test.ts (9.768 s)
+PASS src/cli/inProcess.test.ts
+
+Summary of all failing tests
+FAIL src/render/renderAuditReport.property.test.ts
+  ● renderAuditReport — Property 1: required sections and links › every section title in SECTION_TITLES appears as an H2 with a matching anchor
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at eval (eval at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:484:23), <anonymous>:3:15)
+      at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:491:5)
+
+  ● renderAuditReport — Property 1: required sections and links › intra-document links from the lead paragraph resolve to existing anchors
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at eval (eval at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:484:23), <anonymous>:3:15)
+      at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:491:5)
+
+  ● renderAuditReport — Property 2: Run Metadata + executive summary budget › Run Metadata timestamps parse via Date.parse and Workspace SHA is non-empty
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at eval (eval at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:484:23), <anonymous>:3:15)
+      at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:491:5)
+
+  ● renderAuditReport — Property 2: Run Metadata + executive summary budget › executive summary word count is <= EXECUTIVE_SUMMARY_WORD_LIMIT
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at eval (eval at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:484:23), <anonymous>:3:15)
+      at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:491:5)
+
+  ● renderAuditReport — negative: oversized executive summary throws › throws when executive_summary exceeds EXECUTIVE_SUMMARY_WORD_LIMIT
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at eval (eval at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:484:23), <anonymous>:3:15)
+      at Object.<anonymous> (src/render/renderAuditReport.property.test.ts:491:5)
+
+FAIL src/passes/staticAnalysis/graphify.success.test.ts
+  ● Test suite failed to run
+
+    [96msrc/passes/staticAnalysis/graphify.success.test.ts[0m:[93m73[0m:[93m72[0m - [91merror[0m[90m TS1127: [0mInvalid character.
+
+    [7m73[0m       await fs.writeFile(path.join(graphifyOutDir, 'GRAPH_REPORT.md'), \`
+    [7m  [0m [91m                                                                       [0m
+    [96msrc/passes/staticAnalysis/graphify.success.test.ts[0m:[93m103[0m:[93m1[0m - [91merror[0m[90m TS1160: [0mUnterminated template literal.
+
+    [7m103[0m 
+    [7m   [0m [91m[0m
+
+FAIL src/passes/staticAnalysis/routes.success.test.ts
+  ● Test suite failed to run
+
+    [96msrc/passes/staticAnalysis/routes.success.test.ts[0m:[93m48[0m:[93m87[0m - [91merror[0m[90m TS1127: [0mInvalid character.
+
+    [7m48[0m     await fs.writeFile(path.join(workspaceRoot, 'apps', 'backend', 'src', 'auth.ts'), \`
+    [7m  [0m [91m                                                                                      [0m
+    [96msrc/passes/staticAnalysis/routes.success.test.ts[0m:[93m90[0m:[93m1[0m - [91merror[0m[90m TS1160: [0mUnterminated template literal.
+
+    [7m90[0m 
+    [7m  [0m [91m[0m
+
+
+Test Suites: 3 failed, 24 passed, 27 total
+Tests:       5 failed, 87 passed, 92 total
+Snapshots:   0 total
+Time:        12.116 s
+Ran all test suites.
+undefined
+D:\Veilpay\packages\auditor:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found

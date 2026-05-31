@@ -11,9 +11,6 @@
 import { createHmac } from 'crypto';
 import { config } from '../config';
 
-const MAX_RETRIES = 3;
-const RETRY_DELAYS_MS = [5_000, 30_000, 120_000];
-
 export interface WebhookDeliveryPayload {
   eventType: 'payment.received' | 'invoice.paid' | 'invoice.expired';
   merchantId: string;
@@ -28,7 +25,6 @@ export interface WebhookDeliveryPayload {
 export interface WebhookDeliveryResult {
   success: boolean;
   statusCode?: number;
-  attempts: number;
   lastError?: string;
 }
 
@@ -38,11 +34,10 @@ function signWebhookPayload(payload: string, timestamp: number): string {
     .digest('hex');
 }
 
-async function attemptDelivery(
+export async function deliverWebhook(
   url: string,
-  payload: WebhookDeliveryPayload,
-  attempt: number
-): Promise<{ ok: boolean; statusCode?: number; error?: string }> {
+  payload: WebhookDeliveryPayload
+): Promise<WebhookDeliveryResult> {
   const timestamp = Date.now();
   const body = JSON.stringify(payload);
   const signature = signWebhookPayload(body, timestamp);
@@ -67,53 +62,18 @@ async function attemptDelivery(
     clearTimeout(timeoutId);
 
     if (response.ok) {
-      return { ok: true, statusCode: response.status };
+      return { success: true, statusCode: response.status };
     }
 
     const errorText = await response.text().catch(() => 'Unknown error');
     return {
-      ok: false,
+      success: false,
       statusCode: response.status,
-      error: `HTTP ${response.status}: ${errorText.substring(0, 200)}`,
+      lastError: `HTTP ${response.status}: ${errorText.substring(0, 200)}`,
     };
   } catch (err) {
     clearTimeout(timeoutId);
     const message = err instanceof Error ? err.message : 'Unknown fetch error';
-    return { ok: false, error: message };
+    return { success: false, lastError: message };
   }
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-export async function deliverWebhook(
-  url: string,
-  payload: WebhookDeliveryPayload
-): Promise<WebhookDeliveryResult> {
-  let lastError: string | undefined;
-  let attempts = 0;
-
-  for (let i = 0; i < MAX_RETRIES; i++) {
-    attempts = i + 1;
-
-    if (i > 0) {
-      const delay = RETRY_DELAYS_MS[i - 1] ?? RETRY_DELAYS_MS[RETRY_DELAYS_MS.length - 1];
-      await sleep(delay);
-    }
-
-    const result = await attemptDelivery(url, payload, i);
-
-    if (result.ok) {
-      return { success: true, statusCode: result.statusCode, attempts };
-    }
-
-    lastError = result.error;
-
-    if (result.statusCode && result.statusCode >= 400 && result.statusCode < 500) {
-      return { success: false, statusCode: result.statusCode, attempts, lastError };
-    }
-  }
-
-  return { success: false, attempts, lastError };
 }

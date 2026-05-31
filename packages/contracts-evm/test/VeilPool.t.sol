@@ -2,96 +2,133 @@
 pragma solidity ^0.8.25;
 
 import {Test} from "forge-std/Test.sol";
-import {VeilPool, IVerifySignature} from "../src/VeilPool.sol";
-
-contract AcceptsEth {
-    receive() external payable {}
-}
-
-contract MockVerifier is IVerifySignature {
-    bool private immutable returnValue;
-
-    constructor(bool _returnValue) {
-        returnValue = _returnValue;
-    }
-
-    function verifyProof(
-        bytes calldata,
-        bytes32[] calldata
-    ) external view returns (bool) {
-        return returnValue;
-    }
-}
+import {IERC20} from "forge-std/interfaces/IERC20.sol";
+import {VeilPool, InvalidFeeRecipient, InvalidFeeBps, InvalidVerifier, InvalidHasher} from "../src/VeilPool.sol";
+import {ToggleableVerifier, MockPoseidonHasher, MockERC20} from "./CustomErrors.t.sol";
+import {IGroth16Verifier} from "../src/IGroth16Verifier.sol";
+import {IPoseidonHasher} from "../src/IPoseidonHasher.sol";
 
 contract VeilPoolTest is Test {
     VeilPool private pool;
-    MockVerifier private failingVerifier;
-    MockVerifier private passingVerifier;
-    AcceptsEth private feeRecipient;
-    AcceptsEth private recipient;
+    ToggleableVerifier private verifier;
+    MockPoseidonHasher private hasher;
+    MockERC20 private token;
+
+    address private feeRecipient = address(0xFEE);
+    address private recipient = address(0xBEEF);
+    uint256 private constant WITHDRAW_FEE_BPS = 300; // 3%
 
     function setUp() public {
-        failingVerifier = new MockVerifier(false);
-        passingVerifier = new MockVerifier(true);
-        feeRecipient = new AcceptsEth();
-        recipient = new AcceptsEth();
-        pool = new VeilPool(address(failingVerifier), address(feeRecipient));
+        verifier = new ToggleableVerifier();
+        verifier.setOk(true); // default passing
+        hasher = new MockPoseidonHasher();
+        token = new MockERC20();
+
+        pool = new VeilPool(
+            IGroth16Verifier(address(verifier)),
+            IPoseidonHasher(address(hasher)),
+            feeRecipient,
+            WITHDRAW_FEE_BPS
+        );
+
+        token.mint(address(this), 1_000_000);
+        token.approve(address(pool), type(uint256).max);
     }
 
-    function testDepositAndWithdrawWithUpdatedVerifier() public {
-        vm.deal(address(this), 10_000);
-
+    function testDepositAndWithdraw() public {
         bytes32 commitment = keccak256("commitment");
-        uint256 leafIndex = pool.deposit{value: 10_000}(commitment, address(0), 10_000);
+        uint256 depositAmount = 10_000;
 
+        uint256 poolBalanceBefore = token.balanceOf(address(pool));
+
+        uint32 leafIndex = pool.deposit(commitment, address(token), depositAmount);
+        
         assertEq(leafIndex, 0);
-        assertEq(pool.balances(address(0)), 9_970);
-        assertEq(address(pool).balance, 9_970);
-
-        pool.updateVerifier(address(passingVerifier));
+        assertEq(token.balanceOf(address(pool)), poolBalanceBefore + depositAmount);
 
         bytes memory proof = new bytes(256);
         bytes32 nullifier = keccak256("nullifier");
+        bytes32 root = pool.roots(pool.currentRootIndex());
 
-        uint256 feeRecipientBefore = address(feeRecipient).balance;
-        uint256 recipientBefore = address(recipient).balance;
+        uint256 feeRecipientBefore = token.balanceOf(feeRecipient);
+        uint256 recipientBefore = token.balanceOf(recipient);
 
-        pool.withdraw(nullifier, proof, address(recipient), address(0), 9_970);
+        pool.withdraw(nullifier, proof, root, recipient, address(token), depositAmount);
 
         assertEq(pool.nullifierSpent(nullifier), true);
-        assertEq(pool.balances(address(0)), 0);
-        assertEq(address(pool).balance, 0);
-        assertEq(address(feeRecipient).balance - feeRecipientBefore, 29);
-        assertEq(address(recipient).balance - recipientBefore, 9_941);
+        assertEq(token.balanceOf(address(pool)), 0);
+
+        uint256 expectedFee = (depositAmount * WITHDRAW_FEE_BPS) / 10_000;
+        uint256 expectedPayout = depositAmount - expectedFee;
+
+        assertEq(token.balanceOf(feeRecipient) - feeRecipientBefore, expectedFee);
+        assertEq(token.balanceOf(recipient) - recipientBefore, expectedPayout);
     }
 
     function testDepositRevertsWhenPaused() public {
         pool.pause();
 
-        vm.deal(address(this), 1);
         vm.expectRevert(abi.encodeWithSignature("EnforcedPause()"));
-        pool.deposit{value: 1}(bytes32(uint256(1)), address(0), 1);
+        pool.deposit(keccak256("c"), address(token), 10_000);
     }
 
     function testWithdrawRevertsWhenPaused() public {
-        vm.deal(address(this), 10_000);
-        pool.deposit{value: 10_000}(bytes32(uint256(1)), address(0), 10_000);
-        pool.updateVerifier(address(passingVerifier));
+        pool.deposit(keccak256("c"), address(token), 10_000);
+        bytes32 root = pool.roots(pool.currentRootIndex());
+        
         pool.pause();
 
         vm.expectRevert(abi.encodeWithSignature("EnforcedPause()"));
-        pool.withdraw(bytes32(uint256(2)), new bytes(256), address(recipient), address(0), 9_970);
+        pool.withdraw(keccak256("n"), new bytes(0), root, recipient, address(token), 10_000);
     }
 
-    function testUpdateVerifierOnlyOwner() public {
-        vm.prank(address(0xBEEF));
-        vm.expectRevert(abi.encodeWithSignature("OwnableUnauthorizedAccount(address)", address(0xBEEF)));
-        pool.updateVerifier(address(passingVerifier));
+    function testUpdateFeeRecipient() public {
+        address newFeeRecip = address(0x42);
+        pool.updateFeeRecipient(newFeeRecip);
+        assertEq(pool.feeRecipient(), newFeeRecip);
     }
 
     function testUpdateFeeRecipientOnlyOwner() public {
         vm.prank(address(0xBEEF));
         vm.expectRevert(abi.encodeWithSignature("OwnableUnauthorizedAccount(address)", address(0xBEEF)));
         pool.updateFeeRecipient(address(recipient));
+    }
+
+    function testUpdateFeeRecipientRevertsZeroAddress() public {
+        vm.expectRevert(InvalidFeeRecipient.selector);
+        pool.updateFeeRecipient(address(0));
+    }
+
+    function testConstructorReverts() public {
+        vm.expectRevert(InvalidVerifier.selector);
+        new VeilPool(IGroth16Verifier(address(0)), IPoseidonHasher(address(hasher)), feeRecipient, WITHDRAW_FEE_BPS);
+
+        vm.expectRevert(InvalidHasher.selector);
+        new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(address(0)), feeRecipient, WITHDRAW_FEE_BPS);
+
+        vm.expectRevert(InvalidFeeRecipient.selector);
+        new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(address(hasher)), address(0), WITHDRAW_FEE_BPS);
+
+        vm.expectRevert(InvalidFeeBps.selector);
+        new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(address(hasher)), feeRecipient, 10_001);
+    }
+
+    function testUnpause() public {
+        pool.pause();
+        assertTrue(pool.paused());
+        pool.unpause();
+        assertFalse(pool.paused());
+    }
+
+    function testPauseUnpauseOnlyOwner() public {
+        vm.prank(address(0xBEEF));
+        vm.expectRevert(abi.encodeWithSignature("OwnableUnauthorizedAccount(address)", address(0xBEEF)));
+        pool.pause();
+
+        pool.pause();
+
+        vm.prank(address(0xBEEF));
+        vm.expectRevert(abi.encodeWithSignature("OwnableUnauthorizedAccount(address)", address(0xBEEF)));
+        pool.unpause();
     }
 }

@@ -25,6 +25,8 @@ import { Icon } from '../components/Icon';
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { useTokenBalances } from '../hooks/useBalance';
 import { useMarketData } from '../hooks/useMarketData';
+import { useSettingsStore } from '../stores/settingsStore';
+import { formatFiatValue, getFiatExchangeRate } from '../utils/priceFeed';
 import type { PaymentToken } from '../types/tokens';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -106,15 +108,12 @@ const formatBalance = (balance: string | undefined, symbol: string): string => {
   return `${num.toFixed(2)} ${symbol}`;
 };
 
-// Format USD value for display
-const formatUsdValue = (balance: string | undefined, price: number): string => {
-  const num = safeParseFloat(balance) * price;
-  if (num === 0) return '$0.00';
-  if (num < 0.01) return '< $0.01';
-  if (num >= 1000) {
-    return `$${num.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
-  }
-  return `$${num.toFixed(2)}`;
+// Format Fiat value for display
+const formatFiatDisplay = (balance: string | undefined, price: number, fiatRate: number, nativeCurrency: string): string => {
+  const num = safeParseFloat(balance) * price * fiatRate;
+  if (num === 0) return formatFiatValue(0, nativeCurrency);
+  if (num < 0.01) return `< ${formatFiatValue(0.01, nativeCurrency)}`;
+  return formatFiatValue(num, nativeCurrency);
 };
 
 export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenProps) {
@@ -124,6 +123,12 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
 
   const { activeChain } = useWalletStore();
   const { quotes: marketQuotes } = useMarketData(MARKET_SYMBOLS);
+  const { nativeCurrency } = useSettingsStore();
+  const [fiatRate, setFiatRate] = useState(1);
+
+  useEffect(() => {
+    getFiatExchangeRate(nativeCurrency || 'USD').then(setFiatRate);
+  }, [nativeCurrency]);
 
   // Get params with proper typing
   const selectedSymbol = route.params?.selectedSymbol;
@@ -219,7 +224,7 @@ backgroundColor={isSelected ? colors.bgTertiary : colors.bgSecondary}
                 {formatBalance(item.balance, item.symbol)}
               </Text>
               <Text style={styles.tokenUsd}>
-                {formatUsdValue(item.balance, item.usdPrice)}
+                {formatFiatDisplay(item.balance, item.usdPrice, fiatRate, nativeCurrency || 'USD')}
               </Text>
               <Text
                 style={[

@@ -20,7 +20,9 @@ export const MetaMaskIcon = ({ width = 24, height = 24 }: { width?: number, heig
 
 export const WalletConnectIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
   <Svg width={width} height={height} fill="none" viewBox="0 0 400 400">
+    // eslint-disable-next-line rendering-svg-precision
     <Circle cx="200" cy="200" fill="#3396ff" r="199.5" />
+    // eslint-disable-next-line rendering-svg-precision
     <Path fill="#fff" d="m122.519 148.965c42.791-41.729 112.171-41.729 154.962 0l5.15 5.022c2.14 2.086 2.14 5.469 0 7.555l-17.617 17.18c-1.07 1.043-2.804 1.043-3.874 0l-7.087-6.911c-29.853-29.111-78.253-29.111-108.106 0l-7.59 7.401c-1.07 1.043-2.804 1.043-3.874 0l-17.617-17.18c-2.14-2.086-2.14-5.469 0-7.555zm191.397 35.529 15.679 15.29c2.14 2.086 2.14 5.469 0 7.555l-70.7 68.944c-2.139 2.087-5.608 2.087-7.748 0l-50.178-48.931c-.535-.522-1.402-.522-1.937 0l-50.178 48.931c-2.139 2.087-5.608 2.087-7.748 0l-70.7015-68.945c-2.1396-2.086-2.1396-5.469 0-7.555l15.6795-15.29c2.1396-2.086 5.6085-2.086 7.7481 0l50.1789 48.932c.535.522 1.402.522 1.937 0l50.177-48.932c2.139-2.087 5.608-2.087 7.748 0l50.179 48.932c.535.522 1.402.522 1.937 0l50.179-48.931c2.139-2.087 5.608-2.087 7.748 0z" />
   </Svg>
 );
@@ -29,5 +31,38 @@ export const TrustWalletIcon = ({ width = 24, height = 24 }: { width?: number, h
   <Svg width={width} height={height} viewBox="0 0 1024 1024" fill="none">
     <Path d="M512 110l-340 160v220c0 340 340 500 340 500s340-160 340-500V270L512 110z" fill="#3375BB"/>
     <Path d="M512 280c-40 0-80 15-110 45l-140 140 80 80L432 435v395h160V435l90 90 80-80-140-140C592 295 552 280 512 280z" fill="#FFF"/>
+  </Svg>
+);
+
+export const PhantomIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
+  <Svg width={width} height={height} viewBox="0 0 100 100" fill="none">
+    <Circle cx="50" cy="50" r="50" fill="#AB9FF2"/>
+    <Path d="M70.9 44.5c0-14.8-12-26.8-26.8-26.8S17.3 29.7 17.3 44.5v37.8L28 71.6l10.7 10.7 10.7-10.7 10.7 10.7L70.9 71.6V44.5z" fill="#FFF"/>
+    <Circle cx="35" cy="40" r="4" fill="#AB9FF2"/>
+    <Circle cx="53" cy="40" r="4" fill="#AB9FF2"/>
+  </Svg>
+);
+
+export const PetraIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
+  <Svg width={width} height={height} viewBox="0 0 100 100" fill="none">
+    <Circle cx="50" cy="50" r="50" fill="#E86C6A"/>
+    <Path d="M41 22L20 48L41 78h18l21-30L59 22H41z" fill="#FFF"/>
+    <Path d="M50 35l12 18-12 15-12-15L50 35z" fill="#E86C6A"/>
+  </Svg>
+);
+
+export const LobstrIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
+  <Svg width={width} height={height} viewBox="0 0 100 100" fill="none">
+    <Circle cx="50" cy="50" r="50" fill="#00C48C"/>
+    <Path d="M30 50h40M50 30v40" stroke="#FFF" strokeWidth="8" strokeLinecap="round"/>
+    <Circle cx="50" cy="50" r="10" fill="#FFF"/>
+  </Svg>
+);
+
+export const LedgerIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
+  <Svg width={width} height={height} viewBox="0 0 100 100" fill="none">
+    <Circle cx="50" cy="50" r="50" fill="#000000"/>
+    <Path d="M35 35h10v10H35zM55 35h10v10H55zM35 55h10v10H35z" fill="#FFF"/>
+    <Path d="M45 45h20v20H45z" stroke="#FFF" strokeWidth="4"/>
   </Svg>
 );

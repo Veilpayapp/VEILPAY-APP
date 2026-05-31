@@ -1,8 +1,8 @@
-{
+﻿{
   "expo": {
     "name": "Veilpay",
     "slug": "veilpay",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "entryPoint": "./index.ts",
     "orientation": "portrait",
     "icon": "./assets/logo-icon.png",
@@ -21,10 +21,14 @@
       "resizeMode": "contain",
       "backgroundColor": "#0A0A0B"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.veilpay.consumer"
+      "bundleIdentifier": "com.veilpay.consumer",
+      "buildNumber": "2",
+      "jsEngine": "hermes"
     },
     "android": {
       "adaptiveIcon": {
@@ -32,9 +36,14 @@
         "backgroundImage": "./assets/android-icon-background.png"
       },
       "package": "com.veilpay.consumer",
-      "versionCode": 1,
-      "permissions": ["CAMERA", "INTERNET", "VIBRATE", "POST_NOTIFICATIONS"],
-      "googleServicesFile": "./google-services.json"
+      "versionCode": 2,
+      "permissions": [
+        "CAMERA",
+        "INTERNET",
+        "VIBRATE",
+        "POST_NOTIFICATIONS"
+      ],
+      "jsEngine": "hermes"
     },
     "notification": {
       "icon": "./assets/icon.png",
@@ -51,11 +60,11 @@
       "expo-font",
       "expo-notifications",
       "expo-updates",
-      "@sentry/react-native/expo"
-    ],
+      "@react-native-community/datetimepicker"],
     "scheme": "veilpay",
     "extra": {
       "eas": {}
     }
   }
 }
+

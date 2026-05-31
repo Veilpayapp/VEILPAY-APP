@@ -1,0 +1,16 @@
+appId: com.veilpay.consumer
+---
+- launchApp:
+    clearState: true
+- assertVisible: 'Veilpay'
+- tapOn: 'IMPORT WALLET'
+- assertVisible: 'Secret Recovery Phrase'
+- tapOn: 'Enter your 12 or 24-word phrase'
+- inputText: 'apple banana cherry date elderberry fig grape honeydew kiwi lemon mango nectarine'
+- hideKeyboard
+- tapOn: 'CONTINUE'
+- extendedWaitUntil:
+    visible: 'Wallet Imported'
+    timeout: 15000
+- assertVisible: 'SEND'
+- assertVisible: 'RECEIVE'

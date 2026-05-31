@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { SovereignButton } from './SovereignButton';
-import { typography, useTheme, useStyles } from '../styles/design-tokens';
+import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 
 interface EmptyStateProps {
   icon: React.ReactNode;
@@ -39,7 +39,7 @@ export function EmptyState({
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',

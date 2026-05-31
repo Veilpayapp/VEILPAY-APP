@@ -4,10 +4,9 @@ const mockCreateRandom = jest.fn(() => ({
   address: '0x2222222222222222222222222222222222222222',
 }));
 
-jest.mock('ethers', () => ({
-  Wallet: {
-    createRandom: () => mockCreateRandom(),
-  },
+jest.mock('viem/accounts', () => ({
+  generatePrivateKey: () => '0x123',
+  privateKeyToAccount: () => mockCreateRandom(),
 }));
 
 describe('createDemoEvmAddress', () => {
@@ -18,7 +17,7 @@ describe('createDemoEvmAddress', () => {
     });
   });
 
-  it('uses ethers wallet random generation for demo addresses', () => {
+  it('uses viem random generation for demo addresses', () => {
     expect(createDemoEvmAddress()).toBe('0x2222222222222222222222222222222222222222');
     expect(mockCreateRandom).toHaveBeenCalledTimes(1);
   });

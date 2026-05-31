@@ -30,8 +30,9 @@ import { ScreenBackButton } from "../components/ScreenBackButton";
 import { NetworkSelectorModal } from "../components/NetworkSelectorModal";
 import { setClipboardString } from "../utils/clipboard";
 import { openExternalUrl } from "../utils/externalLink";
-import { clearStoredMnemonic, deriveWalletFromMnemonic, getStoredMnemonic } from "../utils/transactions";
+import { clearStoredMnemonic, getStoredMnemonic } from "../utils/transactions";
 import { useBiometrics } from "../hooks/useBiometrics";
+import { useSettingsStore } from "../stores/settingsStore";
 import { useShallow } from "zustand/react/shallow";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -64,33 +65,43 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
     address,
     activeChain,
     setActiveChain,
-    biometricsEnabled,
-    notificationsEnabled,
-    analyticsEnabled,
-    defaultPrivacyLevel,
-    setBiometricsEnabled,
-    setNotificationsEnabled,
-    setAnalyticsEnabled,
-    setPrivacyLevel,
-    theme,
-    setTheme,
     disconnect,
   } = useWalletStore(
     useShallow((state) => ({
       address: state.address,
       activeChain: state.activeChain,
       setActiveChain: state.setActiveChain,
+      disconnect: state.disconnect,
+    }))
+  );
+
+  const {
+    biometricsEnabled,
+    notificationsEnabled,
+    analyticsEnabled,
+    defaultPrivacyLevel,
+    theme,
+    nativeCurrency,
+    setBiometricsEnabled,
+    setNotificationsEnabled,
+    setAnalyticsEnabled,
+    setPrivacyLevel,
+    setTheme,
+    setNativeCurrency,
+  } = useSettingsStore(
+    useShallow((state) => ({
       biometricsEnabled: state.biometricsEnabled,
       notificationsEnabled: state.notificationsEnabled,
       analyticsEnabled: state.analyticsEnabled,
       defaultPrivacyLevel: state.defaultPrivacyLevel,
       theme: state.theme,
+      nativeCurrency: state.nativeCurrency,
       setBiometricsEnabled: state.setBiometricsEnabled,
       setNotificationsEnabled: state.setNotificationsEnabled,
       setAnalyticsEnabled: state.setAnalyticsEnabled,
       setPrivacyLevel: state.setPrivacyLevel,
       setTheme: state.setTheme,
-      disconnect: state.disconnect,
+      setNativeCurrency: state.setNativeCurrency,
     }))
   );
   const toast = useToast();
@@ -176,6 +187,15 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
     setShowNetworkSelector(false);
     toast.show(`Switched to ${chain.name}`, "success");
   };
+
+  const handleCurrencyToggle = () => {
+    const currencies = ['USD', 'EUR', 'GBP', 'INR'];
+    const currentIndex = currencies.indexOf(nativeCurrency || 'USD');
+    const nextIndex = (currentIndex + 1) % currencies.length;
+    const nextCurrency = currencies[nextIndex];
+    setNativeCurrency(nextCurrency);
+    toast.show(`Native currency set to ${nextCurrency}`, "success");
+  };
   
   const handleNavPress = (screen: keyof RootStackParamList) => {
     if (screen === SCREENS.SETTINGS) {
@@ -234,7 +254,7 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
   };
 
   // Render settings section
-  const renderSection = (title: string, items: SettingsItem[]) => (
+  const renderSection = (title: string, items: SettingsItem[], index: number = 0) => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
       {items.map((item) => (
@@ -376,7 +396,15 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
     },
   ];
 
-  const appearanceSection: SettingsItem[] = [
+  const preferencesSection: SettingsItem[] = [
+    {
+      id: "currency",
+      label: "Native Currency",
+      description: `Display balances in ${nativeCurrency || 'USD'}`,
+      iconName: "globe",
+      type: "action",
+      onPress: handleCurrencyToggle,
+    },
     {
       id: "theme",
       label: "Light Mode",
@@ -479,12 +507,18 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
           </View>
 
           {/* Settings Sections */}
-          {renderSection("WALLET", walletSection)}
-          {renderSection("SECURITY", securitySection)}
-          {renderSection("PRIVACY", privacySection)}
-          {renderSection("APPEARANCE", appearanceSection)}
-          {renderSection("ABOUT", aboutSection)}
-          {renderSection("DANGER ZONE", dangerSection)}
+          // eslint-disable-next-line no-render-in-render
+          {renderSection("WALLET", walletSection, 0)}
+          // eslint-disable-next-line no-render-in-render
+          {renderSection("SECURITY", securitySection, 1)}
+          // eslint-disable-next-line no-render-in-render
+          {renderSection("PRIVACY", privacySection, 2)}
+          // eslint-disable-next-line no-render-in-render
+          {renderSection("PREFERENCES", preferencesSection, 3)}
+          // eslint-disable-next-line no-render-in-render
+          {renderSection("ABOUT", aboutSection, 4)}
+          // eslint-disable-next-line no-render-in-render
+          {renderSection("DANGER ZONE", dangerSection, 5)}
 
           <View style={{ height: 120 }} />
         </ScrollView>

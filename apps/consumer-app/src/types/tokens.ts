@@ -8,4 +8,6 @@ export interface PaymentToken {
   usdPrice: number;
   chainTypes: ChainTypeKey[];
   icon?: string;
+  address?: string;
+  decimals?: number;
 }

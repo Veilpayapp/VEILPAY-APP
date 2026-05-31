@@ -1,0 +1,285 @@
+import type { Request, Response, NextFunction } from "express";
+import { z } from "zod";
+import { randomUUID } from "crypto";
+import { hashApiKey, type AuthenticatedRequest } from "../middleware/auth";
+import { prisma } from "../lib/prisma";
+import {
+  uuidParamSchema,
+  MerchantUpdateRequestSchema,
+  MerchantUpdateResponseSchema,
+  MerchantStatsResponseSchema,
+} from "../types";
+
+const registerSchema = z.object({
+  businessName: z.string().trim().min(1).max(100),
+  email: z.string().email(),
+  webhookUrl: z.string().url().max(500).optional(),
+});
+
+const publishKeySchema = z.object({
+  chainKey: z.string().trim().min(1).max(50),
+  viewingKey: z.string().trim().min(1).max(2048),
+  settlementAddress: z.string().trim().min(1).max(100),
+});
+
+export const registerMerchant = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const data = registerSchema.parse(req.body);
+
+    const existingMerchant = await prisma.merchant.findUnique({
+      where: { email: data.email },
+    });
+
+    if (existingMerchant) {
+      res.status(409).json({ error: "Email already registered" });
+      return;
+    }
+
+    const apiKey = `vp_${randomUUID().replace(/-/g, "")}`;
+    const apiKeyHash = hashApiKey(apiKey);
+
+    const merchant = await prisma.merchant.create({
+      data: {
+        businessName: data.businessName,
+        email: data.email,
+        webhookUrl: data.webhookUrl,
+        apiKeyHash,
+        status: "active",
+      },
+    });
+
+    res.status(201).json({
+      merchantId: merchant.id,
+      businessName: merchant.businessName,
+      email: merchant.email,
+      apiKey,
+      status: merchant.status,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const publishKey = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const data = publishKeySchema.parse(req.body);
+    const merchantId = req.merchantId as string;
+
+    const CHAIN_TYPE_MAP: Record<string, "evm" | "svm" | "mvm"> = {
+      ethereum: "evm",
+      polygon: "evm",
+      arbitrum: "evm",
+      optimism: "evm",
+      base: "evm",
+      sepolia: "evm",
+      solana: "svm",
+      "solana-devnet": "svm",
+      aptos: "mvm",
+    };
+    const chainType = CHAIN_TYPE_MAP[data.chainKey] ?? "evm";
+
+    const viewingKey = await prisma.chainViewingKey.upsert({
+      where: {
+        merchantId_chainKey: {
+          merchantId,
+          chainKey: data.chainKey,
+        },
+      },
+      update: {
+        viewingKey: data.viewingKey,
+        settlementAddress: data.settlementAddress,
+      },
+      create: {
+        merchantId,
+        chainType,
+        chainKey: data.chainKey,
+        viewingKey: data.viewingKey,
+        settlementAddress: data.settlementAddress,
+      },
+    });
+
+    res.json({
+      chainKey: viewingKey.chainKey,
+      published: true,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMerchant = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = uuidParamSchema.parse(req.params);
+
+    if (req.merchantId !== id) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    const merchant = await prisma.merchant.findUnique({
+      where: { id },
+      include: { viewingKeys: true },
+    });
+
+    if (!merchant) {
+      res.status(404).json({ error: "Merchant not found" });
+      return;
+    }
+
+    res.json({
+      id: merchant.id,
+      businessName: merchant.businessName,
+      email: merchant.email,
+      webhookUrl: merchant.webhookUrl,
+      status: merchant.status,
+      tier: merchant.tier,
+      viewingKeys: merchant.viewingKeys.map((k) => ({
+        chainKey: k.chainKey,
+        settlementAddress: k.settlementAddress,
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMerchantStats = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = uuidParamSchema.parse(req.params);
+
+    if (req.merchantId !== id) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    const merchant = await prisma.merchant.findUnique({ where: { id } });
+    if (!merchant) {
+      res.status(404).json({ error: "Merchant not found" });
+      return;
+    }
+
+    const [
+      totalInvoices,
+      pendingInvoices,
+      paidInvoices,
+      expiredInvoices,
+      cancelledInvoices,
+      totalPayments,
+      confirmedPayments,
+      pendingPayments,
+      failedPayments,
+      chainVolumes,
+      recentPayments,
+    ] = await Promise.all([
+      prisma.invoice.count({ where: { merchantId: id } }),
+      prisma.invoice.count({ where: { merchantId: id, status: "pending" } }),
+      prisma.invoice.count({ where: { merchantId: id, status: "paid" } }),
+      prisma.invoice.count({ where: { merchantId: id, status: "expired" } }),
+      prisma.invoice.count({ where: { merchantId: id, status: "cancelled" } }),
+      prisma.payment.count({ where: { merchantId: id } }),
+      prisma.payment.count({ where: { merchantId: id, status: "confirmed" } }),
+      prisma.payment.count({ where: { merchantId: id, status: "pending" } }),
+      prisma.payment.count({ where: { merchantId: id, status: "failed" } }),
+      prisma.payment.findMany({
+        where: { merchantId: id, status: 'confirmed' },
+        select: { chainKey: true, amount: true },
+      }),
+      prisma.payment.findMany({
+        where: { merchantId: id },
+        orderBy: { timestamp: "desc" },
+        take: 5,
+        select: {
+          id: true,
+          invoiceId: true,
+          chainKey: true,
+          txHash: true,
+          fromAddress: true,
+          toAddress: true,
+          amount: true,
+          tokenSymbol: true,
+          privacyLevel: true,
+          status: true,
+          blockNumber: true,
+          timestamp: true,
+        },
+      }),
+    ]);
+
+    const totalVolumeByChain: Record<string, number> = {};
+    for (const payment of chainVolumes) {
+      const rawAmount = payment.amount ?? '0';
+      const val = parseFloat(rawAmount);
+      if (!isNaN(val)) {
+        totalVolumeByChain[payment.chainKey] = (totalVolumeByChain[payment.chainKey] || 0) + val;
+      }
+    }
+
+    res.json(
+      MerchantStatsResponseSchema.parse({
+        merchantId: id,
+        totalInvoices,
+        pendingInvoices,
+        paidInvoices,
+        expiredInvoices,
+        cancelledInvoices,
+        totalPayments,
+        confirmedPayments,
+        pendingPayments,
+        failedPayments,
+        totalVolumeByChain,
+        recentPayments,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateMerchant = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = uuidParamSchema.parse(req.params);
+
+    if (req.merchantId !== id) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    const data = MerchantUpdateRequestSchema.parse(req.body);
+
+    if (Object.keys(data).length === 0) {
+      res.status(400).json({ error: "No fields to update" });
+      return;
+    }
+
+    const merchant = await prisma.merchant.update({
+      where: { id },
+      data: {
+        ...(data.businessName !== undefined && { businessName: data.businessName }),
+        ...(data.webhookUrl !== undefined && { webhookUrl: data.webhookUrl }),
+      },
+      select: {
+        id: true,
+        businessName: true,
+        email: true,
+        webhookUrl: true,
+        status: true,
+        tier: true,
+        updatedAt: true,
+      },
+    });
+
+    res.json(
+      MerchantUpdateResponseSchema.parse({
+        id: merchant.id,
+        businessName: merchant.businessName,
+        email: merchant.email,
+        webhookUrl: merchant.webhookUrl,
+        status: merchant.status,
+        tier: merchant.tier,
+        updatedAt: merchant.updatedAt,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};

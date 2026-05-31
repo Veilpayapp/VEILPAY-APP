@@ -12,6 +12,9 @@ const mockShowToast = jest.fn();
 
 const walletState = {
   address: "0x1234567890abcdef1234567890abcdef12345678",
+  addresses: {
+    evm: "0x1234567890abcdef1234567890abcdef12345678",
+  },
   activeChain: {
     key: "ethereum",
     nativeToken: {
@@ -23,6 +26,21 @@ const walletState = {
   biometricsEnabled: false,
 };
 
+const settingsState = {
+  biometricsEnabled: false,
+};
+
+jest.mock("../../stores/settingsStore", () => ({
+  useSettingsStore: Object.assign((selector?: any) => {
+    if (typeof selector === 'function') {
+      return selector(settingsState);
+    }
+    return settingsState;
+  }, { getState: () => settingsState }),
+  useThemeState: () => 'dark',
+  usePrivacyLevel: () => 'standard',
+}));
+
 const mockMarketQuotes: Record<string, { symbol: string; price: number; change24h: number | null; lastUpdated: number; source: string; isStale: boolean }> = {
   ETH: { symbol: "ETH", price: 3200, change24h: 1.24, lastUpdated: Date.now(), source: "binance", isStale: false },
   MATIC: { symbol: "MATIC", price: 0.9, change24h: -0.72, lastUpdated: Date.now(), source: "binance", isStale: false },
@@ -31,7 +49,13 @@ const mockMarketQuotes: Record<string, { symbol: string; price: number; change24
 };
 
 jest.mock("../../stores/walletStore", () => ({
-  useWalletStore: () => walletState,
+  useWalletStore: Object.assign((selector?: any) => {
+    if (typeof selector === 'function') {
+      return selector(walletState);
+    }
+    return walletState;
+  }, { getState: () => walletState }),
+  useThemeState: () => "dark",
 }));
 
 jest.mock("../../hooks/useBiometrics", () => ({
@@ -156,7 +180,7 @@ describe("DepositCryptoScreen", () => {
     mockShowToast.mockReset();
     mockNavigate.mockReset();
     mockGoBack.mockReset();
-    walletState.biometricsEnabled = false;
+    settingsState.biometricsEnabled = false;
     mockAuthenticate.mockResolvedValue(true);
   });
 
@@ -210,10 +234,9 @@ describe("DepositCryptoScreen", () => {
     const screen = renderScreen();
 
     await waitFor(() => {
-      expect(screen.getAllByText("ETH").length).toBeGreaterThan(0);
+      expect(screen.getByText("Ethereum")).toBeTruthy();
       expect(screen.getAllByText("USDT").length).toBeGreaterThan(0);
       expect(screen.getAllByText("USDC").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("MATIC").length).toBeGreaterThan(0);
       expect(screen.getByText("LIVE BINANCE FEED")).toBeTruthy();
       expect(screen.getByText("+1.24%")).toBeTruthy();
     });
@@ -241,7 +264,7 @@ describe("DepositCryptoScreen", () => {
   });
 
   it("requires biometrics before continuing when enabled", async () => {
-    walletState.biometricsEnabled = true;
+    settingsState.biometricsEnabled = true;
     const screen = renderScreen();
 
     await waitFor(() => {

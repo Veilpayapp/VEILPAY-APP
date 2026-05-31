@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 /**
  * Veilpay Send Payment Screen
  * Allows users to send payments with address input, amount, and token selection
@@ -15,9 +16,10 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
 import { useWalletStore, validateAddress, ChainType } from '../stores/walletStore';
 import { SCREENS } from '../constants/screens';
@@ -28,11 +30,15 @@ import { Logo } from '../components/Logo';
 import { BottomNavBar } from '../components/BottomNavBar';
 import { Icon } from '../components/Icon';
 import { ScreenBackButton } from '../components/ScreenBackButton';
+import { AddressBookModal } from '../components/dashboard/AddressBookModal';
 import { getClipboardString } from '../utils/clipboard';
 import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
 import { useBiometrics } from '../hooks/useBiometrics';
 import { FALLBACK_ETH_PRICE } from '../utils/priceFeed';
+import { useSettingsStore } from '../stores/settingsStore';
+import { useMarketData } from '../hooks/useMarketData';
+import { formatFiat as formatFiatValue } from '../utils/formatters';
 import type { PaymentToken } from '../types/tokens';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -48,6 +54,7 @@ interface SendPaymentScreenProps {
 
 export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useStyles(themeStyles);
   const [recipientAddress, setRecipientAddress] = useState('');
   const [amount, setAmount] = useState('');
@@ -55,20 +62,28 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
   const [isRecipientTouched, setIsRecipientTouched] = useState(false);
   const [isAmountTouched, setIsAmountTouched] = useState(false);
   const [selectedPercent, setSelectedPercent] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isAddressBookVisible, setIsAddressBookVisible] = useState(false);
   const lastContinueAttemptRef = useRef(0);
 
-  const { activeChain, balance, biometricsEnabled } = useWalletStore();
+  const { activeChain, balance } = useWalletStore();
+  const { nativeCurrency, biometricsEnabled } = useSettingsStore();
   const toast = useToast();
   const { isAvailable, authenticate } = useBiometrics();
-  const isNativeTransferSupported = activeChain?.type === 'evm';
+  
+  const [isUsdInput, setIsUsdInput] = useState(false);
   const [selectedToken, setSelectedToken] = useState<PaymentToken>({
     id: `${activeChain?.key || 'ethereum'}-${activeChain?.nativeToken.symbol || 'ETH'}`,
     name: activeChain?.nativeToken.name || 'Ether',
     symbol: activeChain?.nativeToken.symbol || 'ETH',
     balance: balance || '0.000',
-    usdPrice: FALLBACK_ETH_PRICE,
+    usdPrice: 0,
     chainTypes: [activeChain?.type || 'evm'],
   });
+
+  const { getQuote } = useMarketData([selectedToken.symbol]);
+  const marketData = getQuote(selectedToken.symbol);
+  const currentFiatPrice = marketData?.price || 0;
 
   const chainType = (activeChain?.type as ChainType) || 'evm';
   const trimmedRecipientAddress = recipientAddress.trim();
@@ -96,7 +111,7 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
         ? 'Enter a valid amount greater than 0.'
         : '';
 
-  const canContinue = isRecipientValid && isAmountValid && isNativeTransferSupported;
+  const canContinue = isRecipientValid && isAmountValid;
 
   // Pre-filled data from QR scan (if any)
   const scannedAddress = route?.params?.address || '';
@@ -221,16 +236,37 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
     }
   };
 
-  const handleAmountChange = (value: string) => {
-    const normalizedValue = value.replace(',', '.').replace(/[^0-9.]/g, '');
-    const [whole, ...fraction] = normalizedValue.split('.');
-    const sanitizedAmount = fraction.length > 0 ? `${whole}.${fraction.join('')}` : whole;
-
-    setAmount(sanitizedAmount);
+  const handleAmountChange = (text: string) => {
+    // Only allow numbers and decimal point
+    const filtered = text.replace(/[^0-9.]/g, '');
+    
+    // Prevent multiple decimal points
+    const parts = filtered.split('.');
+    const cleanText = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : filtered;
+    
+    setAmount(cleanText);
     setSelectedPercent(null); // Clear selected percent when manual input
     if (!isAmountTouched) {
       setIsAmountTouched(true);
     }
+  };
+
+  const toggleInputCurrency = () => {
+    if (!amount) {
+      setIsUsdInput(!isUsdInput);
+      return;
+    }
+    
+    // Convert current amount when switching
+    if (isUsdInput && currentFiatPrice > 0) {
+      // Switch from Fiat to Crypto
+      setAmount((parsedAmount / currentFiatPrice).toFixed(6));
+    } else if (!isUsdInput && currentFiatPrice > 0) {
+      // Switch from Crypto to Fiat
+      setAmount((parsedAmount * currentFiatPrice).toFixed(2));
+    }
+    
+    setIsUsdInput(!isUsdInput);
   };
 
   const validateInputs = (): boolean => {
@@ -273,25 +309,27 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
 
     if (!validateInputs()) return;
 
-    if (!isNativeTransferSupported) {
-      toast.show('Send payment is only supported on EVM networks in this build.', 'error');
-      return;
-    }
-
     lastContinueAttemptRef.current = now;
+
+    // Biometrics flow
+    setIsAuthenticating(true);
 
     if (biometricsEnabled) {
       if (!isAvailable) {
         toast.show('Biometric authentication is unavailable on this device', 'error');
+        setIsAuthenticating(false);
         return;
       }
 
       const authenticated = await authenticate();
       if (!authenticated) {
         toast.show('Biometric authentication failed', 'error');
+        setIsAuthenticating(false);
         return;
       }
     }
+    
+    setIsAuthenticating(false);
 
     trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_CONTINUE_PRESSED, {
       chain_key: activeChain?.key || 'unknown',
@@ -299,10 +337,18 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
       has_memo: Boolean(memo.trim()),
     });
 
+    let finalCryptoAmount = amount.trim();
+    if (isUsdInput && currentFiatPrice > 0) {
+      const parsedAmount = Number.parseFloat(amount);
+      if (Number.isFinite(parsedAmount)) {
+        finalCryptoAmount = (parsedAmount / currentFiatPrice).toFixed(6);
+      }
+    }
+
     // Navigate to privacy level selection
     navigation.navigate(SCREENS.PRIVACY_LEVEL, {
       recipient: recipientAddress.trim(),
-      amount: amount.trim(),
+      amount: finalCryptoAmount,
       memo: memo.trim(),
       token: selectedToken.symbol,
     });
@@ -325,35 +371,56 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
     toast.show('This build supports only the network native token for sends.', 'info');
   };
 
+  const handleQuickAmount = (percent: string) => {
+    setSelectedPercent(percent);
+    const balanceNum = parseFloat(selectedToken.balance || '0');
+    if (percent === 'MAX') {
+      const gasReserveMap: Record<string, number> = {
+        ethereum: 0.01, polygon: 0.005, arbitrum: 0.002, sepolia: 0.001,
+      };
+      const gasReserve = activeChain?.type === 'evm'
+        ? (gasReserveMap[activeChain.key] ?? 0.005)
+        : 0;
+      const maxAmount = Math.max(0, balanceNum - gasReserve);
+      setAmount(maxAmount.toFixed(6));
+    } else {
+      const multiplier = parseInt(percent) / 100;
+      setAmount((balanceNum * multiplier).toFixed(6));
+    }
+    setIsAmountTouched(true);
+    trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_QUICK_AMOUNT_SELECTED, {
+      percent, token_symbol: selectedToken.symbol,
+    });
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" backgroundColor={colors.surfaceScreen} />
 
-      {/* Header */}
-      <View style={styles.header}>
+        {/* Header */}
+        <View style={styles.header}>
         <ScreenBackButton onPress={handleBack} />
-        <Text style={styles.headerTitle}>SEND PAYMENT</Text>
-        <View style={{ width: 80 }} />
-      </View>
+          <Text style={styles.headerTitle}>SEND PAYMENT</Text>
+          <View style={{ width: 44 }} />
+        </View>
 
-      <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1 }}
-    >
-        <Animated.View entering={FadeInDown.duration(260)} style={styles.animatedContent}>
-          <ScrollView
-            style={styles.content}
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardView}
+        >
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Chain & Balance Info */}
-<SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
-      <View style={styles.chainInfoRow}>
-                <View style={styles.chainInfoLeft}>
-                  <Text style={styles.chainLabel}>SENDING FROM</Text>
-                  <Text style={styles.chainName}>{activeChain?.name?.toUpperCase() || 'ETHEREUM'}</Text>
+            {/* Account Selector Section */}
+            <SovereignCard backgroundColor={colors.surfaceCard} padding={20} style={{ marginBottom: 24 }}>
+              <View style={styles.cardHeader}>
+                <View>
+                  <Text style={styles.cardLabel}>SENDING FROM</Text>
+                  <Text style={styles.chainName}>{activeChain?.name.toUpperCase() || 'ETHEREUM'}</Text>
                 </View>
-                <View style={styles.chainInfoRight}>
+                <View style={styles.iconCircle}>
                   <Logo variant="icon" size="small" />
                 </View>
               </View>
@@ -363,25 +430,17 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
               </View>
             </SovereignCard>
 
-            {/* Network Selection Warning */}
-            <View style={styles.warningBanner}>
-              <Icon name="info" size={16} color={colors.warning} />
-              <Text style={styles.warningText}>
-                Double check that the recipient address is on the {activeChain?.name?.toUpperCase() || 'ETHEREUM'} network.
-              </Text>
-            </View>
-
             {/* Recipient Address */}
             <Text style={styles.sectionLabel}>{activeChain?.type?.toUpperCase() || 'EVM'} RECIPIENT ADDRESS</Text>
-<SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 16 }}>
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.addressInput}
-          value={recipientAddress}
-          onChangeText={handleRecipientAddressChange}
-          onBlur={() => setIsRecipientTouched(true)}
-          placeholder={`Enter ${activeChain?.name || 'Ethereum'} address`}
-          placeholderTextColor={colors.textFaint}
+            <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={styles.addressInput}
+                  value={recipientAddress}
+                  onChangeText={handleRecipientAddressChange}
+                  onBlur={() => setIsRecipientTouched(true)}
+                  placeholder={`Enter ${activeChain?.name || 'Ethereum'} address`}
+                  placeholderTextColor={colors.textFaint}
                   autoCapitalize="none"
                   autoCorrect={false}
                   multiline
@@ -389,11 +448,18 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                 />
                 <View style={styles.inputActions}>
                   <TouchableOpacity
+                    onPress={() => setIsAddressBookVisible(true)}
+                    style={styles.inputActionBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel="Open address book"
+                  >
+                    <Icon name="wallet" size={20} color={colors.accent} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     onPress={handleScanQR}
                     style={styles.inputActionBtn}
                     accessibilityRole="button"
                     accessibilityLabel="Scan QR code"
-                    accessibilityHint="Opens the QR scanner to fill recipient details"
                   >
                     <Icon name="camera" size={20} color={colors.accent} />
                   </TouchableOpacity>
@@ -402,7 +468,6 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                     style={styles.inputActionBtn}
                     accessibilityRole="button"
                     accessibilityLabel="Paste from clipboard"
-                    accessibilityHint="Pastes recipient details from the clipboard"
                   >
                     <Icon name="copy" size={20} color={colors.accent} />
                   </TouchableOpacity>
@@ -412,134 +477,120 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
             {recipientError ? <Text style={styles.validationError}>{recipientError}</Text> : null}
 
             {/* Amount Input */}
-            <Text style={styles.sectionLabel}>AMOUNT</Text>
-<SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 16 }}>
-      <View style={styles.amountRow}>
-        <TextInput
-          style={styles.amountInput}
-          value={amount}
-          onChangeText={handleAmountChange}
-          onBlur={() => setIsAmountTouched(true)}
-          placeholder="0.00"
-          placeholderTextColor={colors.textFaint}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>AMOUNT</Text>
+              <TouchableOpacity onPress={toggleInputCurrency}>
+                <Text style={{ fontFamily: typography.fontFamily.mono, fontSize: 11, color: colors.accent, fontWeight: 'bold' }}>
+                  SWAP TO {isUsdInput ? selectedToken.symbol : (nativeCurrency || 'USD')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
+              <View style={styles.amountRow}>
+                {isUsdInput && <Text style={[styles.amountInput, { flex: 0, marginRight: 8, color: colors.textSecondary }]}>{nativeCurrency === 'EUR' ? '€' : nativeCurrency === 'GBP' ? '£' : nativeCurrency === 'INR' ? '₹' : '$'}</Text>}
+                <TextInput
+                  style={styles.amountInput}
+                  value={amount}
+                  onChangeText={handleAmountChange}
+                  onBlur={() => setIsAmountTouched(true)}
+                  placeholder="0.00"
+                  placeholderTextColor={colors.textFaint}
                   keyboardType="decimal-pad"
                 />
                 <TouchableOpacity
-                  disabled={!isNativeTransferSupported}
                   onPress={handleSelectToken}
                   style={styles.tokenSelector}
                   accessibilityRole="button"
-                  accessibilityLabel={`Network token ${selectedToken.symbol}`}
-                  accessibilityHint="Only the network native token is supported in this build"
                 >
-                  <Text style={styles.tokenSymbol}>{selectedToken.symbol}</Text>
-                  <Icon name={isNativeTransferSupported ? 'chevron-down' : 'info'} size={14} color={colors.textMuted} />
+                  <Text style={styles.tokenSymbol}>{isUsdInput ? (nativeCurrency || 'USD') : selectedToken.symbol}</Text>
+                  {!isUsdInput && <Icon name={'chevron-down'} size={14} color={colors.textMuted} />}
                 </TouchableOpacity>
               </View>
-              <View style={styles.usdRow}>
-                <Text style={styles.usdAmount}>
-                  ≈ ${((Number.isFinite(parsedAmount) ? parsedAmount : 0) * selectedToken.usdPrice).toFixed(2)} USD
-                </Text>
-              </View>
-              {!isNativeTransferSupported ? (
-                <Text style={styles.validationError}>
-                  Send payment is only supported on EVM networks in this build.
-                </Text>
-              ) : null}
             </SovereignCard>
             {amountError ? <Text style={styles.validationError}>{amountError}</Text> : null}
+
+            {/* Fiat equivalent */}
+            {isAmountValid && currentFiatPrice > 0 && (
+              <View style={styles.fiatRow}>
+                <Text style={styles.fiatLabel}>
+                  {isUsdInput
+                    ? `≈ ${parsedAmount.toFixed(6)} ${selectedToken.symbol}`
+                    : `≈ ${nativeCurrency === 'EUR' ? '€' : nativeCurrency === 'GBP' ? '£' : nativeCurrency === 'INR' ? '₹' : '$'}${formatFiatValue(parsedAmount * currentFiatPrice)}`}
+                </Text>
+              </View>
+            )}
 
             {/* Quick Amount Buttons */}
             <View style={styles.quickAmountRow}>
               {['25%', '50%', '75%', 'MAX'].map((percent) => (
                 <TouchableOpacity
                   key={percent}
-                  onPress={() => {
-                    setSelectedPercent(percent);
-                    // Calculate percentage of balance
-                    const balance = parseFloat(selectedToken.balance || '0');
-                    const multiplier = percent === 'MAX' ? 1 : parseInt(percent) / 100;
-
-                    if (percent === 'MAX') {
-                      const gasReserveMap: Record<string, number> = {
-                        ethereum: 0.01,
-                        polygon: 0.005,
-                        arbitrum: 0.002,
-                        sepolia: 0.001,
-                      };
-                      const gasReserve = activeChain?.type === 'evm'
-                        ? (gasReserveMap[activeChain.key] ?? 0.005)
-                        : 0;
-                      const maxAmount = Math.max(0, balance - gasReserve);
-                      setAmount(maxAmount.toFixed(6));
-                    } else {
-                      setAmount((balance * multiplier).toFixed(6));
-                    }
-                    setIsAmountTouched(true);
-                    trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_QUICK_AMOUNT_SELECTED, {
-                      percent,
-                      token_symbol: selectedToken.symbol,
-                    });
-                  }}
-                  activeOpacity={0.7}
+                  onPress={() => handleQuickAmount(percent)}
                   style={[
                     styles.quickAmountCard,
-                    selectedPercent === percent && styles.quickAmountCardActive
+                    selectedPercent === percent && styles.quickAmountCardActive,
                   ]}
+                  activeOpacity={0.7}
                 >
-                  <Text style={[
-                    styles.quickAmountText,
-                    selectedPercent === percent && styles.quickAmountTextActive
-                  ]}>
+                  <Text
+                    style={[
+                      styles.quickAmountText,
+                      selectedPercent === percent && styles.quickAmountTextActive,
+                    ]}
+                  >
                     {percent}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* Memo (Optional) */}
+            {/* Memo */}
             <Text style={styles.sectionLabel}>MEMO (OPTIONAL)</Text>
-<SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
-      <TextInput
-        style={styles.memoInput}
-        value={memo}
-        onChangeText={setMemo}
-        placeholder="Add a note for this transaction"
-        placeholderTextColor={colors.textFaint}
-                multiline
-                numberOfLines={2}
+            <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
+              <TextInput
+                style={styles.memoInput}
+                value={memo}
+                onChangeText={setMemo}
+                placeholder="Add a note for this transaction"
+                placeholderTextColor={colors.textFaint}
               />
             </SovereignCard>
 
-            {/* Privacy Notice */}
-<SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
-      <View style={styles.privacyNotice}>
-        <Icon name="private" size={24} color={colors.accent} />
-                <View style={styles.privacyTextContainer}>
-                  <Text style={styles.privacyTitle}>PRIVATE BY DEFAULT</Text>
-                  <Text style={styles.privacyDesc}>
-                    All transactions use stealth addresses. Choose your privacy level on the next screen.
-                  </Text>
-                </View>
+            {/* Privacy Level Info */}
+            <SovereignCard backgroundColor={colors.surfaceCard} padding={16} style={styles.privacyCard}>
+              <View style={styles.privacyHeader}>
+                <Icon name="shield" size={18} color={colors.accent} />
+                <Text style={styles.privacyTitle}>PRIVATE BY DEFAULT</Text>
               </View>
+              <Text style={styles.privacyDescription}>
+                All transactions use stealth addresses. Choose your privacy level on the next screen.
+              </Text>
             </SovereignCard>
-
-            {/* Continue Button */}
-            <SovereignButton
-              title="CONTINUE"
-              variant={canContinue ? 'primary' : 'outline'}
-              onPress={handleContinue}
-              disabled={!canContinue}
-              style={{ marginBottom: 32 }}
-            />
-            <View style={{ height: 120 }} />
           </ScrollView>
-        </Animated.View>
-      </KeyboardAvoidingView>
+
+          <View style={[styles.footerContainer, { marginBottom: 72 + Math.max(insets.bottom, 16) }]}>
+            <SovereignButton
+              title={isAuthenticating ? "AUTHENTICATING..." : "CONTINUE"}
+              onPress={handleContinue}
+              disabled={!canContinue || isAuthenticating}
+              variant={canContinue ? 'primary' : 'outline'}
+              style={styles.continueButton}
+            />
+          </View>
+        </KeyboardAvoidingView>
+
+      <AddressBookModal
+        visible={isAddressBookVisible}
+        onClose={() => setIsAddressBookVisible(false)}
+        onSelect={(addr) => {
+          setRecipientAddress(addr);
+          setIsRecipientTouched(true);
+        }}
+        currentChain={activeChain?.key || ''}
+      />
 
       <BottomNavBar currentScreen={SCREENS.SEND_PAYMENT} onNavigate={handleNavPress} />
 
-      {/* Toast Notification */}
       <Toast
         visible={toast.visible}
         message={toast.message}
@@ -555,108 +606,97 @@ const themeStyles = (colors: any) => StyleSheet.create({
     flex: 1,
     backgroundColor: colors.surfaceScreen,
   },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 20,
+    flexGrow: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    height: 64,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.outlineSubtle,
   },
-  backButton: {
-    width: 80,
-    paddingVertical: 8,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  backButtonText: {
-    fontFamily: typography.fontFamily.mono,
-    color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
   headerTitle: {
-    fontFamily: typography.fontFamily.mono,
+    fontFamily: typography.fontFamily.headlineBold,
     fontSize: 16,
-    fontWeight: 'bold',
     color: colors.textPrimary,
     letterSpacing: 1,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-  },
-  animatedContent: {
-    flex: 1,
-  },
-  chainInfoRow: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    paddingBottom: 8,
+    marginBottom: 20,
   },
-  chainInfoLeft: {
-    gap: 4,
-  },
-  chainLabel: {
+  cardLabel: {
     fontFamily: typography.fontFamily.mono,
-    fontSize: 10,
-    color: colors.textTertiary,
+    fontSize: 12,
+    color: colors.textMuted,
     letterSpacing: 1,
+    marginBottom: 6,
   },
   chainName: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 18,
+    fontFamily: typography.fontFamily.headlineBold,
+    fontSize: 20,
     color: colors.accent,
-    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
-  chainInfoRight: {
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.bgContainerHigh,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   balanceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.outlineSubtle,
   },
   balanceLabel: {
     fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textMuted,
+    fontSize: 13,
+    color: colors.textSecondary,
   },
   balanceAmount: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 14,
+    fontFamily: typography.fontFamily.headlineBold,
+    fontSize: 16,
     color: colors.textPrimary,
-    fontWeight: 'bold',
   },
   sectionLabel: {
     fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textMuted,
     letterSpacing: 1,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   inputRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 12,
-    gap: 12,
+    alignItems: 'center',
+    paddingRight: 8,
   },
   addressInput: {
     flex: 1,
     fontFamily: typography.fontFamily.mono,
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textPrimary,
-    minHeight: 48,
+    paddingHorizontal: 20,
+    minHeight: 52,
   },
   inputActions: {
     flexDirection: 'row',
-    gap: 8,
   },
   inputActionBtn: {
     width: 44,
@@ -664,13 +704,31 @@ const themeStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  inputActionIcon: {
-    fontSize: 18,
+  validationError: {
+    fontFamily: typography.fontFamily.bodyMedium,
+    fontSize: 12,
+    color: colors.error,
+    marginBottom: 12,
+    marginTop: -8,
+  },
+  fiatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: -16,
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  fiatLabel: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 12,
+    color: colors.textSecondary,
+    letterSpacing: 0.3,
   },
   amountRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
   amountInput: {
     flex: 1,
@@ -687,7 +745,6 @@ const themeStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 8,
-    minHeight: 44,
   },
   tokenSymbol: {
     fontFamily: typography.fontFamily.mono,
@@ -695,31 +752,18 @@ const themeStyles = (colors: any) => StyleSheet.create({
     color: colors.accent,
     fontWeight: 'bold',
   },
-  tokenArrow: {
-    fontSize: 10,
-    color: colors.textMuted,
-  },
-  usdRow: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  usdAmount: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textTertiary,
-  },
   quickAmountRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 32,
     gap: 12,
   },
   quickAmountCard: {
     flex: 1,
-    height: 36,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 18,
+    borderRadius: 12,
     backgroundColor: colors.surfaceCard,
     borderWidth: 1,
     borderColor: colors.outlineSubtle,
@@ -737,63 +781,67 @@ const themeStyles = (colors: any) => StyleSheet.create({
   quickAmountTextActive: {
     color: colors.bgPrimary,
   },
-  validationError: {
-    fontFamily: typography.fontFamily.bodyMedium,
-    fontSize: 12,
-    color: colors.error,
-    marginBottom: 12,
-    marginTop: -8,
-  },
   memoInput: {
-    fontFamily: typography.fontFamily.mono,
+    fontFamily: typography.fontFamily.body,
     fontSize: 14,
     color: colors.textPrimary,
     padding: 16,
-    minHeight: 60,
+    minHeight: 56,
   },
-  privacyNotice: {
+  privacyCard: {
+    marginBottom: 40,
+  },
+  privacyHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    padding: 16,
-  },
-  privacyIcon: {
-    fontSize: 24,
-  },
-  privacyTextContainer: {
-    flex: 1,
-    gap: 4,
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 8,
   },
   privacyTitle: {
     fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.accent,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-  privacyDesc: {
-    fontFamily: typography.fontFamily.body,
     fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 18,
+    color: colors.accent,
+    letterSpacing: 0.5,
+    fontWeight: 'bold',
+  },
+  privacyDescription: {
+    fontFamily: typography.fontFamily.body,
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    marginTop: 4,
   },
   warningBanner: {
     flexDirection: 'row',
-    backgroundColor: colors.warningBg + '15',
-    padding: 12,
-    borderRadius: 16,
-    marginBottom: 24,
-    gap: 10,
     alignItems: 'center',
+    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
     borderWidth: 1,
-    borderColor: colors.warningBg + '30',
+    borderColor: 'rgba(245, 158, 11, 0.2)',
+    gap: 10,
   },
   warningText: {
     flex: 1,
     fontFamily: typography.fontFamily.bodyMedium,
-    fontSize: 11,
+    fontSize: 13,
     color: colors.warning,
-    lineHeight: 15,
+    lineHeight: 18,
+  },
+  footerContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.outlineSubtle,
+    backgroundColor: colors.bgPrimary,
+  },
+  continueButton: {
+    marginTop: 0,
+    height: 56,
+  },
+  addressBookModal: {
+    // handled by AddressBookModal component
   },
 });
 

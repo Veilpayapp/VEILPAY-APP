@@ -1,9 +1,8 @@
-import React from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SovereignButton } from './SovereignButton';
 import { SovereignCard } from './SovereignCard';
 import { Icon } from './Icon';
-import { useTheme, useStyles, typography } from '../styles/design-tokens';
+import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 
 interface FiatGatewayModalProps {
   visible: boolean;
@@ -31,7 +30,7 @@ export function FiatGatewayModal({ visible, onClose, onBuy, onSell }: FiatGatewa
             <View style={styles.headerCopy}>
               <Text style={styles.title}>FIAT GATEWAY</Text>
               <Text style={styles.subtitle}>
-                Powered by Onramp.money. Fast, secure, and India-native payments via UPI/IMPS.
+                Compare best rates across Transak, Moonpay, Stripe, and Onramp.
               </Text>
             </View>
 
@@ -85,7 +84,7 @@ export function FiatGatewayModal({ visible, onClose, onBuy, onSell }: FiatGatewa
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              Onramp.money handles KYC securely. VeilPay does not store your personal identity data.
+              Providers handle KYC securely. VeilPay does not store your personal identity data.
             </Text>
             <SovereignButton title="CLOSE" variant="outline" onPress={onClose} />
           </View>
@@ -95,7 +94,7 @@ export function FiatGatewayModal({ visible, onClose, onBuy, onSell }: FiatGatewa
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -106,8 +105,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.surfaceScreen,
     borderRadius: 28,
     padding: 24,
-    borderWidth: 1,
-    borderColor: colors.outlineSubtle,
+    // No-Line Rule: Removed borderWidth and borderColor
   },
   header: {
     flexDirection: 'row',

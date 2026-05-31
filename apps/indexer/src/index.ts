@@ -3,44 +3,61 @@ import { startWebhookWorker } from "./webhook/dispatcher";
 import { startStealthScanners } from "./stealth/scanner";
 import { config } from "./config";
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 async function main() {
-  console.log("[VeilPay] Indexer starting...");
-  console.log(`[VeilPay] Environment: ${config.nodeEnv}`);
+  console.warn("[VeilPay] Indexer starting...");
+  console.warn(`[VeilPay] Environment: ${config.nodeEnv}`);
 
-  console.log("[VeilPay] Starting WebSocket indexers...");
+  console.warn("[VeilPay] Starting WebSocket indexers...");
   const indexers = await startWebSocketIndexers();
-  console.log(`[VeilPay] Started ${indexers.size} indexers`);
+  console.warn(`[VeilPay] Started ${indexers.size} indexers`);
 
-  console.log("[VeilPay] Starting webhook worker...");
+  console.warn("[VeilPay] Starting webhook worker...");
   const worker = startWebhookWorker();
 
-  console.log("[VeilPay] Starting stealth scanners...");
+  console.warn("[VeilPay] Starting stealth scanners...");
   const scanners = await startStealthScanners();
-  console.log(`[VeilPay] Started ${scanners.size} stealth scanners`);
+  console.warn(`[VeilPay] Started ${scanners.size} stealth scanners`);
 
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   const shutdown = async () => {
-    console.log("[VeilPay] Shutting down...");
+    console.warn("[VeilPay] Shutting down...");
 
     for (const [chainKey, indexer] of indexers) {
       await indexer.stop();
-      console.log(`[VeilPay] Stopped indexer for ${chainKey}`);
+      console.warn(`[VeilPay] Stopped indexer for ${chainKey}`);
     }
 
+    // `scanner.stop` is currently synchronous; the call site does not
+    // need `await` and `await-thenable` rightly flags it. Drop the
+    // `await` so the rule passes; the loop still completes before
+    // `worker.close()` runs.
     for (const [chainKey, scanner] of scanners) {
-      await scanner.stop();
-      console.log(`[VeilPay] Stopped stealth scanner for ${chainKey}`);
+      scanner.stop();
+      console.warn(`[VeilPay] Stopped stealth scanner for ${chainKey}`);
     }
 
     await worker.close();
-    console.log("[VeilPay] Webhook worker stopped");
+    console.warn("[VeilPay] Webhook worker stopped");
 
     process.exit(0);
   };
 
-  process.on("SIGINT", shutdown);
-  process.on("SIGTERM", shutdown);
+  // `process.on('SIGINT', shutdown)` registers an async function as an
+  // event listener; `no-misused-promises` flags that because the
+  // unhandled rejection path differs. Wrap in a sync trampoline that
+  // logs unexpected errors.
+  // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+  const onSignal = (signal: NodeJS.Signals) => {
+    void shutdown().catch((error) => {
+      console.error(`[VeilPay] Shutdown error on ${signal}:`, error);
+      process.exit(1);
+    });
+  };
+  process.on("SIGINT", onSignal);
+  process.on("SIGTERM", onSignal);
 
-  console.log("[VeilPay] Indexer running (WebSocket + Stealth mode)");
+  console.warn("[VeilPay] Indexer running (WebSocket + Stealth mode)");
 }
 
 main().catch((error) => {

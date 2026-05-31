@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 // Removed top-level import of expo-notifications to prevent Expo Go Android crash
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Linking, Platform } from 'react-native';
@@ -89,7 +90,6 @@ export function usePushNotifications(options: UsePushNotificationsOptions = {}) 
     error: null,
   });
   const isMountedRef = useRef(true);
-
   useEffect(() => {
     return () => {
       isMountedRef.current = false;

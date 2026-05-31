@@ -6,6 +6,7 @@ import {
   type MarketQuote,
   type MarketQuoteMap,
 } from '../utils/marketData';
+import { marketStreamer } from '../utils/marketStreamer';
 
 export interface UseMarketDataResult {
   quotes: MarketQuoteMap;
@@ -18,9 +19,9 @@ export interface UseMarketDataResult {
 
 export function useMarketData(
   symbols: readonly string[],
-  options: { autoRefresh?: boolean; refreshIntervalMs?: number } = {}
+  options: { throttleMs?: number } = {}
 ): UseMarketDataResult {
-  const { autoRefresh = true, refreshIntervalMs = 60_000 } = options;
+  const { throttleMs = 1000 } = options;
   const normalizedSymbols = useMemo(
     () => Array.from(new Set(symbols.map((symbol) => symbol.trim().toUpperCase()).filter(Boolean))).sort(),
     [symbols.join('|')]
@@ -30,7 +31,6 @@ export function useMarketData(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
-
   useEffect(() => {
     setQuotes(createFallbackQuoteMap(normalizedSymbols));
     setLastUpdated(null);
@@ -63,20 +63,49 @@ export function useMarketData(
       return;
     }
 
+    // Bootstrap initial REST fetch
     void refresh();
 
-    if (!autoRefresh) {
-      return;
-    }
+    // Subscribe to WebSocket streams
+    marketStreamer.subscribe(normalizedSymbols);
 
-    const intervalId = setInterval(() => {
-      void refresh();
-    }, refreshIntervalMs);
+    // Throttle UI updates to prevent 60fps drops
+    const lastUpdateTimes: Record<string, number> = {};
+
+    const handleUpdate = (symbol: string, price: number, change24h: number | null) => {
+      if (!normalizedSymbols.includes(symbol)) return;
+
+      const now = Date.now();
+      const last = lastUpdateTimes[symbol] || 0;
+
+      if (now - last > throttleMs) {
+        lastUpdateTimes[symbol] = now;
+        setQuotes(prev => {
+          const existing = prev[symbol];
+          if (!existing) return prev;
+          
+          return {
+            ...prev,
+            [symbol]: {
+              ...existing,
+              price,
+              change24h,
+              lastUpdated: now,
+              source: 'binance',
+              isStale: false,
+            }
+          };
+        });
+      }
+    };
+
+    marketStreamer.addListener(handleUpdate);
 
     return () => {
-      clearInterval(intervalId);
+      marketStreamer.removeListener(handleUpdate);
+      marketStreamer.unsubscribe(normalizedSymbols);
     };
-  }, [autoRefresh, normalizedSymbols, refresh, refreshIntervalMs]);
+  }, [normalizedSymbols, refresh, throttleMs]);
 
   const getQuote = useCallback(
     (symbol: string) => {

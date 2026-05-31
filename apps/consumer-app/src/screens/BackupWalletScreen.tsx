@@ -6,9 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  Text,  StyleSheet,  TouchableOpacity,
   ScrollView,
   StatusBar,
   Alert,
@@ -19,27 +17,22 @@ import { useTheme, useStyles, typography, spacing } from '../styles/design-token
 import { useWalletStore } from '../stores/walletStore';
 import { getStoredMnemonic } from '../utils/transactions';
 import { useBiometrics } from '../hooks/useBiometrics';
+import { useSettingsStore } from '../stores/settingsStore';
 import { SovereignCard } from "../components/SovereignCard";
 import { SovereignButton } from "../components/SovereignButton";
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { Icon } from '../components/Icon';
 import Toast, { useToast } from '../components/Toast';
 import { setClipboardString } from '../utils/clipboard';
+import { SecurityWarningModal } from '../components/SecurityWarningModal';
 
 export function BackupWalletScreen({ navigation }: any) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const toast = useToast();
   const { isAvailable, authenticate } = useBiometrics();
-  const { biometricsEnabled } = useWalletStore();
-
-  const [mnemonic, setMnemonic] = useState<string[]>([]);
-  const [isRevealed, setIsRevealed] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadMnemonic();
-  }, []);
+  const { biometricsEnabled } = useSettingsStore();  const [mnemonic, setMnemonic] = useState<string[]>([]);
+  const [isRevealed, setIsRevealed] = useState(false);  const [isLoading, setIsLoading] = useState(true);  useEffect(() => {    loadMnemonic();  }, []);
 
   const loadMnemonic = async () => {
     try {
@@ -55,39 +48,37 @@ export function BackupWalletScreen({ navigation }: any) {
   };
 
   const handleReveal = async () => {
-    if (biometricsEnabled && isAvailable) {
-      const success = await authenticate();
-      if (!success) {
-        toast.show('Authentication failed', 'error');
-        return;
-      }
+    // ALWAYS require authentication to view recovery phrase (fallback to Device PIN if no biometrics)
+    const result = await authenticate('backup_seed', true);
+    if (!result.success) {
+      toast.show(
+        result.cancelled ? 'Authentication cancelled' : 'Authentication failed',
+        'error'
+      );
+      return;
     }
     setIsRevealed(true);
   };
 
-  const handleCopy = () => {
-    if (!isRevealed) return;
+  const [showWarning, setShowWarning] = useState(false);
 
-    Alert.alert(
-      "Security Warning",
-      "Copying your recovery phrase to the clipboard is risky. Other apps may be able to read it. Are you sure?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Copy Anyway", 
-          onPress: async () => {
-            await setClipboardString(mnemonic.join(' '));
-            toast.show('Phrase copied to clipboard', 'success');
-          }
-        }
-      ]
-    );
+  const handleCopyRequest = () => {
+    if (!isRevealed) return;
+    setShowWarning(true);
   };
+
+  const handleCopyConfirm = async () => {
+    setShowWarning(false);
+    await setClipboardString(mnemonic.join(' '));
+    toast.show('Phrase copied to clipboard', 'success');
+  };
+
+  const handleCopyCancel = () => {
+    setShowWarning(false);  };
 
   const handleBack = () => navigation.goBack();
 
-  return (
-    <SafeAreaView style={styles.container}>
+  return (    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.surfaceScreen} />
 
       <View style={styles.header}>
@@ -97,7 +88,7 @@ export function BackupWalletScreen({ navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInDown.duration(400)} style={styles.content}>
+        <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={styles.content}>
           
           {/* Warning Banner */}
           <View style={styles.warningBanner}>
@@ -118,14 +109,12 @@ export function BackupWalletScreen({ navigation }: any) {
             {!isRevealed ? (
               <View style={styles.hiddenOverlay}>
                 <View style={styles.blurEffect} />
-                <Icon name="private" size={48} color={colors.textFaint} style={{ marginBottom: 16 }} />
-                <Text style={styles.hiddenText}>Tap below to reveal your phrase</Text>
+                <Icon name="private" size={48} color={colors.textFaint} style={{ marginBottom: 16 }} />                <Text style={styles.hiddenText}>Tap below to reveal your phrase</Text>
                 <Text style={styles.hiddenSubtext}>Make sure no one is watching your screen</Text>
               </View>
             ) : (
               <Animated.View entering={FadeIn} style={styles.wordsGrid}>
-                {mnemonic.map((word, index) => (
-                  <View key={index} style={styles.wordContainer}>
+                {mnemonic.map((word, index) => (                  <View key={index} style={styles.wordContainer}>
                     <Text style={styles.wordNumber}>{index + 1}.</Text>
                     <Text style={styles.wordText}>{word}</Text>
                   </View>
@@ -146,7 +135,7 @@ export function BackupWalletScreen({ navigation }: any) {
               <SovereignButton 
                 title="COPY TO CLIPBOARD" 
                 variant="outline" 
-                onPress={handleCopy}
+                onPress={handleCopyRequest}
                 style={[styles.actionButton, { flex: 1 }]}
               />
               <SovereignButton 
@@ -172,6 +161,15 @@ export function BackupWalletScreen({ navigation }: any) {
         message={toast.message}
         type={toast.type}
         onDismiss={toast.hide}
+      />
+
+      <SecurityWarningModal
+        visible={showWarning}
+        title="Security Warning"
+        message="Copying your recovery phrase to the clipboard is risky. Other apps may be able to read it. Are you sure?"
+        onCancel={handleCopyCancel}
+        onConfirm={handleCopyConfirm}
+        confirmText="COPY ANYWAY"
       />
     </SafeAreaView>
   );

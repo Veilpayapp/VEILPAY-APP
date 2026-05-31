@@ -1,8 +1,10 @@
 import type { TransactionRecord, TransactionStatus, TransactionType } from '../types/transactions';
 import { validateAddress, type ChainType, type ChainConfig } from '../stores/walletStore';
-import { ethers } from 'ethers';
+import { useTransactionStore, useTransactions } from '../stores/transactionStore';
+import { formatEther } from 'viem';
 import { captureError } from './sentry';
 import { poolCall } from './rpcPool';
+import { fetchEvmHistory, fetchSolanaHistory, fetchStellarHistory } from './publicIndexers';
 
 interface RawResponse {
   data?: {
@@ -199,7 +201,6 @@ function getCursor(payload: RawResponse | unknown): { nextCursor: string | null;
   return { nextCursor, hasMore };
 }
 
-// Helper to determine chain type from chain key
 const getChainTypeFromKey = (key: string | undefined): ChainType | null => {
   if (!key) return null;
   const chainTypeMap: Record<string, ChainType> = {
@@ -210,6 +211,8 @@ const getChainTypeFromKey = (key: string | undefined): ChainType | null => {
     solana:          'svm',
     'solana-devnet': 'svm',
     aptos:           'mvm',
+    stellar:         'xlm',
+    'stellar-testnet':'xlm',
   };
   return chainTypeMap[key] || null;
 };
@@ -217,74 +220,26 @@ const getChainTypeFromKey = (key: string | undefined): ChainType | null => {
 async function fetchBlockchainTransactions(
   address: string,
   chainKey: string,
+  cursor: string | undefined,
   limit: number = 20
 ): Promise<TransactionHistoryPage> {
-  try {
-    const currentBlock = await poolCall(chainKey, (p) => p.getBlockNumber());
-    
-    const transactions: TransactionRecord[] = [];
-    const lowerAddress = address.toLowerCase();
-    
-    // Cap the blockchain fallback scan to 50 blocks to avoid free-tier RPC blowups.
-    const startBlock = Math.max(0, currentBlock - 50);
-    
-    for (let blockNum = currentBlock; blockNum > startBlock && transactions.length < limit; blockNum--) {
-      try {
-        const block = await poolCall(chainKey, (p) => p.getBlock(blockNum, false));
-        if (!block || !block.transactions) continue;
-        
-        for (const txHash of block.transactions) {
-          if (transactions.length >= limit) break;
-          
-          try {
-            const tx = await poolCall(chainKey, (p) => p.getTransaction(txHash));
-            if (!tx || !tx.from || !tx.to) continue;
-            
-            const fromLower = tx.from.toLowerCase();
-            const toLower = tx.to.toLowerCase();
-            
-            if (fromLower === lowerAddress || toLower === lowerAddress) {
-              const receipt = await poolCall(chainKey, (p) => p.getTransactionReceipt(txHash));
-              const timestamp = block.timestamp ? block.timestamp * 1000 : Date.now();
-              
-              transactions.push({
-                id: txHash,
-                type: fromLower === lowerAddress ? 'sent' : 'received',
-                amount: ethers.formatEther(tx.value),
-                token: 'Ether',
-                tokenSymbol: 'ETH',
-                from: tx.from,
-                to: tx.to,
-                timestamp,
-                status: receipt?.status === 1 ? 'completed' : receipt?.status === 0 ? 'failed' : 'pending',
-                hash: txHash,
-                network: chainKey,
-                fee: receipt ? ethers.formatEther(receipt.gasUsed * receipt.gasPrice) : undefined,
-              });
-            }
-          } catch {
-            // Skip failed transaction fetches
-            continue;
-          }
-        }
-      } catch {
-        // Skip failed block fetches
-        continue;
-      }
-    }
-
-    return {
-      transactions: transactions.sort((a, b) => b.timestamp - a.timestamp),
-      nextCursor: null,
-      hasMore: false,
-    };
-  } catch (error) {
-    captureError(error instanceof Error ? error : new Error('Blockchain fetch failed'), {
-      scope: 'transaction-history',
-      chain: chainKey,
-    });
-    return { transactions: [], nextCursor: null, hasMore: false };
+  const chainType = getChainTypeFromKey(chainKey);
+  
+  if (chainType === 'evm') {
+    return fetchEvmHistory(address, chainKey, cursor, limit);
   }
+  
+  if (chainType === 'svm') {
+    return fetchSolanaHistory(address, chainKey, cursor, limit);
+  }
+  
+  if (chainType === 'xlm') {
+    return fetchStellarHistory(address, chainKey, cursor, limit);
+  }
+
+  // Fallback for unsupported chains (e.g. mvm/aptos) - return empty for now since indexer is required
+  console.warn(`Public indexer not yet implemented for chain type: ${chainType}`);
+  return { transactions: [], nextCursor: null, hasMore: false };
 }
 
 async function fetchIndexerTransactions(
@@ -371,22 +326,26 @@ export async function fetchTransactionHistoryPage({
     };
   }
 
-  // Try indexer first if available
   if (INDEXER_BASE_URL) {
     try {
       return await fetchIndexerTransactions(address, chainKey, cursor, limit);
     } catch (error) {
-      console.warn('Indexer fetch failed, falling back to blockchain:', error);
-      captureError(error instanceof Error ? error : new Error('Indexer fetch failed'), {
-        scope: 'transaction-history',
-        chain: chainKey,
-      });
+      // AbortError = request timed out or was cancelled (expected on devnets / no indexer)
+      // Silently fall back to blockchain without polluting console or Sentry.
+      const isAbort = error instanceof Error && error.name === 'AbortError';
+
+      if (!isAbort) {
+        console.warn('Indexer fetch failed, falling back to blockchain:', error);
+        captureError(error instanceof Error ? error : new Error('Indexer fetch failed'), {
+          scope: 'transaction-history',
+          chain: chainKey,
+        });
+      }
     }
   }
 
-  // Fall back to direct blockchain queries for EVM chains
-  if (chainKey && chainType === 'evm' && !cursor) {
-    return fetchBlockchainTransactions(address, chainKey, limit);
+  if (chainKey) {
+    return fetchBlockchainTransactions(address, chainKey, cursor, limit);
   }
 
   return { transactions: [], nextCursor: null, hasMore: false };
@@ -397,16 +356,16 @@ export async function fetchPendingTransactions(
   chainKey: string
 ): Promise<TransactionRecord[]> {
   try {
-    const pendingBlock = await poolCall(chainKey, (p) => p.getBlock('pending', false));
+    const pendingBlock = await poolCall(chainKey, (p) => p.getBlock({ blockTag: 'pending', includeTransactions: true }));
     if (!pendingBlock || !pendingBlock.transactions) return [];
 
     const pending: TransactionRecord[] = [];
     const lowerAddress = address.toLowerCase();
 
-    for (const txHash of pendingBlock.transactions) {
+    for (const tx of pendingBlock.transactions as any[]) {
       try {
-        const tx = await poolCall(chainKey, (p) => p.getTransaction(txHash));
         if (tx && tx.from && tx.to) {
+          const txHash = tx.hash;
           const fromLower = tx.from.toLowerCase();
           const toLower = tx.to.toLowerCase();
           
@@ -414,7 +373,7 @@ export async function fetchPendingTransactions(
             pending.push({
               id: txHash,
               type: fromLower === lowerAddress ? 'sent' : 'received',
-              amount: ethers.formatEther(tx.value),
+              amount: formatEther(tx.value),
               token: 'Ether',
               tokenSymbol: 'ETH',
               from: tx.from,
@@ -449,7 +408,13 @@ export function getTransactionExplorerUrl(txHash: string, chainKey: string): str
     sepolia:         'https://sepolia.etherscan.io/tx/',
     'solana-devnet': 'https://explorer.solana.com/tx/',
     solana:          'https://explorer.solana.com/tx/',
+    stellar:         'https://stellar.expert/explorer/public/tx/',
+    'stellar-testnet':'https://stellar.expert/explorer/testnet/tx/',
   };
+  
+  if (chainKey === 'solana-devnet') {
+    return `${explorers[chainKey]}${txHash}?cluster=devnet`;
+  }
   
   return explorers[chainKey] ? `${explorers[chainKey]}${txHash}` : '';
 }

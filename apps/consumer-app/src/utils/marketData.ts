@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { sleep } from './timing';
 
 export type MarketQuoteSource = 'binance' | 'cache' | 'fallback';
 
@@ -53,9 +54,7 @@ let hasLoadedCache = false;
 const inFlightRequests = new Map<string, Promise<MarketQuoteMap>>();
 
 function normalizeSymbols(symbols: readonly string[]): string[] {
-  return Array.from(
-    new Set(
-      symbols
+  return Array.from(    new Set(      symbols
         .map((symbol) => symbol.trim().toUpperCase())
         .filter((symbol) => symbol.length > 0)
     )
@@ -154,6 +153,18 @@ function mergeQuote(symbol: string, nextQuote: MarketQuote): MarketQuote {
   return merged;
 }
 
+export function updateLiveQuote(symbol: string, price: number, change24h: number | null): void {
+  const normalized = symbol.trim().toUpperCase();
+  mergeQuote(normalized, {
+    symbol: normalized,
+    price,
+    change24h,
+    lastUpdated: Date.now(),
+    source: 'binance',
+    isStale: false,
+  });
+}
+
 /** Binance API retry config */
 const BINANCE_MAX_RETRIES = 2;
 const BINANCE_RETRY_BASE_DELAY_MS = 1000;
@@ -178,11 +189,8 @@ async function fetchFromBinance(symbols: readonly string[]): Promise<MarketQuote
   const symbolsJson = JSON.stringify(binanceSymbols);
   const url = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbolsJson)}`;
 
-  let data: BinanceTicker[] | null = null;
-
-  for (let attempt = 0; attempt <= BINANCE_MAX_RETRIES; attempt++) {
-    try {
-      const response = await fetch(url, {
+  let data: BinanceTicker[] | null = null;  for (let attempt = 0; attempt <= BINANCE_MAX_RETRIES; attempt++) {
+    try {      const response = await fetch(url, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
@@ -196,7 +204,7 @@ async function fetchFromBinance(symbols: readonly string[]): Promise<MarketQuote
 
       if (response.status === 429 && attempt < BINANCE_MAX_RETRIES) {
         const delayMs = BINANCE_RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        await sleep(delayMs);
         continue;
       }
 
@@ -204,7 +212,7 @@ async function fetchFromBinance(symbols: readonly string[]): Promise<MarketQuote
     } catch (error) {
       if (attempt === BINANCE_MAX_RETRIES) throw error;
       const delayMs = BINANCE_RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      await sleep(delayMs);
     }
   }
 
@@ -232,11 +240,9 @@ async function fetchFromBinance(symbols: readonly string[]): Promise<MarketQuote
         source: 'binance',
         isStale: false,
       });
-      continue;
-    }
+      continue;    }
 
-    // Special case for stablecoins if they failed or aren't mapped
-    if (['USDT', 'USDC', 'DAI'].includes(symbol)) {
+    // Special case for stablecoins if they failed or aren't mapped    if (['USDT', 'USDC', 'DAI'].includes(symbol)) {
        quotes[symbol] = mergeQuote(symbol, {
          symbol,
          price: 1,

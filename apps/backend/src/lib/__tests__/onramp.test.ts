@@ -8,13 +8,13 @@ process.env = {
 };
 
 const assert = require('node:assert/strict');
-const { after, describe, it } = require('node:test');
+// Removed node:test import for Jest
 const { createHmac } = require('node:crypto');
 
 const { OnrampService } = require('../onramp');
 
 describe('OnrampService', () => {
-  after(() => {
+  afterAll(() => {
     process.env = ORIGINAL_ENV;
   });
 

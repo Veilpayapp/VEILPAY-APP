@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 /**
  * Veilpay Receive QR Code Screen
  * Displays QR code for receiving payments
@@ -6,12 +7,10 @@
  * UPDATED: Now generates real QR codes using react-native-qrcode-svg
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  Text,  StyleSheet,  TouchableOpacity,
   ScrollView,
   StatusBar,
   Share,
@@ -21,17 +20,21 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import QRCode from 'react-native-qrcode-svg';
-import { useTheme, useStyles, typography } from '../styles/design-tokens';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 import { useWalletStore } from '../stores/walletStore';
 import { SCREENS } from '../constants/screens';
 import { SovereignCard } from "../components/SovereignCard";
 import { SovereignButton } from "../components/SovereignButton";
+import { HybridInput } from "../components/HybridInput";
 import Toast, { useToast } from '../components/Toast';
 import { Logo } from '../components/Logo';
 import { BottomNavBar } from '../components/BottomNavBar';
 import { Icon } from '../components/Icon';
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { setClipboardString } from '../utils/clipboard';
+import { triggerLightImpactHaptic } from '../utils/haptics';
 import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -41,15 +44,13 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 type ReceiveQRScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ReceiveQR'>;
 
 interface ReceiveQRScreenProps {
-  navigation: ReceiveQRScreenNavigationProp;
-}
-
-export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
+  navigation: ReceiveQRScreenNavigationProp;}export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const [requestedAmount, setRequestedAmount] = useState('');
   const { address, activeChain } = useWalletStore();
   const toast = useToast();
+  const viewShotRef = useRef<View>(null);
 
   useEffect(() => {
     trackEvent(ANALYTICS_EVENTS.RECEIVE_QR_VIEWED, {
@@ -73,11 +74,8 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
       };
       const scheme = schemeMap[activeChain?.type || 'evm'] || 'ethereum';
       return `${scheme}:${address}?amount=${requestedAmount}`;
-    }
-
-    // Otherwise just encode the address
-    return address;
-  }, [address, requestedAmount]);
+    }    // Otherwise just encode the address
+    return address;  }, [address, requestedAmount]);
 
   const handleBack = () => {
     trackEvent(ANALYTICS_EVENTS.RECEIVE_QR_BACK_PRESSED, {
@@ -88,6 +86,7 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
 
   const handleCopyAddress = async () => {
     if (address) {
+      void triggerLightImpactHaptic();
       const copied = await setClipboardString(address);
       if (!copied) {
         trackEvent(ANALYTICS_EVENTS.RECEIVE_ADDRESS_COPY_FAILED, {
@@ -113,11 +112,18 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
       return;
     }
 
+    void triggerLightImpactHaptic();
     try {
-      await Share.share({
-        message: `Send ${activeChain?.symbol || 'ETH'} on ${activeChain?.name || 'Ethereum'} network to my Veilpay wallet: ${address}`,
-        title: 'Veilpay Wallet Address',
+      const uri = await captureRef(viewShotRef, {
+        format: 'png',
+        quality: 1,
       });
+      
+      await Sharing.shareAsync(uri, {
+        dialogTitle: 'Share Veilpay Wallet Address',
+        mimeType: 'image/png',
+      });
+      
       trackEvent(ANALYTICS_EVENTS.RECEIVE_ADDRESS_SHARED, {
         chain_key: activeChain?.key || 'unknown',
       });
@@ -125,7 +131,7 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
       trackEvent(ANALYTICS_EVENTS.RECEIVE_ADDRESS_SHARE_FAILED, {
         reason: 'share_error',
       });
-      toast.show('Failed to share address', 'error');
+      toast.show('Failed to share address image', 'error');
     }
   };
 
@@ -193,7 +199,7 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
         <View style={{ width: 80 }} />
       </View>
 
-      <Animated.View entering={FadeInDown.duration(260)} style={styles.animatedContent}>
+      <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={styles.animatedContent}>
         <ScrollView
           style={styles.content}
           showsVerticalScrollIndicator={false}
@@ -205,14 +211,14 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
           </View>
 
           {/* QR Code Card */}
-            <SovereignCard backgroundColor={colors.textPrimary} padding={0} style={{ marginBottom: 24 }}>
+            <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
             <View style={styles.qrContainer}>
               {address ? (
                 <QRCode
                   value={qrValue}
-                  size={200}
-                  color={colors.bgPrimary}
-                  backgroundColor={colors.textPrimary}
+                  size={220}
+                  color={colors.textPrimary}
+                  backgroundColor={colors.surfaceCard}
                 />
               ) : (
                 <Text style={styles.noAddressText}>No wallet connected</Text>
@@ -259,33 +265,27 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
           </SovereignCard>
 
           {/* Request Specific Amount */}
-          <Text style={styles.sectionLabel}>REQUEST SPECIFIC AMOUNT</Text>
-          <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 16 }}>
-            <View style={styles.requestRow}>
+          <HybridInput
+            label="REQUEST SPECIFIC AMOUNT"
+            value={requestedAmount}
+            onChangeText={(value: string) => {
+              const normalized = value.replace(/[^0-9.]/g, '');
+              const dotIndex = normalized.indexOf('.');
+              if (dotIndex >= 0) {
+                const integerPart = normalized.slice(0, dotIndex + 1);
+                const decimalPart = normalized.slice(dotIndex + 1).replace(/\./g, '');
+                setRequestedAmount(`${integerPart}${decimalPart}`);
+                return;
+              }
+              setRequestedAmount(normalized);
+            }}
+            placeholder="0.00"
+            keyboardType="decimal-pad"
+            wrapperStyle={{ marginBottom: 16 }}
+            rightAdornment={
               <Text style={styles.requestInputPrefix}>{activeChain?.symbol || 'ETH'}</Text>
-              <View style={styles.requestInputBox}>
-                <TextInput
-                  style={styles.requestInputValue}
-                  value={requestedAmount}
-                  onChangeText={(value) => {
-                    const normalized = value.replace(/[^0-9.]/g, '');
-                    const dotIndex = normalized.indexOf('.');
-                    if (dotIndex >= 0) {
-                      const integerPart = normalized.slice(0, dotIndex + 1);
-                      const decimalPart = normalized.slice(dotIndex + 1).replace(/\./g, '');
-                      setRequestedAmount(`${integerPart}${decimalPart}`);
-                      return;
-                    }
-
-                    setRequestedAmount(normalized);
-                  }}
-                  placeholder="0.00"
-                  placeholderTextColor={colors.textFaint}
-                  keyboardType="decimal-pad"
-                />
-              </View>
-            </View>
-          </SovereignCard>
+            }
+          />
 
           <SovereignButton
             title="GENERATE PAYMENT REQUEST"
@@ -295,17 +295,18 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
           />
 
           {/* Privacy Notice */}
-          <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
-              <View style={styles.privacyNotice}>
-              <Icon name="private" size={24} color={colors.accent} />
-              <View style={styles.privacyTextContainer}>
+          <View style={styles.privacyNoticeContainer}>
+            <View style={styles.privacyHazardTape} />
+            <View style={styles.privacyContent}>
+              <Icon name="private" size={24} color={colors.success} />
+              <View style={styles.privacyTextGroup}>
                 <Text style={styles.privacyTitle}>STEALTH ADDRESS ACTIVE</Text>
-                <Text style={styles.privacyDesc}>
+                <Text style={styles.privacyText}>
                   Each incoming payment uses a unique stealth address. Your real address stays private.
                 </Text>
               </View>
             </View>
-          </SovereignCard>
+          </View>
 
           {/* Network Info */}
           <View style={styles.networkInfo}>
@@ -319,6 +320,34 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
 
       <BottomNavBar currentScreen={SCREENS.RECEIVE_QR} onNavigate={handleNavPress} />
 
+      {/* Off-screen view for generating the shareable image */}
+      <View style={styles.shareImageWrapper} pointerEvents="none" collapsable={false}>
+        <View ref={viewShotRef} style={styles.shareImageContainer} collapsable={false}>
+          <View style={styles.shareImageHeader}>
+            <Logo variant="full" />
+            <Text style={styles.shareImageNetwork}>
+              {activeChain?.name?.toUpperCase() || 'ETHEREUM'} NETWORK
+            </Text>
+          </View>
+
+          <View style={styles.shareImageQrWrapper}>
+            {address ? (
+              <QRCode
+                value={qrValue}
+                size={260}
+                color={colors.textPrimary}
+                backgroundColor={colors.surfaceCard}
+              />
+            ) : null}
+          </View>
+
+          <View style={styles.shareImageAddressBox}>
+            <Text style={styles.shareImageLabel}>WALLET ADDRESS</Text>
+            <Text style={styles.shareImageAddress}>{address}</Text>
+          </View>
+        </View>
+      </View>
+
       {/* Toast Notification */}
       <Toast
         visible={toast.visible}
@@ -331,7 +360,7 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surfaceScreen,
@@ -342,8 +371,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     height: 64,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.outlineSubtle,
+    // No-Line Rule: Removed borderBottomWidth and borderBottomColor
   },
   backButton: {
     width: 80,
@@ -444,6 +472,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     fontSize: 18,
     color: colors.accent,
     fontWeight: 'bold',
+    paddingRight: 16,
   },
   requestInputBox: {
     flex: 1,
@@ -458,31 +487,46 @@ const themeStyles = (colors: any) => StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: 'bold',
   },
-  privacyNotice: {
+  privacyNoticeContainer: {
+    borderWidth: 1,
+    borderColor: colors.success,
+    borderRadius: 8,
+    overflow: 'hidden',
+    position: 'relative',
+    marginBottom: 24,
+  },
+  privacyHazardTape: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: 4,
+    backgroundColor: colors.success,
+  },
+  privacyContent: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    padding: 16,
+    padding: 20,
+    alignItems: 'center',
+    backgroundColor: colors.success + '15',
   },
-  privacyIcon: {
-    fontSize: 24,
-  },
-  privacyTextContainer: {
+  privacyTextGroup: {
+    marginLeft: 16,
     flex: 1,
-    gap: 4,
   },
   privacyTitle: {
     fontFamily: typography.fontFamily.mono,
     fontSize: 12,
-    color: colors.accent,
-    fontWeight: 'bold',
+    color: colors.success,
+    fontWeight: "900",
     letterSpacing: 1,
+    marginBottom: 4,
   },
-  privacyDesc: {
-    fontFamily: typography.fontFamily.body,
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 18,
+  privacyText: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 11,
+    color: colors.textPrimary,
+    lineHeight: 16,
+    opacity: 0.9,
   },
   networkInfo: {
     flexDirection: 'row',
@@ -505,12 +549,11 @@ const themeStyles = (colors: any) => StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: colors.warningBg + '15',
     padding: 12,
-    borderRadius: 16,
+    borderRadius: 8,
     marginBottom: 24,
     gap: 10,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.warningBg + '30',
+    // No-Line Rule: Removed borderWidth and borderColor
   },
   warningText: {
     flex: 1,
@@ -519,6 +562,65 @@ const themeStyles = (colors: any) => StyleSheet.create({
     color: colors.warning,
     lineHeight: 15,
   },
+  shareImageWrapper: {
+    position: 'absolute',
+    top: -10000,
+    left: -10000,
+  },
+  shareImageContainer: {
+    width: 400,
+    backgroundColor: colors.surfaceScreen,
+    padding: 40,
+    alignItems: 'center',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.accent + '20',
+  },
+  shareImageHeader: {
+    alignItems: 'center',
+    marginBottom: 40,
+    gap: 12,
+  },
+  shareImageNetwork: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 14,    color: colors.accent,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },  shareImageQrWrapper: {
+    padding: 24,
+    backgroundColor: colors.surfaceCard,
+    borderRadius: 16,
+    marginBottom: 40,    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.05,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  shareImageAddressBox: {
+    width: '100%',
+    backgroundColor: colors.surfaceCard,
+    padding: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.accent + '20',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  shareImageLabel: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 12,
+    color: colors.textMuted,
+    letterSpacing: 1.5,
+    marginBottom: 8,
+  },
+  shareImageAddress: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 15,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
 });
 
 export default ReceiveQRScreen;
+

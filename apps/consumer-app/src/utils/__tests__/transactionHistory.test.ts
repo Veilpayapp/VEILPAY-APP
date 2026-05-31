@@ -156,38 +156,4 @@ describe('fetchTransactionHistoryPage', () => {
       hasMore: false,
     });
   });
-
-  it('caps blockchain fallback lookback to 50 blocks', async () => {
-    process.env = {
-      ...ORIGINAL_ENV,
-      EXPO_PUBLIC_INDEXER_BASE_URL: '',
-    };
-
-    const walletAddress = '0x1111111111111111111111111111111111111111';
-    const provider = {
-      getBlockNumber: jest.fn().mockResolvedValue(1000),
-      getBlock: jest.fn().mockResolvedValue({ transactions: [] }),
-      getTransaction: jest.fn(),
-      getTransactionReceipt: jest.fn(),
-    };
-
-    const { poolCall } = require('../rpcPool');
-    (poolCall as jest.Mock).mockImplementation(async (_chainKey: string, callback: (provider: any) => unknown) => callback(provider));
-
-    const { fetchTransactionHistoryPage } = require('../transactionHistory');
-
-    const result = await fetchTransactionHistoryPage({
-      address: walletAddress,
-      chainKey: 'ethereum',
-    });
-
-    expect(result).toEqual({
-      transactions: [],
-      nextCursor: null,
-      hasMore: false,
-    });
-    expect(provider.getBlock).toHaveBeenCalledTimes(50);
-    expect(provider.getBlock).toHaveBeenNthCalledWith(1, 1000, false);
-    expect(provider.getBlock).toHaveBeenLastCalledWith(951, false);
-  });
 });

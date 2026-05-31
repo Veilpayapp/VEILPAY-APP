@@ -45,7 +45,6 @@ export function useTransakQuote(
       const currentVersion = ++requestVersionRef.current;
       setIsLoading(true);
       setError(null);
-
       const nextQuote = await getTransakQuote(currentRequest, { preferCache });
 
       if (requestVersionRef.current !== currentVersion) {
@@ -59,7 +58,6 @@ export function useTransakQuote(
     },
     [preferCache]
   );
-
   useEffect(() => {
     if (!enabled || !request || !requestIsReady) {
       requestVersionRef.current += 1;

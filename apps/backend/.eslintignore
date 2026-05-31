@@ -1,0 +1,18 @@
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+*.config.js
+*.config.ts
+**/__tests__/**
+# `scripts/e2e-smoke-test.ts` is an operator-driven harness that lives
+# outside `src/` (so it is excluded from the production build's tsconfig
+# include list). Linting it would require a separate tsconfig just for
+# scripts/; we ignore it here instead.
+scripts/
+# `tests/` is the Jest test root and is also outside `src/**/*` in the
+# build tsconfig. Test files are already type-checked by `ts-jest` at
+# test time; linting them would require a second tsconfig. Ignore.
+tests/

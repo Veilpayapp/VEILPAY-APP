@@ -7,24 +7,26 @@ type MockProvider = {
 
 const mockProviderRegistry = new Map<string, MockProvider>();
 
-jest.mock('ethers', () => ({
-  JsonRpcProvider: jest.fn().mockImplementation((url: string) => {
+jest.mock('viem', () => ({
+  createPublicClient: jest.fn().mockImplementation(({ transport }: any) => {
+    // extract url from transport mock
+    const url = transport.url;
     if (!mockProviderRegistry.has(url)) {
       mockProviderRegistry.set(url, {
         url,
         getBlockNumber: jest.fn(),
       });
     }
-
     return mockProviderRegistry.get(url);
   }),
+  http: jest.fn((url: string) => ({ url })),
 }));
 
 jest.mock('../sentry', () => ({
   captureError: jest.fn(),
 }));
 
-let JsonRpcProviderMock: jest.Mock;
+let createPublicClientMock: jest.Mock;
 let captureErrorMock: jest.Mock;
 
 function loadRpcPool() {
@@ -54,9 +56,9 @@ describe('rpcPool', () => {
     jest.resetModules();
     jest.useFakeTimers();
     mockProviderRegistry.clear();
-    JsonRpcProviderMock = require('ethers').JsonRpcProvider;
+    createPublicClientMock = require('viem').createPublicClient;
     captureErrorMock = require('../sentry').captureError;
-    JsonRpcProviderMock.mockClear();
+    createPublicClientMock.mockClear();
     captureErrorMock.mockClear();
 
     process.env = {
@@ -78,11 +80,9 @@ describe('rpcPool', () => {
     const provider = getPoolProvider('ethereum') as MockProvider;
 
     expect(provider.url).toBe(getAlchemyUrl());
-    expect(JsonRpcProviderMock).toHaveBeenCalledTimes(1);
-    expect(JsonRpcProviderMock).toHaveBeenCalledWith(
-      getAlchemyUrl(),
-      undefined,
-      { staticNetwork: true }
+    expect(createPublicClientMock).toHaveBeenCalledTimes(1);
+    expect(createPublicClientMock).toHaveBeenCalledWith(
+      { transport: { url: getAlchemyUrl() } }
     );
   });
 

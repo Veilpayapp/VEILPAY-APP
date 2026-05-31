@@ -13,6 +13,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWalletStore } from '../stores/walletStore';
 import { fetchNativeBalance, fetchERC20Balances, type BalanceResult, type TokenBalance } from '../utils/balanceFetcher';
 import { getTokenMarketQuote } from '../utils/marketData';
+import { getFiatExchangeRate } from '../utils/priceFeed';
+import { useSettingsStore } from '../stores/settingsStore';
 import { useShallow } from 'zustand/react/shallow';
 
 export interface UseBalanceResult {
@@ -22,6 +24,7 @@ export interface UseBalanceResult {
   error: string | null;
   refresh: () => Promise<void>;
   lastUpdated: number | null;
+  fiatRate: number;
 }
 
 const REFRESH_INTERVAL_MS = 30000; // 30 seconds
@@ -37,11 +40,14 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
     }))
   );
   
+  const nativeCurrency = useSettingsStore((state) => state.nativeCurrency);
+  
   const [nativeBalance, setNativeBalance] = useState<BalanceResult | null>(null);
   const [tokenBalances, setTokenBalances] = useState<TokenBalance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+  const [fiatRate, setFiatRate] = useState<number>(1.0);
   
   const lastFetchTime = useRef<number>(0);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -70,9 +76,10 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
       const chainKey = activeChain.key;
 
       // Fetch native balance and token balances in parallel
-      const [native, tokens] = await Promise.all([
+      const [native, tokens, fiatRate] = await Promise.all([
         fetchNativeBalance(address, chainKey),
         activeChain.type === 'evm' ? fetchERC20Balances(address, chainKey) : Promise.resolve([]),
+        getFiatExchangeRate(nativeCurrency || 'USD'),
       ]);
 
       const marketQuote = await getTokenMarketQuote(activeChain.symbol || native.symbol);
@@ -80,13 +87,14 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
       // Update state
       setNativeBalance(native);
       setTokenBalances(tokens);
+      setFiatRate(fiatRate);
       setLastUpdated(Date.now());
 
-      // Calculate USD value and update wallet store
+      // Calculate Fiat value and update wallet store
       if (native.balanceFormatted && marketQuote) {
         const balanceNum = parseFloat(native.balanceFormatted);
-        const usdValue = (balanceNum * marketQuote.price).toFixed(2);
-        setBalance(native.balanceFormatted, usdValue);
+        const fiatValue = (balanceNum * marketQuote.price * fiatRate).toFixed(2);
+        setBalance(native.balanceFormatted, fiatValue);
       } else {
         setBalance(native.balanceFormatted, '0.00');
       }
@@ -102,8 +110,7 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
       setIsLoading(false);
       setLoadingBalance(false);
     }
-  }, [address, activeChain, setBalance, setLoadingBalance]);
-
+  }, [address, activeChain, setBalance, setLoadingBalance, nativeCurrency]);
   // Initial fetch on mount and when wallet/chain changes
   useEffect(() => {
     if (address && activeChain) {
@@ -146,6 +153,7 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
     error,
     refresh,
     lastUpdated,
+    fiatRate,
   };
 }
 
@@ -188,7 +196,6 @@ export function useTokenBalances(chainKey?: string): {
       setIsLoading(false);
     }
   }, [address, targetChain, chainType]);
-
   useEffect(() => {
     if (address && targetChain && chainType === 'evm') {
       refresh();

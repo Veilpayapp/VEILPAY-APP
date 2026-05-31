@@ -7,9 +7,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  Text,  StyleSheet,  TouchableOpacity,
   ScrollView,
   StatusBar,
   TextInput,
@@ -35,14 +33,9 @@ type ImportWalletScreenNavigationProp = NativeStackNavigationProp<RootStackParam
 type WordCount = 12 | 24;
 
 interface ImportWalletScreenProps {
-  navigation: ImportWalletScreenNavigationProp;
-}
-
-export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {
-  const { colors } = useTheme();
+  navigation: ImportWalletScreenNavigationProp;}export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {  const { colors } = useTheme();
   const styles = useStyles(themeStyles);
-  const [wordCount, setWordCount] = useState<WordCount>(12);
-  const [words, setWords] = useState<string[]>(Array(12).fill(''));
+  const [wordCount, setWordCount] = useState<WordCount>(12);  const [words, setWords] = useState<string[]>(Array(12).fill(''));
   const [passphrase, setPassphrase] = useState('');
   const [isPhraseTouched, setIsPhraseTouched] = useState(false);
   const [mnemonicValidationState, setMnemonicValidationState] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
@@ -60,6 +53,7 @@ export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {
 
   useEffect(() => {
     let cancelled = false;
+    let timerId: NodeJS.Timeout | undefined;
 
     if (!hasAllWords || hasAnyShortWord) {
       setMnemonicValidationState('idle');
@@ -72,6 +66,10 @@ export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {
 
     const validatePhrase = async () => {
       try {
+        // Yield to the UI thread so that pasted words render before blocking on validation
+        await new Promise(resolve => { timerId = setTimeout(resolve, 50); });
+        if (cancelled) return;
+
         const isValidMnemonic = await validateMnemonic(words.slice(0, wordCount));
         if (!cancelled) {
           setMnemonicValidationState(isValidMnemonic ? 'valid' : 'invalid');
@@ -87,6 +85,7 @@ export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {
 
     return () => {
       cancelled = true;
+      if (timerId) clearTimeout(timerId);
     };
   }, [hasAllWords, hasAnyShortWord, wordCount, words]);
 
@@ -169,7 +168,7 @@ export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {
       // Derive the Ethereum address from the mnemonic
       const address = await deriveAddressFromMnemonic(mnemonicWords);
       await connect(address, 'evm');
-      navigation.reset({ index: 0, routes: [{ name: SCREENS.HOME }] });
+      navigation.reset({ index: 0, routes: [{ name: SCREENS.SET_PASSWORD as any }] });
     } catch (error) {
       if (mnemonicStored) {
         try {
@@ -202,7 +201,7 @@ export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {
         <View style={{ width: 80 }} />
       </View>
 
-      <Animated.View entering={FadeInDown.duration(260)} style={styles.animatedContent}>
+      <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={styles.animatedContent}>
         <ScrollView
           style={styles.content}
           showsVerticalScrollIndicator={false}

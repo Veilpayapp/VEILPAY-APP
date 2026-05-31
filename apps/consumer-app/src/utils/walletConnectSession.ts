@@ -10,6 +10,7 @@ type WalletConnectConnectOptions = {
   pairingTopic?: string;
   requestTimeoutMs?: number;
   requiredNamespaces?: WalletConnectRequiredNamespaces;
+  optionalNamespaces?: WalletConnectRequiredNamespaces;
 };
 
 type WalletConnectSessionRequestInternal = {
@@ -34,7 +35,9 @@ export type WalletConnectSessionRequest = {
 const DEFAULT_REQUEST_TIMEOUT_MS = 3 * 60_000;
 const REUSE_WINDOW_MS = 60_000;
 
-const DEFAULT_REQUIRED_NAMESPACES: WalletConnectRequiredNamespaces = {
+const DEFAULT_REQUIRED_NAMESPACES: WalletConnectRequiredNamespaces = {};
+
+const DEFAULT_OPTIONAL_NAMESPACES: WalletConnectRequiredNamespaces = {
   eip155: {
     methods: [
       'eth_sendTransaction',
@@ -45,6 +48,21 @@ const DEFAULT_REQUIRED_NAMESPACES: WalletConnectRequiredNamespaces = {
     ],
     chains: ['eip155:1', 'eip155:11155111'],
     events: ['accountsChanged', 'chainChanged'],
+  },
+  solana: {
+    methods: ['solana_signTransaction', 'solana_signMessage'],
+    chains: ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1'],
+    events: ['accountsChanged'],
+  },
+  aptos: {
+    methods: ['aptos_signTransaction', 'aptos_signMessage'],
+    chains: ['aptos:1'],
+    events: ['accountsChanged'],
+  },
+  stellar: {
+    methods: ['stellar_signXDR', 'stellar_signMessage'],
+    chains: ['stellar:pubnet'],
+    events: [],
   },
 };
 
@@ -152,7 +170,12 @@ async function getSignClient(): Promise<any> {
   }
 
   signClientPromise = (async () => {
-    const signClientModule = await import('@walletconnect/sign-client');
+    let signClientModule;
+    if (typeof jest !== 'undefined') {
+      signClientModule = require('@walletconnect/sign-client');
+    } else {
+      signClientModule = await import('@walletconnect/sign-client');
+    }
     const SignClient = (signClientModule as any).default || signClientModule;
 
     return SignClient.init({
@@ -206,9 +229,11 @@ export async function createWalletConnectSession(
 
   const signClient = await getSignClient();
   const requiredNamespaces = options.requiredNamespaces || DEFAULT_REQUIRED_NAMESPACES;
+  const optionalNamespaces = options.optionalNamespaces || DEFAULT_OPTIONAL_NAMESPACES;
 
   const connectResponse = await signClient.connect({
     requiredNamespaces,
+    optionalNamespaces,
     pairingTopic: options.pairingTopic,
   });
 

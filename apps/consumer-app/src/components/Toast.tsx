@@ -8,12 +8,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
-  Animated,
-  TouchableOpacity,
+  Text,  StyleSheet,  Animated,  TouchableOpacity,
 } from 'react-native';
-import { typography, useTheme, useStyles } from '../styles/design-tokens';
+import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 import { Icon, IconName } from './Icon';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
@@ -26,7 +23,7 @@ interface ToastProps {
   onDismiss: () => void;
 }
 
-const getToastConfig = (colors: any): Record<ToastType, { iconName: IconName; bgColor: string; shadowColor: string; textColor: string }> => ({
+const getToastConfig = (colors: Colors): Record<ToastType, { iconName: IconName; bgColor: string; shadowColor: string; textColor: string }> => ({
   success: {
     iconName: 'success',
     bgColor: colors.successMuted,
@@ -87,11 +84,9 @@ export function Toast({
       }, duration);
 
       return () => clearTimeout(timer);
-    } else {
-      translateY.setValue(100);
+    } else {      translateY.setValue(100);
       opacity.setValue(0);
-    }
-  }, [visible, duration]);
+    }  }, [visible, duration]);
 
   const handleDismiss = () => {
     Animated.parallel([
@@ -148,13 +143,11 @@ export function Toast({
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
-  container: {
-    position: 'absolute',
+const themeStyles = (colors: Colors) => StyleSheet.create({
+  container: {    position: 'absolute',
     bottom: 24,
     left: 24,
-    right: 24,
-    zIndex: 1000,
+    right: 24,    zIndex: 1000,
   },
   touchable: {
     width: '100%',

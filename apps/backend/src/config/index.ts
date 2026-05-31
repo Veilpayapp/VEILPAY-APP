@@ -34,6 +34,9 @@ const envSchema = z.object({
   // RPC provider keys (required in production)
   ALCHEMY_API_KEY: z.string().default(''),
   INFURA_API_KEY: z.string().default(''),
+  GOLDRUSH_API_KEY: z.string().default(''),
+  SENTRY_DSN: z.string().default(''),
+  RELAYER_PRIVATE_KEY: z.string().optional(),
 });
 
 const env = envSchema.parse(process.env);
@@ -107,7 +110,10 @@ export const config = {
   rpc: {
     alchemyApiKey: env.ALCHEMY_API_KEY,
     infuraApiKey: env.INFURA_API_KEY,
+    goldrushApiKey: env.GOLDRUSH_API_KEY,
   },
+  sentryDsn: env.SENTRY_DSN,
+  relayerPrivateKey: env.RELAYER_PRIVATE_KEY,
   cors: {
     origin: parseCorsOrigins(env.CORS_ORIGINS),
     credentials: true,

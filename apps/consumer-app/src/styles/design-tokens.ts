@@ -9,7 +9,8 @@
  */
 
 import { Dimensions, StyleSheet } from 'react-native';
-import { useThemeState } from '../stores/walletStore';
+import {  } from '../stores/walletStore';
+import { useSettingsStore, useThemeState, usePrivacyLevel } from '../stores/settingsStore';
 import { useMemo } from 'react';
 
 export const darkColors = {

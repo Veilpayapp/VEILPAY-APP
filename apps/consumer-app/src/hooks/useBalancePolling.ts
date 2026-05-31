@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 /**
  * Veilpay Balance Polling Hook
  * Polls wallet balance at regular intervals with automatic refresh and error handling

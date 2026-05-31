@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, AccessibilityProps } from 'react-native';
-import { useTheme, useStyles } from '../styles/design-tokens';
+import { useTheme, useStyles, type Colors } from "../styles/design-tokens";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -25,13 +25,11 @@ export function Skeleton({ width, height, borderRadius = 8, style, ...accessibil
   React.useEffect(() => {
     opacity.value = withRepeat(
       withSequence(
-        withTiming(0.3, { duration: 1000, easing: Easing.ease }),
-        withTiming(0.7, { duration: 1000, easing: Easing.ease })
+        withTiming(0.2, { duration: 800, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
+        withTiming(0.8, { duration: 800, easing: Easing.bezier(0.4, 0, 0.2, 1) })
       ),
       -1,
-      true
-    );
-  }, []);
+      true    );  }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -106,7 +104,7 @@ export function WalletSkeleton() {
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   skeleton: {
     backgroundColor: colors.bgContainerHigh,
   },

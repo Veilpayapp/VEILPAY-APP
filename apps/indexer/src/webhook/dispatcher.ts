@@ -1,5 +1,6 @@
 import { Worker, Job } from "bullmq";
 import { createHmac } from "crypto";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { WebhookPayload, enqueueDeadLetter, createWebhookWorker } from "../queue";
 import { config } from "../config";
@@ -95,7 +96,7 @@ async function recordWebhookDelivery(args: {
     data: {
       merchantId: args.merchantId,
       eventType: args.eventType,
-      payload: args.payload as any,
+      payload: args.payload as unknown as Prisma.InputJsonValue,
       status: args.status,
       ...(typeof args.statusCode === "number" ? { statusCode: args.statusCode } : {}),
       ...(args.error ? { error: args.error } : {}),
@@ -107,7 +108,7 @@ async function recordWebhookDelivery(args: {
 export async function processWebhookJob(job: Job<WebhookPayload>): Promise<void> {
   const { merchantId, eventType } = job.data;
 
-  console.log(`[Webhook] Processing job ${job.id} for merchant ${merchantId}`);
+  console.warn(`[Webhook] Processing job ${job.id} for merchant ${merchantId}`);
 
   const cfg = await getMerchantWebhookConfig(merchantId);
 
@@ -119,7 +120,7 @@ export async function processWebhookJob(job: Job<WebhookPayload>): Promise<void>
   const result = await sendWebhook(cfg, job.data);
 
   if (result.success) {
-    console.log(`[Webhook] Successfully delivered to ${cfg.url} (status: ${result.statusCode})`);
+    console.warn(`[Webhook] Successfully delivered to ${cfg.url} (status: ${result.statusCode})`);
 
     const deliveryRecord: Parameters<typeof recordWebhookDelivery>[0] = {
       merchantId,
@@ -141,7 +142,7 @@ export function startWebhookWorker(): Worker<WebhookPayload> {
   const worker = createWebhookWorker(processWebhookJob);
 
   worker.on("completed", (job: Job<WebhookPayload>) => {
-    console.log(`[Webhook] Job ${job.id} completed`);
+    console.warn(`[Webhook] Job ${job.id} completed`);
   });
 
   worker.on("failed", (job: Job<WebhookPayload> | undefined, error: Error) => {
@@ -157,6 +158,7 @@ export function startWebhookWorker(): Worker<WebhookPayload> {
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
     void (async () => {
       try {
         await recordWebhookDelivery({
@@ -188,7 +190,7 @@ export function startWebhookWorker(): Worker<WebhookPayload> {
     })();
   });
 
-  console.log("[Webhook] Worker started");
+  console.warn("[Webhook] Worker started");
   return worker;
 }
 

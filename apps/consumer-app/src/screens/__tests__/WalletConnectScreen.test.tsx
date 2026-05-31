@@ -12,6 +12,7 @@ jest.mock('../../stores/walletStore', () => ({
   useWalletStore: () => ({
     connect: mockConnect,
   }),
+  useThemeState: () => 'dark',
 }));
 
 jest.mock('../../components/Toast', () => ({
@@ -41,14 +42,18 @@ jest.mock('../../components/WalletIcons', () => {
     MetaMaskIcon: () => <View testID="mock-metamask-icon" />,
     TrustWalletIcon: () => <View testID="mock-trust-icon" />,
     WalletConnectIcon: () => <View testID="mock-walletconnect-icon" />,
+    PhantomIcon: () => <View testID="mock-phantom-icon" />,
+    PetraIcon: () => <View testID="mock-petra-icon" />,
+    LobstrIcon: () => <View testID="mock-lobstr-icon" />,
+    LedgerIcon: () => <View testID="mock-ledger-icon" />,
   };
 });
 
-jest.mock('../../components/NeoPop', () => {
+jest.mock('../../components/SovereignCard', () => {
   const React = require('react');
   const { View } = require('react-native');
   return {
-    NeoPopCard: ({ children }: { children: any }) => <View>{children}</View>,
+    SovereignCard: ({ children }: { children: any }) => <View>{children}</View>,
   };
 });
 

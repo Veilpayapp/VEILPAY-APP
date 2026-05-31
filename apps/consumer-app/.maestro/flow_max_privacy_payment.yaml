@@ -1,0 +1,19 @@
+appId: com.veilpay.consumer
+---
+- launchApp
+- tapOn: 'SEND'
+- tapOn: 'Enter Ethereum address'
+- inputText: '0x1234567890123456789012345678901234567890'
+- hideKeyboard
+- tapOn: '0.00'
+- inputText: '1.5'
+- hideKeyboard
+- tapOn: 'CONTINUE'
+- extendedWaitUntil:
+    visible: 'PRIVATE BY DEFAULT'
+    timeout: 10000
+- tapOn: 'MAXIMUM PRIVACY'
+- assertVisible: 'Relayer Fee'
+- assertVisible: 'Tornado Cash'
+- tapOn: 'CONFIRM PAYMENT'
+- assertVisible: 'Processing'

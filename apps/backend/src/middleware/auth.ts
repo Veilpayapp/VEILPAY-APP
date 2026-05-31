@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { config } from '../config';
 import { prisma } from '../lib/prisma';
+import { getRedisClient } from '../lib/redis';
+import { asyncHandler } from '../utils/asyncHandler';
 
 export interface AuthenticatedRequest extends Request {
   merchantId?: string;
@@ -49,11 +51,11 @@ export function validateSignature(
   }
 }
 
-export async function authMiddleware(
+export const authMiddleware = asyncHandler(async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-): Promise<void> {
+) => {
   const apiKey = req.headers['x-api-key'] as string;
   const signature = req.headers['x-signature'] as string;
   const timestamp = req.headers['x-timestamp'] as string;
@@ -79,6 +81,16 @@ export async function authMiddleware(
     return;
   }
 
+  const redis = getRedisClient();
+  if (redis) {
+    const replayKey = `auth:nonce:${signature}`;
+    const exists = await redis.exists(replayKey);
+    if (exists) {
+      res.status(401).json({ error: 'Replay attack detected: signature already used' });
+      return;
+    }
+  }
+
   try {
     const merchant = await prisma.merchant.findFirst({
       where: {
@@ -100,6 +112,11 @@ export async function authMiddleware(
       return;
     }
 
+    if (redis) {
+      const replayKey = `auth:nonce:${signature}`;
+      await redis.setex(replayKey, 300, '1'); // 5 minute TTL
+    }
+
     req.merchantId = merchant.id;
     req.merchant = {
       id: merchant.id,
@@ -112,7 +129,7 @@ export async function authMiddleware(
     console.error('[Auth] Error:', error);
     res.status(500).json({ error: 'Authentication failed' });
   }
-}
+});
 
 /**
  * requireAuth — validates that authMiddleware has already populated req.merchantId.

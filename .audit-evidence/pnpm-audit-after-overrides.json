@@ -1,0 +1,165 @@
+{
+  "actions": [
+    {
+      "action": "review",
+      "module": "bigint-buffer",
+      "resolves": [
+        {
+          "id": 1103747,
+          "path": "apps__consumer-app>@solana/spl-token>@solana/buffer-layout-utils>bigint-buffer",
+          "dev": false,
+          "bundled": false,
+          "optional": false
+        }
+      ]
+    },
+    {
+      "action": "review",
+      "module": "elliptic",
+      "resolves": [
+        {
+          "id": 1112030,
+          "path": "packages__circuits>circomlibjs>ethers>@ethersproject/signing-key>elliptic",
+          "dev": false,
+          "bundled": false,
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "advisories": {
+    "1103747": {
+      "findings": [
+        {
+          "version": "1.1.5",
+          "paths": [
+            "apps\\consumer-app > @solana/spl-token@0.4.14 > @solana/buffer-layout-utils@0.2.0 > bigint-buffer@1.1.5",
+            "apps\\consumer-app > bigint-buffer@1.1.5"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://nvd.nist.gov/vuln/detail/CVE-2025-3194\n- https://security.snyk.io/vuln/SNYK-JS-BIGINTBUFFER-3364597\n- https://www.usenix.org/system/files/sec23fall-prepub-262_staicu.pdf\n- https://github.com/no2chem/bigint-buffer/blob/master/src/index.ts#L25\n- https://github.com/advisories/GHSA-3gc7-fjrx-p6mg",
+      "created": "2025-04-04T06:34:22.000Z",
+      "id": 1103747,
+      "npm_advisory_id": null,
+      "overview": "Versions of the package bigint-buffer from 0.0.0 to 1.1.5 are vulnerable to Buffer Overflow in the toBigIntLE() function. Attackers can exploit this to crash the application.",
+      "reported_by": null,
+      "title": "bigint-buffer Vulnerable to Buffer Overflow via toBigIntLE() Function",
+      "metadata": null,
+      "cves": [
+        "CVE-2025-3194"
+      ],
+      "access": "public",
+      "severity": "high",
+      "module_name": "bigint-buffer",
+      "vulnerable_versions": "<=1.1.5",
+      "github_advisory_id": "GHSA-3gc7-fjrx-p6mg",
+      "recommendation": "None",
+      "patched_versions": "<0.0.0",
+      "updated": "2025-04-04T18:23:46.000Z",
+      "cvss": {
+        "score": 7.5,
+        "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+      },
+      "cwe": [
+        "CWE-120"
+      ],
+      "url": "https://github.com/advisories/GHSA-3gc7-fjrx-p6mg"
+    },
+    "1112030": {
+      "findings": [
+        {
+          "version": "6.6.1",
+          "paths": [
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/abi@5.8.0 > @ethersproject/hash@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/contracts@5.8.0 > @ethersproject/abi@5.8.0 > @ethersproject/hash@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/contracts@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/contracts@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/contracts@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/hash@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/wordlists@5.8.0 > @ethersproject/hash@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/wordlists@5.8.0 > @ethersproject/hash@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/providers@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/providers@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/providers@5.8.0 > @ethersproject/hash@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/providers@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/hash@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/wordlists@5.8.0 > @ethersproject/hash@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/hdnode@5.8.0 > @ethersproject/wordlists@5.8.0 > @ethersproject/hash@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/json-wallets@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wallet@5.8.0 > @ethersproject/wordlists@5.8.0 > @ethersproject/hash@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1",
+            "packages\\circuits > circomlibjs@0.1.7 > ethers@5.8.0 > @ethersproject/wordlists@5.8.0 > @ethersproject/hash@5.8.0 > @ethersproject/abstract-signer@5.8.0 > @ethersproject/abstract-provider@5.8.0 > @ethersproject/transactions@5.8.0 > @ethersproject/signing-key@5.8.0 > elliptic@6.6.1"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://nvd.nist.gov/vuln/detail/CVE-2025-14505\n- https://github.com/indutny/elliptic/issues/321\n- https://www.herodevs.com/vulnerability-directory/cve-2025-14505\n- https://github.com/advisories/GHSA-848j-6mx2-7j84",
+      "created": "2026-01-08T21:30:34.000Z",
+      "id": 1112030,
+      "npm_advisory_id": null,
+      "overview": "The ECDSA implementation of the Elliptic package generates incorrect signatures if an interim value of 'k' (as computed based on step 3.2 of  RFC 6979 https://datatracker.ietf.org/doc/html/rfc6979 ) has leading zeros and is susceptible to cryptanalysis, which can lead to secret key exposure. This happens, because the byte-length of 'k' is incorrectly computed, resulting in its getting truncated during the computation. Legitimate transactions or communications will be broken as a result.┬áFurthermore, due to the nature of the fault, attackers couldÔÇôunder certain conditionsÔÇôderive the secret key, if they could get their hands on both a faulty signature generated by a vulnerable version of Elliptic and a correct signature for the same inputs.\n\nThis issue affects all known versions of Elliptic (at the time of writing, versions less than or equal to 6.6.1).",
+      "reported_by": null,
+      "title": "Elliptic Uses a Cryptographic Primitive with a Risky Implementation",
+      "metadata": null,
+      "cves": [
+        "CVE-2025-14505"
+      ],
+      "access": "public",
+      "severity": "low",
+      "module_name": "elliptic",
+      "vulnerable_versions": "<=6.6.1",
+      "github_advisory_id": "GHSA-848j-6mx2-7j84",
+      "recommendation": "None",
+      "patched_versions": "<0.0.0",
+      "updated": "2026-01-09T20:19:43.000Z",
+      "cvss": {
+        "score": 5.6,
+        "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L"
+      },
+      "cwe": [
+        "CWE-1240"
+      ],
+      "url": "https://github.com/advisories/GHSA-848j-6mx2-7j84"
+    }
+  },
+  "muted": [],
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 1,
+      "moderate": 0,
+      "high": 1,
+      "critical": 0
+    },
+    "dependencies": 2063,
+    "devDependencies": 0,
+    "optionalDependencies": 0,
+    "totalDependencies": 2063
+  }
+}

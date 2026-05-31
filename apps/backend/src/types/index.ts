@@ -280,6 +280,7 @@ export const MerchantUpdateResponseSchema = z.object({
 });
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       rawBody?: string;

@@ -18,10 +18,11 @@ import { captureError } from './sentry';
 // In production all chains go through Alchemy/Infura via rpcPool.ts.
 
 const PUBLIC_FALLBACKS: Record<string, string> = {
-  ethereum:       'https://eth.llamarpc.com',
-  bsc:            'https://binance.llamarpc.com',
-  polygon:        'https://polygon.llamarpc.com',
+  ethereum:       'https://ethereum-rpc.publicnode.com',
+  bsc:            'https://bsc-dataseed.binance.org',
+  polygon:        'https://polygon-rpc.com',
   arbitrum:       'https://arb1.arbitrum.io/rpc',
+  base:           'https://mainnet.base.org',
   sepolia:        'https://rpc.sepolia.org',
   solana:         'https://api.mainnet-beta.solana.com',
   'solana-devnet': 'https://api.devnet.solana.com',
@@ -37,6 +38,7 @@ const RPC_ENV_VARS: Record<string, string | undefined> = {
   ethereum:       process.env.EXPO_PUBLIC_RPC_ETHEREUM,
   polygon:        process.env.EXPO_PUBLIC_RPC_POLYGON,
   arbitrum:       process.env.EXPO_PUBLIC_RPC_ARBITRUM,
+  base:           process.env.EXPO_PUBLIC_RPC_BASE,
   sepolia:        process.env.EXPO_PUBLIC_RPC_SEPOLIA,
   solana:         process.env.EXPO_PUBLIC_RPC_SOLANA,
   'solana-devnet': process.env.EXPO_PUBLIC_RPC_SOLANA_DEVNET,
@@ -45,7 +47,7 @@ const RPC_ENV_VARS: Record<string, string | undefined> = {
 
 // ─── Key-based URL builder ────────────────────────────────────────────────────
 
-function buildAlchemyUrl(chainKey: string): string | null {
+export function buildAlchemyUrl(chainKey: string): string | null {
   const apiKey = process.env.EXPO_PUBLIC_ALCHEMY_API_KEY?.trim();
   if (!apiKey) return null;
 
@@ -53,8 +55,10 @@ function buildAlchemyUrl(chainKey: string): string | null {
     ethereum:  'eth-mainnet',
     polygon:   'polygon-mainnet',
     arbitrum:  'arb-mainnet',
+    base:      'base-mainnet',
     sepolia:   'eth-sepolia',
     solana:    'solana-mainnet',
+    bsc:       'bnb-mainnet',
   };
 
   const slug = slugs[chainKey];
@@ -73,6 +77,7 @@ function buildInfuraUrl(chainKey: string): string | null {
     ethereum: 'mainnet',
     polygon:  'polygon-mainnet',
     arbitrum: 'arbitrum-mainnet',
+    base:     'base-mainnet',
     sepolia:  'sepolia',
   };
 

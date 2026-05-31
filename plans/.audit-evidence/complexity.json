@@ -1,0 +1,8 @@
+C:\Users\vahi1\AppData\Local\pnpm-cache\dlx\fjrdlorpyecqhsi5zjmsf24ts4\19e7f170f96-5eb4:
+ ERR_PNPM_FETCH_404  GET https://registry.npmjs.org/ts-complexity-report: Not Found - 404
+
+This error happened while installing a direct dependency of C:\Users\vahi1\AppData\Local\pnpm-cache\dlx\fjrdlorpyecqhsi5zjmsf24ts4\19e7f170f96-5eb4
+
+ts-complexity-report is not in the npm registry, or you have no permission to fetch it.
+
+No authorization header was set for the request.

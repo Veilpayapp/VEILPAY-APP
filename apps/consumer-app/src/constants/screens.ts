@@ -16,10 +16,13 @@ export const SCREENS = {
   SEND_PAYMENT: 'SendPayment',
   PRIVACY_LEVEL: 'PrivacyLevel',
   PAYMENT_CONFIRMATION: 'PaymentConfirmation',
+  PAYMENT_SUCCESS: 'PaymentSuccess',
 
   // Priority 2: Wallet Management
   CREATE_WALLET: 'CreateWallet',
   IMPORT_WALLET: 'ImportWallet',
+  SET_PASSWORD: 'SetPassword',
+  BIOMETRIC_SETUP: 'BiometricSetup',
   RECEIVE_QR: 'ReceiveQR',
   BACKUP_WALLET: 'BackupWallet',
   EXPORT_PRIVATE_KEY: 'ExportPrivateKey',
@@ -40,6 +43,8 @@ export const SCREENS = {
   TRANSAK_WEBVIEW: 'TransakWebView',
   ONRAMP_WIDGET: 'OnrampWidget',
   ONRAMP_AMOUNT: 'OnrampAmount',
+  ONRAMP_QUOTES: 'OnrampQuotes',
+  OFFRAMP_QUOTES: 'OfframpQuotes',
 } as const;
 
 /**
@@ -59,8 +64,11 @@ export const SCREEN_TITLES: Record<ScreenName, string> = {
   [SCREENS.SEND_PAYMENT]: 'Send Payment',
   [SCREENS.PRIVACY_LEVEL]: 'Privacy Level',
   [SCREENS.PAYMENT_CONFIRMATION]: 'Confirm Payment',
+  [SCREENS.PAYMENT_SUCCESS]: 'Payment Sent',
   [SCREENS.CREATE_WALLET]: 'Create Wallet',
   [SCREENS.IMPORT_WALLET]: 'Import Wallet',
+  [SCREENS.SET_PASSWORD]: 'Set Cipher',
+  [SCREENS.BIOMETRIC_SETUP]: 'Biometric Setup',
   [SCREENS.RECEIVE_QR]: 'Receive',
   [SCREENS.BACKUP_WALLET]: 'Backup Wallet',
   [SCREENS.EXPORT_PRIVATE_KEY]: 'Export Private Key',
@@ -75,6 +83,8 @@ export const SCREEN_TITLES: Record<ScreenName, string> = {
   [SCREENS.TRANSAK_WEBVIEW]: 'Transak',
   [SCREENS.ONRAMP_WIDGET]: 'Onramp',
   [SCREENS.ONRAMP_AMOUNT]: 'Buy Crypto',
+  [SCREENS.ONRAMP_QUOTES]: 'Compare Providers',
+  [SCREENS.OFFRAMP_QUOTES]: 'Sell Crypto',
 } as const;
 
 /**

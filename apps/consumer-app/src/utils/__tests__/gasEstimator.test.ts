@@ -15,8 +15,9 @@ const {
 } = require('../gasEstimator');
 
 const mockProvider = {
-  getFeeData: jest.fn(),
+  estimateFeesPerGas: jest.fn(),
   estimateGas: jest.fn(),
+  getGasPrice: jest.fn(),
 };
 
 describe('gasEstimator', () => {
@@ -29,10 +30,9 @@ describe('gasEstimator', () => {
   });
 
   it('uses live fee data and buffers the gas estimate', async () => {
-    mockProvider.getFeeData.mockResolvedValue({
+    mockProvider.estimateFeesPerGas.mockResolvedValue({
       maxFeePerGas: 10_000_000_000n,
       maxPriorityFeePerGas: 2_000_000_000n,
-      gasPrice: 8_000_000_000n,
     });
     mockProvider.estimateGas.mockResolvedValue(21_000n);
 
@@ -42,7 +42,7 @@ describe('gasEstimator', () => {
       3200
     );
 
-    expect(mockProvider.getFeeData).toHaveBeenCalledTimes(1);
+    expect(mockProvider.estimateFeesPerGas).toHaveBeenCalledTimes(1);
     expect(mockProvider.estimateGas).toHaveBeenCalledTimes(1);
     expect(estimate.gasLimit).toBe(24_150n);
     expect(estimate.maxFeePerGas).toBe(11_500_000_000n);
@@ -53,10 +53,9 @@ describe('gasEstimator', () => {
   });
 
   it('returns cached estimates for identical requests', async () => {
-    mockProvider.getFeeData.mockResolvedValue({
+    mockProvider.estimateFeesPerGas.mockResolvedValue({
       maxFeePerGas: 10_000_000_000n,
       maxPriorityFeePerGas: 2_000_000_000n,
-      gasPrice: 8_000_000_000n,
     });
     mockProvider.estimateGas.mockResolvedValue(21_000n);
 
@@ -73,7 +72,7 @@ describe('gasEstimator', () => {
     );
 
     expect(poolCall).toHaveBeenCalledTimes(2);
-    expect(mockProvider.getFeeData).toHaveBeenCalledTimes(1);
+    expect(mockProvider.estimateFeesPerGas).toHaveBeenCalledTimes(1);
     expect(mockProvider.estimateGas).toHaveBeenCalledTimes(1);
     expect(firstEstimate.gasLimit).toEqual(secondEstimate.gasLimit);
     expect(secondEstimate.estimatedCostUsd).toBe('0.8887');

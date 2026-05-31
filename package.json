@@ -22,17 +22,36 @@
     "build:indexer": "turbo run build --filter=@veilpay/indexer...",
     "backend:dev": "pnpm --filter @veilpay/backend dev",
     "indexer:dev": "pnpm --filter @veilpay/indexer dev",
-    "consumer:dev": "pnpm --filter @veilpay/consumer-app start"
+    "consumer:dev": "pnpm --filter @veilpay/consumer-app start",
+    "audit:prod": "pnpm --filter @veilpay/auditor exec ts-node src/cli/index.ts run"
   },
   "devDependencies": {
+    "@prisma/client": "^5.22.0",
     "@types/node": "^20.11.0",
     "@types/react": "~19.2.10",
     "eslint": "^8.57.0",
+    "jimp": "^1.6.1",
     "prettier": "^3.2.5",
-    "turbo": "^2.0.0",
-    "typescript": "^5.4.0",
     "prisma": "^5.22.0",
-    "@prisma/client": "^5.22.0"
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
   },
-  "packageManager": "pnpm@9.0.0"
+  "packageManager": "pnpm@9.0.0",
+  "pnpm": {
+    "overrides": {
+      "bigint-buffer": "npm:bigint-buffer-fixed@latest",
+      "tar": ">=7.5.4",
+      "axios": ">=1.15.2",
+      "glob@>=10.2.0 <10.5.0": "^10.5.0",
+      "serialize-javascript@<7.0.5": "^7.0.5",
+      "underscore@<=1.13.7": "^1.13.8",
+      "ws@>=8.0.0 <8.20.1": "^8.20.1",
+      "brace-expansion@>=5.0.0 <5.0.6": "^5.0.6",
+      "qs@>=6.11.1 <=6.15.1": "^6.15.2",
+      "@tootallnate/once": "^2.0.1",
+      "postcss@<8.5.10": "^8.5.10",
+      "uuid@<11.1.1": "^11.1.1",
+      "turbo": "^2.9.14"
+    }
+  }
 }

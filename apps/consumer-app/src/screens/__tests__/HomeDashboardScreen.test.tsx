@@ -24,13 +24,21 @@ const mockWalletState: any = {
   setActiveChain: mockSetActiveChain,
   balance: '1.234',
   balanceUsd: '4321.00',
+};
+
+const mockTransactionState: any = {
   transactions: [],
   isLoadingTransactions: false,
   refreshTransactions: mockRefreshTransactions,
   latestTransakOrder: null,
+  latestOnrampOrder: null,
   clearLatestTransakOrder: jest.fn(() => {
-    mockWalletState.latestTransakOrder = null;
+    mockTransactionState.latestTransakOrder = null;
   }),
+  clearLatestOnrampOrder: jest.fn(() => {
+    mockTransactionState.latestOnrampOrder = null;
+  }),
+  clearTransactions: jest.fn(),
 };
 
 jest.mock('../../stores/walletStore', () => ({
@@ -38,13 +46,23 @@ jest.mock('../../stores/walletStore', () => ({
     { key: 'ethereum', name: 'Ethereum', type: 'evm', symbol: 'ETH' },
     { key: 'polygon', name: 'Polygon', type: 'evm', symbol: 'MATIC' },
   ],
-  useWalletStore: (selector: any) => {
+  useWalletStore: Object.assign((selector: any) => {
     if (typeof selector === 'function') {
       return selector(mockWalletState);
     }
 
     return mockWalletState;
-  },
+  }, { getState: () => mockWalletState }),
+  useThemeState: () => 'dark',
+}));
+
+jest.mock('../../stores/transactionStore', () => ({
+  useTransactionStore: Object.assign((selector: any) => {
+    if (typeof selector === 'function') {
+      return selector(mockTransactionState);
+    }
+    return mockTransactionState;
+  }, { getState: () => mockTransactionState }),
 }));
 
 jest.mock('../../hooks/useBalance', () => ({
@@ -167,8 +185,8 @@ describe('HomeDashboardScreen', () => {
     mockSetActiveChain.mockReset();
     mockRefreshTransactions.mockReset();
     mockRefreshBalance.mockReset();
-    mockWalletState.latestTransakOrder = null;
-    mockWalletState.clearLatestTransakOrder.mockClear();
+    mockTransactionState.latestTransakOrder = null;
+    mockTransactionState.clearLatestTransakOrder.mockClear();
     mockOpenExternalUrl.mockResolvedValue(true);
   });
 
@@ -188,25 +206,29 @@ describe('HomeDashboardScreen', () => {
       expect(mockOpenExternalUrl).toHaveBeenCalledWith('https://app.uniswap.org/swap');
     });
 
-    fireEvent.press(screen.getByText('BUY / SELL CRYPTO'));
+    // Press Fiat Gateway card to open chooser modal
+    fireEvent.press(screen.getByText('FIAT GATEWAY'));
 
     await waitFor(() => {
-      expect(screen.getByText('BUY OR SELL CRYPTO')).toBeTruthy();
+      expect(screen.getAllByText('FIAT GATEWAY').length).toBeGreaterThan(0);
     });
 
+    // Press BUY CRYPTO option in the modal
     fireEvent.press(screen.getByText('BUY CRYPTO'));
 
-    expect(navigation.navigate).toHaveBeenCalledWith(SCREENS.DEPOSIT_CRYPTO);
+    expect(navigation.navigate).toHaveBeenCalledWith(SCREENS.ONRAMP_AMOUNT, { flow: 'buy' });
 
-    fireEvent.press(screen.getByText('BUY / SELL CRYPTO'));
+    // Open Fiat Gateway chooser modal again
+    fireEvent.press(screen.getByText('FIAT GATEWAY'));
 
     await waitFor(() => {
-      expect(screen.getByText('SELL CRYPTO')).toBeTruthy();
+      expect(screen.getByText('OFF-RAMP FIAT')).toBeTruthy();
     });
 
-    fireEvent.press(screen.getByText('SELL CRYPTO'));
+    // Press OFF-RAMP FIAT option in the modal
+    fireEvent.press(screen.getByText('OFF-RAMP FIAT'));
 
-    expect(navigation.navigate).toHaveBeenCalledWith(SCREENS.WITHDRAW_FIAT);
+    expect(navigation.navigate).toHaveBeenCalledWith(SCREENS.ONRAMP_AMOUNT, { flow: 'sell' });
   });
 
   it('switches network through the selector modal', async () => {
@@ -232,7 +254,7 @@ describe('HomeDashboardScreen', () => {
   });
 
   it('clears stale Transak outcomes from the dashboard', async () => {
-    mockWalletState.latestTransakOrder = {
+    mockTransactionState.latestTransakOrder = {
       walletAddress: '0x1234567890abcdef1234567890abcdef12345678',
       flow: 'buy',
       status: 'success',
@@ -248,7 +270,7 @@ describe('HomeDashboardScreen', () => {
     const screen = render(<HomeDashboardScreen navigation={navigation as any} route={route as any} />);
 
     await waitFor(() => {
-      expect(mockWalletState.clearLatestTransakOrder).toHaveBeenCalled();
+      expect(mockTransactionState.clearLatestTransakOrder).toHaveBeenCalled();
     });
 
     screen.rerender(<HomeDashboardScreen navigation={navigation as any} route={route as any} />);

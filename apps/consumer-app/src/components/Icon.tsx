@@ -64,7 +64,9 @@ export type IconName =
   | 'hourglass'
   | 'inbox'
   | 'hexagon'
-  | 'search';
+  | 'search'
+  | 'water'
+  | 'plus';
 
 interface IconProps {
   name: IconName;
@@ -423,6 +425,18 @@ const ICONS: Record<IconName, React.ReactNode> = {
     <G>
       <Circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" fill="none"/>
       <Path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none"/>
+    </G>
+  ),
+  
+  water: (
+    <G>
+      <Path d="M12 2L6 12a6 6 0 0012 0L12 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+    </G>
+  ),
+
+  plus: (
+    <G>
+      <Path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
     </G>
   ),
 };

@@ -4,7 +4,7 @@
  */
 
 import React, { useCallback, useEffect, useRef } from "react";
-import { NavigationContainer, useNavigationContainerRef } from "@react-navigation/native";
+import { NavigationContainer, DarkTheme, useNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
@@ -18,6 +18,7 @@ import { HomeDashboardScreen } from "../screens/HomeDashboardScreen";
 import { SendPaymentScreen } from "../screens/SendPaymentScreen";
 import { PrivacyLevelScreen } from "../screens/PrivacyLevelScreen";
 import { PaymentConfirmationScreen } from "../screens/PaymentConfirmationScreen";
+import { PaymentSuccessScreen } from "../screens/PaymentSuccessScreen";
 import { ReceiveQRScreen } from "../screens/ReceiveQRScreen";
 import { BackupWalletScreen } from "../screens/BackupWalletScreen";
 import { ExportPrivateKeyScreen } from "../screens/ExportPrivateKeyScreen";
@@ -36,7 +37,8 @@ import {
 import { AddCustomNetworkScreen } from "../screens/AddCustomNetworkScreen";
 import type { TransactionRecord } from "../types/transactions";
 import type { PaymentToken } from "../types/tokens";
-import type { ChainType, TransakFlow } from "../stores/walletStore";
+import type { ChainType } from "../stores/walletStore";
+import type { TransakFlow } from "../stores/transactionStore";
 
 // Constants
 import { SCREENS } from "../constants/screens";
@@ -45,6 +47,7 @@ import { trackScreenView } from "../utils/analytics";
 import { getScreenTransition } from "./transitions";
 import { useTheme, useStyles } from "../styles/design-tokens";
 import { useWalletStore } from "../stores/walletStore";
+import { useTransactionStore } from "../stores/transactionStore";
 
 // Note: This function reads store state but is only called from event handlers
 // (navigateFromDeepLink), not during render, so it's safe from React concurrency issues.
@@ -54,7 +57,7 @@ function resolveTransactionFromDeepLink(identifier?: string): TransactionRecord 
   }
 
   const normalizedIdentifier = identifier.toLowerCase();
-  const { transactions } = useWalletStore.getState();
+  const { transactions } = useTransactionStore.getState();
 
   for (const transaction of transactions) {
     const normalizedHash = transaction.hash?.toLowerCase();
@@ -98,7 +101,10 @@ export type RootStackParamList = {
     amount: string;
     memo?: string;
     token: string;
-    privacyLevel: "standard" | "max";
+    privacyLevel: "standard" | "stealth" | "max";
+  };
+  [SCREENS.PAYMENT_SUCCESS]: {
+    transaction: TransactionRecord;
   };
   [SCREENS.RECEIVE_QR]: undefined;
   [SCREENS.TRANSACTION_HISTORY]: undefined;
@@ -131,6 +137,14 @@ export type RootStackParamList = {
   [SCREENS.ONRAMP_AMOUNT]: {
     flow: 'buy' | 'sell';
   };
+  [SCREENS.ONRAMP_QUOTES]: {
+    flow: 'buy' | 'sell';
+    fiatAmount: string;
+    cryptoToken: string;
+    chainKey: string;
+  };
+  [SCREENS.SET_PASSWORD]: undefined;
+  [SCREENS.BIOMETRIC_SETUP]: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -242,6 +256,18 @@ export function AppNavigator({ initialRouteName = SCREENS.ONBOARDING }: AppNavig
       ref={navigationRef}
       onReady={handleNavigationReady}
       onStateChange={handleNavigationStateChange}
+      theme={{
+        ...DarkTheme,
+        colors: {
+          ...DarkTheme.colors,
+          primary: colors.accent,
+          background: colors.bgPrimary,
+          card: colors.surfaceCard,
+          text: colors.textPrimary,
+          border: colors.outlineSubtle,
+          notification: colors.accent,
+        },
+      }}
     >
       <Stack.Navigator
         initialRouteName={initialRouteName}
@@ -295,6 +321,11 @@ export function AppNavigator({ initialRouteName = SCREENS.ONBOARDING }: AppNavig
           name={SCREENS.PAYMENT_CONFIRMATION}
           component={PaymentConfirmationScreen}
           options={getScreenTransition(SCREENS.PAYMENT_CONFIRMATION)}
+        />
+        <Stack.Screen
+          name={SCREENS.PAYMENT_SUCCESS}
+          component={PaymentSuccessScreen}
+          options={getScreenTransition(SCREENS.PAYMENT_SUCCESS)}
         />
         <Stack.Screen
           name={SCREENS.RECEIVE_QR}

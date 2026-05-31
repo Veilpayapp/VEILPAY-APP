@@ -1,0 +1,10 @@
+PASS src/app/__tests__/page.test.tsx
+  Home page
+    √ renders the heading and description (113 ms)
+    √ renders supported chains (16 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        2.736 s, estimated 3 s
+Ran all test suites.

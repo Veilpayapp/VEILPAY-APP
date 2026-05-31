@@ -6,9 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  Text,  StyleSheet,  TouchableOpacity,
   ScrollView,
   StatusBar,
   Alert,
@@ -17,7 +15,10 @@ import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography, spacing } from '../styles/design-tokens';
 import { useWalletStore } from '../stores/walletStore';
-import { getStoredMnemonic, deriveWalletFromMnemonic } from '../utils/transactions';
+import { useSettingsStore } from '../stores/settingsStore';
+import { getStoredMnemonic } from '../utils/transactions';
+import { mnemonicToAccount } from 'viem/accounts';
+import { Buffer } from 'buffer';
 import { useBiometrics } from '../hooks/useBiometrics';
 import { SovereignCard } from "../components/SovereignCard";
 import { SovereignButton } from "../components/SovereignButton";
@@ -25,28 +26,27 @@ import { ScreenBackButton } from '../components/ScreenBackButton';
 import { Icon } from '../components/Icon';
 import Toast, { useToast } from '../components/Toast';
 import { setClipboardString } from '../utils/clipboard';
+import { SecurityWarningModal } from '../components/SecurityWarningModal';
 
 export function ExportPrivateKeyScreen({ navigation }: any) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const toast = useToast();
   const { isAvailable, authenticate } = useBiometrics();
-  const { biometricsEnabled, address, activeChain } = useWalletStore();
-
-  const [privateKey, setPrivateKey] = useState<string>('');
-  const [isRevealed, setIsRevealed] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadPrivateKey();
-  }, []);
+  const { address, activeChain } = useWalletStore();
+  const biometricsEnabled = useSettingsStore((state: any) => state.biometricsEnabled);  const [privateKey, setPrivateKey] = useState<string>('');
+  const [isRevealed, setIsRevealed] = useState(false);  const [isLoading, setIsLoading] = useState(true);  useEffect(() => {    loadPrivateKey();  }, []);
 
   const loadPrivateKey = async () => {
     try {
       const words = await getStoredMnemonic();
       if (words) {
-        const wallet = deriveWalletFromMnemonic(words);
-        setPrivateKey(wallet.privateKey);
+        const phrase = words.join(' ');
+        const account = mnemonicToAccount(phrase, { path: "m/44'/60'/0'/0/0" });
+        const hdKey = account.getHdKey();
+        if (hdKey.privateKey) {
+          setPrivateKey('0x' + Buffer.from(hdKey.privateKey).toString('hex'));
+        }
       }
     } catch (error) {
       toast.show('Failed to load private key', 'error');
@@ -56,39 +56,37 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
   };
 
   const handleReveal = async () => {
-    if (biometricsEnabled && isAvailable) {
-      const success = await authenticate();
-      if (!success) {
-        toast.show('Authentication failed', 'error');
-        return;
-      }
+    // ALWAYS require authentication to view private key (fallback to Device PIN if no biometrics)
+    const result = await authenticate('export_key', true);
+    if (!result.success) {
+      toast.show(
+        result.cancelled ? 'Authentication cancelled' : 'Authentication failed',
+        'error'
+      );
+      return;
     }
     setIsRevealed(true);
   };
 
-  const handleCopy = () => {
-    if (!isRevealed) return;
+  const [showWarning, setShowWarning] = useState(false);
 
-    Alert.alert(
-      "Critical Warning",
-      "Sharing your private key gives full control of your funds to anyone. Never share it. Are you sure you want to copy it?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Copy Anyway", 
-          onPress: async () => {
-            await setClipboardString(privateKey);
-            toast.show('Private key copied to clipboard', 'success');
-          }
-        }
-      ]
-    );
+  const handleCopyRequest = () => {
+    if (!isRevealed) return;
+    setShowWarning(true);
   };
+
+  const handleCopyConfirm = async () => {
+    setShowWarning(false);
+    await setClipboardString(privateKey);
+    toast.show('Private key copied to clipboard', 'success');
+  };
+
+  const handleCopyCancel = () => {
+    setShowWarning(false);  };
 
   const handleBack = () => navigation.goBack();
 
-  return (
-    <SafeAreaView style={styles.container}>
+  return (    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.surfaceScreen} />
 
       <View style={styles.header}>
@@ -98,7 +96,7 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Animated.View entering={FadeInDown.duration(400)} style={styles.content}>
+        <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={styles.content}>
           
           {/* Warning Banner */}
           <View style={styles.warningBanner}>
@@ -148,7 +146,7 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
               <SovereignButton 
                 title="COPY KEY" 
                 variant="outline" 
-                onPress={handleCopy}
+                onPress={handleCopyRequest}
                 style={[styles.actionButton, { flex: 1 }]}
               />
               <SovereignButton 
@@ -174,6 +172,15 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
         message={toast.message}
         type={toast.type}
         onDismiss={toast.hide}
+      />
+
+      <SecurityWarningModal
+        visible={showWarning}
+        title="Critical Warning"
+        message="Sharing your private key gives full control of your funds to anyone. Never share it. Are you sure you want to copy it?"
+        onCancel={handleCopyCancel}
+        onConfirm={handleCopyConfirm}
+        confirmText="COPY ANYWAY"
       />
     </SafeAreaView>
   );

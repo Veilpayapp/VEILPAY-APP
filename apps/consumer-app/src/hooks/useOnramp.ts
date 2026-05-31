@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useWalletStore } from '../stores/walletStore';
+import { useTransactionStore } from '../stores/transactionStore';
 import { getOnrampConfig } from '../utils/onramp';
 import { captureError } from '../utils/sentry';
 import type { FiatGatewayProvider } from '../utils/fiatGateway';
@@ -22,7 +23,8 @@ export interface OnrampSession {
 export const useOnramp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { address, setLatestOnrampOrder } = useWalletStore();
+  const { address } = useWalletStore();
+  const setLatestOnrampOrder = useTransactionStore(s => s.setLatestOnrampOrder);
 
   /**
    * Fetches a signed Onramp URL from the VeilPay backend.

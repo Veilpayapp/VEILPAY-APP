@@ -4,6 +4,8 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { sleep } from './timing';
+import { formatFiat, type FiatCurrency } from './transak';
 
 // Cache keys prefix
 const CACHE_KEY_PREFIX = '@veilpay_price_';
@@ -19,6 +21,14 @@ export const FALLBACK_PRICES: Record<string, number> = {
   BNB: 580,
   MATIC: 0.72,
   APT: 9.50,
+};
+
+// Fallback fiat exchange rates (USD -> FIAT)
+const FALLBACK_FIAT_RATES: Record<string, number> = {
+  USD: 1.0,
+  EUR: 0.92,
+  GBP: 0.79,
+  INR: 83.5,
 };
 
 // API endpoints
@@ -82,7 +92,7 @@ async function fetchFromBinance(symbol: string): Promise<{ price: number; change
 
       if (response.status === 429 && attempt < BINANCE_MAX_RETRIES) {
         const delayMs = BINANCE_RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        await sleep(delayMs);
         continue;
       }
 
@@ -90,7 +100,7 @@ async function fetchFromBinance(symbol: string): Promise<{ price: number; change
     } catch (error) {
       if (attempt === BINANCE_MAX_RETRIES) throw error;
       const delayMs = BINANCE_RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      await sleep(delayMs);
     }
   }
   throw new Error(`Binance API error: Data not received after retries`);
@@ -201,6 +211,43 @@ export async function getTokenPrice(symbol: string): Promise<PriceData> {
 export const getETHPrice = () => getTokenPrice('ETH');
 export const FALLBACK_ETH_PRICE = FALLBACK_PRICES.ETH;
 
+export async function getFiatExchangeRate(currency: string): Promise<number> {
+  if (currency === 'USD') return 1.0;
+  
+  try {
+    const cached = await AsyncStorage.getItem(`${CACHE_KEY_PREFIX}fiat_${currency}`);
+    if (cached) {
+      const { rate, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < CACHE_DURATION * 12) {
+        return rate;
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const coincapIdMap: Record<string, string> = {
+      EUR: 'euro',
+      GBP: 'british-pound-sterling',
+      INR: 'indian-rupee'
+    };
+    
+    const id = coincapIdMap[currency];
+    if (id) {
+      const response = await fetch(`https://api.coincap.io/v2/rates/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data?.data?.rateUsd) {
+          const rate = 1 / parseFloat(data.data.rateUsd);
+          await AsyncStorage.setItem(`${CACHE_KEY_PREFIX}fiat_${currency}`, JSON.stringify({ rate, timestamp: Date.now() }));
+          return rate;
+        }
+      }
+    }
+  } catch (e) {}
+
+  return FALLBACK_FIAT_RATES[currency] || 1.0;
+}
+
 export async function convertTokenToUsd(amount: number | string, symbol: string): Promise<{
   usdValue: number;
   price: number;
@@ -219,6 +266,18 @@ export function formatUsdValue(usdValue: number): string {
   return `$${usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+export function formatFiatValue(usdValue: number, currencyCode: string = 'USD'): string {
+  if (currencyCode === 'USD') return formatUsdValue(usdValue);
+  
+  // Use transak's formatFiat to properly format other currencies
+  try {
+    return formatFiat(usdValue, currencyCode as FiatCurrency);
+  } catch (e) {
+    // Fallback if Intl fails
+    return `${usdValue.toFixed(2)} ${currencyCode}`;
+  }
+}
+
 export function formatLastUpdated(timestamp: number): string {
   const diff = Date.now() - timestamp;
   if (diff < 60000) return 'just now';
@@ -229,8 +288,10 @@ export function formatLastUpdated(timestamp: number): string {
 export default {
   getTokenPrice,
   getETHPrice,
+  getFiatExchangeRate,
   convertTokenToUsd,
   formatUsdValue,
+  formatFiatValue,
   formatLastUpdated,
   FALLBACK_PRICES,
 };

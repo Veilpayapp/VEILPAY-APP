@@ -2,19 +2,18 @@ import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
+  StyleSheet,  TextInput,  TouchableOpacity,
   ScrollView,
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme, useStyles, typography } from '../styles/design-tokens';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { SovereignButton } from '../components/SovereignButton';
 import { SovereignCard } from '../components/SovereignCard';
 import { Icon } from '../components/Icon';
-import { useOnramp } from '../features/fiat-gateway';
+
 import { useWalletStore } from '../stores/walletStore';
 import { SCREENS } from '../constants/screens';
 import { triggerLightImpactHaptic } from '../utils/haptics';
@@ -36,27 +35,16 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
   const styles = useStyles(themeStyles);
   const [amount, setAmount] = useState('5000');
   const { activeChain } = useWalletStore();
-  const { getOnrampUrl, isLoading, error: apiError } = useOnramp();
-
-  const handleContinue = useCallback(async () => {
-    triggerLightImpactHaptic();
+  const handleContinue = useCallback(() => {
+    if (!amount || !activeChain) return;
     
-    const session = await getOnrampUrl({
+    navigation.navigate(SCREENS.ONRAMP_QUOTES, {
+      flow,
       fiatAmount: amount,
-      fiatCurrency: 'INR',
-      cryptoToken: activeChain?.symbol || 'ETH',
-      chainKey: activeChain?.key || 'ethereum',
-      flow: flow,
+      cryptoToken: activeChain.nativeToken.symbol,
+      chainKey: activeChain.key,
     });
-
-    if (session) {
-      navigation.navigate(SCREENS.ONRAMP_WIDGET, {
-        url: session.url,
-        orderId: session.orderId,
-        title: flow === 'buy' ? 'BUY CRYPTO' : 'SELL CRYPTO',
-      });
-    }
-  }, [amount, activeChain, flow, getOnrampUrl, navigation]);
+  }, [amount, activeChain, flow, navigation]);
 
   const handleQuickAmount = (val: string) => {
     triggerLightImpactHaptic();
@@ -73,6 +61,7 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
         <View style={{ width: 44 }} />
       </View>
 
+      <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.inputSection}>
           <Text style={styles.label}>AMOUNT IN INR</Text>
@@ -109,32 +98,27 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
             <View style={styles.infoRow}>
               <Icon name="info" size={16} color={colors.accent} />
               <Text style={styles.infoText}>
-                You are using Onramp.money for this transaction. 
-                KYC may be required for Indian residents.
+                You are using the VeilPay Aggregator for this transaction. 
+                We will find the best rate across multiple providers.
               </Text>
             </View>
           </SovereignCard>
         </View>
-
-        {apiError && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{apiError}</Text>
-          </View>
-        )}
       </ScrollView>
 
       <View style={styles.footer}>
         <SovereignButton
-          title={isLoading ? 'PREPARING GATEWAY...' : 'CONTINUE'}
+          title="CONTINUE"
           onPress={handleContinue}
-          disabled={isLoading || !amount || parseInt(amount) < 100}
+          disabled={!amount || parseInt(amount) < 100}
         />
       </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surfaceScreen,

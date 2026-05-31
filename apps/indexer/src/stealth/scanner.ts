@@ -44,7 +44,7 @@ export async function scanForStealthPayments(
   });
 
   if (viewingKeys.length === 0) {
-    console.log(`[StealthScanner] No viewing keys for chain ${chainKey}`);
+    console.warn(`[StealthScanner] No viewing keys for chain ${chainKey}`);
     return [];
   }
 
@@ -65,7 +65,7 @@ export async function scanForStealthPayments(
         continue;
       }
 
-      const match = await checkStealthMatch(vk, invoice, fromBlock, toBlock);
+      const match = checkStealthMatch(vk, invoice, fromBlock, toBlock);
       if (match) {
         matches.push(match);
       }
@@ -75,12 +75,12 @@ export async function scanForStealthPayments(
   return matches;
 }
 
-async function checkStealthMatch(
-  viewingKey: ViewingKeyConfig,
-  invoice: { id: string; paymentAddress: string | null; chainKey: string },
+function checkStealthMatch(
+  _viewingKey: ViewingKeyConfig,
+  _invoice: { id: string; paymentAddress: string | null; chainKey: string },
   _fromBlock: number,
-  _toBlock: number
-): Promise<StealthAddressMatch | null> {
+  _toBlock: number,
+): StealthAddressMatch | null {
   // TODO: implement actual stealth address matching when crypto module is ready
   return null;
 }
@@ -97,7 +97,7 @@ export async function processStealthMatch(match: StealthAddressMatch): Promise<v
     });
 
     if (existingPayment) {
-      console.log(`[StealthScanner] Payment already recorded: ${existingPayment.id}`);
+      console.warn(`[StealthScanner] Payment already recorded: ${existingPayment.id}`);
       return;
     }
 
@@ -137,7 +137,7 @@ export async function processStealthMatch(match: StealthAddressMatch): Promise<v
       },
     });
 
-    console.log(`[StealthScanner] Payment recorded for invoice ${invoice.id}`);
+    console.warn(`[StealthScanner] Payment recorded for invoice ${invoice.id}`);
 
     const webhookPayload: WebhookPayload = {
       merchantId: match.merchantId,
@@ -156,7 +156,7 @@ export async function processStealthMatch(match: StealthAddressMatch): Promise<v
     };
 
     await enqueueWebhook(webhookPayload);
-    console.log(`[StealthScanner] Webhook queued for invoice ${invoice.id}`);
+    console.warn(`[StealthScanner] Webhook queued for invoice ${invoice.id}`);
   });
 }
 
@@ -171,7 +171,7 @@ export class StealthScanner {
     this.chainKey = chainKey;
   }
 
-  async start(initialBlock?: number): Promise<void> {
+  start(initialBlock?: number): void {
     if (this.isRunning) {
       return;
     }
@@ -180,20 +180,25 @@ export class StealthScanner {
     this.lastScannedBlock = initialBlock ?? 0;
     this.lastSuccessfulBlock = this.lastScannedBlock;
 
-    console.log(`[StealthScanner:${this.chainKey}] Starting from block ${this.lastScannedBlock}`);
+    console.warn(`[StealthScanner:${this.chainKey}] Starting from block ${this.lastScannedBlock}`);
 
-    this.scanInterval = setInterval(async () => {
-      await this.scan();
+    // setInterval expects `() => void`. Wrap the async scan in a void
+    // expression that swallows rejections so `no-misused-promises` is
+    // satisfied without losing error visibility.
+    this.scanInterval = setInterval(() => {
+      void this.scan().catch((e) => {
+        console.error(`[StealthScanner:${this.chainKey}] scan error:`, e);
+      });
     }, 30000);
   }
 
-  async stop(): Promise<void> {
+  stop(): void {
     this.isRunning = false;
     if (this.scanInterval) {
       clearInterval(this.scanInterval);
       this.scanInterval = null;
     }
-    console.log(`[StealthScanner:${this.chainKey}] Stopped`);
+    console.warn(`[StealthScanner:${this.chainKey}] Stopped`);
   }
 
   private async scan(): Promise<void> {
@@ -225,7 +230,7 @@ export async function startStealthScanners(): Promise<Map<string, StealthScanner
 
   for (const { chainKey } of viewingKeys) {
     const scanner = new StealthScanner(chainKey);
-    await scanner.start();
+    scanner.start();
     scanners.set(chainKey, scanner);
   }
 

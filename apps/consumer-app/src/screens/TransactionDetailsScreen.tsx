@@ -7,15 +7,13 @@
 import React, { useEffect, useMemo } from "react";
 import {
   View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  Text,  StyleSheet,  TouchableOpacity,
   ScrollView,
   StatusBar,
   Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme, useStyles, typography } from "../styles/design-tokens";
+import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 import { useWalletStore, SUPPORTED_CHAINS } from "../stores/walletStore";
 import { SovereignCard } from "../components/SovereignCard";
 import { SovereignButton } from "../components/SovereignButton";
@@ -189,13 +187,10 @@ export function TransactionDetailsScreen({ navigation, route }: TransactionDetai
   const formatAddress = (addr: string) => {
     if (!addr) return "0x…";
     return `${addr.slice(0, 8)}…${addr.slice(-6)}`;
-  };
-
-  return (
-    <SafeAreaView style={styles.container}>
+  };  return (    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.surfaceScreen} />
 
-      {/* Header */}
+      {/* Hero Header */}
       <View style={styles.header}>
         <ScreenBackButton
           onPress={() => {
@@ -205,215 +200,114 @@ export function TransactionDetailsScreen({ navigation, route }: TransactionDetai
             navigation.goBack();
           }}
         />
-        <Text style={styles.headerTitle}>TRANSACTION DETAILS</Text>
-        <View style={{ width: 80 }} />
+        <View style={styles.headerRight}>
+          <View style={[styles.statusTag, { borderColor: statusInfo.color }]}>
+            <View style={[styles.statusDot, { backgroundColor: statusInfo.color }]} />
+            <Text style={[styles.statusTagText, { color: statusInfo.color }]}>{statusInfo.label.toUpperCase()}</Text>
+          </View>
+        </View>
       </View>
 
-      <Animated.View entering={FadeInDown.duration(260)} style={styles.animatedContent}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Amount Card */}
-        <SovereignCard backgroundColor={colors.surfaceCard} padding={0}>
-          <View style={styles.amountCard}>
-{/* Type Icon */}
-            <View
-              style={[styles.typeIconLarge, { backgroundColor: isSent ? colors.errorBg : colors.successBg }]}
-            >
-              <Icon name={isSent ? "send" : "receive"} size={24} color={colors.textPrimary} />
-              </View>
-
-              {/* Amount */}
-              <Text style={[styles.amountText, { color: amountColor }]}>
-                {amountPrefix}
-                {transaction.amount} {transaction.tokenSymbol}
-              </Text>
-
-              {/* Token Name */}
-              <Text style={styles.tokenName}>{transaction.token}</Text>
-
-              {/* Status Badge */}
-              <View style={[styles.statusBadge, { backgroundColor: statusInfo.bg }]}>
-                <Icon name={statusInfo.iconName} size={14} color={statusInfo.color} style={styles.statusIcon} />
-                <Text style={[styles.statusLabel, { color: statusInfo.color }]}>
-                  {statusInfo.label}
-                </Text>
-              </View>
-
-              {/* Privacy Badge */}
-              {transaction.privacyLevel === "max" && (
-                <View style={styles.privacyBadge}>
-              <Icon name="private" size={16} color={colors.accent} />
-              <Text style={styles.privacyText}>MAX Privacy</Text>
-                </View>
-              )}
-            </View>
-          </SovereignCard>
-
-          {/* Transaction Info Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>TRANSACTION INFO</Text>
-
-            {/* From Address */}
-        <SovereignCard backgroundColor={colors.surfaceCard} padding={0}>
-          <View style={styles.infoRow}>
-            <View style={styles.infoLabelContainer}>
-              <Icon name="send" size={16} color={colors.accent} />
-              <Text style={styles.infoLabel}>From</Text>
-            </View>
-            <View style={styles.infoValueContainer}>
-              <Text style={styles.infoValue}>{formatAddress(transaction.from)}</Text>
-              <TouchableOpacity
-                style={styles.copyButton}
-                onPress={() => handleCopyAddress(transaction.from)}
-                accessibilityRole="button"
-                accessibilityLabel="Copy sender address"
-                accessibilityHint="Copies the sender wallet address"
-              >
-                <Icon name="copy" size={16} color={colors.accent} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </SovereignCard>
-
-            {/* To Address */}
-        <SovereignCard backgroundColor={colors.surfaceCard} padding={0}>
-          <View style={styles.infoRow}>
-            <View style={styles.infoLabelContainer}>
-              <Icon name="receive" size={16} color={colors.accent} />
-              <Text style={styles.infoLabel}>To</Text>
-            </View>
-            <View style={styles.infoValueContainer}>
-              <Text style={styles.infoValue}>{formatAddress(transaction.to)}</Text>
-              <TouchableOpacity
-                style={styles.copyButton}
-                onPress={() => handleCopyAddress(transaction.to)}
-                accessibilityRole="button"
-                accessibilityLabel="Copy recipient address"
-                accessibilityHint="Copies the recipient wallet address"
-              >
-                <Icon name="copy" size={16} color={colors.accent} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </SovereignCard>
-
-            {/* Date & Time */}
-        <SovereignCard backgroundColor={colors.surfaceCard} padding={0}>
-          <View style={styles.infoRow}>
-            <View style={styles.infoLabelContainer}>
-              <Icon name="calendar" size={16} color={colors.accent} />
-                  <Text style={styles.infoLabel}>Date</Text>
-                </View>
-                <View style={styles.infoValueContainer}>
-                  <Text style={styles.infoValue}>{formattedDate}</Text>
-                  <Text style={styles.infoSubvalue}>{formattedTime}</Text>
-                </View>
-              </View>
-            </SovereignCard>
-
-            {/* Network */}
-        <SovereignCard backgroundColor={colors.surfaceCard} padding={0}>
-          <View style={styles.infoRow}>
-            <View style={styles.infoLabelContainer}>
-              <Icon name="globe" size={16} color={colors.accent} />
-                  <Text style={styles.infoLabel}>Network</Text>
-                </View>
-                <View style={styles.infoValueContainer}>
-                  <Text style={styles.infoValue}>{activeChain?.name || "Ethereum"}</Text>
-                </View>
-              </View>
-            </SovereignCard>
-
-            {/* Fee (if available) */}
-            {transaction.fee && (
-          <SovereignCard backgroundColor={colors.surfaceCard} padding={0}>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Icon name="wallet" size={16} color={colors.accent} style={styles.infoIcon} />
-                    <Text style={styles.infoLabel}>Network Fee</Text>
-                  </View>
-                  <View style={styles.infoValueContainer}>
-                    <Text style={styles.infoValue}>{transaction.fee}</Text>
-                  </View>
-                </View>
-              </SovereignCard>
-            )}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Massive Dynamic Hero Section */}
+        <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.heroSection}>
+          <View style={styles.heroWatermarkContainer}>
+            <Icon name={isSent ? "send" : "receive"} size={240} color={colors.accent} style={styles.heroWatermark} />
           </View>
+          <Text style={styles.heroPrefix}>{amountPrefix}</Text>
+          <Text style={[styles.heroAmount, { color: amountColor }]} adjustsFontSizeToFit numberOfLines={1}>
+            {transaction.amount}
+          </Text>
+          <Text style={styles.heroToken}>{transaction.tokenSymbol}</Text>
+        </Animated.View>
 
-          {/* Transaction Hash Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>TRANSACTION HASH</Text>
-
-          <SovereignCard backgroundColor={colors.surfaceCard} padding={0}>
-            <View style={styles.hashContainer}>
-              <Text style={styles.hashLabel}>Hash</Text>
-              <Text style={styles.hashValue} numberOfLines={2} selectable>
-                {transaction.hash}
-              </Text>
-              <View style={styles.hashActions}>
-                <TouchableOpacity
-                  style={styles.hashActionButton}
-                  onPress={handleCopyHash}
-                  accessibilityRole="button"
-                  accessibilityLabel="Copy transaction hash"
-                  accessibilityHint="Copies the full transaction hash"
-                >
-                  <Icon name="copy" size={16} color={colors.accent} />
-                  <Text style={styles.hashActionText}>Copy</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.hashActionButton}
-                  onPress={handleViewOnExplorer}
-                  accessibilityRole="button"
-                  accessibilityLabel="View on block explorer"
-                  accessibilityHint="Opens the transaction on the chain explorer"
-                >
-                  <Icon name="link" size={16} color={colors.accent} />
-                    <Text style={styles.hashActionText}>View on Explorer</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </SovereignCard>
-          </View>
-
-          {/* Privacy Notice */}
-          {transaction.privacyLevel === "max" && (
-            <View style={styles.section}>
-          <SovereignCard backgroundColor={colors.successBg} padding={0}>
-            <View style={styles.privacyNotice}>
-              <Icon name="private-lock" size={24} color={colors.success} />
-                  <View style={styles.privacyNoticeContent}>
-                    <Text style={styles.privacyNoticeTitle}>Private Transaction</Text>
-                    <Text style={styles.privacyNoticeText}>
-                      This transaction was sent with MAX privacy using stealth addresses. The
-                      recipient's identity is protected.
-                    </Text>
-                  </View>
-                </View>
-              </SovereignCard>
+        {/* Data Receipt Ledger */}
+        <View style={styles.ledgerContainer}>
+          <Animated.View entering={FadeInDown.duration(400).delay(200)} style={styles.ledgerRow}>
+            <Text style={styles.ledgerLabel}>FROM</Text>
+            <View style={styles.ledgerValueGroup}>
+              <Text style={styles.ledgerValue}>{formatAddress(transaction.from)}</Text>
+              <TouchableOpacity style={styles.ledgerCopyBtn} onPress={() => handleCopyAddress(transaction.from)}>
+                <Icon name="copy" size={14} color={colors.accent} />
+              </TouchableOpacity>
             </View>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.duration(400).delay(250)} style={styles.ledgerRow}>
+            <Text style={styles.ledgerLabel}>TO</Text>
+            <View style={styles.ledgerValueGroup}>
+              <Text style={styles.ledgerValue}>{formatAddress(transaction.to)}</Text>
+              <TouchableOpacity style={styles.ledgerCopyBtn} onPress={() => handleCopyAddress(transaction.to)}>
+                <Icon name="copy" size={14} color={colors.accent} />
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.duration(400).delay(300)} style={styles.ledgerRow}>
+            <Text style={styles.ledgerLabel}>TIMESTAMP</Text>
+            <View style={styles.ledgerValueGroupCol}>
+              <Text style={styles.ledgerValue}>{formattedDate}</Text>
+              <Text style={styles.ledgerSubValue}>{formattedTime}</Text>
+            </View>
+          </Animated.View>
+
+          <Animated.View entering={FadeInDown.duration(400).delay(350)} style={styles.ledgerRow}>
+            <Text style={styles.ledgerLabel}>NETWORK</Text>
+            <Text style={styles.ledgerValue}>{activeChain?.name?.toUpperCase() || "ETHEREUM"}</Text>
+          </Animated.View>
+
+          {transaction.fee && (
+            <Animated.View entering={FadeInDown.duration(400).delay(400)} style={styles.ledgerRow}>
+              <Text style={styles.ledgerLabel}>NETWORK FEE</Text>
+              <Text style={styles.ledgerValue}>{transaction.fee}</Text>
+            </Animated.View>
           )}
 
-          {/* Bottom spacing */}
-          <View style={styles.bottomSpacing} />
-        </ScrollView>
-      </Animated.View>
+          <Animated.View entering={FadeInDown.duration(400).delay(450)} style={[styles.ledgerRow, styles.ledgerRowLast]}>
+            <Text style={styles.ledgerLabel}>TX HASH</Text>
+            <View style={styles.ledgerHashGroup}>
+              <Text style={styles.ledgerHashValue} numberOfLines={1} ellipsizeMode="middle">{transaction.hash}</Text>
+              <View style={styles.ledgerHashActions}>
+                <TouchableOpacity style={styles.ledgerToggleBtn} onPress={handleCopyHash}>
+                  <Icon name="copy" size={12} color={colors.bgPrimary} />
+                  <Text style={styles.ledgerToggleText}>COPY</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.ledgerToggleBtnOutline} onPress={handleViewOnExplorer}>
+                  <Icon name="link" size={12} color={colors.accent} />
+                  <Text style={styles.ledgerToggleTextOutline}>EXPLORER</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Animated.View>
+        </View>
 
+        {/* Privacy Notice */}
+        {transaction.privacyLevel === "max" && (
+          <Animated.View entering={FadeInDown.duration(400).delay(550)} style={styles.privacyNoticeContainer}>
+            <View style={styles.privacyHazardTape} />
+            <View style={styles.privacyContent}>
+              <Icon name="private-lock" size={24} color={colors.success} />
+              <View style={styles.privacyTextGroup}>
+                <Text style={styles.privacyTitle}>MAX PRIVACY ACTIVE</Text>
+                <Text style={styles.privacyText}>Stealth addresses used. Recipient identity protected.</Text>
+              </View>
+            </View>
+          </Animated.View>
+        )}
+
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
       {/* Toast */}
-      <Toast
-        visible={toast.visible}
-        message={toast.message}
-        type={toast.type}
-        onDismiss={toast.hide}
-      />
+      <Toast visible={toast.visible} message={toast.message} type={toast.type} onDismiss={toast.hide} />
     </SafeAreaView>
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surfaceScreen,
@@ -424,209 +318,232 @@ const themeStyles = (colors: any) => StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 24,
     height: 64,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.outlineSubtle,
+    zIndex: 10,
   },
-  headerTitle: {
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  statusTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    backgroundColor: colors.surfaceScreen,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  statusTagText: {
     fontFamily: typography.fontFamily.mono,
-    fontSize: 16,
-    color: colors.textPrimary,
+    fontSize: 10,
     fontWeight: "bold",
     letterSpacing: 1,
   },
   scrollView: {
     flex: 1,
   },
-  animatedContent: {
-    flex: 1,
-  },
   scrollContent: {
     paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 32,
   },
-  amountCard: {
-    alignItems: "center",
-    padding: 32,
-    marginTop: 8,
+  heroSection: {
+    position: 'relative',
+    marginTop: 20,
+    marginBottom: 40,
+    paddingVertical: 20,
   },
-  typeIconLarge: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+  heroWatermarkContainer: {
+    position: 'absolute',
+    right: -40,
+    top: -40,
+    opacity: 0.04,
+    transform: [{ rotate: '-15deg' }],
+  },
+  heroWatermark: {},
+  heroPrefix: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 24,
+    color: colors.textMuted,
+    marginBottom: -10,
+  },
+  heroAmount: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 56,
+    fontWeight: "900",
+    letterSpacing: -2,
+    lineHeight: 64,
+  },
+  heroToken: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 16,
+    color: colors.accent,
+    fontWeight: "bold",
+    letterSpacing: 2,
+    marginTop: 4,
+  },
+  ledgerContainer: {
+    borderWidth: 1,
+    borderColor: colors.accent + '30',
+    borderRadius: 8,
+    backgroundColor: colors.surfaceCard,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  ledgerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.accent + '15',
+  },
+  ledgerRowLast: {
+    flexDirection: "column",
+    borderBottomWidth: 0,
+  },
+  ledgerLabel: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 11,
+    color: colors.textMuted,
+    letterSpacing: 1.5,
+    marginTop: 2,
+  },
+  ledgerValueGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  ledgerValueGroupCol: {
+    alignItems: "flex-end",
+  },
+  ledgerValue: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 13,
+    color: colors.textPrimary,
+    textAlign: "right",
+  },
+  ledgerSubValue: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 11,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  ledgerCopyBtn: {
+    padding: 8,
+    marginLeft: 8,
+    backgroundColor: colors.accent + '10',
+    borderRadius: 6,
+  },
+  ledgerHashGroup: {
+    marginTop: 16,
+    width: '100%',
+  },
+  ledgerHashValue: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 13,
+    color: colors.textPrimary,
+    backgroundColor: colors.surfaceScreen,
+    padding: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.accent + '15',
+    overflow: 'hidden',
+  },
+  ledgerHashActions: {
+    flexDirection: "row",
+    marginTop: 12,
+    gap: 12,
+  },
+  ledgerToggleBtn: {
+    flex: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
+    backgroundColor: colors.accent,
+    paddingVertical: 12,
+    borderRadius: 4,
+    gap: 8,
   },
-  typeIconTextLarge: {
-    fontSize: 32,
-    color: colors.textPrimary,
-  },
-  amountText: {
+  ledgerToggleText: {
     fontFamily: typography.fontFamily.mono,
-    fontSize: 36,
-    fontWeight: "bold",
+    fontSize: 11,
+    color: colors.bgPrimary,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  ledgerToggleBtnOutline: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.accent,
+    paddingVertical: 12,
+    borderRadius: 4,
+    gap: 8,
+  },
+  ledgerToggleTextOutline: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 11,
+    color: colors.accent,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  privacyNoticeContainer: {
+    marginTop: 32,
+    borderWidth: 1,
+    borderColor: colors.success,
+    borderRadius: 4,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  privacyHazardTape: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: 4,
+    backgroundColor: colors.success,
+  },
+  privacyContent: {
+    flexDirection: 'row',
+    padding: 20,
+    alignItems: 'center',
+    backgroundColor: colors.success + '15',
+  },
+  privacyTextGroup: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  privacyTitle: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 12,
+    color: colors.success,
+    fontWeight: "900",
+    letterSpacing: 1,
     marginBottom: 4,
-  },
-  tokenName: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 14,
-    color: colors.textMuted,
-    marginBottom: 16,
-  },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginBottom: 8,
-  },
-  statusIcon: {
-    marginRight: 6,
-  },
-  statusLabel: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    fontWeight: "bold",
-    letterSpacing: 0.5,
-  },
-  privacyBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.successBg,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  privacyIcon: {
-    fontSize: 12,
-    marginRight: 6,
   },
   privacyText: {
     fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.success,
-    fontWeight: "bold",
-  },
-  section: {
-    marginTop: 24,
-  },
-  sectionTitle: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.accent,
-    fontWeight: "bold",
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-  },
-  infoLabelContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  infoIcon: {
-    marginRight: 8,
-  },
-  infoLabel: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 14,
-    color: colors.textMuted,
-  },
-  infoValueContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  infoValue: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 14,
+    fontSize: 11,
     color: colors.textPrimary,
-  },
-  infoSubvalue: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textMuted,
-    marginLeft: 8,
-  },
-  copyButton: {
-    marginLeft: 8,
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  copyIcon: {
-    fontSize: 14,
-  },
-  hashContainer: {
-    padding: 16,
-  },
-  hashLabel: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textMuted,
-    marginBottom: 8,
-  },
-  hashValue: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.accent,
-    lineHeight: 18,
-    marginBottom: 16,
-  },
-  hashActions: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  hashActionButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.surfaceCard,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  hashActionIcon: {
-    fontSize: 14,
-    marginRight: 6,
-  },
-  hashActionText: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textPrimary,
-    fontWeight: "bold",
-  },
-  privacyNotice: {
-    flexDirection: "row",
-    padding: 16,
-  },
-  privacyNoticeIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  privacyNoticeContent: {
-    flex: 1,
-  },
-  privacyNoticeTitle: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 14,
-    color: colors.success,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  privacyNoticeText: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textMuted,
-    lineHeight: 18,
+    lineHeight: 16,
+    opacity: 0.9,
   },
   bottomSpacing: {
-    height: 32,
+    height: 60,
   },
 });
 

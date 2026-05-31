@@ -3,12 +3,11 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
+  Text,  TextInput,  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 import { useShallow } from "zustand/react/shallow";
@@ -16,11 +15,13 @@ import type { RootStackParamList } from "../navigation/AppNavigator";
 import { SCREENS } from "../constants/screens";
 import { useTheme, useStyles, typography } from "../styles/design-tokens";
 import { ScreenBackButton } from "../components/ScreenBackButton";
-import { NeoPopButton } from "../components/NeoPopButton";
+import { SovereignButton } from "../components/SovereignButton";
+import { SovereignCard } from "../components/SovereignCard";
 import { SelectablePill, SelectableCard } from "../components/SelectableControls";
 import Toast, { useToast } from "../components/Toast";
 import { Icon } from "../components/Icon";
 import { useWalletStore } from "../stores/walletStore";
+import { useSettingsStore } from "../stores/settingsStore";
 import { useBiometrics } from "../hooks/useBiometrics";
 import { useMarketData } from "../hooks/useMarketData";
 import { useTransakQuote } from "../hooks/useTransakQuote";
@@ -53,24 +54,19 @@ type WithdrawFiatRouteProp = RouteProp<RootStackParamList, "WithdrawFiat">;
 
 interface WithdrawFiatScreenProps {
   navigation: WithdrawFiatScreenNavigationProp;
-  route: WithdrawFiatRouteProp;
-}
-
-export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
+  route: WithdrawFiatRouteProp;}export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
-  const { address, activeChain, balance, biometricsEnabled } = useWalletStore(
+  const { address, activeChain, balance } = useWalletStore(
     useShallow((state) => ({
       address: state.address,
       activeChain: state.activeChain,
       balance: state.balance,
-      biometricsEnabled: state.biometricsEnabled,
     }))
   );
-  const [cryptoAmount, setCryptoAmount] = useState("0.5");
+  const biometricsEnabled = useSettingsStore((state: any) => state.biometricsEnabled);  const [cryptoAmount, setCryptoAmount] = useState("0.5");
   const [selectedCurrency, setSelectedCurrency] = useState<FiatCurrency>("USD");
-  const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<PayoutMethodId>("neft_rtgs");
-  const [selectedNetwork, setSelectedNetwork] = useState<string>(activeChain?.key || "ethereum");
+  const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<PayoutMethodId>("neft_rtgs");  const [selectedNetwork, setSelectedNetwork] = useState<string>(activeChain?.key || "ethereum");
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoToken>(CRYPTO_TOKENS[0]);
   const [selectedPercent, setSelectedPercent] = useState<number | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
@@ -269,8 +265,9 @@ export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
         <View style={{ width: 80 }} />
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.section}>
+      <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>AMOUNT TO SELL</Text>
           <View style={styles.amountRow}>
             <Text style={styles.currencySymbol}>{selectedCrypto.symbol}</Text>
@@ -337,9 +334,9 @@ export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
           <Text style={styles.helperText}>
             Quotes refresh automatically when you change amount, currency, token, or payout method.
           </Text>
-        </View>
+        </SovereignCard>
 
-        <View style={styles.section}>
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>LIVE TOKEN PRICE</Text>
           <Text style={styles.priceValue}>{formatFiat(selectedMarketQuote.price, "USD")}</Text>
           <View style={styles.feedRow}>
@@ -347,26 +344,24 @@ export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
             <Text style={[styles.feedLabel, marketChangeStyle]}>{formatChangePercent(selectedMarketQuote.change24h)}</Text>
           </View>
           <Text style={styles.helperText}>{quoteStatusLabel}</Text>
-        </View>
+        </SovereignCard>
 
-        <View style={styles.section}>
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>ESTIMATED PAYOUT</Text>
           <Text style={styles.receiveValue}>{formatFiat(displayFiatPayout, selectedCurrency)}</Text>
           <Text style={styles.helperText}>Remaining balance: {formatCrypto(Math.max(availableBalance - parsedAmount, 0), selectedCrypto.symbol)}</Text>
           {quoteDetailLabel ? <Text style={styles.helperText}>{quoteDetailLabel}</Text> : null}
-        </View>
+        </SovereignCard>
 
-        <View style={styles.section}>
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>CRYPTO TOKEN</Text>
           
           {/* Network Tab Bar */}
           <View style={styles.networkTabsContainer}>
-            <ScrollView 
-              horizontal 
+            <ScrollView               horizontal 
               showsHorizontalScrollIndicator={false} 
               contentContainerStyle={styles.networkTabsScroll}
-            >
-              {getTokenGroups(CRYPTO_TOKENS).map((group) => (
+            >              {getTokenGroups(CRYPTO_TOKENS).map((group) => (
                 <TouchableOpacity
                   key={group}
                   onPress={() => {
@@ -393,13 +388,11 @@ export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
               ))}
             </ScrollView>
             <View style={styles.scrollIndicatorHint}>
-              <Icon name="chevron-right" size={14} color={colors.textMuted} />
-            </View>
+              <Icon name="chevron-right" size={14} color={colors.textMuted} />            </View>
           </View>
 
           {/* Tokens Grid for active network */}
-          <View style={styles.tokenPillsContainer}>
-            {CRYPTO_TOKENS.filter((t) => t.group.toLowerCase() === selectedCrypto.group.toLowerCase()).map((token, idx) => (
+          <View style={styles.tokenPillsContainer}>            {CRYPTO_TOKENS.filter((t) => t.group.toLowerCase() === selectedCrypto.group.toLowerCase()).map((token, idx) => (
               <TouchableOpacity
                 key={`${token.symbol}-${token.network}-${idx}`}
                 onPress={() => {
@@ -420,9 +413,9 @@ export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
+        </SovereignCard>
 
-        <View style={styles.section}>
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>PAYOUT METHOD</Text>
           {PAYOUT_METHODS.map((method) => (
             <SelectableCard
@@ -434,9 +427,9 @@ export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
               <Text style={styles.choiceSubtitle}>TRANSAK HANDLES KYC</Text>
             </SelectableCard>
           ))}
-        </View>
+        </SovereignCard>
 
-        <View style={styles.section}>
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>FEES</Text>
           {feeRows.map((row) => (
             <View key={row.id} style={styles.feeRow}>
@@ -449,19 +442,20 @@ export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
             <Text style={styles.feeTotalValue}>{formatFiat(displayFeeTotal, selectedCurrency)}</Text>
           </View>
           <Text style={styles.helperText}>Fee percent: {formatFeePercent(fallbackFees.transakFeePercent)}</Text>
-        </View>
+        </SovereignCard>
 
         <View style={{ height: 120 }} />
       </ScrollView>
 
       <View style={styles.footer}>
-        <NeoPopButton
+        <SovereignButton
           title="CONTINUE TO TRANSAK"
           variant={(!validation.valid || !address) ? "outline" : "primary"}
           onPress={handleContinue}
           disabled={!validation.valid || !address}
         />
       </View>
+      </Animated.View>
 
       <Toast
         visible={toast.visible}
@@ -501,18 +495,8 @@ const themeStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 8,
   },
-  section: {
+  sectionCard: {
     marginBottom: 24,
-    padding: 20,
-    backgroundColor: colors.surfaceCard,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: colors.bgPrimary,
-    shadowColor: colors.bgPrimary,
-    shadowOffset: { width: 4, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 0,
-    elevation: 4,
   },
   label: {
     fontFamily: typography.fontFamily.mono,

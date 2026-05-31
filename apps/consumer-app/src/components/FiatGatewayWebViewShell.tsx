@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { ActivityIndicator, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { WebView, type WebViewProps } from 'react-native-webview';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme, useStyles, typography } from '../styles/design-tokens';
+import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 import { ScreenBackButton } from './ScreenBackButton';
 
 interface FiatGatewayWebViewShellProps {
@@ -59,7 +59,7 @@ export const FiatGatewayWebViewShell = forwardRef<WebView, FiatGatewayWebViewShe
   }
 );
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surfaceScreen,

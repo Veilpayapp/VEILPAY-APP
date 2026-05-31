@@ -1,5 +1,10 @@
 import { SUPPORTED_CHAINS } from "@veilpay/shared";
 
+export const metadata = {
+  title: 'VeilPay',
+  description: 'Multi-Chain Privacy Payment Protocol',
+};
+
 export default function Home() {
   return (
     <main className="min-h-screen p-8">

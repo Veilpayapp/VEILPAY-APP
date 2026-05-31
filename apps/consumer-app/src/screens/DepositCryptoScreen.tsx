@@ -3,12 +3,11 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
+  Text,  TextInput,  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 import { useShallow } from "zustand/react/shallow";
@@ -16,11 +15,13 @@ import type { RootStackParamList } from "../navigation/AppNavigator";
 import { SCREENS } from "../constants/screens";
 import { useTheme, useStyles, typography } from "../styles/design-tokens";
 import { ScreenBackButton } from "../components/ScreenBackButton";
-import { NeoPopButton } from "../components/NeoPopButton";
+import { SovereignButton } from "../components/SovereignButton";
+import { SovereignCard } from "../components/SovereignCard";
 import { SelectablePill, SelectableCard } from "../components/SelectableControls";
 import Toast, { useToast } from "../components/Toast";
 import { Icon } from "../components/Icon";
-import { useWalletStore } from "../stores/walletStore";
+import { useWalletStore, type ChainType } from "../stores/walletStore";
+import { useSettingsStore } from "../stores/settingsStore";
 import { useBiometrics } from "../hooks/useBiometrics";
 import { useMarketData } from "../hooks/useMarketData";
 import { useTransakQuote } from "../hooks/useTransakQuote";
@@ -55,25 +56,20 @@ type DepositCryptoRouteProp = RouteProp<RootStackParamList, "DepositCrypto">;
 
 interface DepositCryptoScreenProps {
   navigation: DepositCryptoScreenNavigationProp;
-  route: DepositCryptoRouteProp;
-}
-
-export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
+  route: DepositCryptoRouteProp;}export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
-  const { address, activeChain, biometricsEnabled } = useWalletStore(
+  const biometricsEnabled = useSettingsStore(state => state.biometricsEnabled);
+  const { address, activeChain } = useWalletStore(
     useShallow((state) => ({
       address: state.address,
       activeChain: state.activeChain,
-      biometricsEnabled: state.biometricsEnabled,
     }))
   );
   const [fiatAmount, setFiatAmount] = useState("100");
-  const [selectedCurrency, setSelectedCurrency] = useState<FiatCurrency>("USD");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodId>(
+  const [selectedCurrency, setSelectedCurrency] = useState<FiatCurrency>("USD");  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodId>(
     "credit_debit_card"
-  );
-  const [selectedNetwork, setSelectedNetwork] = useState<string>(activeChain?.key || "ethereum");
+  );  const [selectedNetwork, setSelectedNetwork] = useState<string>(activeChain?.key || "ethereum");
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoToken>(CRYPTO_TOKENS[0]);
   const [inputError, setInputError] = useState<string | null>(null);
   const toast = useToast();
@@ -206,8 +202,22 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
       return;
     }
 
-    if (!address) {
-      toast.show("Wallet not connected", "error");
+    const networkTypeMap: Record<string, ChainType> = {
+      ethereum: 'evm',
+      bsc: 'evm',
+      polygon: 'evm',
+      arbitrum: 'evm',
+      base: 'evm',
+      solana: 'svm',
+      aptos: 'mvm',
+      stellar: 'xlm',
+    };
+    
+    const targetChainType = networkTypeMap[selectedCrypto.network.toLowerCase()] || 'evm';
+    const targetAddress = useWalletStore.getState().addresses[targetChainType];
+
+    if (!targetAddress) {
+      toast.show(`Wallet not connected for ${selectedCrypto.network.toUpperCase()}`, "error");
       return;
     }
 
@@ -230,7 +240,7 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
     }
 
     const url = buildTransakDepositUrl({
-      walletAddress: address,
+      walletAddress: targetAddress,
       fiatAmount: parsedAmount,
       fiatCurrency: selectedCurrency,
       cryptoToken: selectedCrypto.symbol,
@@ -239,12 +249,10 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
     });
 
     navigation.navigate(SCREENS.TRANSAK_WEBVIEW, {
-      url,
-      title: "BUY CRYPTO",
+      url,      title: "BUY CRYPTO",
       flow: "buy",
     });
-  }, [
-    address,
+  }, [    address,
     authenticate,
     biometricsEnabled,
     isAvailable,
@@ -268,8 +276,9 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
         <View style={{ width: 80 }} />
       </View>
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.section}>
+      <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>YOU PAY</Text>
           <View style={styles.amountRow}>
             <Text style={styles.currencySymbol}>{currencySymbol}</Text>
@@ -336,9 +345,9 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
           <Text style={styles.helperText}>
             Current limits: {formatFiat(getMinDepositAmount(selectedCurrency), selectedCurrency)} - {formatFiat(getMaxDepositAmount(selectedCurrency), selectedCurrency)}
           </Text>
-        </View>
+        </SovereignCard>
 
-        <View style={styles.section}>
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>LIVE TOKEN PRICE</Text>
           <Text style={styles.priceValue}>{formatFiat(selectedMarketQuote.price, "USD")}</Text>
           <View style={styles.feedRow}>
@@ -346,26 +355,24 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
             <Text style={[styles.feedLabel, marketChangeStyle]}>{formatChangePercent(selectedMarketQuote.change24h)}</Text>
           </View>
           <Text style={styles.helperText}>{quoteStatusLabel}</Text>
-        </View>
+        </SovereignCard>
 
-        <View style={styles.section}>
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>YOU RECEIVE</Text>
           <Text style={styles.receiveValue}>{formatCrypto(displayCryptoAmount, selectedCrypto.symbol)}</Text>
           <Text style={styles.helperText}>On {selectedCrypto.network.toUpperCase()}</Text>
           {quoteDetailLabel ? <Text style={styles.helperText}>{quoteDetailLabel}</Text> : null}
-        </View>
+        </SovereignCard>
 
-        <View style={styles.section}>
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>CRYPTO TOKEN</Text>
           
           {/* Network Tab Bar */}
-          <View style={styles.networkTabsContainer}>
-            <ScrollView 
+          <View style={styles.networkTabsContainer}>            <ScrollView 
               horizontal 
               showsHorizontalScrollIndicator={false} 
               contentContainerStyle={styles.networkTabsScroll}
-            >
-              {getTokenGroups(CRYPTO_TOKENS).map((group) => (
+            >              {getTokenGroups(CRYPTO_TOKENS).map((group) => (
                 <TouchableOpacity
                   key={group}
                   onPress={() => {
@@ -391,14 +398,12 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <View style={styles.scrollIndicatorHint}>
-              <Icon name="chevron-right" size={14} color={colors.textMuted} />
+            <View style={styles.scrollIndicatorHint}>              <Icon name="chevron-right" size={14} color={colors.textMuted} />
             </View>
           </View>
 
           {/* Tokens Grid for active network */}
-          <View style={styles.tokenPillsContainer}>
-            {CRYPTO_TOKENS.filter((t) => t.group.toLowerCase() === selectedCrypto.group.toLowerCase()).map((token, idx) => (
+          <View style={styles.tokenPillsContainer}>            {CRYPTO_TOKENS.filter((t) => t.group.toLowerCase() === selectedCrypto.group.toLowerCase()).map((token, idx) => (
               <TouchableOpacity
                 key={`${token.symbol}-${token.network}-${idx}`}
                 onPress={() => {
@@ -419,9 +424,9 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
+        </SovereignCard>
 
-        <View style={styles.section}>
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>PAYMENT METHOD</Text>
           {PAYMENT_METHODS.map((method) => (
             <SelectableCard
@@ -435,9 +440,9 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
               ) : null}
             </SelectableCard>
           ))}
-        </View>
+        </SovereignCard>
 
-        <View style={styles.section}>
+        <SovereignCard style={styles.sectionCard} padding={20}>
           <Text style={styles.label}>FEES</Text>
           {feeRows.map((row) => (
             <View key={row.id} style={styles.feeRow}>
@@ -449,19 +454,20 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
             <Text style={styles.feeTotalLabel}>TOTAL FEES</Text>
             <Text style={styles.feeTotalValue}>{formatFiat(displayFeeTotal, selectedCurrency)}</Text>
           </View>
-        </View>
+        </SovereignCard>
 
         <View style={{ height: 120 }} />
       </ScrollView>
 
       <View style={styles.footer}>
-        <NeoPopButton
+        <SovereignButton
           title="CONTINUE TO TRANSAK"
           variant={(!validation.valid || !address) ? "outline" : "primary"}
           onPress={handleContinue}
           disabled={!validation.valid || !address}
         />
       </View>
+      </Animated.View>
 
       <Toast
         visible={toast.visible}
@@ -500,18 +506,8 @@ const themeStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 8,
   },
-  section: {
+  sectionCard: {
     marginBottom: 24,
-    padding: 20,
-    backgroundColor: colors.surfaceCard,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: colors.surfaceElevated,
-    shadowColor: "#000000",
-    shadowOffset: { width: 4, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 0,
-    elevation: 4,
   },
   label: {
     fontFamily: typography.fontFamily.mono,

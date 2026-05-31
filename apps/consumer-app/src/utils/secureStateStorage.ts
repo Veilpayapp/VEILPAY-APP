@@ -60,6 +60,20 @@ function getSecureStoreOptions(
   };
 }
 
+async function withTimeout<T>(promise: Promise<T>, ms: number, operationName: string): Promise<T> {
+  let timeoutHandle: ReturnType<typeof setTimeout>;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutHandle = setTimeout(() => {
+      reject(new Error(`SecureStore operation '${operationName}' timed out after ${ms}ms`));
+    }, ms);
+  });
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timeoutHandle!);
+  }
+}
+
 function reportStorageError(operation: string, key: string, error: unknown) {
   const normalized = error instanceof Error ? error : new Error('Unknown secure storage error');
   captureError(normalized, {
@@ -75,7 +89,11 @@ export const secureStateStorage: StateStorage = {
 
     if (canUseSecureStore(secureStore)) {
       try {
-        const secureValue = await secureStore.getItemAsync(name, getSecureStoreOptions(secureStore));
+        const secureValue = await withTimeout(
+          secureStore.getItemAsync(name, getSecureStoreOptions(secureStore)),
+          3000,
+          'getItem'
+        );
         if (secureValue !== null) {
           return secureValue;
         }
@@ -117,7 +135,11 @@ export const secureStateStorage: StateStorage = {
 
     if (canUseSecureStore(secureStore)) {
       try {
-        await secureStore.setItemAsync(name, value, getSecureStoreOptions(secureStore));
+        await withTimeout(
+          secureStore.setItemAsync(name, value, getSecureStoreOptions(secureStore)),
+          3000,
+          'setItem'
+        );
         return;
       } catch (error) {
         reportStorageError('setItem', name, error);
@@ -156,7 +178,11 @@ export const secureStateStorage: StateStorage = {
 
     if (canUseSecureStore(secureStore)) {
       try {
-        await secureStore.deleteItemAsync(name, getSecureStoreOptions(secureStore));
+        await withTimeout(
+          secureStore.deleteItemAsync(name, getSecureStoreOptions(secureStore)),
+          3000,
+          'deleteItem'
+        );
         return;
       } catch (error) {
         reportStorageError('removeItem', name, error);

@@ -1,0 +1,23 @@
+appId: com.veilpay.consumer
+---
+- launchApp
+- assertVisible: 'SEND'
+- tapOn: 'SEND'
+- assertVisible: 'SEND PAYMENT'
+- tapOn: 'Enter Ethereum address'
+- inputText: '0x1234567890123456789012345678901234567890'
+- hideKeyboard
+- assertVisible: '0.00'
+- tapOn: '0.00'
+- inputText: '0.1'
+- hideKeyboard
+- assertVisible: 'Add a note for this transaction'
+- tapOn: 'Add a note for this transaction'
+- inputText: 'E2E Test'
+- hideKeyboard
+- tapOn: 'CONTINUE'
+- extendedWaitUntil:
+    visible: 'PRIVATE BY DEFAULT'
+    timeout: 10000
+- tapOn: 'CONFIRM PAYMENT'
+- assertVisible: 'Processing'

@@ -4,12 +4,9 @@
  * Uses the current structural design language with a prominent center QR button
  *
  * UPDATED: Now uses premium SVG icons instead of emojis
- */
-
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+ */import React from "react";import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { typography, useTheme, useStyles } from "../styles/design-tokens";
+import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 import { SCREENS } from "../constants/screens";
 import { Icon, IconName } from "./Icon";
 import { triggerLightImpactHaptic } from "../utils/haptics";
@@ -112,15 +109,14 @@ export function BottomNavBar({ currentScreen, onNavigate }: BottomNavBarProps) {
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   container: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     backgroundColor: colors.bgPrimary,
-    borderTopWidth: 1,
-    borderTopColor: colors.bgTertiary,
+    // No-Line Rule: Removed borderTopWidth and borderTopColor
   },
   navBar: {
     flexDirection: "row",
@@ -159,19 +155,14 @@ const themeStyles = (colors: any) => StyleSheet.create({
   prominentButton: {
     alignItems: "center",
     justifyContent: "center",
-    flex: 1.2,
-    marginTop: PROMINENT_OFFSET,
-  },
-  prominentInner: {
+    flex: 1.2,    marginTop: PROMINENT_OFFSET,
+  },  prominentInner: {
     width: PROMINENT_BUTTON_SIZE,
     height: PROMINENT_BUTTON_SIZE,
     borderRadius: PROMINENT_BUTTON_SIZE / 2,
-    backgroundColor: colors.accent,
-    alignItems: "center",
+    backgroundColor: colors.accent,    alignItems: "center",
     justifyContent: "center",
-    borderWidth: 4,
-    borderColor: colors.bgPrimary,
-    shadowColor: colors.accent,
+    // No-Line Rule: Removed borderWidth and borderColor    shadowColor: colors.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,

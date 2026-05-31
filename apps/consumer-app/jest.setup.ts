@@ -43,11 +43,16 @@ jest.mock('react-native-safe-area-context', () => {
 jest.mock('react-native-reanimated', () => {
 	const ReactNative = require('react-native');
 
-	const createAnimatedPreset = (name: string) => ({
-		duration: () => ({
-			name,
-		}),
-	});
+	const createAnimatedPreset = (name: string) => {
+		const preset: any = { name };
+		preset.duration = () => preset;
+		preset.springify = () => preset;
+		preset.damping = () => preset;
+		preset.stiffness = () => preset;
+		preset.mass = () => preset;
+		preset.delay = () => preset;
+		return preset;
+	};
 
 	const Animated = {
 		View: ReactNative.View,
@@ -80,6 +85,7 @@ jest.mock('react-native-reanimated', () => {
 			ease: jest.fn(),
 		},
 		useAnimatedStyle: (factory: () => unknown) => factory(),
+		useAnimatedScrollHandler: () => () => {},
 		useSharedValue: (initialValue: unknown) => ({
 			value: initialValue,
 		}),
@@ -87,10 +93,77 @@ jest.mock('react-native-reanimated', () => {
 		withSequence: (...values: unknown[]) => values[values.length - 1],
 		withSpring: (value: unknown) => value,
 		withTiming: (value: unknown) => value,
+		withDelay: (delayMs: number, value: unknown) => value,
+		withDecay: (value: unknown) => value,
 		interpolate: () => 0,
 		interpolateColor: () => '#000000',
+		Extrapolation: {
+			CLAMP: 'clamp',
+			EXTEND: 'extend',
+			IDENTITY: 'identity',
+		},
+		ReduceMotion: {
+			System: 'system',
+			Always: 'always',
+			Never: 'never',
+		},
 		runOnJS: (fn: (...args: unknown[]) => unknown) => fn,
 		runOnUI: (fn: (...args: unknown[]) => unknown) => fn,
 	};
 });
 jest.mock('react-native/src/private/animated/NativeAnimatedHelper');
+
+jest.mock('react-native-webview', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    WebView: (props: any) => React.createElement(View, props),
+  };
+});
+
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock')
+);
+
+
+jest.useFakeTimers();
+global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) }));
+
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(),
+  notificationAsync: jest.fn(),
+  selectionAsync: jest.fn(),
+  ImpactFeedbackStyle: {
+    Light: 'light',
+    Medium: 'medium',
+    Heavy: 'heavy',
+  },
+  NotificationFeedbackType: {
+    Success: 'success',
+    Warning: 'warning',
+    Error: 'error',
+  },
+}));
+
+jest.mock('expo-constants', () => ({
+  expoConfig: {
+    extra: {
+      transakApiKey: 'test-transak-key',
+    },
+  },
+  manifest: {},
+}));
+
+jest.mock('expo-linking', () => ({
+  createURL: jest.fn(),
+  openURL: jest.fn(),
+  useURL: jest.fn(),
+}), { virtual: true });
+
+jest.mock('@react-native-community/netinfo', () => require('@react-native-community/netinfo/jest/netinfo-mock.js'));
+
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: jest.fn(() => Promise.resolve(null)),
+  setItemAsync: jest.fn(() => Promise.resolve()),
+  deleteItemAsync: jest.fn(() => Promise.resolve()),
+}));

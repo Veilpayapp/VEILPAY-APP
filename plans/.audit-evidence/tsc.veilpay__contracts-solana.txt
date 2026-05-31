@@ -1,0 +1,46 @@
+tests/veil_pool.ts(1,13): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(2,10): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(4,3): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(5,3): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(6,3): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(7,3): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(10,3): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(11,3): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(12,3): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(13,3): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(15,10): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(16,13): error TS1295: ECMAScript imports and exports cannot be written in a CommonJS file under 'verbatimModuleSyntax'. Adjust the 'type' field in the nearest 'package.json' to make this file an ECMAScript module, or adjust your 'verbatimModuleSyntax', 'module', and 'moduleResolution' settings in TypeScript.
+tests/veil_pool.ts(23,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+tests/veil_pool.ts(48,3): error TS2304: Cannot find name 'before'.
+tests/veil_pool.ts(111,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+tests/veil_pool.ts(112,11): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(112,11): error TS2589: Type instantiation is excessively deep and possibly infinite.
+tests/veil_pool.ts(126,45): error TS2339: Property 'pool' does not exist on type 'AccountNamespace<any>'.
+tests/veil_pool.ts(138,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+tests/veil_pool.ts(141,11): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(155,45): error TS2339: Property 'pool' does not exist on type 'AccountNamespace<any>'.
+tests/veil_pool.ts(165,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+tests/veil_pool.ts(168,11): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(182,13): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(203,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+tests/veil_pool.ts(204,11): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(214,45): error TS2339: Property 'pool' does not exist on type 'AccountNamespace<any>'.
+tests/veil_pool.ts(220,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+tests/veil_pool.ts(223,13): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(244,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+tests/veil_pool.ts(245,11): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(255,45): error TS2339: Property 'pool' does not exist on type 'AccountNamespace<any>'.
+tests/veil_pool.ts(261,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+tests/veil_pool.ts(268,11): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(290,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+tests/veil_pool.ts(294,11): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(307,13): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(327,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+tests/veil_pool.ts(328,11): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(340,13): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(360,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+tests/veil_pool.ts(361,11): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+tests/veil_pool.ts(371,13): error TS2722: Cannot invoke an object which is possibly 'undefined'.
+undefined
+D:\Veilpay\packages\contracts-solana:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit

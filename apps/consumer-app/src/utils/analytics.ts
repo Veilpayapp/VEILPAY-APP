@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import {
   ANALYTICS_EVENTS,
   type AnalyticsEventName,

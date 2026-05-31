@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Text, View, Linking, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { useTheme, useStyles, typography } from '../styles/design-tokens';
-import { Icon } from '../components/Icon';
-import { useOnramp, FiatGatewayWebViewShell, isAllowedOnrampUrl, isPaymentIntentUrl } from '../features/fiat-gateway';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";import { Icon } from '../components/Icon';import { useOnramp, FiatGatewayWebViewShell, isAllowedOnrampUrl, isPaymentIntentUrl } from '../features/fiat-gateway';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -85,12 +84,11 @@ export function OnrampWidgetScreen({ navigation, route }: OnrampWidgetScreenProp
   };
 
   return (
+    <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>
     <FiatGatewayWebViewShell
       ref={webViewRef}
-      onClose={() => navigation.goBack()}
-      loading={loading}
-      loadingMessage="Establishing Secure Connection..."
-      headerCenter={
+      onClose={() => navigation.goBack()}      loading={loading}
+      loadingMessage="Establishing Secure Connection..."      headerCenter={
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle}>{title.toUpperCase()}</Text>
           <View style={styles.secureBadge}>
@@ -112,10 +110,11 @@ export function OnrampWidgetScreen({ navigation, route }: OnrampWidgetScreenProp
         allowsBackForwardNavigationGestures: true,
       }}
     />
+    </Animated.View>
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   headerTitleContainer: {
     alignItems: 'center',
   },

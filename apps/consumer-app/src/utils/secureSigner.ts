@@ -1,127 +1,132 @@
-/**
- * Veilpay Secure Signer
- *
- * Implements the signing closure pattern to eliminate mnemonic memory exposure.
- *
- * SECURITY DESIGN:
- * - The mnemonic is retrieved from SecureStore, used to derive the private key,
- *   sign and broadcast the transaction — all within a single async scope.
- * - The mnemonic string is never returned to the caller.
- * - The derived wallet object is local to the closure and eligible for GC
- *   immediately after the transaction is submitted.
- * - No intermediate variable holds key material across await boundaries
- *   unnecessarily.
- *
- * This eliminates the pattern:
- *   const mnemonic = await getStoredMnemonic();   // ← hangs in heap
- *   await sendTransaction(mnemonic, params, ...);  // ← still there
- *
- * And replaces it with:
- *   await signAndSendTransaction(params, chainKey); // mnemonic scope-local
- */
-
-import { ethers, TransactionRequest, TransactionResponse, Wallet, HDNodeWallet, Mnemonic } from 'ethers';
-import { poolCall } from './rpcPool';
+import { parseEther, formatEther, createWalletClient, custom } from 'viem';
+import { mnemonicToAccount } from 'viem/accounts';
+import { poolCall, getPoolProvider } from './rpcPool';
 import { getStoredMnemonic, TransactionError, NETWORKS } from './transactions';
 import { estimateTransactionGas, GasEstimate } from './gasEstimator';
 import { captureError, addBreadcrumb } from './sentry';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export interface SignerParams {
-  /** Recipient address (checksummed or not — validated before use) */
   to: string;
-  /** Amount in ETH as a string (e.g. '0.01') */
   value: string;
-  /** Optional calldata */
   data?: string;
-  /** Override gas estimate (optional) */
+  tokenAddress?: string;
+  tokenDecimals?: number;
   gasOverride?: Pick<GasEstimate, 'gasLimit' | 'maxFeePerGas' | 'maxPriorityFeePerGas' | 'gasPrice'>;
 }
 
 export interface SignerResult {
   hash: string;
-  /** Network chain ID */
   chainId: number;
-  /** Gas estimate used for the transaction */
   gasEstimate: GasEstimate;
 }
 
-// BIP-44 derivation path for Ethereum (first account)
 const ETHEREUM_DERIVATION_PATH = "m/44'/60'/0'/0/0";
 
-// ─── Core Signer ──────────────────────────────────────────────────────────────
+const TOKEN_EXPIRY_MS = 30_000;
 
-/**
- * Retrieves the stored mnemonic, derives the private key, signs the transaction,
- * and broadcasts it — all within a single local scope.
- *
- * The mnemonic is NEVER returned to the caller.
- * Key material is local to this function's stack frame.
- *
- * @param params    - Transaction parameters (to, value, data)
- * @param chainKey  - Chain to send on (e.g. 'ethereum', 'sepolia')
- * @param ethPrice  - Current ETH price for USD gas estimate (optional)
- * @throws TransactionError on validation, signing, or broadcast failure
- */
+interface BiometricTokenEntry {
+  token: string;
+  issuedAt: number;
+  consumed: boolean;
+}
+
+const _tokenStore = new Map<string, BiometricTokenEntry>();
+
+export function generateBiometricToken(): string {
+  const nonce = `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+  _tokenStore.set(nonce, { token: nonce, issuedAt: Date.now(), consumed: false });
+  return nonce;
+}
+
+function _consumeBiometricToken(token: string): void {
+  const entry = _tokenStore.get(token);
+  if (!entry) throw new TransactionError('Biometric authorization required. Please authenticate and try again.', 'USER_REJECTED');
+  if (entry.consumed) throw new TransactionError('This authorization token has already been used. Please authenticate again.', 'USER_REJECTED');
+  const age = Date.now() - entry.issuedAt;
+  if (age > TOKEN_EXPIRY_MS) {
+    _tokenStore.delete(token);
+    throw new TransactionError(`Biometric authorization expired (${Math.round(age / 1000)}s ago). Please authenticate again.`, 'USER_REJECTED');
+  }
+  entry.consumed = true;
+  _tokenStore.set(token, entry);
+  const cutoff = Date.now() - TOKEN_EXPIRY_MS * 2;
+  for (const [key, val] of _tokenStore.entries()) {
+    if (val.issuedAt < cutoff || val.consumed) _tokenStore.delete(key);
+  }
+}
+
+export function _biometricTokenCount(): number {
+  const now = Date.now();
+  let count = 0;
+  for (const entry of _tokenStore.values()) {
+    if (!entry.consumed && now - entry.issuedAt <= TOKEN_EXPIRY_MS) count++;
+  }
+  return count;
+}
+
 export async function signAndSendTransaction(
   params: SignerParams,
   chainKey: string,
-  ethPrice?: number
+  ethPrice?: number,
+  biometricToken?: string
 ): Promise<SignerResult> {
-  // ── 1. Validate recipient ─────────────────────────────────────────────────
+  if (biometricToken) {
+    _consumeBiometricToken(biometricToken);
+    addBreadcrumb('Biometric token validated', 'security', { chain: chainKey });
+  }
+
   addBreadcrumb('Transaction signing initiated', 'transaction', { chain: chainKey });
 
   const toAddress = params.to.trim();
   if (!/^0x[0-9a-fA-F]{40}$/.test(toAddress)) {
-    throw new TransactionError(
-      `Invalid recipient address: ${toAddress}`,
-      'INVALID_ADDRESS'
-    );
+    throw new TransactionError(`Invalid recipient address: ${toAddress}`, 'INVALID_ADDRESS');
   }
 
-  // ── 2. Validate network ───────────────────────────────────────────────────
   const network = NETWORKS[chainKey];
   if (!network) {
-    throw new TransactionError(
-      `Unsupported network: ${chainKey}. Did you add it to NETWORKS in transactions.ts?`,
-      'UNKNOWN'
-    );
+    throw new TransactionError(`Unsupported network: ${chainKey}. Did you add it to NETWORKS in transactions.ts?`, 'UNKNOWN');
   }
 
-  // ── 3. Parse and validate amount ──────────────────────────────────────────
   let valueWei: bigint;
   try {
-    valueWei = ethers.parseEther(params.value);
+    valueWei = parseEther(params.value);
   } catch {
-    throw new TransactionError(
-      `Invalid ETH amount: ${params.value}`,
-      'UNKNOWN'
-    );
+    throw new TransactionError(`Invalid ETH amount: ${params.value}`, 'UNKNOWN');
   }
 
   if (valueWei <= 0n) {
     throw new TransactionError('Transaction value must be greater than zero', 'UNKNOWN');
   }
 
-  // ── 4. Retrieve mnemonic (scope-local — never returned) ───────────────────
   const mnemonicWords = await getStoredMnemonic();
   if (!mnemonicWords || mnemonicWords.length === 0) {
-    throw new TransactionError(
-      'No wallet found. Please create or import a wallet first.',
-      'UNKNOWN'
-    );
+    throw new TransactionError('No wallet found. Please create or import a wallet first.', 'UNKNOWN');
   }
 
-  // ── 5. Derive wallet (scope-local — never returned) ───────────────────────
-  // The HDNodeWallet is created here and goes out of scope when the tx resolves.
   let txResult: SignerResult;
   try {
     const mnemonicPhrase = mnemonicWords.join(' ');
-    const mnemonicObj = Mnemonic.fromPhrase(mnemonicPhrase);
-    const wallet: HDNodeWallet = HDNodeWallet.fromMnemonic(mnemonicObj, ETHEREUM_DERIVATION_PATH);
+    const account = mnemonicToAccount(mnemonicPhrase, { path: ETHEREUM_DERIVATION_PATH });
+    
+    const viemChain = {
+      id: network.chainId,
+      name: network.name,
+      network: chainKey,
+      nativeCurrency: { name: network.symbol, symbol: network.symbol, decimals: 18 },
+      rpcUrls: { default: { http: [network.rpcUrl] } },
+    } as any;
 
-    // ── 6. Gas estimation ─────────────────────────────────────────────────
+    const client = createWalletClient({
+      account,
+      chain: viemChain,
+      transport: custom({
+        request: async (request: any) => {
+           const p = getPoolProvider(chainKey);
+           return p.request(request);
+        }
+      })
+    });
+
     const gasEstimate = params.gasOverride
       ? {
           gasLimit: params.gasOverride.gasLimit,
@@ -135,32 +140,26 @@ export async function signAndSendTransaction(
           fetchedAt: Date.now(),
         }
       : await estimateTransactionGas(
-          { to: toAddress, value: valueWei, data: params.data, from: wallet.address },
+          { to: toAddress, value: valueWei, data: params.data, from: account.address },
           chainKey,
           ethPrice
         );
 
-    // ── 7. Balance check ──────────────────────────────────────────────────
-    const balance = await poolCall(chainKey, (p) => p.getBalance(wallet.address));
+    const balance = await poolCall(chainKey, (p) => p.getBalance({ address: account.address }));
     const requiredWei = valueWei + gasEstimate.estimatedCostWei;
 
     if (balance < requiredWei) {
       throw new TransactionError(
-        `Insufficient funds. ` +
-        `Balance: ${ethers.formatEther(balance)} ETH, ` +
-        `Required: ${ethers.formatEther(requiredWei)} ETH ` +
-        `(${params.value} ETH + ~${gasEstimate.estimatedCostEth} ETH gas)`,
+        `Insufficient funds. Balance: ${formatEther(balance)} ETH, Required: ${formatEther(requiredWei)} ETH (${params.value} ETH + ~${gasEstimate.estimatedCostEth} ETH gas)`,
         'INSUFFICIENT_FUNDS'
       );
     }
 
-    // ── 8. Build and sign transaction ─────────────────────────────────────
-    const txRequest: TransactionRequest = {
-      to: toAddress,
+    const txRequest = {
+      to: toAddress as `0x${string}`,
       value: valueWei,
-      chainId: network.chainId,
-      gasLimit: gasEstimate.gasLimit,
-      // Prefer EIP-1559 fields; fall back to legacy gasPrice
+      account,
+      gas: gasEstimate.gasLimit,
       ...(gasEstimate.maxFeePerGas > 0n
         ? {
             maxFeePerGas: gasEstimate.maxFeePerGas,
@@ -169,44 +168,24 @@ export async function signAndSendTransaction(
         : {
             gasPrice: gasEstimate.gasPrice,
           }),
+      data: params.data ? (params.data as `0x${string}`) : undefined,
     };
 
-    if (params.data) {
-      txRequest.data = params.data;
-    }
+    const hash = await client.sendTransaction(txRequest as any);
 
-    // ── 9. Connect wallet and broadcast ───────────────────────────────────
-    const txResponse: TransactionResponse = await poolCall(chainKey, async (provider) => {
-      const connectedWallet = wallet.connect(provider);
-      return connectedWallet.sendTransaction(txRequest);
+    txResult = {
+      hash,
+      chainId: network.chainId,
+      gasEstimate,
+    };
+
+    addBreadcrumb('Transaction broadcast successful', 'transaction', {
+      chain: chainKey,
+      txHash: hash,
     });
-
-  txResult = {
-    hash: txResponse.hash,
-    chainId: network.chainId,
-    gasEstimate,
-  };
-
-  addBreadcrumb('Transaction broadcast successful', 'transaction', {
-    chain: chainKey,
-    txHash: txResponse.hash,
-  });
   } catch (err) {
     if (err instanceof TransactionError) throw err;
-
-    // Normalise ethers.js error codes
-    const anyErr = err as any;
-    if (anyErr?.code === 'INSUFFICIENT_FUNDS') {
-      throw new TransactionError('Insufficient funds for gas or value', 'INSUFFICIENT_FUNDS');
-    }
-    if (anyErr?.code === 'NETWORK_ERROR') {
-      throw new TransactionError('Network error. Please check your connection.', 'NETWORK_ERROR');
-    }
-    if (anyErr?.code === 'ACTION_REJECTED') {
-      throw new TransactionError('Transaction rejected by user', 'USER_REJECTED');
-    }
-
-    const message = anyErr?.message || 'Unknown signing error';
+    const message = (err as any)?.message || 'Unknown signing error';
     captureError(new Error(message), { scope: 'secure-signer', chain: chainKey });
     throw new TransactionError(message, 'UNKNOWN');
   }
@@ -214,23 +193,13 @@ export async function signAndSendTransaction(
   return txResult;
 }
 
-/**
- * Derives the public wallet address from the stored mnemonic WITHOUT
- * exposing the mnemonic or private key to the caller.
- *
- * Safe to call for display/verification purposes.
- *
- * @returns Checksummed EVM address, or null if no wallet is stored
- */
 export async function deriveAddressFromStoredMnemonic(): Promise<string | null> {
   const mnemonicWords = await getStoredMnemonic();
   if (!mnemonicWords || mnemonicWords.length === 0) return null;
-
   try {
     const mnemonicPhrase = mnemonicWords.join(' ');
-    const mnemonicObj = Mnemonic.fromPhrase(mnemonicPhrase);
-    const wallet: HDNodeWallet = HDNodeWallet.fromMnemonic(mnemonicObj, ETHEREUM_DERIVATION_PATH);
-    return wallet.address;
+    const account = mnemonicToAccount(mnemonicPhrase, { path: ETHEREUM_DERIVATION_PATH });
+    return account.address;
   } catch {
     return null;
   }
@@ -244,7 +213,6 @@ export interface ReplaceTransactionParams {
 }
 
 const SPEED_UP_MULTIPLIER = 1.1;
-const CANCEL_VALUE = '0';
 
 export async function replaceTransaction(
   params: ReplaceTransactionParams
@@ -259,7 +227,7 @@ export async function replaceTransaction(
     throw new TransactionError(`Unsupported network: ${params.chainKey}`, 'UNKNOWN');
   }
 
-  const originalTx = await poolCall(params.chainKey, (p) => p.getTransaction(params.originalTxHash));
+  const originalTx = await poolCall(params.chainKey, (p) => p.getTransaction({ hash: params.originalTxHash as `0x${string}` }));
   if (!originalTx) {
     throw new TransactionError('Original transaction not found', 'UNKNOWN');
   }
@@ -276,43 +244,64 @@ export async function replaceTransaction(
   let txResult: SignerResult;
   try {
     const mnemonicPhrase = mnemonicWords.join(' ');
-    const mnemonicObj = Mnemonic.fromPhrase(mnemonicPhrase);
-    const wallet: HDNodeWallet = HDNodeWallet.fromMnemonic(mnemonicObj, ETHEREUM_DERIVATION_PATH);
+    const account = mnemonicToAccount(mnemonicPhrase, { path: ETHEREUM_DERIVATION_PATH });
 
-    const baseFeeData = await poolCall(params.chainKey, (p) => p.getFeeData());
+    const viemChain = {
+      id: network.chainId,
+      name: network.name,
+      network: params.chainKey,
+      nativeCurrency: { name: network.symbol, symbol: network.symbol, decimals: 18 },
+      rpcUrls: { default: { http: [network.rpcUrl] } },
+    } as any;
 
-    const originalMaxFee = originalTx.maxFeePerGas ?? originalTx.gasPrice ?? baseFeeData.gasPrice ?? 0n;
-    const originalPriorityFee = originalTx.maxPriorityFeePerGas ?? baseFeeData.maxPriorityFeePerGas ?? 0n;
+    const client = createWalletClient({
+      account,
+      chain: viemChain,
+      transport: custom({
+        request: async (request: any) => {
+           const p = getPoolProvider(params.chainKey);
+           return p.request(request);
+        }
+      })
+    });
+
+    const fees = await poolCall(params.chainKey, async (p) => {
+      try {
+         return await p.estimateFeesPerGas();
+      } catch {
+         return { maxFeePerGas: null, maxPriorityFeePerGas: null, gasPrice: await p.getGasPrice() };
+      }
+    });
+
+    const originalMaxFee = originalTx.maxFeePerGas ?? originalTx.gasPrice ?? fees.gasPrice ?? 0n;
+    const originalPriorityFee = originalTx.maxPriorityFeePerGas ?? fees.maxPriorityFeePerGas ?? 0n;
 
     const multiplier = BigInt(Math.round(SPEED_UP_MULTIPLIER * 100));
     const newMaxFeePerGas: bigint = params.mode === 'speedup'
       ? (originalMaxFee * multiplier) / 100n
-      : ((baseFeeData.gasPrice ?? 0n) * 12n) / 10n;
+      : ((fees.gasPrice ?? 0n) * 12n) / 10n;
 
     const newMaxPriorityFeePerGas: bigint = params.mode === 'speedup'
       ? (originalPriorityFee * multiplier) / 100n
-      : ((baseFeeData.maxPriorityFeePerGas ?? 0n) * 12n) / 10n;
+      : ((fees.maxPriorityFeePerGas ?? 0n) * 12n) / 10n;
 
     const nonce = originalTx.nonce;
-    const to = params.mode === 'cancel' ? wallet.address : (originalTx.to ?? wallet.address);
+    const to = params.mode === 'cancel' ? account.address : (originalTx.to ?? account.address);
     const value = params.mode === 'cancel' ? 0n : (originalTx.value ?? 0n);
-    const gasLimit: bigint = originalTx.gasLimit ?? 21000n;
+    const gasLimit: bigint = originalTx.gas ?? 21000n;
 
-    const txRequest: TransactionRequest = {
-      to,
+    const txRequest = {
+      to: to as `0x${string}`,
       value,
-      chainId: network.chainId,
+      account,
       nonce,
-      gasLimit,
+      gas: gasLimit,
       maxFeePerGas: newMaxFeePerGas,
       maxPriorityFeePerGas: newMaxPriorityFeePerGas,
-      type: 2,
+      type: 'eip1559',
     };
 
-    const txResponse: TransactionResponse = await poolCall(params.chainKey, async (provider) => {
-      const connectedWallet = wallet.connect(provider);
-      return connectedWallet.sendTransaction(txRequest);
-    });
+    const hash = await client.sendTransaction(txRequest as any);
 
     const estimatedCostWei = gasLimit * newMaxFeePerGas;
     const gasEstimate: GasEstimate = {
@@ -321,16 +310,16 @@ export async function replaceTransaction(
       maxPriorityFeePerGas: newMaxPriorityFeePerGas,
       gasPrice: newMaxFeePerGas,
       estimatedCostWei,
-      estimatedCostEth: ethers.formatEther(estimatedCostWei),
+      estimatedCostEth: formatEther(estimatedCostWei),
       estimatedCostUsd: params.ethPrice
-        ? (parseFloat(ethers.formatEther(estimatedCostWei)) * params.ethPrice).toFixed(2)
+        ? (parseFloat(formatEther(estimatedCostWei)) * params.ethPrice).toFixed(2)
         : null,
       isStale: false,
       fetchedAt: Date.now(),
     };
 
     txResult = {
-      hash: txResponse.hash,
+      hash,
       chainId: network.chainId,
       gasEstimate,
     };
@@ -338,14 +327,12 @@ export async function replaceTransaction(
     addBreadcrumb('Transaction replacement broadcast successful', 'transaction', {
       chain: params.chainKey,
       mode: params.mode,
-      txHash: txResponse.hash,
+      txHash: hash,
       replacing: params.originalTxHash,
     });
   } catch (err) {
     if (err instanceof TransactionError) throw err;
-
-    const anyErr = err as any;
-    const message = anyErr?.message || 'Unknown replacement error';
+    const message = (err as any)?.message || 'Unknown replacement error';
     captureError(new Error(message), { scope: 'secure-signer-replace', chain: params.chainKey });
     throw new TransactionError(message, 'UNKNOWN');
   }

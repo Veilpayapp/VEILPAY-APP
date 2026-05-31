@@ -115,9 +115,7 @@ export async function registerPushDeviceToken(payload: RegisterPushTokenPayload)
     app: "veilpay",
   });
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
-      const response = await fetchWithTimeout(
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {    try {      const response = await fetchWithTimeout(
         url,
         { method: "POST", headers, body },
         REQUEST_TIMEOUT_MS,

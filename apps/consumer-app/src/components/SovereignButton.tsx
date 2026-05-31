@@ -1,8 +1,8 @@
 import React, { useCallback } from "react";
 import { View, Text, StyleSheet, Pressable, StyleProp, ViewStyle, TextStyle } from "react-native";
-import { typography, useTheme, useStyles } from "../styles/design-tokens";
+import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 import { triggerLightImpactHaptic } from "../utils/haptics";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, runOnJS } from "react-native-reanimated";
 
 interface SovereignButtonProps {
   title?: string;
@@ -56,26 +56,29 @@ export function SovereignButton({
     return colors.textPrimary;
   };
 
-  const getBorderColor = () => {
-    if (disabled) return "rgba(255, 255, 255, 0.1)";
-    if (variant === "primary") return colors.accent;
-    if (variant === "outline") return "rgba(255, 255, 255, 0.1)";
-    return "rgba(255, 255, 255, 0.1)";
-  };
-
-  const springConfig = { mass: 1, stiffness: 600, damping: 40 };
+  const springConfig = { mass: 1, stiffness: 400, damping: 25 };
 
   const animatedStyle = useAnimatedStyle(() => {
-    const scale = withSpring(isPressed.value ? 0.97 : 1, springConfig);
+    const targetScale = isPressed.value ? 0.95 : 1;
+    const targetOpacity = isPressed.value ? 0.8 : 1;
+    
+    const scale = withSpring(targetScale, springConfig, (finished) => {
+      // Fire haptic at the exact moment the button reaches its maximum compression (bottom out)
+      if (finished && targetScale === 0.95) {
+        runOnJS(triggerLightImpactHaptic)();
+      }
+    });
+    
     return {
       transform: [{ scale }],
+      opacity: withSpring(targetOpacity, { ...springConfig, damping: 20 }),
     };
   });
 
   const handlePressIn = useCallback(() => {
     if (disabled) return;
     isPressed.value = true;
-    void triggerLightImpactHaptic();
+    // Haptic is now physics-driven in the spring callback above
   }, [disabled, isPressed]);
 
   const handlePressOut = useCallback(() => {
@@ -100,9 +103,8 @@ export function SovereignButton({
           animatedStyle,
           {
             backgroundColor: getBackgroundColor(),
-            borderColor: getBorderColor(),
             borderRadius,
-            borderWidth: 1,
+            borderWidth: 0,
             paddingHorizontal: children ? 0 : 24,
           },
         ]}
@@ -117,7 +119,7 @@ export function SovereignButton({
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   buttonWrapper: {
     position: "relative",
     width: "100%",

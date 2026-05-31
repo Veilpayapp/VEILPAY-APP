@@ -1,6 +1,29 @@
 import rateLimit, { type RateLimitRequestHandler } from "express-rate-limit";
 import { prisma } from "../lib/prisma";
 import { config } from "../config";
+import { getRedisClient } from "../lib/redis";
+import RedisStore from "rate-limit-redis";
+
+function getStore(prefix: string) {
+  const client = getRedisClient();
+  if (!client) return undefined; // Fallback to memory store if Redis is unavailable
+  // ioredis's `call(command, ...args)` returns `Promise<unknown>`. The
+  // `RedisStore.sendCommand` contract is structurally compatible — the
+  // store re-types the result internally — but the published types
+  // declare a tighter `Promise<RedisReply>`. Bridge the gap with an
+  // intermediate function typed as `Promise<unknown>` then re-typed
+  // through `unknown` once at the call site to avoid an `any` value.
+  const sendCommand = (...args: string[]): Promise<unknown> => {
+    // `client.call` is typed as `Promise<unknown>` already, so no
+    // assertion is required here.
+    return client.call(args[0], ...args.slice(1));
+  };
+  return new RedisStore({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
+    sendCommand: sendCommand as any,
+    prefix: `rl:${prefix}:`,
+  });
+}
 
 type CachedLimiterEntry = {
   limiter: RateLimitRequestHandler;
@@ -83,7 +106,6 @@ export async function getMerchantLimiter(merchantId: string): Promise<RateLimitR
     return cached;
   }
 
-  // H4 fix: select the merchant's actual tier from the DB
   const merchant = await prisma.merchant.findUnique({
     where: { id: merchantId },
     select: { id: true, tier: true },
@@ -93,7 +115,6 @@ export async function getMerchantLimiter(merchantId: string): Promise<RateLimitR
     throw new Error(`Merchant not found: ${merchantId}`);
   }
 
-  // BE-M10 fix: merchant.tier now exists in schema — no more `as any` cast
   const tier = merchant.tier ?? config.defaultMerchantTier;
   const limits = getMerchantTierLimit(tier);
 
@@ -102,6 +123,7 @@ export async function getMerchantLimiter(merchantId: string): Promise<RateLimitR
     max: limits.max,
     standardHeaders: true,
     legacyHeaders: false,
+    store: getStore(`merchant:${merchantId}`),
     keyGenerator: () => merchantId,
     handler: (_req, res) => {
       res.status(429).json({
@@ -116,10 +138,6 @@ export async function getMerchantLimiter(merchantId: string): Promise<RateLimitR
   return limiter;
 }
 
-/**
- * Invalidate a merchant's cached rate limiter.
- * Call this after a merchant's tier changes.
- */
 export function invalidateMerchantLimiter(merchantId: string): void {
   merchantLimiters.delete(merchantId);
 }
@@ -129,6 +147,7 @@ export const globalRateLimiter = rateLimit({
   max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
+  store: getStore('global'),
   message: {
     error: "Too many requests, please try again later.",
     code: "GLOBAL_RATE_LIMIT",
@@ -141,6 +160,7 @@ export const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
+  store: getStore('auth'),
   message: {
     error: "Too many authentication attempts, please try again later.",
     code: "AUTH_RATE_LIMIT",
@@ -152,31 +172,32 @@ export const webhookRateLimiter = rateLimit({
   max: 500,
   standardHeaders: true,
   legacyHeaders: false,
+  store: getStore('webhook'),
   message: {
     error: "Webhook rate limit exceeded.",
     code: "WEBHOOK_RATE_LIMIT",
   },
 });
 
-/** M7 fix: tighter rate limit on the public invoice status endpoint */
 export const invoiceStatusRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
+  store: getStore('invoice_status'),
   message: {
     error: "Too many invoice status requests. Please slow down.",
     code: "INVOICE_STATUS_RATE_LIMIT",
   },
 });
 
-/** Rate limit on the webhook verification endpoint */
 export const webhookVerifyRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: false,
+  store: getStore('webhook_verify'),
   message: {
     error: "Too many webhook verification requests. Please slow down.",
     code: "WEBHOOK_VERIFY_RATE_LIMIT",

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { typography, useTheme, useStyles } from '../styles/design-tokens';
+import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 import { SovereignCard } from './SovereignCard';
 import { Icon, type IconName } from './Icon';
 
@@ -28,7 +28,7 @@ export function FeatureCard({ title, description, iconName }: FeatureCardProps) 
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   featureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
   iconBox: {
     width: 48,

@@ -18,6 +18,7 @@ import type { TransactionRecord, TransactionStatus } from '../types/transactions
 import { waitForTransaction } from './transactions';
 import { captureError, captureMessage } from './sentry';
 import { useWalletStore } from '../stores/walletStore';
+import { useTransactionStore, useTransactions } from '../stores/transactionStore';
 
 // ── Configuration ──────────────────────────────────────────────────────────
 
@@ -120,7 +121,7 @@ export async function pollTransactionStatus(opts: PollOptions): Promise<PollResu
 
   // 1. Add pending record to store immediately
   const pendingRecord = buildPendingRecord(opts);
-  useWalletStore.getState().addTransaction(pendingRecord);
+  useTransactionStore.getState().addTransaction(pendingRecord);
 
   const startTime = Date.now();
   let interval = INITIAL_POLL_INTERVAL_MS;
@@ -159,7 +160,7 @@ export async function pollTransactionStatus(opts: PollOptions): Promise<PollResu
         };
 
         // Update the store: add the confirmed/failed version (dedup by id=txHash)
-        useWalletStore.getState().addTransaction(finalRecord);
+        useTransactionStore.getState().addTransaction(finalRecord);
 
         opts.onStatusChange?.(finalStatus, finalRecord);
 

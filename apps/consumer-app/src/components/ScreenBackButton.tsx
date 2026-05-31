@@ -1,7 +1,6 @@
-import React from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import React from 'react';import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import { Icon } from './Icon';
-import { typography, useTheme, useStyles } from '../styles/design-tokens';
+import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 
 interface ScreenBackButtonProps {
   onPress: () => void;
@@ -33,7 +32,7 @@ export function ScreenBackButton({
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   button: {
     width: 80,
     minHeight: 44,

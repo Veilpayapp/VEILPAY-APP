@@ -1,5 +1,4 @@
 import { ethers } from "ethers";
-import { Buffer } from "buffer";
 
 // secp256k1 curve parameters
 // P = field prime (modulus for coordinates)
@@ -64,14 +63,19 @@ function pointMultiply(point: [bigint, bigint] | null, scalar: bigint): [bigint,
   if (k === 0n) return null;
 
   let result: [bigint, bigint] | null = null;
-  let addend: [bigint, bigint] | null = point;
+  // `addend` starts as the input point (non-null per the guard above)
+  // and is re-assigned via `pointDouble`, which is total when its
+  // argument is non-null. We track that explicitly here so TypeScript
+  // can drop the null-narrowing assertion that previously guarded the
+  // `pointDouble` call.
+  let addend: [bigint, bigint] = point;
   let remaining = k;
 
   while (remaining > 0n) {
     if (remaining & 1n) {
       result = pointAdd(result, addend);
     }
-    addend = pointDouble(addend!);
+    addend = pointDouble(addend);
     remaining >>= 1n;
   }
 

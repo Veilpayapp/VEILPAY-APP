@@ -1,6 +1,5 @@
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useTheme, useStyles, typography } from '../styles/design-tokens';
+import React from 'react';import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 
 // ─── SelectablePill ──────────────────────────────────────────────────────────
 
@@ -51,7 +50,7 @@ export function SelectableCard({ children, active, onPress }: SelectableCardProp
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   pill: {
     paddingVertical: 8,
     paddingHorizontal: 14,

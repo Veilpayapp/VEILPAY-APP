@@ -9,5 +9,10 @@ module.exports = function(api) {
       'react-native-reanimated/plugin',
       ...(isProduction ? ['transform-remove-console'] : []),
     ],
+    env: {
+      test: {
+        plugins: ['dynamic-import-node'],
+      },
+    },
   };
 };

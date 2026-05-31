@@ -75,6 +75,15 @@ export const transitionPresets = {
   },
 
   /**
+   * Instant transition
+   * Used for: Tab navigation switching to avoid flashing
+   */
+  none: {
+    animation: 'none' as const,
+    gestureEnabled: false,
+  },
+
+  /**
    * Flip transition
    * Used for: Card flips, privacy level selection
    */
@@ -93,37 +102,59 @@ export const screenTransitions: Record<string, NativeStackNavigationOptions> = {
   },
   
   WalletConnect: {
-    ...transitionPresets.push,
+    ...transitionPresets.none,
   },
   
   CreateWallet: {
-    ...transitionPresets.push,
+    ...transitionPresets.none,
   },
   
   ImportWallet: {
-    ...transitionPresets.push,
+    ...transitionPresets.none,
+  },
+  
+  SetPassword: {
+    ...transitionPresets.none,
+  },
+  
+  BiometricSetup: {
+    ...transitionPresets.none,
   },
   
   // Main App - Tab-like behavior
   Home: {
-    ...transitionPresets.fade,
+    ...transitionPresets.none,
   },
   
-  // Payment Flow - Sequential with modals
+  // Payment Flow - Nav-level animation is 'none' so the internal
+  // FadeInDown (Reanimated) is the sole animation, preventing a flash.
   SendPayment: {
-    ...transitionPresets.modal,
+    ...transitionPresets.none,
   },
   
   PrivacyLevel: {
-    ...transitionPresets.push,
+    ...transitionPresets.none,
   },
   
   PaymentConfirmation: {
-    ...transitionPresets.push,
+    ...transitionPresets.none,
+  },
+  
+  PaymentSuccess: {
+    ...transitionPresets.fade,
   },
   
   ReceiveQR: {
-    ...transitionPresets.modal,
+    ...transitionPresets.none,
+  },
+  
+  // Wallet Security & Backup
+  BackupWallet: {
+    ...transitionPresets.none,
+  },
+  
+  ExportPrivateKey: {
+    ...transitionPresets.none,
   },
   
   // Scanner - Full overlay
@@ -139,16 +170,49 @@ export const screenTransitions: Record<string, NativeStackNavigationOptions> = {
   
   // History & Details
   TransactionHistory: {
-    ...transitionPresets.push,
+    ...transitionPresets.none,
   },
   
   TransactionDetails: {
-    ...transitionPresets.push,
+    ...transitionPresets.none,
   },
   
   // Settings
   Settings: {
-    ...transitionPresets.push,
+    ...transitionPresets.none,
+  },
+  
+  AddCustomNetwork: {
+    ...transitionPresets.none,
+  },
+  
+  // Fiat Gateway Flow
+  DepositCrypto: {
+    ...transitionPresets.none,
+  },
+  
+  WithdrawFiat: {
+    ...transitionPresets.none,
+  },
+  
+  TransakWebView: {
+    ...transitionPresets.none,
+  },
+  
+  OnrampWidget: {
+    ...transitionPresets.none,
+  },
+  
+  OnrampAmount: {
+    ...transitionPresets.none,
+  },
+  
+  OnrampQuotes: {
+    ...transitionPresets.none,
+  },
+  
+  OfframpQuotes: {
+    ...transitionPresets.none,
   },
 };
 

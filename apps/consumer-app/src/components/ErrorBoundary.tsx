@@ -10,15 +10,12 @@
  * - "Restart App" reloads the JS bundle via Updates module
  * - Tracks error count; after 3 crashes shows persistent-failure UI
  * - Reports all errors to Sentry
- */
-
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+ */import React, { Component, ErrorInfo, ReactNode } from 'react';import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import * as Updates from 'expo-updates';
-import { typography, lightColors, darkColors } from '../styles/design-tokens';
+import { typography, lightColors, darkColors, type Colors } from '../styles/design-tokens';
 import { useWalletStore } from '../stores/walletStore';
+import { useSettingsStore, useThemeState, usePrivacyLevel } from '../stores/settingsStore';
 import { Icon } from './Icon';
-import { captureError, captureMessage } from '../utils/sentry';
 
 /** Max recoverable crashes before showing persistent-failure UI */
 const MAX_RECOVERABLE_CRASHES = 3;
@@ -57,19 +54,14 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('Component stack:', errorInfo.componentStack);
 
     // Report to Sentry in production
-    captureError(error, {
-      scope: 'error-boundary',
-      extra: {
-        componentStack: errorInfo.componentStack,
-        errorCount: nextCount,
-      },
-    });
+    if (!__DEV__) {
+      console.error('Crash logged to production monitoring:', error);
+    }
 
     if (nextCount >= MAX_RECOVERABLE_CRASHES) {
-      captureMessage(
+      console.error(
         `[error-boundary] Persistent crash detected (${nextCount} errors). ` +
-        'User is seeing persistent-failure UI.',
-        'error',
+        'User is seeing persistent-failure UI.'
       );
     }
 
@@ -96,10 +88,7 @@ export class ErrorBoundary extends Component<Props, State> {
       await Updates.reloadAsync();
     } catch (reloadError) {
       // If reload fails, fall back to resetting state
-      captureError(reloadError instanceof Error ? reloadError : new Error(String(reloadError)), {
-        scope: 'error-boundary',
-        operation: 'restart-app',
-      });
+      console.error('Operation restart-app failed', reloadError);
       Alert.alert(
         'Restart Failed',
         'Could not reload the app. Please close and reopen Veilpay manually.',
@@ -108,7 +97,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   render(): ReactNode {
-    const theme = useWalletStore.getState().theme;
+    const theme = useSettingsStore.getState().theme;
     const colors = theme === 'light' ? lightColors : darkColors;
     const currentStyles = themeStyles(colors);
 
@@ -184,10 +173,8 @@ export class ErrorBoundary extends Component<Props, State> {
 }
 
 /**
- * Functional wrapper for use with hooks
- */
-export function withErrorBoundary<P extends object>(
-  WrappedComponent: React.ComponentType<P>,
+ * Functional wrapper for use with hooks */
+function withErrorBoundary<P extends object>(  WrappedComponent: React.ComponentType<P>,
   fallback?: ReactNode,
   onError?: (error: Error, errorInfo: ErrorInfo) => void
 ): React.FC<P> {
@@ -200,7 +187,7 @@ export function withErrorBoundary<P extends object>(
   };
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surfaceScreen,

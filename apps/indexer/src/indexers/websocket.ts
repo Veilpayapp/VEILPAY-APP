@@ -1,7 +1,7 @@
 import { WebSocketProvider, JsonRpcProvider, ethers, Contract } from "ethers";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
-import { config } from "../config";
+import { redis } from "../lib/redis";
 import { IndexedEvent } from "./index";
 import { enqueueWebhook, WebhookPayload } from "../queue";
 
@@ -51,10 +51,10 @@ export class EVMWebSocketIndexer {
 
     if (rpcUrl.startsWith("wss://") || rpcUrl.startsWith("ws://")) {
       this.provider = new WebSocketProvider(rpcUrl);
-      console.log(`[${this.chainKey}] Using WebSocket provider`);
+      console.warn(`[${this.chainKey}] Using WebSocket provider`);
     } else {
       this.provider = new JsonRpcProvider(rpcUrl, undefined, { staticNetwork: true });
-      console.log(`[${this.chainKey}] Using HTTP provider (polling mode)`);
+      console.warn(`[${this.chainKey}] Using HTTP provider (polling mode)`);
     }
 
     if (this.poolAddress) {
@@ -73,7 +73,7 @@ export class EVMWebSocketIndexer {
     }
 
     this.isRunning = true;
-    console.log(`[${this.chainKey}] Starting WebSocket indexer`);
+    console.warn(`[${this.chainKey}] Starting WebSocket indexer`);
 
     await this.recoverFromCrash();
 
@@ -81,25 +81,47 @@ export class EVMWebSocketIndexer {
       this.setupEventListeners();
     }
 
-    (this.provider as any).on("error", (error: Error) => {
+    // ethers v6 providers expose `on('error', ...)` via their EventEmitter
+    // shape. The base `Provider` interface in the type defs does not (yet)
+    // include the error event, so we narrow to the runtime EventEmitter
+    // instead of re-introducing `any`.
+    type ErrorEmitter = { on(event: 'error', cb: (err: Error) => void): void };
+    (this.provider as unknown as ErrorEmitter).on('error', (error: Error) => {
       console.error(`[${this.chainKey}] Provider error:`, error);
-      this.handleReconnect();
+      void this.handleReconnect();
     });
 
     if (this.provider instanceof WebSocketProvider) {
-      (this.provider as any).websocket?.on("close", () => {
-        console.log(`[${this.chainKey}] WebSocket closed`);
-        this.handleReconnect();
+      // The underlying ws socket is exposed as `websocket` on the
+      // WebSocketProvider; the type def does not surface it directly.
+      type WsHolder = { websocket?: { on(event: 'close', cb: () => void): void } };
+      (this.provider as unknown as WsHolder).websocket?.on('close', () => {
+        console.warn(`[${this.chainKey}] WebSocket closed`);
+        void this.handleReconnect();
       });
     }
   }
 
+  /**
+   * Stop the indexer and tear down the underlying socket. Returns a
+   * Promise so call sites can `await indexer.stop()` symmetrically with
+   * `start()` even though the underlying teardown is currently
+   * synchronous — leaves room to await graceful close on the websocket
+   * without breaking the API.
+   */
   async stop(): Promise<void> {
     this.isRunning = false;
-    if (this.provider instanceof WebSocketProvider) {
-      this.provider.destroy();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+    if (this.provider && typeof (this.provider as any).destroy === 'function') {
+      // ethers v6's `WebSocketProvider.destroy()` returns
+      // `Promise<void>`. We don't need to wait for the close handshake
+      // before continuing (the orchestrator already moved on), so
+      // `void`-discard the promise to satisfy `no-floating-promises`.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      void (this.provider as any).destroy();
     }
-    console.log(`[${this.chainKey}] Indexer stopped`);
+    console.warn(`[${this.chainKey}] Indexer stopped`);
+    await Promise.resolve();
   }
 
   private setupEventListeners(): void {
@@ -107,29 +129,50 @@ export class EVMWebSocketIndexer {
       return;
     }
 
-    this.poolContract.on("NewCommitment", async (commitment, token, amount, leafIndex, event) => {
-      await this.handleEvent({
-        type: "commitment",
-        commitment,
-        token,
-        amount: amount.toString(),
-        leafIndex: leafIndex.toNumber(),
-        event,
-      });
-    });
+    // ethers v6's `Contract.on` returns `Promise<Contract>` so it can be
+    // chained; we don't need the chain, so explicitly `void` the
+    // subscription promises to satisfy `no-floating-promises`.
+    void this.poolContract.on(
+      'NewCommitment',
+      (
+        commitment: string,
+        token: string,
+        amount: bigint,
+        leafIndex: bigint,
+        event: ethers.EventLog,
+      ) => {
+        void this.handleEvent({
+          type: 'commitment',
+          commitment,
+          token,
+          amount: amount.toString(),
+          leafIndex: Number(leafIndex),
+          event,
+        });
+      },
+    );
 
-    this.poolContract.on("Withdrawal", async (nullifier, recipient, token, amount, event) => {
-      await this.handleEvent({
-        type: "withdrawal",
-        nullifier,
-        recipient,
-        token,
-        amount: amount.toString(),
-        event,
-      });
-    });
+    void this.poolContract.on(
+      'Withdrawal',
+      (
+        nullifier: string,
+        recipient: string,
+        token: string,
+        amount: bigint,
+        event: ethers.EventLog,
+      ) => {
+        void this.handleEvent({
+          type: 'withdrawal',
+          nullifier,
+          recipient,
+          token,
+          amount: amount.toString(),
+          event,
+        });
+      },
+    );
 
-    console.log(`[${this.chainKey}] Event listeners setup complete`);
+    console.warn(`[${this.chainKey}] Event listeners setup complete`);
   }
 
   private async handleEvent(eventData: {
@@ -148,7 +191,7 @@ export class EVMWebSocketIndexer {
       // IX-H6 fix: wait for block confirmations before processing
       const currentBlock = await this.provider.getBlockNumber();
       if (event.blockNumber + this.confirmations > currentBlock) {
-        console.log(
+        console.warn(
           `[${this.chainKey}] Event at block ${event.blockNumber} needs ${this.confirmations} confirmations (current: ${currentBlock}), waiting...`
         );
         await this.waitForConfirmations(event.blockNumber + this.confirmations);
@@ -208,14 +251,14 @@ export class EVMWebSocketIndexer {
     });
 
     if (existingPayment) {
-      console.log(`[${this.chainKey}] Event already processed: ${event.txHash}`);
+      console.warn(`[${this.chainKey}] Event already processed: ${event.txHash}`);
       return;
     }
 
     const merchant = await this.findMerchantByPayment(fromAddress, toAddress);
 
     if (!merchant) {
-      console.log(`[${this.chainKey}] No merchant found for payment: ${event.txHash}`);
+      console.warn(`[${this.chainKey}] No merchant found for payment: ${event.txHash}`);
       return;
     }
 
@@ -239,7 +282,7 @@ export class EVMWebSocketIndexer {
         },
       });
 
-      console.log(`[${this.chainKey}] Payment recorded: ${payment.id}`);
+      console.warn(`[${this.chainKey}] Payment recorded: ${payment.id}`);
 
       const invoice = await this.matchPaymentToInvoice(payment, tx);
 
@@ -265,7 +308,7 @@ export class EVMWebSocketIndexer {
       };
 
       await enqueueWebhook(webhookPayload);
-      console.log(`[${this.chainKey}] Webhook queued for payment: ${result.payment.id}`);
+      console.warn(`[${this.chainKey}] Webhook queued for payment: ${result.payment.id}`);
     }
   }
 
@@ -337,13 +380,13 @@ export class EVMWebSocketIndexer {
     if (lastProcessed === 0) {
       const startBlock = currentBlock - 1000;
       await this.updateLastProcessedBlock(startBlock);
-      console.log(`[${this.chainKey}] Initialized at block ${startBlock}`);
+      console.warn(`[${this.chainKey}] Initialized at block ${startBlock}`);
       return;
     }
 
     const blocksToReplay = currentBlock - lastProcessed;
     if (blocksToReplay > 0 && blocksToReplay < 10000) {
-      console.log(`[${this.chainKey}] Recovering: replaying ${blocksToReplay} blocks`);
+      console.warn(`[${this.chainKey}] Recovering: replaying ${blocksToReplay} blocks`);
       await this.replayBlocks(lastProcessed + 1, currentBlock);
     } else if (blocksToReplay >= 10000) {
       console.warn(`[${this.chainKey}] Too many blocks to replay (${blocksToReplay}), skipping`);
@@ -378,7 +421,7 @@ export class EVMWebSocketIndexer {
             token: String(args[1]),
             amount: (args[2] as bigint).toString(),
             leafIndex: Number(args[3]),
-            event: log as ethers.EventLog,
+            event: log,
           });
         }
   
@@ -391,7 +434,7 @@ export class EVMWebSocketIndexer {
             recipient: String(args[1]),
             token: String(args[2]),
             amount: (args[3] as bigint).toString(),
-            event: log as ethers.EventLog,
+            event: log,
           });
         }
       } catch (error) {
@@ -400,24 +443,59 @@ export class EVMWebSocketIndexer {
     }
 
     await this.updateLastProcessedBlock(toBlock);
-    console.log(`[${this.chainKey}] Replay complete, now at block ${toBlock}`);
+    console.warn(`[${this.chainKey}] Replay complete, now at block ${toBlock}`);
   }
 
   private async getLastProcessedBlock(): Promise<number> {
+    const cacheKey = `veilpay:block:${this.chainKey}`;
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) {
+        return parseInt(cached, 10);
+      }
+    } catch (e) {
+      console.error(`[${this.chainKey}] Redis read error:`, e);
+    }
+
     const record = await prisma.processedBlock.findUnique({
       where: { chainKey: this.chainKey },
     });
     const bn = record?.blockNumber;
     if (bn == null) return 0;
-    return typeof bn === 'bigint' ? Number(bn) : (bn as any).toNumber();
+
+    // Prisma's `BigInt` columns deserialise to a JS bigint; the legacy
+    // BigNumber path here pre-dated bigint support and is no longer
+    // reachable, but we keep the conversion explicit for readability.
+    const blockNum = typeof bn === 'bigint' ? Number(bn) : Number(bn);
+
+    try {
+      await redis.set(cacheKey, blockNum.toString());
+    } catch (e) {
+      console.error(`[${this.chainKey}] Redis write error:`, e);
+    }
+
+    return blockNum;
   }
 
   private async updateLastProcessedBlock(blockNumber: number): Promise<void> {
-    await prisma.processedBlock.upsert({
-      where: { chainKey: this.chainKey },
-      update: { blockNumber: BigInt(blockNumber) },
-      create: { chainKey: this.chainKey, blockNumber: BigInt(blockNumber) },
-    });
+    const cacheKey = `veilpay:block:${this.chainKey}`;
+    try {
+      await redis.set(cacheKey, blockNumber.toString());
+    } catch (e) {
+      console.error(`[${this.chainKey}] Redis write error:`, e);
+    }
+
+    // Fire and forget Prisma upsert to unblock the event loop.
+    // Explicitly `void` the promise so `no-floating-promises` is happy
+    // — the `.catch` already handles rejections, but the rule needs to
+    // see the discard intention.
+    void prisma.processedBlock
+      .upsert({
+        where: { chainKey: this.chainKey },
+        update: { blockNumber: BigInt(blockNumber) },
+        create: { chainKey: this.chainKey, blockNumber: BigInt(blockNumber) },
+      })
+      .catch((e) => console.error(`[${this.chainKey}] Async Prisma upsert error:`, e));
   }
 
   private async handleReconnect(): Promise<void> {
@@ -429,7 +507,7 @@ export class EVMWebSocketIndexer {
     this.reconnectAttempts++;
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
 
-    console.log(
+    console.warn(
       `[${this.chainKey}] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`
     );
 
@@ -442,7 +520,9 @@ export class EVMWebSocketIndexer {
     } catch (error) {
       console.error(`[${this.chainKey}] Reconnect failed:`, error);
       // Fix: use setTimeout instead of recursive call to avoid stack overflow
-      setTimeout(() => this.handleReconnect(), 1000);
+      setTimeout(() => {
+        void this.handleReconnect();
+      }, 1000);
     }
   }
 }

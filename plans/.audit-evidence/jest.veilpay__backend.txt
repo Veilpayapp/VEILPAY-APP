@@ -1,0 +1,753 @@
+PASS src/controllers/__tests__/webhookController.test.ts (16.627 s)
+PASS src/controllers/__tests__/invoiceController.test.ts (16.837 s)
+  ● Console
+
+    console.error
+      Next called with error: Error: DB Error
+          at Object.<anonymous> (D:\Veilpay\apps\backend\src\controllers\__tests__\invoiceController.test.ts:115:64)
+          at Promise.then.completed (D:\Veilpay\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\Veilpay\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\Veilpay\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at _runTest (D:\Veilpay\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\Veilpay\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\run.js:121:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\Veilpay\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\Veilpay\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\Veilpay\node_modules\.pnpm\jest-circus@29.7.0\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\Veilpay\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\node_modules\.pnpm\jest-runner@29.7.0\node_modules\jest-runner\build\testWorker.js:106:12)
+
+    [0m [90m 90 |[39m     }[33m;[39m
+     [90m 91 |[39m     next [33m=[39m jest[33m.[39mfn((err) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 92 |[39m       [36mif[39m (err) console[33m.[39merror([32m'Next called with error:'[39m[33m,[39m err)[33m;[39m
+     [90m    |[39m                        [31m[1m^[22m[39m
+     [90m 93 |[39m     })[33m;[39m
+     [90m 94 |[39m   })[33m;[39m
+     [90m 95 |[39m[0m
+
+      at src/controllers/__tests__/invoiceController.test.ts:92:24
+      at next (src/controllers/invoiceController.ts:77:5)
+      at Object.<anonymous> (src/controllers/__tests__/invoiceController.test.ts:117:7)
+
+PASS src/controllers/__tests__/paymentController.test.ts (16.916 s)
+PASS src/controllers/__tests__/onrampController.replay.property.test.ts (16.833 s)
+  ● Console
+
+    console.log
+      Order order-1 updated to completed
+
+      at log (src/controllers/onrampController.ts:313:13)
+
+    console.log
+      Order order-1 updated to completed
+
+      at log (src/controllers/onrampController.ts:313:13)
+
+PASS src/middleware/__tests__/auth.test.ts (17.389 s)
+PASS src/middleware/__tests__/rateLimiter.test.ts (17.517 s)
+PASS src/routes/__tests__/onramp.test.ts
+PASS src/controllers/__tests__/merchantController.test.ts (18.817 s)
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+PASS src/utils/__tests__/metrics.test.ts
+PASS src/routes/__tests__/merchant.test.ts
+PASS src/controllers/__tests__/relayerController.revert.property.test.ts (19.644 s)
+PASS src/routes/__tests__/webhook.test.ts
+PASS src/routes/__tests__/payment.test.ts
+PASS src/routes/__tests__/health.test.ts
+PASS src/controllers/__tests__/relayerController.forwarding.property.test.ts (19.95 s)
+PASS src/jobs/__tests__/webhookWorker.test.ts
+PASS src/jobs/__tests__/webhookDelivery.test.ts
+[2026-05-31 22:58:46.958 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-05-31 22:58:46.941 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-05-31 22:58:46.974 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-05-31 22:58:46.975 +0530] [33mWARN[39m: [36m[WebhookWorker] No webhook URL for merchant m-1, skipping[39m
+[2026-05-31 22:58:47.111 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-05-31 22:58:47.112 +0530] [32mINFO[39m: [36m[WebhookWorker] Delivering job j-1 to http://example.com[39m
+PASS src/services/__tests__/paymentProcessor.test.ts
+PASS src/controllers/__tests__/relayerController.validation.property.test.ts (20.399 s)
+PASS src/jobs/__tests__/webhookQueue.test.ts
+PASS src/services/__tests__/goldrush.test.ts
+[2026-05-31 22:58:47.000 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-05-31 22:58:47.003 +0530] [32mINFO[39m: [36m[WebhookWorker] Delivering job j-1 to http://example.com[39m
+[2026-05-31 22:58:46.988 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-05-31 22:58:46.988 +0530] [32mINFO[39m: [36m[WebhookWorker] Delivering job j-1 to http://example.com[39m
+[2026-05-31 22:58:46.988 +0530] [32mINFO[39m: [36m[WebhookWorker] Successfully delivered job j-1[39m
+PASS src/lib/__tests__/redisLock.test.ts
+  ● Console
+
+    console.warn
+      [RedisLock] Redis not available, running my-key locally.
+
+    [0m [90m 19 |[39m   [36mif[39m ([33m![39mredis) {
+     [90m 20 |[39m     [90m// If Redis is not available, default to running the function (local only)[39m
+    [31m[1m>[22m[39m[90m 21 |[39m     console[33m.[39mwarn([32m`[RedisLock] Redis not available, running ${key} locally.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 22 |[39m     [36mreturn[39m fn()[33m;[39m
+     [90m 23 |[39m   }
+     [90m 24 |[39m[0m
+
+      at warn (src/lib/redisLock.ts:21:13)
+      at Object.<anonymous> (src/lib/__tests__/redisLock.test.ts:42:39)
+
+PASS src/jobs/__tests__/chainIndexer.test.ts
+  ● Console
+
+    console.log
+      [ChainIndexer] Found matching payment for invoice inv1 on solana
+
+      at log (src/jobs/chainIndexer.ts:41:19)
+
+    console.log
+      [ChainIndexer] Starting Goldrush polling worker...
+
+      at log (src/jobs/chainIndexer.ts:63:11)
+
+    console.log
+      [ChainIndexer] Polling worker stopped.
+
+      at log (src/jobs/chainIndexer.ts:79:13)
+
+PASS src/controllers/__tests__/directoryController.test.ts
+PASS src/controllers/__tests__/healthController.test.ts
+PASS tests/e2e/webhookDelivery.test.ts
+PASS src/routes/__tests__/docs.test.ts
+PASS src/lib/__tests__/invoiceExpiry.test.ts
+  ● Console
+
+    console.log
+      [InvoiceExpiry] Starting invoice expiry worker
+
+      at log (src/lib/invoiceExpiry.ts:13:11)
+
+    console.log
+      [InvoiceExpiry] Expired 5 invoice(s)
+
+      at log (src/lib/invoiceExpiry.ts:55:13)
+
+    console.log
+      [InvoiceExpiry] Stopped invoice expiry worker
+
+      at log (src/lib/invoiceExpiry.ts:36:13)
+
+    console.log
+      [InvoiceExpiry] Starting invoice expiry worker
+
+      at log (src/lib/invoiceExpiry.ts:13:11)
+
+    console.log
+      [InvoiceExpiry] Stopped invoice expiry worker
+
+      at log (src/lib/invoiceExpiry.ts:36:13)
+
+PASS src/lib/__tests__/redis.test.ts
+PASS src/routes/__tests__/directory.test.ts
+PASS src/middleware/__tests__/errorHandler.test.ts
+PASS src/utils/__tests__/openapi.test.ts
+PASS src/controllers/__tests__/relayerController.503.property.test.ts (20.782 s)
+PASS src/middleware/__tests__/requestLogger.test.ts
+PASS src/routes/__tests__/relayer.test.ts
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+PASS src/lib/__tests__/chain.test.ts
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+PASS src/routes/__tests__/invoice.test.ts
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+PASS tests/health.test.ts (5.281 s)
+  ● Console
+
+    console.log
+      [HTTP] GET / 200 6ms req=460bb583-290c-487f-8297-66b8fb6754f9 merchant=-
+
+      at ServerResponse.log (src/middleware/requestLogger.ts:16:13)
+
+    console.warn
+      [Redis] Connection error: Redis error
+
+    [0m[0m
+
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+PASS tests/e2e/invoiceFlow.test.ts (7.459 s)
+  ● Console
+
+    console.log
+      [HTTP] POST /api/v1/invoices 404 16ms req=6e24e2c2-2f45-47bd-80e8-eb74eead584f merchant=-
+
+      at ServerResponse.log (src/middleware/requestLogger.ts:16:13)
+
+    console.log
+      [HTTP] GET /api/v1/invoices/inv_123/status 404 3ms req=14748574-9de7-4137-ad88-f0a16d004224 merchant=-
+
+      at ServerResponse.log (src/middleware/requestLogger.ts:16:13)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/lib/__tests__/onramp.test.ts (5.929 s)
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+
+Test Suites: 40 passed, 40 total
+Tests:       2 skipped, 142 passed, 144 total
+Snapshots:   0 total
+Time:        28.996 s, estimated 72 s
+Ran all test suites.

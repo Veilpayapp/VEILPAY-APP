@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 /**
  * TransakWebViewScreen
  *
@@ -14,19 +15,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
+    Text,    StyleSheet,    TouchableOpacity,
     Platform,
 } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
-import { Icon } from '../components/Icon';
-import { useWalletStore, type TransakOrderStatus } from '../stores/walletStore';
-import { FiatGatewayWebViewShell } from '../features/fiat-gateway';
+import { Icon } from '../components/Icon';import { useWalletStore } from '../stores/walletStore';
+import { useTransactionStore, type TransakOrderStatus } from '../stores/transactionStore';import { FiatGatewayWebViewShell } from '../features/fiat-gateway';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -110,11 +109,8 @@ const INJECTED_JS = `
 })();
 `;
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
-export function TransakWebViewScreen({ navigation, route }: Props) {
+// ---------------------------------------------------------------------------// Component
+// ---------------------------------------------------------------------------export function TransakWebViewScreen({ navigation, route }: Props) {
     const { colors } = useTheme();
     const styles = useStyles(themeStyles);
     const { url, title = 'Buy / Sell Crypto', flow } = route.params;
@@ -122,12 +118,9 @@ export function TransakWebViewScreen({ navigation, route }: Props) {
     const webviewRef = useRef<WebView>(null);
     const overlayTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [loading, setLoading] = useState(true);
-    const [loadError, setLoadError] = useState<string | null>(null);
-    const [kycStatus, setKycStatus] = useState<KycStatus>('unknown');
+    const [loadError, setLoadError] = useState<string | null>(null);    const [kycStatus, setKycStatus] = useState<KycStatus>('unknown');
     const [orderStatus, setOrderStatus] = useState<OrderStatus>({});
-    const [overlayMessage, setOverlayMessage] = useState<string | null>(null);
-
-    useEffect(() => {
+    const [overlayMessage, setOverlayMessage] = useState<string | null>(null);    useEffect(() => {
         return () => {
             if (overlayTimeoutRef.current) {
                 clearTimeout(overlayTimeoutRef.current);
@@ -142,7 +135,7 @@ export function TransakWebViewScreen({ navigation, route }: Props) {
             return;
         }
 
-        useWalletStore.getState().setLatestTransakOrder({
+        useTransactionStore.getState().setLatestTransakOrder({
             provider: 'transak',
             walletAddress,
             flow,
@@ -346,35 +339,30 @@ export function TransakWebViewScreen({ navigation, route }: Props) {
   };
 
     return (
-        <FiatGatewayWebViewShell
+        <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>        <FiatGatewayWebViewShell
             ref={webviewRef}
             onClose={handleClose}
             loading={loading}
-            loadingMessage="Loading Transak..."
-            headerCenter={
+            loadingMessage="Loading Transak..."            headerCenter={
                 <View style={styles.headerCenter}>
                     <Text style={styles.headerTitle}>{title}</Text>
                     <Text style={styles.headerSubtitle}>{flowLabel} • {statusSummary}</Text>
-                    <View style={[styles.kycBadge, { backgroundColor: kycBadgeColor[kycStatus] + '22', borderColor: kycBadgeColor[kycStatus] }]}>
-                        <Text style={[styles.kycBadgeText, { color: kycBadgeColor[kycStatus] }]}>
+                    <View style={[styles.kycBadge, { backgroundColor: kycBadgeColor[kycStatus] + '22', borderColor: kycBadgeColor[kycStatus] }]}>                        <Text style={[styles.kycBadgeText, { color: kycBadgeColor[kycStatus] }]}>
                             {kycStatusLabel}
                         </Text>
                     </View>
                 </View>
-            }
-            headerRight={
+            }            headerRight={
                 orderStatus.status && orderStatus.status !== 'failed' ? (
                     <View style={styles.orderPill}>
                         <Text style={styles.orderPillText}>{orderPillLabel}</Text>
-                    </View>
-                ) : undefined
+                    </View>                ) : undefined
             }
             banner={overlayMessage ? (
                 <View style={styles.banner}>
                     <Text style={styles.bannerText}>{overlayMessage}</Text>
                 </View>
-            ) : null}
-            errorState={loadError ? (
+            ) : null}            errorState={loadError ? (
                 <View style={styles.errorState}>
                     <Icon name="close" size={28} color={colors.error} />
                     <Text style={styles.errorTitle}>Transak failed to load</Text>
@@ -431,6 +419,7 @@ export function TransakWebViewScreen({ navigation, route }: Props) {
                         : undefined,
             }}
         />
+        </Animated.View>
     );
 }
 

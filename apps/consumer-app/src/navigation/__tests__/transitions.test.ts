@@ -2,12 +2,11 @@ import { SCREENS } from '../../constants/screens';
 import { getScreenTransition, transitionPresets } from '../transitions';
 
 describe('navigation transitions', () => {
-  it('returns modal transition for send payment', () => {
+  it('returns none transition for send payment', () => {
     const options = getScreenTransition(SCREENS.SEND_PAYMENT);
 
-    expect(options.animation).toBe('slide_from_bottom');
-    expect(options.presentation).toBe('containedTransparentModal');
-    expect(options.gestureDirection).toBe('vertical');
+    expect(options.animation).toBe('none');
+    expect(options.gestureEnabled).toBe(false);
   });
 
   it('returns transparent modal transition for token selector', () => {

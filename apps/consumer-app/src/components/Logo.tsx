@@ -7,11 +7,8 @@
  * - <Logo variant="icon" /> - Icon only (shield logo from Logo.png)
  * - <Logo variant="header" /> - Compact icon version for headers
  * - <Logo variant="manual" /> - Shield icon + Manually written text
- */
-
-import React from 'react';
-import { View, Image, StyleSheet, Text, ViewStyle, TextStyle, ImageStyle } from 'react-native';
-import { useTheme, useStyles, typography, spacing } from '../styles/design-tokens';
+ */import React from 'react';import { View, Image, StyleSheet, Text, ViewStyle, TextStyle, ImageStyle } from 'react-native';
+import { useTheme, useStyles, typography, spacing, type Colors } from "../styles/design-tokens";
 
 export type LogoVariant = 'full' | 'icon' | 'header' | 'manual';
 
@@ -30,8 +27,11 @@ export function Logo({
   textStyle,
   imageStyle
 }: LogoProps) { 
-  const { colors } = useTheme();
+  const { theme, colors } = useTheme();
   const styles = useStyles(themeStyles);
+  
+  const iconSource = theme === 'dark' ? require('../../assets/logo-icon-dark.png') : require('../../assets/logo-icon.png');
+  const fullSource = theme === 'dark' ? require('../../assets/logo-full-dark.png') : require('../../assets/logo-full.png');
   
   // Size configurations for different variants
   const sizeConfig = {
@@ -62,7 +62,7 @@ export function Logo({
     return (
       <View style={[styles.manualContainer, style]}>
         <Image
-          source={require('../../assets/logo-icon.png')}
+          source={iconSource}
           style={[{ width: currentSize.icon, height: currentSize.icon }, imageStyle]}
           resizeMode="contain"
         />
@@ -82,7 +82,7 @@ export function Logo({
     return (
       <View style={[styles.iconContainer, style]}>
         <Image
-          source={require('../../assets/logo-icon.png')}
+          source={iconSource}
           style={[{ width: currentSize.icon, height: currentSize.icon }, imageStyle]}
           resizeMode="contain"
         />
@@ -96,7 +96,7 @@ export function Logo({
   return (
     <View style={[styles.container, style]}>
       <Image
-        source={require('../../assets/logo-full.png')}
+        source={fullSource}
         style={[{ width: logoSize, height: logoSize * 0.3 }, imageStyle]}
         resizeMode="contain"
       />
@@ -104,7 +104,7 @@ export function Logo({
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',

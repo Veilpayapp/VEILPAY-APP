@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  Text,  StyleSheet,  TouchableOpacity,
   ScrollView,
   StatusBar,
   ActivityIndicator,
@@ -15,8 +13,7 @@ import { SCREENS } from '../constants/screens';
 import { Logo } from '../components/Logo';
 import { useWalletStore, ChainType } from '../stores/walletStore';
 import { SovereignCard } from "../components/SovereignCard";
-import { SovereignButton } from "../components/SovereignButton";
-import { MetaMaskIcon, TrustWalletIcon, WalletConnectIcon } from '../components/WalletIcons';
+import { MetaMaskIcon, TrustWalletIcon, WalletConnectIcon, PhantomIcon, PetraIcon, LobstrIcon, LedgerIcon } from '../components/WalletIcons';
 import Toast, { useToast } from '../components/Toast';
 import { Icon } from '../components/Icon';
 import { ScreenBackButton } from '../components/ScreenBackButton';
@@ -24,7 +21,6 @@ import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
 import { createDemoEvmAddress } from '../utils/demoWallet';
 import { createWalletConnectSession, hasWalletConnectProjectId } from '../utils/walletConnectSession';
-import { Wallet } from 'ethers';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -43,7 +39,7 @@ const ATTEMPT_WINDOW_MS = 60_000;
 const EXTERNAL_CONNECT_COOLDOWN_MS = 30_000;
 const IS_DEMO_MODE = process.env.EXPO_PUBLIC_DEMO_WALLET_CONNECT === 'true';
 
-type ExternalWalletId = 'MetaMask' | 'Trust Wallet' | 'WalletConnect';
+type ExternalWalletId = 'MetaMask' | 'Trust Wallet' | 'WalletConnect' | 'Phantom' | 'Petra' | 'Lobstr' | 'Ledger';
 
 function buildExternalWalletLaunchUrl(walletId: ExternalWalletId, uri: string): string {
   const encodedUri = encodeURIComponent(uri);
@@ -53,6 +49,14 @@ function buildExternalWalletLaunchUrl(walletId: ExternalWalletId, uri: string): 
       return `https://metamask.app.link/wc?uri=${encodedUri}`;
     case 'Trust Wallet':
       return `https://link.trustwallet.com/wc?uri=${encodedUri}`;
+    case 'Phantom':
+      return `https://phantom.app/ul/wc?uri=${encodedUri}`;
+    case 'Petra':
+      return `petra://wc?uri=${encodedUri}`;
+    case 'Lobstr':
+      return `lobstr://wc?uri=${encodedUri}`;
+    case 'Ledger':
+      return `ledgerlive://wc?uri=${encodedUri}`;
     case 'WalletConnect':
       return uri;
     default:
@@ -76,15 +80,8 @@ function resolveChainTypeFromWalletConnect(
     return 'mvm';
   }
 
-  return 'evm';
-}
-
-export function WalletConnectScreen({ navigation, route }: WalletConnectScreenProps) {
-  const { colors } = useTheme();
-  const styles = useStyles(themeStyles);
-  const [connecting, setConnecting] = useState<string | null>(null);
-  const [attemptTimestamps, setAttemptTimestamps] = useState<number[]>([]);
-  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  return 'evm';}export function WalletConnectScreen({ navigation, route }: WalletConnectScreenProps) {  const { colors } = useTheme();  const styles = useStyles(themeStyles);
+  const [connecting, setConnecting] = useState<string | null>(null);  const [attemptTimestamps, setAttemptTimestamps] = useState<number[]>([]);  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
   const [inlineError, setInlineError] = useState<string | null>(null);
   const { connect } = useWalletStore();
   const handledCallbackRef = useRef<string | null>(null);
@@ -110,13 +107,10 @@ export function WalletConnectScreen({ navigation, route }: WalletConnectScreenPr
     const callbackError = route?.params?.error;
     if (!callbackError) {
       return;
-    }
-
-    trackEvent(ANALYTICS_EVENTS.WALLET_CONNECT_CALLBACK_ERROR, {
+    }    trackEvent(ANALYTICS_EVENTS.WALLET_CONNECT_CALLBACK_ERROR, {
       error: callbackError,
       source: route?.params?.source || 'unknown',
-    });
-    setInlineError(callbackError);
+    });    setInlineError(callbackError);
     toast.show(callbackError, 'error');
   }, [route?.params?.error, route?.params?.source, toast]);
 
@@ -348,7 +342,7 @@ export function WalletConnectScreen({ navigation, route }: WalletConnectScreenPr
         <View style={{ width: 80 }} />
       </View>
 
-      <Animated.View entering={FadeInDown.duration(260)} style={styles.animatedContent}>
+      <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={styles.animatedContent}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -473,6 +467,114 @@ export function WalletConnectScreen({ navigation, route }: WalletConnectScreenPr
 
         <TouchableOpacity 
           activeOpacity={0.9} 
+          onPress={() => handleExternalWallet('Phantom', 'svm')} 
+          style={{ marginBottom: 16 }}
+          disabled={connecting !== null}
+          accessibilityRole="button"
+          accessibilityLabel="Connect Phantom"
+          accessibilityHint="Opens Phantom to approve connection"
+          accessibilityState={{ disabled: connecting !== null }}
+        >
+        <SovereignCard backgroundColor={colors.surfaceCard}>
+          <View style={styles.methodRow}>
+            <View style={[styles.methodIconBox, { backgroundColor: colors.surfaceCard, borderColor: colors.bgPrimary }]}>
+              {connecting === 'Phantom' ? (
+                <ActivityIndicator size="small" color="#AB9FF2" />
+                ) : (
+                  <PhantomIcon width={24} height={24} />
+                )}
+              </View>
+              <View style={styles.methodTextContainer}>
+              <Text style={[styles.methodTitle, { color: "#AB9FF2" }]}>PHANTOM</Text>
+              <Text style={[styles.methodDescription, { color: colors.textMuted }]}>Connect your Solana Phantom wallet.</Text>
+              </View>
+            </View>
+          </SovereignCard>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          activeOpacity={0.9} 
+          onPress={() => handleExternalWallet('Petra', 'mvm')} 
+          style={{ marginBottom: 16 }}
+          disabled={connecting !== null}
+          accessibilityRole="button"
+          accessibilityLabel="Connect Petra"
+          accessibilityHint="Opens Petra to approve connection"
+          accessibilityState={{ disabled: connecting !== null }}
+        >
+        <SovereignCard backgroundColor={colors.surfaceCard}>
+          <View style={styles.methodRow}>
+            <View style={[styles.methodIconBox, { backgroundColor: colors.surfaceCard, borderColor: colors.bgPrimary }]}>
+              {connecting === 'Petra' ? (
+                <ActivityIndicator size="small" color="#E86C6A" />
+                ) : (
+                  <PetraIcon width={24} height={24} />
+                )}
+              </View>
+              <View style={styles.methodTextContainer}>
+              <Text style={[styles.methodTitle, { color: "#E86C6A" }]}>PETRA</Text>
+              <Text style={[styles.methodDescription, { color: colors.textMuted }]}>Connect your Aptos Petra wallet.</Text>
+              </View>
+            </View>
+          </SovereignCard>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          activeOpacity={0.9} 
+          onPress={() => handleExternalWallet('Lobstr', 'xlm')} 
+          style={{ marginBottom: 16 }}
+          disabled={connecting !== null}
+          accessibilityRole="button"
+          accessibilityLabel="Connect Lobstr"
+          accessibilityHint="Opens Lobstr to approve connection"
+          accessibilityState={{ disabled: connecting !== null }}
+        >
+        <SovereignCard backgroundColor={colors.surfaceCard}>
+          <View style={styles.methodRow}>
+            <View style={[styles.methodIconBox, { backgroundColor: colors.surfaceCard, borderColor: colors.bgPrimary }]}>
+              {connecting === 'Lobstr' ? (
+                <ActivityIndicator size="small" color="#00C48C" />
+                ) : (
+                  <LobstrIcon width={24} height={24} />
+                )}
+              </View>
+              <View style={styles.methodTextContainer}>
+              <Text style={[styles.methodTitle, { color: "#00C48C" }]}>LOBSTR</Text>
+              <Text style={[styles.methodDescription, { color: colors.textMuted }]}>Connect your Stellar Lobstr wallet.</Text>
+              </View>
+            </View>
+          </SovereignCard>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          activeOpacity={0.9} 
+          onPress={() => handleExternalWallet('Ledger', 'evm')} 
+          style={{ marginBottom: 16 }}
+          disabled={connecting !== null}
+          accessibilityRole="button"
+          accessibilityLabel="Connect Ledger Live"
+          accessibilityHint="Opens Ledger Live to approve connection"
+          accessibilityState={{ disabled: connecting !== null }}
+        >
+        <SovereignCard backgroundColor={colors.surfaceCard}>
+          <View style={styles.methodRow}>
+            <View style={[styles.methodIconBox, { backgroundColor: colors.surfaceCard, borderColor: colors.bgPrimary }]}>
+              {connecting === 'Ledger' ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <LedgerIcon width={24} height={24} />
+                )}
+              </View>
+              <View style={styles.methodTextContainer}>
+              <Text style={[styles.methodTitle, { color: colors.textPrimary }]}>LEDGER LIVE</Text>
+              <Text style={[styles.methodDescription, { color: colors.textMuted }]}>Connect your Ledger Nano via Ledger Live.</Text>
+              </View>
+            </View>
+          </SovereignCard>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          activeOpacity={0.9} 
           onPress={() => handleExternalWallet('WalletConnect', 'evm')} 
           style={{ marginBottom: 16 }}
           disabled={connecting !== null}
@@ -523,8 +625,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
     height: 64,
-    borderBottomWidth: 2,
-    borderBottomColor: colors.outlineSubtle
+    // No-Line Rule: Removed borderBottomWidth and borderBottomColor
   },
   backButton: { width: 80, paddingVertical: 8, minHeight: 44, justifyContent: 'center' },
   backButtonText: { fontFamily: typography.fontFamily.mono, color: colors.textMuted, fontSize: 13, fontWeight: 'bold' },

@@ -9,11 +9,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
+  Text,  StyleSheet,  TouchableOpacity,
   ScrollView,
   StatusBar,
+  InteractionManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
@@ -35,10 +34,7 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 type CreateWalletScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateWallet'>;
 
 interface CreateWalletScreenProps {
-  navigation: CreateWalletScreenNavigationProp;
-}
-
-export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
+  navigation: CreateWalletScreenNavigationProp;}export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const [savedConfirmed, setSavedConfirmed] = useState(false);
@@ -51,12 +47,16 @@ export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
   const toast = useToast();
   const clipboardClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Generate cryptographically secure seed phrase and derive address on mount
   useEffect(() => {
     let isMounted = true;
+    let timer1: NodeJS.Timeout | undefined;
+    let timer2: NodeJS.Timeout | undefined;
 
     async function generateSecureSeed() {
       try {
+        // Yield to animation thread first to prevent stutter
+        await new Promise(resolve => { timer1 = setTimeout(resolve, 300); });
+        
         // Generate 12-word BIP-39 mnemonic using cryptographically secure RNG
         const words = await generateMnemonic(12);
 
@@ -65,6 +65,9 @@ export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
           setIsLoading(false);
           setIsDerivingAddress(true);
         }
+
+        // Yield again before derivation
+        await new Promise(resolve => { timer2 = setTimeout(resolve, 50); });
 
         // Derive address in the background so users can copy/write words immediately.
         const address = await deriveAddressFromMnemonic(words, { skipValidation: true });
@@ -88,12 +91,16 @@ export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
       }
     }
 
-    generateSecureSeed();
+    // Run after screen transition to ensure smooth entering animation
+    const interaction = InteractionManager.runAfterInteractions(() => {
+      generateSecureSeed();
+    });
 
     return () => {
       isMounted = false;
-    };
-  }, []);
+      interaction.cancel();      if (timer1) clearTimeout(timer1);
+      if (timer2) clearTimeout(timer2);
+    };  }, []);
 
   const handleCopy = useCallback(async () => {
     if (seedWords.length === 0) return;
@@ -110,12 +117,8 @@ export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
     clipboardClearTimerRef.current = setTimeout(() => {
       void setClipboardString('');
       clipboardClearTimerRef.current = null;
-    }, 30000);
-
-    toast.show('Seed phrase copied. Clear clipboard after writing it down!', 'success');
-  }, [seedWords, toast]);
-
-  useEffect(() => {
+    }, 30000);    toast.show('Seed phrase copied. Clear clipboard after writing it down!', 'success');
+  }, [seedWords, toast]);  useEffect(() => {
     return () => {
       if (clipboardClearTimerRef.current) {
         clearTimeout(clipboardClearTimerRef.current);
@@ -142,7 +145,7 @@ export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
 
       // Connect wallet with the derived Ethereum address
       await connect(addressToConnect, 'evm');
-      navigation.reset({ index: 0, routes: [{ name: SCREENS.HOME }] });
+      navigation.reset({ index: 0, routes: [{ name: SCREENS.SET_PASSWORD as any }] });
     } catch {
       if (mnemonicStored) {
         try {
@@ -169,7 +172,7 @@ export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
         <View style={{ width: 80 }} />
       </View>
 
-      <Animated.View entering={FadeInDown.duration(260)} style={styles.animatedContent}>
+      <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={styles.animatedContent}>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Security Warning */}
           <SovereignCard style={{ marginBottom: 24 }} padding={16} backgroundColor={colors.bgTertiary}>
@@ -183,11 +186,13 @@ export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
                   Write down your seed phrase and store it offline. Anyone with these words can access your funds.
                 </Text>
               </View>
+            // eslint-disable-next-line design-no-em-dash-in-jsx-text
             </View>
           </SovereignCard>
 
           {/* Title */}
           <Text style={styles.sectionTitle}>YOUR RECOVERY PHRASE</Text>
+          // eslint-disable-next-line design-no-em-dash-in-jsx-text
           <Text style={styles.sectionSubtitle}>12 words — do not share with anyone</Text>
 
           {/* Seed Grid */}
@@ -197,18 +202,14 @@ export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
                 // Loading skeleton while secure seed phrase is being generated.
                 <View style={styles.loadingContainer}>
                   <View style={styles.seedSkeletonGrid}>
-                    {Array.from({ length: 12 }).map((_, index) => (
-                      <View key={`seed-skeleton-${index}`} style={styles.seedCell}>
+                    {Array.from({ length: 12 }).map((_, index) => (                      <View key={`seed-skeleton-${index}`} style={styles.seedCell}>
                         <Skeleton width={10} height={10} borderRadius={2} />
                         <Skeleton width={52} height={12} borderRadius={2} style={{ marginLeft: 8 }} />
-                      </View>
-                    ))}
-                  </View>
-                  <Text style={styles.loadingText}>Generating secure seed phrase...</Text>
+                      </View>                    ))}
+                  </View>                  <Text style={styles.loadingText}>Generating secure seed phrase...</Text>
                 </View>
               ) : (
-                seedWords.map((word: string, index: number) => (
-                  <View key={index} style={styles.seedCell}>
+                seedWords.map((word: string, index: number) => (                  <View key={index} style={styles.seedCell}>
                     <Text style={styles.seedNumber}>{index + 1}</Text>
                     <Text style={styles.seedWord}>{word}</Text>
                   </View>
@@ -244,16 +245,14 @@ export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
           </TouchableOpacity>
 
           {/* Derived Address Display */}
-          {!isLoading && (
-            <SovereignCard backgroundColor={colors.surfaceCard} padding={16} style={{ marginBottom: 24 }}>
+          {!isLoading && (            <SovereignCard backgroundColor={colors.surfaceCard} padding={16} style={{ marginBottom: 24 }}>
               <View style={styles.addressContainer}>
                 <Text style={styles.addressLabel}>YOUR WALLET ADDRESS</Text>
                 {derivedAddress ? (
                   <Text style={styles.addressValue}>{derivedAddress}</Text>
                 ) : (
                   <View style={styles.addressLoadingContainer}>
-                    <Skeleton width={220} height={14} borderRadius={2} />
-                    <Text style={styles.addressLoadingText}>Preparing wallet address...</Text>
+                    <Skeleton width={220} height={14} borderRadius={2} />                    <Text style={styles.addressLoadingText}>Preparing wallet address...</Text>
                   </View>
                 )}
               </View>

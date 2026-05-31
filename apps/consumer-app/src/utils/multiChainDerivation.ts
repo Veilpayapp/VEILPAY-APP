@@ -1,34 +1,45 @@
-import { ethers } from 'ethers';
+import { keccak256, stringToBytes, bytesToHex } from 'viem';
+import { mnemonicToAccount } from 'viem/accounts';
 import { ChainType } from '../stores/walletStore';
+import { mnemonicToSeed } from '@scure/bip39';
+import { derivePath } from 'ed25519-hd-key';
+import { Keypair } from '@solana/web3.js';
+import { Ed25519Account } from '@aptos-labs/ts-sdk';
+import { Buffer } from 'buffer';
 
-/**
- * Derives addresses for all supported chain types from a single mnemonic
- * @param mnemonicWords - Array of 12 or 24 mnemonic words
- * @returns Map of chain type to address
- */
-export async function deriveAddressesForAllChains(mnemonicWords: string[]): Promise<Record<ChainType, string>> {
+export async function deriveAddressesForAllChains(mnemonicWords: string[], accountIndex: number = 0): Promise<Record<ChainType, string>> {
   const mnemonicPhrase = mnemonicWords.join(' ');
-  const seed = ethers.Mnemonic.fromPhrase(mnemonicPhrase).computeSeed();
+  // EVM standard path: m/44'/60'/0'/0/accountIndex
+  const account = mnemonicToAccount(mnemonicPhrase, { path: `m/44'/60'/0'/0/${accountIndex}` });
   
-  // 1. EVM (Ethereum, BSC, Polygon, Arbitrum)
-  const evmWallet = ethers.HDNodeWallet.fromMnemonic(
-    ethers.Mnemonic.fromPhrase(mnemonicPhrase),
-    "m/44'/60'/0'/0/0"
-  );
-  const evmAddress = evmWallet.address.toLowerCase();
+  // Use private key hex as seed for mock derivation (for remaining mocks)
+  const hdKey = account.getHdKey();
+  const seedHex = bytesToHex(hdKey.privateKey!);
 
-  // 2. SVM (Solana) - Deterministic mock using seed hash for demo purposes
-  // Real derivation requires Ed25519 curve which is not in standard ethers
-  const solanaHash = ethers.keccak256(ethers.toUtf8Bytes(seed + 'solana'));
-  const solanaAddress = encodeBase58Mock(solanaHash.slice(2, 42)); // Valid length Base58-like
+  // 1. EVM
+  const evmAddress = account.address.toLowerCase();
 
-  // 3. MVM (Aptos) - 0x + 64 hex chars
-  const aptosHash = ethers.keccak256(ethers.toUtf8Bytes(seed + 'aptos'));
-  const aptosAddress = '0x' + aptosHash.slice(2);
+  // 2. SVM (Genuine Solana Derivation)
+  // Derive seed asynchronously to avoid blocking the main thread and ensure RN compatibility
+  const seed = await mnemonicToSeed(mnemonicPhrase);
+  // Solana standard path: m/44'/501'/accountIndex'/0'
+  const derivedSeed = derivePath(`m/44'/501'/${accountIndex}'/0'`, Buffer.from(seed).toString('hex')).key;
+  const solanaKeypair = Keypair.fromSeed(derivedSeed);
+  const solanaAddress = solanaKeypair.publicKey.toBase58();
 
-  // 4. XLM (Stellar) - G + 55 chars
-  const stellarHash = ethers.keccak256(ethers.toUtf8Bytes(seed + 'stellar'));
-  const stellarAddress = encodeStellarMock(stellarHash.slice(2, 42));
+  // 3. MVM (Genuine Aptos Derivation)
+  // Derive Aptos standard path: m/44'/637'/${accountIndex}'/0'/0'
+  const aptosAccount = Ed25519Account.fromDerivationPath({ path: `m/44'/637'/${accountIndex}'/0'/0'`, mnemonic: mnemonicPhrase });
+  const aptosAddress = aptosAccount.accountAddress.toString();
+
+  // 4. XLM (Genuine Stellar Derivation)
+  // Derive Stellar standard path: m/44'/148'/${accountIndex}'
+  const stellarDerivedSeed = derivePath(`m/44'/148'/${accountIndex}'`, Buffer.from(seed).toString('hex')).key;
+  // We use dynamic import for stellar-sdk to keep initial bundle size small, 
+  // just like we do in multiChainSigner.ts
+  const StellarSdk = await import('stellar-sdk');
+  const stellarKeypair = StellarSdk.Keypair.fromRawEd25519Seed(stellarDerivedSeed as Buffer);
+  const stellarAddress = stellarKeypair.publicKey();
 
   return {
     evm: evmAddress,
@@ -38,32 +49,24 @@ export async function deriveAddressesForAllChains(mnemonicWords: string[]): Prom
   };
 }
 
-/**
- * Simple Base58-like encoder for mock addresses (Solana style)
- */
 function encodeBase58Mock(hex: string): string {
   const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
   let result = '';
   for (let i = 0; i < hex.length; i += 2) {
-    const byte = parseInt(hex.substr(i, 2), 16);
+    const byte = parseInt(hex.substring(i, i + 2), 16);
     result += chars[byte % chars.length];
   }
-  // Ensure it's long enough for Solana (32-44)
   while (result.length < 32) result += chars[result.length % chars.length];
   return result;
 }
 
-/**
- * Simple Stellar-style encoder (G + Base32-like)
- */
 function encodeStellarMock(hex: string): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
   let result = 'G';
   for (let i = 0; i < hex.length; i += 2) {
-    const byte = parseInt(hex.substr(i, 2), 16);
+    const byte = parseInt(hex.substring(i, i + 2), 16);
     result += chars[byte % chars.length];
   }
-  // Ensure exactly 56 chars
   while (result.length < 56) result += chars[result.length % chars.length];
   return result;
 }

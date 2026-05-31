@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
-import { useTheme, useStyles } from '../styles/design-tokens';
+import { useTheme, useStyles, type Colors } from "../styles/design-tokens";
 
 export function NetworkStatusBanner() {
   const { isConnected } = useNetworkStatus();
@@ -24,7 +24,7 @@ export function NetworkStatusBanner() {
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
+const themeStyles = (colors: Colors) => StyleSheet.create({
   container: {
     backgroundColor: colors.error,
     paddingVertical: 8,

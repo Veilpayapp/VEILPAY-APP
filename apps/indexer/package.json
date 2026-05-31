@@ -7,25 +7,31 @@
     "build": "pnpm prisma generate --schema=../backend/prisma/schema.prisma && tsc",
     "start": "node dist/index.js",
     "lint": "eslint src/",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest --runInBand",
+    "test:coverage": "jest --coverage --runInBand"
   },
   "dependencies": {
-    "@veilpay/shared": "workspace:*",
     "@prisma/client": "^5.12.0",
-    "ethers": "^6.12.0",
     "@solana/web3.js": "^1.91.0",
-    "viem": "^2.9.0",
-    "node-fetch": "^2.7.0",
+    "@veilpay/shared": "workspace:*",
     "bullmq": "^5.4.0",
+    "ethers": "^6.12.0",
     "ioredis": "^5.3.2",
+    "node-fetch": "^2.7.0",
+    "viem": "^2.9.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@jest/globals": "^30.4.1",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.11.0",
     "@types/node-fetch": "^2.6.11",
     "@types/ws": "^8.5.10",
-    "typescript": "^5.4.0",
+    "jest": "^29.7.0",
+    "prisma": "^5.22.0",
+    "ts-jest": "^29.4.11",
     "tsx": "^4.7.0",
-    "prisma": "^5.22.0"
+    "typescript": "^5.4.0"
   }
 }

@@ -17,18 +17,26 @@ jest.mock('../../components/Icon', () => {
   };
 });
 
-jest.mock('../../components/NeoPop', () => {
+jest.mock('../../components/SovereignCard', () => {
   const React = require('react');
-  const { Text, TouchableOpacity, View } = require('react-native');
+  const { View } = require('react-native');
   return {
-    NeoPopCard: ({ children }: { children: any }) => <View>{children}</View>,
-    NeoPopButton: ({ title, onPress }: { title: string; onPress: () => void }) => (
+    SovereignCard: ({ children }: { children: any }) => <View>{children}</View>,
+  };
+});
+
+jest.mock('../../components/SovereignButton', () => {
+  const React = require('react');
+  const { Text, TouchableOpacity } = require('react-native');
+  return {
+    SovereignButton: ({ title, onPress }: { title: string; onPress: () => void }) => (
       <TouchableOpacity onPress={onPress}>
         <Text>{title}</Text>
       </TouchableOpacity>
     ),
   };
 });
+
 
 const { OnboardingScreen } = require('../OnboardingScreen');
 const { SCREENS } = require('../../constants/screens');

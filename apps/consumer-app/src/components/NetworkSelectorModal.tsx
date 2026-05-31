@@ -3,7 +3,8 @@ import { Modal, TouchableOpacity, View, Text, StyleSheet, TextInput, ScrollView 
 import { triggerLightImpactHaptic } from '../utils/haptics';
 import { SovereignCard } from './SovereignCard';
 import { Icon } from './Icon';
-import { typography, useTheme, useStyles } from '../styles/design-tokens';
+import { getNetworkIcon } from './NetworkIcons';
+import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 import type { ChainConfig } from '../stores/walletStore';
 
 interface NetworkSelectorModalProps {
@@ -176,11 +177,10 @@ function ChainItem({ chain, selected, onSelect, styles, colors }: any) {
           styles.chainIconContainer,
           selected && styles.chainIconContainerActive
         ]}>
-          <Icon 
-            name={chain.type === 'evm' ? 'send' : 'hexagon'} 
-            size={18} 
-            color={selected ? colors.bgPrimary : colors.accent} 
-          />
+          {(() => {
+            const NetworkIconSVG = getNetworkIcon(chain.key);
+            return <NetworkIconSVG size={38} />;
+          })()}
         </View>
         <View style={styles.chainMainInfo}>
           <Text style={[
@@ -365,13 +365,13 @@ const themeStyles = (colors: any) => StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
   chainIconContainerActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'transparent',
   },
   chainMainInfo: {
     flex: 1,

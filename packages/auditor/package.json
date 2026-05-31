@@ -1,0 +1,32 @@
+{
+  "name": "@veilpay/auditor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Production-readiness audit pipeline for the VeilPay workspace (planning-only).",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "bin": {
+    "auditor": "./src/cli/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/run-jest.js --runInBand",
+    "lint": "eslint src/",
+    "clean": "rimraf dist *.tsbuildinfo",
+    "audit:prod": "ts-node src/cli/index.ts run"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.11.0",
+    "fast-check": "^3.23.2",
+    "jest": "^29.7.0",
+    "remark": "^14.0.3",
+    "remark-parse": "^10.0.2",
+    "ts-jest": "^29.4.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.0",
+    "unified": "^10.1.2",
+    "unist-util-visit": "^4.1.2"
+  }
+}

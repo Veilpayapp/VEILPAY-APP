@@ -161,6 +161,7 @@ enum ChainType {
   evm
   svm
   mvm
+  xlm
 }
 
 enum PrivacyLevel {

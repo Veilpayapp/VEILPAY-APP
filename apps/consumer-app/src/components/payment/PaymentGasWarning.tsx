@@ -42,7 +42,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   gasWarningIconWrap: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 0,
     backgroundColor: 'rgba(255, 107, 0, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',

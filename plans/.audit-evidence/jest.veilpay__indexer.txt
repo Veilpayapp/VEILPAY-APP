@@ -17,10 +17,10 @@ ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module k
 ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
 ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
 ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/config/__tests__/index.test.ts (8.068 s)
 ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
-PASS src/config/__tests__/index.test.ts (7.827 s)
 ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
-PASS src/stealth/__tests__/scanner.test.ts (7.983 s)
+PASS src/stealth/__tests__/scanner.test.ts (8.34 s)
   ● Console
 
     console.warn
@@ -224,8 +224,7 @@ PASS src/stealth/__tests__/scanner.test.ts (7.983 s)
           at Map.forEach (<anonymous>)
       at Object.<anonymous> (src/stealth/__tests__/scanner.test.ts:158:16)
 
-PASS src/queue/__tests__/index.test.ts (8.015 s)
-PASS src/webhook/__tests__/dispatcher.test.ts (8.029 s)
+PASS src/webhook/__tests__/dispatcher.test.ts (8.451 s)
   ● Console
 
     console.warn
@@ -354,7 +353,9 @@ PASS src/webhook/__tests__/dispatcher.test.ts (8.029 s)
       at warn (src/webhook/dispatcher.ts:193:11)
       at Object.<anonymous> (src/webhook/__tests__/dispatcher.test.ts:120:40)
 
-PASS src/indexers/__tests__/index.test.ts (8.228 s)
+PASS src/queue/__tests__/index.test.ts (8.516 s)
+PASS src/stealth/__tests__/crypto.test.ts (8.615 s)
+PASS src/indexers/__tests__/index.test.ts (8.638 s)
   ● Console
 
     console.warn
@@ -665,8 +666,7 @@ PASS src/indexers/__tests__/index.test.ts (8.228 s)
       at AptosIndexer.warn [as indexNewBlocks] (src/indexers/index.ts:196:13)
       at Object.<anonymous> (src/indexers/__tests__/index.test.ts:220:28)
 
-PASS src/stealth/__tests__/crypto.test.ts (8.317 s)
-PASS src/indexers/__tests__/websocket.test.ts (8.667 s)
+PASS src/indexers/__tests__/websocket.test.ts (8.985 s)
   ● Console
 
     console.warn
@@ -1145,5 +1145,5 @@ A worker process has failed to exit gracefully and has been force exited. This i
 Test Suites: 7 passed, 7 total
 Tests:       57 passed, 57 total
 Snapshots:   0 total
-Time:        14.018 s
+Time:        14.202 s
 Ran all test suites.

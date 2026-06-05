@@ -9,9 +9,11 @@ interface FiatGatewayModalProps {
   onClose: () => void;
   onBuy: () => void;
   onSell: () => void;
+  currentCurrency?: string;
+  onOpenCurrencySelector?: () => void;
 }
 
-export function FiatGatewayModal({ visible, onClose, onBuy, onSell }: FiatGatewayModalProps) {
+export function FiatGatewayModal({ visible, onClose, onBuy, onSell, currentCurrency = 'USD', onOpenCurrencySelector }: FiatGatewayModalProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   
@@ -34,19 +36,26 @@ export function FiatGatewayModal({ visible, onClose, onBuy, onSell }: FiatGatewa
               </Text>
             </View>
 
-            <TouchableOpacity
-              onPress={onClose}
-              style={styles.closeButton}
-            >
-              <Icon name="close" size={20} color={colors.textPrimary} />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {onOpenCurrencySelector && (
+                <TouchableOpacity onPress={onOpenCurrencySelector} style={styles.currencyButton}>
+                  <Text style={styles.currencyButtonText}>{currentCurrency}</Text>
+                  <Icon name="chevron-down" size={16} color={colors.accent} />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                onPress={onClose}
+                style={styles.closeButton}
+              >
+                <Icon name="close" size={20} color={colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.options}>
             <SovereignCard
               onPress={onBuy}
               backgroundColor={colors.surfaceCard}
-              borderRadius={24}
               style={styles.optionCard}
             >
               <View style={styles.optionContent}>
@@ -65,7 +74,6 @@ export function FiatGatewayModal({ visible, onClose, onBuy, onSell }: FiatGatewa
             <SovereignCard
               onPress={onSell}
               backgroundColor={colors.surfaceCard}
-              borderRadius={24}
               style={styles.optionCard}
             >
               <View style={styles.optionContent}>
@@ -97,15 +105,16 @@ export function FiatGatewayModal({ visible, onClose, onBuy, onSell }: FiatGatewa
 const themeStyles = (colors: Colors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: colors.opacityOverlayHeavy,
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
   content: {
     backgroundColor: colors.surfaceScreen,
-    borderRadius: 28,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
     padding: 24,
-    // No-Line Rule: Removed borderWidth and borderColor
   },
   header: {
     flexDirection: 'row',
@@ -136,6 +145,27 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+  },
+  currencyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    height: 44,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    gap: 4,
+  },
+  currencyButtonText: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 14,
+    color: colors.textPrimary,
+    fontWeight: 'bold',
   },
   options: {
     gap: 16,
@@ -153,7 +183,9 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   optionIconWrap: {
     width: 52,
     height: 52,
-    borderRadius: 26,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.bgTertiary,

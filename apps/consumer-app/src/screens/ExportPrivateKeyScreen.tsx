@@ -214,11 +214,11 @@ const themeStyles = (colors: any) => StyleSheet.create({
   },
   warningBanner: {
     flexDirection: 'row',
-    backgroundColor: colors.warningBg + '15',
-    borderRadius: 16,
+    backgroundColor: 'transparent',
+    borderRadius: 0,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.warningBg + '30',
+    borderColor: colors.error,
     marginBottom: 32,
   },
   warningIconContainer: {
@@ -292,11 +292,11 @@ const themeStyles = (colors: any) => StyleSheet.create({
     textAlign: 'center',
   },
   revealedKeyContainer: {
-    backgroundColor: colors.bgPrimary,
+    backgroundColor: 'transparent',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 0,
     borderWidth: 1,
-    borderColor: colors.outlineSubtle,
+    borderColor: colors.textPrimary,
   },
   privateKeyText: {
     fontFamily: typography.fontFamily.mono,
@@ -315,9 +315,11 @@ const themeStyles = (colors: any) => StyleSheet.create({
   },
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: colors.bgTertiary,
+    backgroundColor: 'transparent',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.textPrimary,
     marginTop: 16,
     gap: 12,
   },

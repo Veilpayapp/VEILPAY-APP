@@ -15,6 +15,8 @@ import { SovereignCard } from '../components/SovereignCard';
 import { Icon } from '../components/Icon';
 
 import { useWalletStore } from '../stores/walletStore';
+import { useSettingsStore } from '../stores/settingsStore';
+import { CurrencySelectorModal, CURRENCIES } from '../components/CurrencySelectorModal';
 import { SCREENS } from '../constants/screens';
 import { triggerLightImpactHaptic } from '../utils/haptics';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -34,7 +36,13 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const [amount, setAmount] = useState('5000');
+  const [showCurrencySelector, setShowCurrencySelector] = useState(false);
   const { activeChain } = useWalletStore();
+  const { nativeCurrency, setNativeCurrency } = useSettingsStore();
+
+  const currencyObj = useMemo(() => {
+    return CURRENCIES.find(c => c.id === nativeCurrency) || CURRENCIES[0];
+  }, [nativeCurrency]);
   const handleContinue = useCallback(() => {
     if (!amount || !activeChain) return;
     
@@ -64,9 +72,13 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
       <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.inputSection}>
-          <Text style={styles.label}>AMOUNT IN INR</Text>
+          <TouchableOpacity onPress={() => setShowCurrencySelector(true)} style={styles.currencyToggleBtn}>
+            <Text style={styles.label}>AMOUNT IN {currencyObj.id}</Text>
+            <Icon name="chevron-down" size={14} color={colors.textSecondary} />
+          </TouchableOpacity>
+          
           <View style={styles.amountInputRow}>
-            <Text style={styles.currencyPrefix}>₹</Text>
+            <Text style={styles.currencyPrefix}>{currencyObj.symbol}</Text>
             <TextInput
               style={styles.amountInput}
               value={amount}
@@ -86,7 +98,7 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
                 onPress={() => handleQuickAmount(val)}
               >
                 <Text style={[styles.quickAmountText, amount === val && styles.quickAmountTextActive]}>
-                  ₹{parseInt(val).toLocaleString('en-IN')}
+                  {currencyObj.symbol}{parseInt(val).toLocaleString('en-US')}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -94,7 +106,7 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
         </View>
 
         <View style={styles.infoSection}>
-          <SovereignCard backgroundColor={colors.bgSecondary}>
+          <SovereignCard backgroundColor="transparent" padding={16} style={{ borderRadius: 0, borderWidth: 1, borderColor: colors.textPrimary }}>
             <View style={styles.infoRow}>
               <Icon name="info" size={16} color={colors.accent} />
               <Text style={styles.infoText}>
@@ -114,6 +126,16 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
         />
       </View>
       </Animated.View>
+
+      <CurrencySelectorModal
+        visible={showCurrencySelector}
+        activeCurrency={nativeCurrency}
+        onSelect={(curr) => {
+          setNativeCurrency(curr);
+          setShowCurrencySelector(false);
+        }}
+        onClose={() => setShowCurrencySelector(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -149,7 +171,17 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     letterSpacing: 2,
+  },
+  currencyToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     marginBottom: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: colors.outlineSubtle,
+    borderRadius: 0,
   },
   amountInputRow: {
     flexDirection: 'row',
@@ -162,6 +194,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     color: colors.textPrimary,
     marginRight: 10,
     fontWeight: '700',
+    letterSpacing: -1,
   },
   amountInput: {
     fontFamily: typography.fontFamily.mono,
@@ -170,6 +203,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     fontWeight: '700',
     minWidth: 100,
     textAlign: 'center',
+    letterSpacing: -2,
   },
   quickAmountRow: {
     flexDirection: 'row',
@@ -181,14 +215,14 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   quickAmountBtn: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 0,
     borderWidth: 1,
-    borderColor: colors.outlineSubtle,
-    backgroundColor: colors.surfaceCard,
+    borderColor: colors.textPrimary,
+    backgroundColor: 'transparent',
   },
   quickAmountBtnActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    backgroundColor: colors.textPrimary,
+    borderColor: colors.textPrimary,
   },
   quickAmountText: {
     fontFamily: typography.fontFamily.mono,
@@ -221,8 +255,10 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   errorContainer: {
     marginTop: 20,
     padding: 12,
-    backgroundColor: colors.errorBg,
-    borderRadius: 8,
+    backgroundColor: 'transparent',
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.error,
   },
   errorText: {
     color: colors.error,

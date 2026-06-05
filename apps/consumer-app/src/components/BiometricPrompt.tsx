@@ -225,7 +225,7 @@ const themeStyles = (colors: Colors) =>
       backgroundColor: colors.accent,
       paddingHorizontal: 24,
       paddingVertical: 14,
-      borderRadius: 14,
+      borderRadius: 0,
       minWidth: 180,
       alignItems: 'center',
       justifyContent: 'center',

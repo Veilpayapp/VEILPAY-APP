@@ -138,7 +138,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   iconCircle: {
     width: 120,
     height: 120,
-    borderRadius: 60,
+    borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },

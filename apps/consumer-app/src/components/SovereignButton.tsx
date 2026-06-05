@@ -38,7 +38,7 @@ export function SovereignButton({
   const styles = useStyles(themeStyles);
   const isPressed = useSharedValue(false);
 
-  const borderRadius = shape === "pill" ? 9999 : 16;
+  const borderRadius = 0; // Brutalist strict geometry
 
   const getBackgroundColor = () => {
     if (disabled) return colors.bgContainerHigh;
@@ -104,7 +104,8 @@ export function SovereignButton({
           {
             backgroundColor: getBackgroundColor(),
             borderRadius,
-            borderWidth: 0,
+            borderWidth: 1,
+            borderColor: disabled ? colors.outlineSubtle : colors.textPrimary,
             paddingHorizontal: children ? 0 : 24,
           },
         ]}
@@ -131,8 +132,10 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     alignItems: "center",
   },
   buttonText: {
-    fontFamily: typography.fontFamily.headlineBold,
-    fontSize: 16,
-    letterSpacing: 0.5,
+    fontFamily: 'JetBrainsMono_400Regular',
+    fontWeight: '700',
+    fontSize: 14,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
 });

@@ -33,7 +33,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   iconBox: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: 0,
     backgroundColor: colors.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',

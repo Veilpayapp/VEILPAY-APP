@@ -60,6 +60,17 @@ function buildEndpoints(chainKey: string): RpcEndpoint[] {
 
   const endpoints: RpcEndpoint[] = [];
 
+  try {
+    const customChains = require('../stores/walletStore').useWalletStore.getState().customChains;
+    const customChain = customChains?.find((c: any) => c.key === chainKey);
+    if (customChain && customChain.rpcUrl) {
+      endpoints.push({ name: `custom-${chainKey}`, url: customChain.rpcUrl, weight: 100 });
+      return endpoints;
+    }
+  } catch (e) {
+    // Ignore store initialization errors
+  }
+
   if (overrideUrl) {
     endpoints.push({ name: `override-${chainKey}`, url: overrideUrl, weight: 10 });
     return endpoints;

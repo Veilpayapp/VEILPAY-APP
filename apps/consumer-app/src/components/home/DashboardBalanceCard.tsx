@@ -51,7 +51,7 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
             <>
               <View style={styles.balanceRow}>
                 <View>
-                  <Text style={styles.balanceLabel}>TOTAL BALANCE</Text>
+                  <Text style={styles.balanceLabel}>[ LEDGER_BALANCE ]</Text>
                   <Text
                     style={styles.balanceAmount}
                     accessibilityLiveRegion="assertive"
@@ -160,11 +160,11 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     marginBottom: 4,
   },
   balanceAmount: {
-    fontFamily: typography.fontFamily.mono,
+    fontFamily: 'JetBrainsMono_400Regular',
     fontSize: 36,
     color: colors.textPrimary,
     fontWeight: 'bold',
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   balanceCrypto: {
     fontFamily: typography.fontFamily.mono,
@@ -183,12 +183,12 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     justifyContent: 'center',
   },
   privacyBadge: {
-    backgroundColor: colors.accentContainer,
-    borderWidth: 0,
-    borderColor: 'transparent',
-    paddingHorizontal: 12,
+    backgroundColor: colors.bgPrimary,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,

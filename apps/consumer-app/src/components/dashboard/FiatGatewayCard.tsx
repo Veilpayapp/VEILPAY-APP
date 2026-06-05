@@ -131,7 +131,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
   transakOutcomeIcon: {
     width: 48,
     height: 48,
-    borderRadius: 16,
+    borderRadius: 0,
     alignItems: "center",
     justifyContent: "center",
   },

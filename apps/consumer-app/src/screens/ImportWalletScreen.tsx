@@ -220,15 +220,15 @@ interface ImportWalletScreenProps {
                 accessibilityHint="Changes the number of words to import"
                 accessibilityState={{ selected: wordCount === count }}
               >
-                <SovereignCard
-                  backgroundColor={wordCount === count ? colors.bgContainerHigh : colors.surfaceCard}
-                  padding={0}
-                  style={{ borderRadius: 12 }}
-                >
+                  <SovereignCard
+                    backgroundColor={wordCount === count ? colors.textPrimary : 'transparent'}
+                    padding={0}
+                    style={{ borderRadius: 0, borderWidth: 1, borderColor: colors.textPrimary }}
+                  >
                   <Text
                     style={[
                       styles.toggleChipText,
-                      wordCount === count && styles.toggleChipTextActive,
+                      wordCount === count && { color: colors.bgPrimary },
                     ]}
                   >
                     {count} WORDS
@@ -399,8 +399,10 @@ const themeStyles = (colors: any) => StyleSheet.create({
     width: '31%',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: 8,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.textPrimary,
+    borderRadius: 0,
     paddingHorizontal: 8,
     paddingVertical: 10,
   },

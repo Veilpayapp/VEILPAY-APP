@@ -179,7 +179,7 @@ const TRANSAK_FEE_PERCENT = 1.5;
 const NETWORK_FEE_BASE_USD = 2.5;
 
 /** Rough conversion rates for fallback estimations when live FX is unavailable */
-const USD_TO_FIAT: Record<FiatCurrency, number> = {
+export const USD_TO_FIAT: Record<FiatCurrency, number> = {
   USD: 1.0,
   EUR: 0.92,
   GBP: 0.79,

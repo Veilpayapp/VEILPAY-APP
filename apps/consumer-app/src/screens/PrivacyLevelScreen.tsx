@@ -267,7 +267,7 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
                       </View>
                       {selected && (
                         <View style={styles.checkmarkBox}>
-                          <Icon name="success" size={20} color={colors.textOnPrimary} />
+                          <Icon name="success" size={20} color={colors.textPrimary} />
                         </View>
                       )}
                     </View>
@@ -466,13 +466,15 @@ const themeStyles = (colors: any) => StyleSheet.create({
   optionIconBox: {
     width: 44,
     height: 44,
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: 22,
+    backgroundColor: 'transparent',
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.textPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   optionIconBoxActive: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.textPrimary,
   },
   optionIcon: {
     fontSize: 24,
@@ -496,10 +498,10 @@ const themeStyles = (colors: any) => StyleSheet.create({
     color: colors.textOnPrimary,
   },
   recommendedBadge: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.textPrimary,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 0,
   },
   recommendedText: {
     fontFamily: typography.fontFamily.mono,
@@ -518,10 +520,10 @@ const themeStyles = (colors: any) => StyleSheet.create({
   checkmarkBox: {
     width: 24,
     height: 24,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.textOnPrimary,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 12,
+    borderRadius: 0,
   },
   checkmark: {
     color: colors.textOnPrimary,

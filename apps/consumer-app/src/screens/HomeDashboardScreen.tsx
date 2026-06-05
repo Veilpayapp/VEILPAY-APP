@@ -17,6 +17,7 @@ import {
   StatusBar,
   RefreshControl,
 } from "react-native";
+import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useWalletStore, SUPPORTED_CHAINS } from "../stores/walletStore";
 import { useTransactionStore } from "../stores/transactionStore";
@@ -39,6 +40,7 @@ import { DashboardBalanceCard } from '../components/home/DashboardBalanceCard';
 import { DashboardQuickActions } from '../components/home/DashboardQuickActions';
 import { EmptyState } from "../components/EmptyState";
 import { NetworkSelectorModal } from "../components/NetworkSelectorModal";
+import { CurrencySelectorModal } from "../components/CurrencySelectorModal";
 import { FiatGatewayModal } from "../features/fiat-gateway";
 import { openExternalUrl } from "../utils/externalLink";
 import { useBalance } from "../hooks/useBalance";
@@ -50,6 +52,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 import type { RootStackParamList } from "../navigation/AppNavigator";
 import { useShallow } from "zustand/react/shallow";
+import { useSettingsStore } from "../stores/settingsStore";
 
 const TRANSAK_OUTCOME_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -66,6 +69,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [showChainSelector, setShowChainSelector] = useState(false);
   const [showFiatGateway, setShowFiatGateway] = useState(false);
+  const [showCurrencySelector, setShowCurrencySelector] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // Only animate on first mount — subsequent tab visits should be instant
@@ -109,6 +113,13 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
       latestOnrampOrder: state.latestOnrampOrder,
       clearLatestTransakOrder: state.clearLatestTransakOrder,
       clearLatestOnrampOrder: state.clearLatestOnrampOrder,
+    }))
+  );
+
+  const { nativeCurrency, setNativeCurrency } = useSettingsStore(
+    useShallow((state) => ({
+      nativeCurrency: state.nativeCurrency,
+      setNativeCurrency: state.setNativeCurrency,
     }))
   );
 
@@ -161,6 +172,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
 
   // Pull to refresh
   const onRefresh = useCallback(async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setRefreshing(true);
     try {
       await Promise.all([refreshMarketData(), refreshBalance(), refreshTransactions()]);
@@ -172,21 +184,24 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
 
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected";
 
-  const handleSend = () => {
-    if (activeChain?.type !== 'evm' && activeChain?.type !== 'svm' && activeChain?.type !== 'mvm') {
+  const handleSend = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    if (activeChain?.type !== 'evm' && activeChain?.type !== 'svm' && activeChain?.type !== 'mvm' && activeChain?.type !== 'xlm') {
       toast.show(`Send is not yet available for ${activeChain?.name || 'this chain'}. Coming soon!`, 'info');
       return;
     }
     navigation.navigate(SCREENS.SEND_PAYMENT, {});
-  };
+  }, [activeChain, navigation, toast]);
 
-  const handleReceive = () => {
+  const handleReceive = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     navigation.navigate(SCREENS.RECEIVE_QR);
-  };
+  }, [navigation]);
 
-  const handleScanQR = () => {
+  const handleScanQR = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     navigation.navigate(SCREENS.QR_SCANNER);
-  };
+  }, [navigation]);
 
   const handleOpenFiatGateway = () => {
     setShowFiatGateway(true);
@@ -203,6 +218,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
   };
 
   const handleSwap = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     void (async () => {
       const opened = await openExternalUrl('https://app.uniswap.org/swap');
       if (!opened) {
@@ -216,6 +232,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
   };
 
   const handleFaucet = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     if (!activeChain || !activeChain.isTestnet) return;
     
     void (async () => {
@@ -269,6 +286,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
   };
 
   const handleChainSelect = (chain: (typeof SUPPORTED_CHAINS)[0]) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     setActiveChain(chain);
     setShowChainSelector(false);
     toast.show(`Switched to ${chain.name}`, "success");
@@ -466,13 +484,14 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
             <SovereignCard backgroundColor={colors.bgSecondary} padding={0}>
               <View style={styles.chainSelectorContent}>
                 <View style={styles.chainSelectorLeft}>
-                  <Text style={styles.chainLabel}>NETWORK</Text>
+                  <Text style={styles.chainLabel}>
+                    [ {activeChain?.symbol || "ETH"} • {activeChain?.isTestnet ? "TESTNET" : "MAINNET"} ]
+                  </Text>
                   <Text style={styles.chainName}>
                     {activeChain?.name?.toUpperCase() || "ETHEREUM"}
                   </Text>
                 </View>
                 <View style={styles.chainSelectorRight}>
-                  <Text style={styles.chainSymbol}>{activeChain?.symbol || "ETH"}</Text>
                   <Icon name="chevron-down" size={16} color={colors.accent} />
                 </View>
               </View>
@@ -545,6 +564,11 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
               nativeBalance={nativeBalance}
               tokenBalances={tokenBalances}
               onSend={handleSend}
+              onTokenPress={(symbol) => {
+                if (activeChain?.key) {
+                  navigation.navigate(SCREENS.TOKEN_DETAIL, { tokenSymbol: symbol, chainKey: activeChain.key });
+                }
+              }}
               fiatRate={fiatRate}
             />
           </MotiView>
@@ -576,6 +600,22 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
         onClose={() => setShowFiatGateway(false)}
         onBuy={handleBuyCrypto}
         onSell={handleSellCrypto}
+        currentCurrency={nativeCurrency || 'USD'}
+        onOpenCurrencySelector={() => {
+          setShowFiatGateway(false);
+          setShowCurrencySelector(true);
+        }}
+      />
+
+      <CurrencySelectorModal
+        visible={showCurrencySelector}
+        activeCurrency={nativeCurrency || 'USD'}
+        onSelect={(currency) => {
+          setNativeCurrency(currency);
+          setShowCurrencySelector(false);
+          toast.show(`Native currency set to ${currency}`, "success");
+        }}
+        onClose={() => setShowCurrencySelector(false)}
       />
 
       <NetworkSelectorModal
@@ -584,6 +624,10 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
         chains={SUPPORTED_CHAINS}
         onSelect={handleChainSelect}
         onClose={() => setShowChainSelector(false)}
+        onAddCustomNetwork={() => {
+          setShowChainSelector(false);
+          navigation.navigate(SCREENS.ADD_CUSTOM_NETWORK);
+        }}
       />
 
       {/* Toast Notification */}

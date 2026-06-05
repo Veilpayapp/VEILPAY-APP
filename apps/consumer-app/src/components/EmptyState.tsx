@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { MotiView, MotiText } from 'moti';
 import { SovereignButton } from './SovereignButton';
 import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 
@@ -21,19 +22,46 @@ export function EmptyState({
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   return (
-    <View style={styles.container}>
-      <View style={styles.iconContainer}>{icon}</View>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.description}>{description}</Text>
+    <View style={styles.container} accessibilityRole="summary" accessibilityLabel={`${title}. ${description}`}>
+      <MotiView
+        from={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'spring', delay: 100 }}
+        style={styles.iconContainer}
+      >
+        {icon}
+      </MotiView>
+      <MotiText
+        from={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'spring', delay: 200 }}
+        style={styles.title}
+      >
+        {title}
+      </MotiText>
+      <MotiText
+        from={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'spring', delay: 300 }}
+        style={styles.description}
+      >
+        {description}
+      </MotiText>
       {actionLabel && onAction && (
-        <View style={styles.actionContainer}>
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'spring', delay: 400 }}
+          style={styles.actionContainer}
+        >
           <SovereignButton
             title={actionLabel}
             onPress={onAction}
             variant="primary"
             accessibilityLabel={actionLabel}
+            accessibilityRole="button"
           />
-        </View>
+        </MotiView>
       )}
     </View>
   );

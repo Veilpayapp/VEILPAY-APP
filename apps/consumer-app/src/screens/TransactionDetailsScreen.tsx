@@ -7,7 +7,9 @@
 import React, { useEffect, useMemo } from "react";
 import {
   View,
-  Text,  StyleSheet,  TouchableOpacity,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
   ScrollView,
   StatusBar,
   Linking,
@@ -187,7 +189,9 @@ export function TransactionDetailsScreen({ navigation, route }: TransactionDetai
   const formatAddress = (addr: string) => {
     if (!addr) return "0x…";
     return `${addr.slice(0, 8)}…${addr.slice(-6)}`;
-  };  return (    <SafeAreaView style={styles.container}>
+  };
+  return (
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.surfaceScreen} />
 
       {/* Hero Header */}
@@ -329,14 +333,14 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 0,
     borderWidth: 1,
     backgroundColor: colors.surfaceScreen,
   },
   statusDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: 0,
     marginRight: 6,
   },
   statusTagText: {
@@ -391,7 +395,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   ledgerContainer: {
     borderWidth: 1,
     borderColor: colors.accent + '30',
-    borderRadius: 8,
+    borderRadius: 0,
     backgroundColor: colors.surfaceCard,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -443,7 +447,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     padding: 8,
     marginLeft: 8,
     backgroundColor: colors.accent + '10',
-    borderRadius: 6,
+    borderRadius: 0,
   },
   ledgerHashGroup: {
     marginTop: 16,
@@ -455,7 +459,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     color: colors.textPrimary,
     backgroundColor: colors.surfaceScreen,
     padding: 12,
-    borderRadius: 6,
+    borderRadius: 0,
     borderWidth: 1,
     borderColor: colors.accent + '15',
     overflow: 'hidden',
@@ -472,7 +476,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.accent,
     paddingVertical: 12,
-    borderRadius: 4,
+    borderRadius: 0,
     gap: 8,
   },
   ledgerToggleText: {
@@ -491,7 +495,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.accent,
     paddingVertical: 12,
-    borderRadius: 4,
+    borderRadius: 0,
     gap: 8,
   },
   ledgerToggleTextOutline: {
@@ -505,7 +509,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     marginTop: 32,
     borderWidth: 1,
     borderColor: colors.success,
-    borderRadius: 4,
+    borderRadius: 0,
     overflow: 'hidden',
     position: 'relative',
   },

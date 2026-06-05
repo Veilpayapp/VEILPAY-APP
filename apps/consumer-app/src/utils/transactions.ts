@@ -291,6 +291,75 @@ export async function waitForTransaction(
   confirmations: number = 1
 ): Promise<TransactionResult> {
   try {
+    if (networkKey === 'stellar' || networkKey === 'stellar-testnet') {
+      const horizonUrl = networkKey === 'stellar' ? 'https://horizon.stellar.org' : 'https://horizon-testnet.stellar.org';
+      const res = await fetch(`${horizonUrl}/transactions/${txHash}`);
+      if (res.status === 404) {
+        throw new Error('Transaction not found');
+      }
+      if (!res.ok) {
+        throw new Error(`HTTP error ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.successful) {
+        return {
+          hash: txHash,
+          status: 'confirmed',
+          blockNumber: data.ledger,
+          gasUsed: data.fee_charged,
+        };
+      } else {
+        return { hash: txHash, status: 'failed', error: 'Stellar transaction failed' };
+      }
+    }
+
+    if (networkKey === 'solana' || networkKey === 'solana-devnet') {
+      const solRpc = networkKey === 'solana' ? 'https://api.mainnet-beta.solana.com' : 'https://api.devnet.solana.com';
+      const res = await fetch(solRpc, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'getSignatureStatuses',
+          params: [[txHash], { searchTransactionHistory: true }]
+        })
+      });
+      const data = await res.json();
+      const status = data?.result?.value?.[0];
+      if (!status) throw new Error('Transaction not found');
+      if (status.err) return { hash: txHash, status: 'failed', error: JSON.stringify(status.err) };
+      if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
+        return { hash: txHash, status: 'confirmed', blockNumber: status.slot };
+      }
+      throw new Error('Still pending');
+    }
+
+    if (networkKey === 'aptos') {
+      const aptosRpc = 'https://fullnode.mainnet.aptoslabs.com/v1';
+      const res = await fetch(`${aptosRpc}/transactions/by_hash/${txHash}`);
+      if (res.status === 404) {
+        throw new Error('Transaction not found');
+      }
+      if (!res.ok) {
+        throw new Error(`HTTP error ${res.status}`);
+      }
+      const data = await res.json();
+      if (data.type === 'pending_transaction') {
+        throw new Error('Still pending');
+      }
+      if (data.success) {
+        return {
+          hash: txHash,
+          status: 'confirmed',
+          blockNumber: Number(data.version),
+          gasUsed: data.gas_used,
+        };
+      } else {
+        return { hash: txHash, status: 'failed', error: data.vm_status || 'Aptos transaction failed' };
+      }
+    }
+
     const receipt = await poolCall(networkKey, (p) => p.waitForTransactionReceipt({ hash: txHash as `0x${string}`, confirmations }));
     
     if (!receipt) {
@@ -304,6 +373,14 @@ export async function waitForTransaction(
       gasUsed: receipt.gasUsed.toString(),
     };
   } catch (error: any) {
+    if (
+      error.message === 'Transaction not found' ||
+      error.message === 'Still pending' ||
+      error.name === 'TransactionReceiptNotFoundError' ||
+      error.name === 'TimeoutError'
+    ) {
+      throw error;
+    }
     return {
       hash: txHash,
       status: 'failed',

@@ -34,8 +34,8 @@ export function SovereignCard({
   padding = 24,
   backgroundColor,
   onPress,
-  borderColor = "transparent",
-  borderRadius = 24,
+  borderColor,
+  borderRadius = 0,
   accessibilityRole: accessibilityRoleProp,
   accessibilityLabel,
   accessibilityHint,
@@ -74,7 +74,7 @@ export function SovereignCard({
         {
           padding,
           backgroundColor: actualBackgroundColor,
-          borderColor,
+          borderColor: borderColor || colors.outlineVariant,
           borderRadius,
         },
       ]}
@@ -114,21 +114,8 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   cardSurface: {
     width: "100%",
     justifyContent: "center",
-    // Use a subtle border on Android to avoid harsh elevation shadows and opacity animation bugs.
-    // On iOS, use an extremely soft ambient shadow.
-    ...(Platform.OS === 'ios'
-      ? {
-          borderWidth: 0,
-          borderColor: "transparent",
-          shadowColor: "#000000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.04,
-          shadowRadius: 12,
-        }
-      : {
-          elevation: 0,
-          borderWidth: 1,
-          borderColor: colors.outlineSubtle,
-        }),
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    elevation: 0,
   },
 });

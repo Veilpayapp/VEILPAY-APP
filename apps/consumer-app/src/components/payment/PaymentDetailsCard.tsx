@@ -123,7 +123,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     backgroundColor: colors.accentContainer,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 0,
     gap: 6,
   },
   privacyBadgeText: {

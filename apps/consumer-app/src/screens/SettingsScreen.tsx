@@ -28,7 +28,9 @@ import { BottomNavBar } from "../components/BottomNavBar";
 import { Icon, IconName } from "../components/Icon";
 import { ScreenBackButton } from "../components/ScreenBackButton";
 import { NetworkSelectorModal } from "../components/NetworkSelectorModal";
+import { SecurityWarningModal } from "../components/SecurityWarningModal";
 import { setClipboardString } from "../utils/clipboard";
+import { CurrencySelectorModal } from "../components/CurrencySelectorModal";
 import { openExternalUrl } from "../utils/externalLink";
 import { clearStoredMnemonic, getStoredMnemonic } from "../utils/transactions";
 import { useBiometrics } from "../hooks/useBiometrics";
@@ -107,6 +109,20 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
   const toast = useToast();
   const { isAvailable, authenticate } = useBiometrics();
   const [showNetworkSelector, setShowNetworkSelector] = React.useState(false);
+  const [showCurrencySelector, setShowCurrencySelector] = React.useState(false);
+  const [warningModalConfig, setWarningModalConfig] = React.useState<{
+    visible: boolean;
+    title: string;
+    message: string;
+    confirmText: string;
+    onConfirm: () => void;
+  }>({
+    visible: false,
+    title: "",
+    message: "",
+    confirmText: "",
+    onConfirm: () => {},
+  });
 
   const privacyModeEnabled = defaultPrivacyLevel === "max";
 
@@ -188,13 +204,10 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
     toast.show(`Switched to ${chain.name}`, "success");
   };
 
-  const handleCurrencyToggle = () => {
-    const currencies = ['USD', 'EUR', 'GBP', 'INR'];
-    const currentIndex = currencies.indexOf(nativeCurrency || 'USD');
-    const nextIndex = (currentIndex + 1) % currencies.length;
-    const nextCurrency = currencies[nextIndex];
-    setNativeCurrency(nextCurrency);
-    toast.show(`Native currency set to ${nextCurrency}`, "success");
+  const handleCurrencySelect = (currency: string) => {
+    setNativeCurrency(currency);
+    setShowCurrencySelector(false);
+    toast.show(`Native currency set to ${currency}`, "success");
   };
   
   const handleNavPress = (screen: keyof RootStackParamList) => {
@@ -215,42 +228,40 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
   };
 
   const handleClearCache = () => {
-    Alert.alert("Clear Cache", "This will clear cached data. Your wallet will remain safe.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Clear",
-        style: "destructive",
-        onPress: () => toast.show("Cache cleared", "success"),
+    setWarningModalConfig({
+      visible: true,
+      title: "Clear Cache",
+      message: "This will clear cached data. Your wallet will remain safe.",
+      confirmText: "CLEAR CACHE",
+      onConfirm: () => {
+        toast.show("Cache cleared", "success");
+        setWarningModalConfig((prev) => ({ ...prev, visible: false }));
       },
-    ]);
+    });
   };
 
   const handleDisconnect = () => {
-    Alert.alert(
-      "Disconnect Wallet",
-      "Are you sure you want to disconnect? You will need your recovery phrase to reconnect.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Disconnect",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await clearStoredMnemonic();
-              disconnect();
+    setWarningModalConfig({
+      visible: true,
+      title: "Disconnect Wallet",
+      message: "Are you sure you want to disconnect? You will need your recovery phrase to reconnect.",
+      confirmText: "DISCONNECT",
+      onConfirm: async () => {
+        setWarningModalConfig((prev) => ({ ...prev, visible: false }));
+        try {
+          await clearStoredMnemonic();
+          disconnect();
 
-              toast.show("Wallet disconnected", "success");
-              navigation.reset({
-                index: 0,
-                routes: [{ name: SCREENS.ONBOARDING }],
-              });
-            } catch {
-              toast.show("Failed to disconnect wallet securely. Please try again.", "error");
-            }
-          },
-        },
-      ]
-    );
+          toast.show("Wallet disconnected", "success");
+          navigation.reset({
+            index: 0,
+            routes: [{ name: SCREENS.ONBOARDING }],
+          });
+        } catch {
+          toast.show("Failed to disconnect wallet securely. Please try again.", "error");
+        }
+      },
+    });
   };
 
   // Render settings section
@@ -402,8 +413,8 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
       label: "Native Currency",
       description: `Display balances in ${nativeCurrency || 'USD'}`,
       iconName: "globe",
-      type: "action",
-      onPress: handleCurrencyToggle,
+      type: "navigate",
+      onPress: () => setShowCurrencySelector(true),
     },
     {
       id: "theme",
@@ -507,17 +518,17 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
           </View>
 
           {/* Settings Sections */}
-          // eslint-disable-next-line no-render-in-render
+          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("WALLET", walletSection, 0)}
-          // eslint-disable-next-line no-render-in-render
+          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("SECURITY", securitySection, 1)}
-          // eslint-disable-next-line no-render-in-render
+          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("PRIVACY", privacySection, 2)}
-          // eslint-disable-next-line no-render-in-render
+          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("PREFERENCES", preferencesSection, 3)}
-          // eslint-disable-next-line no-render-in-render
+          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("ABOUT", aboutSection, 4)}
-          // eslint-disable-next-line no-render-in-render
+          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("DANGER ZONE", dangerSection, 5)}
 
           <View style={{ height: 120 }} />
@@ -532,7 +543,27 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
         chains={SUPPORTED_CHAINS}
         onSelect={handleNetworkSelect}
         onClose={() => setShowNetworkSelector(false)}
+        onAddCustomNetwork={() => {
+          setShowNetworkSelector(false);
+          navigation.navigate(SCREENS.ADD_CUSTOM_NETWORK);
+        }}
         title="SELECT ACTIVE NETWORK"
+      />
+
+      <CurrencySelectorModal
+        visible={showCurrencySelector}
+        activeCurrency={nativeCurrency || 'USD'}
+        onSelect={handleCurrencySelect}
+        onClose={() => setShowCurrencySelector(false)}
+      />
+
+      <SecurityWarningModal
+        visible={warningModalConfig.visible}
+        title={warningModalConfig.title}
+        message={warningModalConfig.message}
+        confirmText={warningModalConfig.confirmText}
+        onConfirm={warningModalConfig.onConfirm}
+        onCancel={() => setWarningModalConfig((prev) => ({ ...prev, visible: false }))}
       />
 
       <Toast
@@ -612,16 +643,19 @@ const themeStyles = (colors: any) => StyleSheet.create({
   },
   networkBadge: {
     alignSelf: "flex-start",
-    backgroundColor: colors.accent,
+    backgroundColor: colors.bgPrimary,
+    borderWidth: 1,
+    borderColor: colors.textPrimary,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 0,
   },
   networkText: {
     fontFamily: typography.fontFamily.mono,
     fontSize: 10,
-    color: colors.bgPrimary,
+    color: colors.textPrimary,
     fontWeight: "bold",
+    textTransform: 'uppercase',
   },
   section: {
     marginBottom: 24,
@@ -652,8 +686,10 @@ const themeStyles = (colors: any) => StyleSheet.create({
   iconBox: {
     width: 40,
     height: 40,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceCard,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.textPrimary,
+    backgroundColor: 'transparent',
     alignItems: "center",
     justifyContent: "center",
   },
@@ -667,10 +703,11 @@ const themeStyles = (colors: any) => StyleSheet.create({
     flex: 1,
   },
   settingsLabel: {
-    fontFamily: typography.fontFamily.body,
-    fontSize: 16,
-    fontWeight: "600",
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 14,
+    fontWeight: "bold",
     color: colors.textPrimary,
+    textTransform: 'uppercase',
   },
   settingsLabelDanger: {
     color: colors.error,

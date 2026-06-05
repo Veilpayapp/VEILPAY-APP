@@ -56,46 +56,36 @@ function getChainColor(chain: ChainConfig): string {
   return keyMap[chain.key] ?? CHAIN_TYPE_COLORS[chain.type] ?? '#F59E0B';
 }
 
-/** Compact badge showing a network icon + name */
-function ChainBadge({ chainKey, colors }: { chainKey: string; colors: any }) {
+function ChainBlock({ chainKey, colors }: { chainKey: string; colors: any }) {
   const chain = SUPPORTED_CHAINS.find((c) => c.key === chainKey);
-  if (!chain) {
-    return (
-      <View style={[badgeStyles.badge, { backgroundColor: colors.bgContainerHigh }]}>
-        <Text style={[badgeStyles.badgeText, { color: colors.textMuted }]} numberOfLines={1}>
-          {chainKey.toUpperCase()}
-        </Text>
-      </View>
-    );
-  }
-  const NetworkIconSVG = getNetworkIcon(chain.key);
-  const accentColor = getChainColor(chain);
+  const color = chain ? getChainColor(chain) : colors.textPrimary;
+  const env = chain ? (chain.isTestnet ? 'TESTNET' : 'MAINNET') : 'UNKNOWN';
+  const NetworkIconSVG = getNetworkIcon(chainKey);
   return (
-    <View style={[badgeStyles.badge, { backgroundColor: accentColor + '18' }]}>
-      <NetworkIconSVG size={14} />
-      <Text style={[badgeStyles.badgeText, { color: accentColor }]} numberOfLines={1}>
-        {chain.name.toUpperCase()}
+    <View style={[styles.chainBlock, { borderColor: color }]}>
+      <View style={{ opacity: 1 }}><NetworkIconSVG size={14} /></View>
+      <Text style={[styles.chainBlockText, { color }]} numberOfLines={1}>
+        [ {chain ? `${chain.symbol.toUpperCase()} • ${env}` : `${chainKey.toUpperCase()} • ${env}`} ]
       </Text>
     </View>
   );
 }
 
-const badgeStyles = StyleSheet.create({
-  badge: {
+const styles = StyleSheet.create({
+  chainBlock: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
+    borderWidth: 1,
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-    marginTop: 6,
+    paddingVertical: 4,
+    borderRadius: 0,
   },
-  badgeText: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 9,
+  chainBlockText: {
+    fontFamily: 'JetBrainsMono_400Regular',
+    fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 0.6,
+    letterSpacing: 1,
   },
 });
 
@@ -149,7 +139,7 @@ const chipStyles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 7,
-    borderRadius: 10,
+    borderRadius: 0,
     borderWidth: 1,
     marginRight: 8,
     marginBottom: 8,
@@ -163,7 +153,7 @@ const chipStyles = StyleSheet.create({
   dot: {
     width: 5,
     height: 5,
-    borderRadius: 2.5,
+    borderRadius: 0,
     marginLeft: 2,
   },
 });
@@ -371,7 +361,7 @@ export function AddressBookModal({
                   <Icon name="search" size={16} color={colors.textTertiary} />
                   <TextInput
                     style={styles.searchInput}
-                    placeholder="Search by name, address, or network…"
+                    placeholder="SEARCH LEDGER..."
                     placeholderTextColor={colors.textFaint}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
@@ -386,19 +376,14 @@ export function AddressBookModal({
                 </View>
               )}
 
-              {/* ── Empty state ── */}
               {filteredAddresses.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                  <View style={styles.emptyIconWrap}>
-                    <Icon name="wallet" size={28} color={colors.textFaint} />
-                  </View>
-                  <Text style={styles.emptyTitle}>
-                    {searchQuery ? 'No matches found' : 'No contacts yet'}
+                <View style={styles.emptyLedger}>
+                  <Text style={styles.emptyLedgerArt}>[ / / / / / / / / ]</Text>
+                  <Text style={styles.emptyLedgerTitle}>
+                    {searchQuery ? '0 MATCHES' : 'EMPTY LEDGER'}
                   </Text>
-                  <Text style={styles.emptySubtext}>
-                    {searchQuery
-                      ? 'Try a different search term'
-                      : 'Tap ADD to save a wallet address for quick access.'}
+                  <Text style={styles.emptyLedgerSub}>
+                    {searchQuery ? 'SYS.SEARCH_FAILED' : 'AWAITING_INPUT...'}
                   </Text>
                 </View>
               ) : (
@@ -411,35 +396,35 @@ export function AddressBookModal({
                     const isDeleting = deletingId === item.id;
                     return (
                       <Animated.View
-                        style={[styles.card, isDeleting && { opacity: 0.4 }]}
+                        style={[styles.ledgerRow, isDeleting && { opacity: 0.4 }]}
                       >
-                        {/* Left: chain color accent bar */}
-                        <ChainAccentBar chainKey={item.chain} />
-
-                        {/* Card body */}
                         <TouchableOpacity
-                          style={styles.cardContent}
-                          activeOpacity={0.75}
+                          style={styles.ledgerContent}
+                          activeOpacity={0.7}
                           onPress={() => {
                             onSelect(item.address);
                             onClose();
                           }}
                         >
-                          <Text style={styles.cardName}>{item.name}</Text>
-                          <Text style={styles.cardAddress} numberOfLines={1} ellipsizeMode="middle">
-                            {item.address}
-                          </Text>
-                          <ChainBadge chainKey={item.chain} colors={colors} />
+                          <View style={styles.ledgerHeader}>
+                            <Text style={styles.ledgerName}>{item.name.toUpperCase()}</Text>
+                            <ChainBlock chainKey={item.chain} colors={colors} />
+                          </View>
+                          
+                          <View style={styles.ledgerFooter}>
+                            <Text style={styles.ledgerAddress} numberOfLines={1} ellipsizeMode="middle">
+                              {item.address}
+                            </Text>
+                          </View>
                         </TouchableOpacity>
 
-                        {/* Delete button */}
                         <TouchableOpacity
-                          style={styles.deleteBtn}
+                          style={styles.ledgerDeleteBtn}
                           onPress={() => handleDelete(item.id)}
                           disabled={isDeleting}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                         >
-                          <Icon name="trash" size={18} color={colors.errorMuted} />
+                          <Text style={styles.ledgerDeleteText}>✕</Text>
                         </TouchableOpacity>
                       </Animated.View>
                     );
@@ -454,33 +439,19 @@ export function AddressBookModal({
   );
 }
 
-/** Thin vertical accent strip coloured by chain */
-function ChainAccentBar({ chainKey }: { chainKey: string }) {
-  const chain = SUPPORTED_CHAINS.find((c) => c.key === chainKey);
-  const color = chain ? getChainColor(chain) : '#F59E0B';
-  return <View style={[accentBarStyles.bar, { backgroundColor: color }]} />;
-}
-
-const accentBarStyles = StyleSheet.create({
-  bar: {
-    width: 3,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
-    alignSelf: 'stretch',
-  },
-});
+// Removed ChainAccentBar and accentBarStyles
 
 const themeStyles = (colors: any) =>
   StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.72)',
+      backgroundColor: colors.opacityOverlay,
       justifyContent: 'flex-end',
     },
     sheet: {
       backgroundColor: colors.bgSecondary,
-      borderTopLeftRadius: 28,
-      borderTopRightRadius: 28,
+      borderTopLeftRadius: 0,
+      borderTopRightRadius: 0,
       minHeight: '50%',
       maxHeight: '88%',
       paddingHorizontal: 20,
@@ -495,7 +466,7 @@ const themeStyles = (colors: any) =>
       width: 44,
       height: 4,
       backgroundColor: colors.outlineVariant,
-      borderRadius: 2,
+      borderRadius: 0,
       alignSelf: 'center',
       marginBottom: 20,
     },
@@ -515,7 +486,7 @@ const themeStyles = (colors: any) =>
     headerIconWrap: {
       width: 32,
       height: 32,
-      borderRadius: 10,
+      borderRadius: 0,
       backgroundColor: colors.accentContainer,
       alignItems: 'center',
       justifyContent: 'center',
@@ -527,7 +498,7 @@ const themeStyles = (colors: any) =>
       letterSpacing: -0.3,
     },
     addBtn: {
-      borderRadius: 10,
+      borderRadius: 0,
       overflow: 'hidden',
     },
     addBtnInner: {
@@ -537,7 +508,7 @@ const themeStyles = (colors: any) =>
       backgroundColor: colors.accent,
       paddingHorizontal: 14,
       paddingVertical: 8,
-      borderRadius: 10,
+      borderRadius: 0,
     },
     addBtnText: {
       fontFamily: 'Inter_700Bold',
@@ -555,90 +526,113 @@ const themeStyles = (colors: any) =>
     searchRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.bgContainer,
-      borderRadius: 12,
+      backgroundColor: colors.bgPrimary,
+      borderRadius: 0,
       borderWidth: 1,
-      borderColor: colors.outlineSubtle,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-      gap: 10,
-      marginBottom: 16,
+      borderBottomWidth: 3,
+      borderColor: colors.textPrimary,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      gap: 12,
+      marginBottom: 24,
     },
     searchInput: {
       flex: 1,
-      fontFamily: 'Inter_400Regular',
-      fontSize: 14,
+      fontFamily: 'JetBrainsMono_400Regular',
+      fontSize: 13,
       color: colors.textPrimary,
       paddingVertical: 0,
+      textTransform: 'uppercase',
     },
 
     // ── Empty state ──────────────────────────
-    emptyContainer: {
+    emptyLedger: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 56,
-    },
-    emptyIconWrap: {
-      width: 64,
-      height: 64,
-      borderRadius: 20,
-      backgroundColor: colors.bgContainer,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 20,
+      paddingVertical: 80,
       borderWidth: 1,
-      borderColor: colors.outlineSubtle,
+      borderColor: colors.outlineVariant,
+      borderStyle: 'dashed',
+      marginTop: 10,
     },
-    emptyTitle: {
-      fontFamily: 'Manrope_700Bold',
-      fontSize: 17,
+    emptyLedgerArt: {
+      fontFamily: 'JetBrainsMono_400Regular',
+      fontSize: 24,
+      color: colors.outlineVariant,
+      letterSpacing: 4,
+      marginBottom: 20,
+    },
+    emptyLedgerTitle: {
+      fontFamily: 'JetBrainsMono_400Regular',
+      fontSize: 16,
       color: colors.textPrimary,
+      fontWeight: '700',
+      letterSpacing: 2,
       marginBottom: 8,
     },
-    emptySubtext: {
-      fontFamily: 'Inter_400Regular',
-      fontSize: 13,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      lineHeight: 20,
-      paddingHorizontal: 24,
-    },
-
-    // ── Contact list ─────────────────────────
-    listContent: {
-      paddingBottom: 24,
-      gap: 10,
-    },
-    card: {
-      flexDirection: 'row',
-      backgroundColor: colors.bgContainer,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.outlineSubtle,
-      overflow: 'hidden',
-    },
-    cardContent: {
-      flex: 1,
-      paddingHorizontal: 14,
-      paddingVertical: 14,
-    },
-    cardName: {
-      fontFamily: 'Inter_600SemiBold',
-      fontSize: 15,
-      color: colors.textPrimary,
-      marginBottom: 4,
-    },
-    cardAddress: {
+    emptyLedgerSub: {
       fontFamily: 'JetBrainsMono_400Regular',
       fontSize: 12,
+      color: colors.textTertiary,
+      letterSpacing: 1,
+    },
+
+    // ── Contact list (Ledger Blocks) ─────────
+    listContent: {
+      paddingBottom: 24,
+      gap: 12,
+    },
+    ledgerRow: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      backgroundColor: colors.bgPrimary,
+      borderRadius: 0,
+    },
+    ledgerContent: {
+      flex: 1,
+      padding: 16,
+    },
+    ledgerHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    ledgerName: {
+      fontFamily: 'JetBrainsMono_400Regular',
+      fontSize: 14,
+      color: colors.textPrimary,
+      fontWeight: '700',
+      letterSpacing: 1.5,
+    },
+    ledgerFooter: {
+      backgroundColor: colors.bgTertiary,
+      paddingHorizontal: 8,
+      paddingVertical: 6,
+      alignSelf: 'flex-start',
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+    },
+    ledgerAddress: {
+      fontFamily: 'JetBrainsMono_400Regular',
+      fontSize: 11,
       color: colors.textSecondary,
     },
-    deleteBtn: {
-      paddingHorizontal: 16,
+    ledgerDeleteBtn: {
+      width: 48,
+      borderLeftWidth: 1,
+      borderLeftColor: colors.outlineVariant,
+      backgroundColor: colors.errorBg,
       justifyContent: 'center',
       alignItems: 'center',
-      borderLeftWidth: 1,
-      borderLeftColor: colors.outlineSubtle,
+    },
+    ledgerDeleteText: {
+      fontFamily: 'JetBrainsMono_400Regular',
+      fontSize: 18,
+      color: colors.error,
+      fontWeight: 'bold',
     },
 
     // ── Add Form ─────────────────────────────
@@ -656,7 +650,7 @@ const themeStyles = (colors: any) =>
     },
     input: {
       backgroundColor: colors.bgContainer,
-      borderRadius: 12,
+      borderRadius: 0,
       borderWidth: 1,
       borderColor: colors.outlineSubtle,
       paddingHorizontal: 16,
@@ -703,7 +697,7 @@ const themeStyles = (colors: any) =>
       gap: 8,
       paddingVertical: 12,
       paddingHorizontal: 22,
-      borderRadius: 100,
+      borderRadius: 0,
     },
     saveText: {
       fontFamily: 'Inter_700Bold',

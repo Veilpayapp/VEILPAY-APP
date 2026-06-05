@@ -85,9 +85,9 @@ export function DashboardQuickActions({
           <SovereignCard
             backgroundColor={prominent ? colors.accent : colors.bgSecondary}
             padding={0}
-            style={prominent ? { borderRadius: 36 } : { borderRadius: 28 }}
+            style={{ borderRadius: 0 }}
           >
-            <View style={[styles.actionIconCircle, prominent && styles.actionIconCircleProminent]}>
+            <View style={[styles.actionIconBlock, prominent && styles.actionIconBlockProminent]}>
               <Icon
                 name={iconName}
                 size={prominent ? 28 : 22}
@@ -120,21 +120,24 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     gap: 8,
     marginTop: -16,
   },
-  actionIconCircle: {
+  actionIconBlock: {
     width: 56,
     height: 56,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
-  actionIconCircleProminent: {
-    width: 72,
-    height: 72,
+  actionIconBlockProminent: {
+    width: 64,
+    height: 64,
   },
   actionLabel: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textMuted,
+    fontFamily: 'JetBrainsMono_400Regular',
+    fontSize: 10,
+    color: colors.textSecondary,
     letterSpacing: 1,
+    fontWeight: '700',
   },
   actionLabelProminent: {
     color: colors.accent,

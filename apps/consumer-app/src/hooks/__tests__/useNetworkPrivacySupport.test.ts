@@ -29,9 +29,9 @@ jest.mock('@react-navigation/native', () => ({
 describe('useNetworkPrivacySupport', () => {
   it('renders hooks without crashing', () => {
     for (const key of Object.keys(Module)) {
-      if (typeof Module[key] === 'function' && key.startsWith('use')) {
+      if (typeof (Module as any)[key] === 'function' && key.startsWith('use')) {
         try {
-          const {unmount} = renderHook(() => Module[key]({} as any, {} as any)); unmount();
+          const {unmount} = renderHook(() => (Module as any)[key]({} as any, {} as any)); unmount();
         } catch(e) {
           console.warn("Hook error:", key, e.message);
         }

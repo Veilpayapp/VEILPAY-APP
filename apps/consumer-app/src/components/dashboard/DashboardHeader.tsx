@@ -76,7 +76,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 0,
     gap: 6,
     borderWidth: 1,
     borderColor: colors.outlineSubtle,
@@ -84,7 +84,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
   accountIconContainer: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: 0,
     backgroundColor: colors.accentContainer,
     alignItems: 'center',
     justifyContent: 'center',

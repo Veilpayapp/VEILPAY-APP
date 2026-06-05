@@ -50,6 +50,8 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
   const [fiatRate, setFiatRate] = useState<number>(1.0);
   
   const lastFetchTime = useRef<number>(0);
+  const lastAddressRef = useRef<string | null>(null);
+  const lastChainRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const refresh = useCallback(async () => {
@@ -58,10 +60,13 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
     }
 
     const now = Date.now();
-    if (now - lastFetchTime.current < MIN_REFRESH_INTERVAL_MS) {
+    const isNewContext = lastAddressRef.current !== address || lastChainRef.current !== activeChain.key;
+    if (!isNewContext && now - lastFetchTime.current < MIN_REFRESH_INTERVAL_MS) {
       return;
     }
     lastFetchTime.current = now;
+    lastAddressRef.current = address;
+    lastChainRef.current = activeChain.key;
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();

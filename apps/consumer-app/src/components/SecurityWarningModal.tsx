@@ -74,7 +74,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
   },
   modalContent: {
     backgroundColor: colors.surfaceCard,
-    borderRadius: 24,
+    borderRadius: 0,
     padding: 24,
     width: '100%',
     maxWidth: 400,
@@ -85,7 +85,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
   iconContainer: {
     width: 64,
     height: 64,
-    borderRadius: 32,
+    borderRadius: 0,
     backgroundColor: colors.warningBg + '20',
     justifyContent: 'center',
     alignItems: 'center',

@@ -55,6 +55,7 @@ import {
 import { estimateTransactionGas, isGasExpensive, type GasEstimate } from '../utils/gasEstimator';
 import { TransactionResultModal } from '../components/payment/TransactionResultModal';
 import { FALLBACK_PRICES, getFiatExchangeRate, formatFiatValue, formatLastUpdated } from '../utils/priceFeed';
+import { triggerLightImpactHaptic } from '../utils/haptics';
 import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -99,16 +100,27 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
 
   const activeNetworkKey = useMemo(() => {
     const chainKey = activeChain?.key;
+    const chainType = activeChain?.type || 'evm';
+
+    const getTestnetFallback = (type: string) => {
+      switch (type) {
+        case 'svm': return 'solana-devnet';
+        case 'xlm': return 'stellar-testnet';
+        case 'mvm': return 'aptos'; // Aptos testnet uses same key currently or has no split in NETWORKS
+        default: return 'sepolia';
+      }
+    };
+
     if (!chainKey || !NETWORKS[chainKey]) {
-      return 'sepolia';
+      return getTestnetFallback(chainType);
     }
 
     if (NETWORKS[chainKey].isTestnet || mainnetTransactionsEnabled) {
       return chainKey;
     }
 
-    return 'sepolia';
-  }, [activeChain?.key, mainnetTransactionsEnabled]);
+    return getTestnetFallback(chainType);
+  }, [activeChain?.key, activeChain?.type, mainnetTransactionsEnabled]);
 
   const selectedNetwork = NETWORKS[activeNetworkKey];
   const faucetUrl = getFaucetUrl(activeNetworkKey);
@@ -302,6 +314,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
   }, [activeNetworkKey, address, amount, tokenPrice, isSendSupported, recipient, txStatus, activeChain?.type]);
 
   const handleBack = () => {
+    void triggerLightImpactHaptic();
     trackEvent(ANALYTICS_EVENTS.PAYMENT_CONFIRMATION_BACK_PRESSED, {
       network_key: activeNetworkKey,
       tx_status: txStatus,
@@ -362,6 +375,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
   };
 
   const handleViewOnExplorer = () => {
+    void triggerLightImpactHaptic();
     if (txResult?.hash) {
       trackEvent(ANALYTICS_EVENTS.PAYMENT_VIEW_EXPLORER_PRESSED, {
         network_key: activeNetworkKey,
@@ -375,6 +389,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
   };
 
   const handleGetTestnetETH = () => {
+    void triggerLightImpactHaptic();
     if (!faucetUrl) {
       trackEvent(ANALYTICS_EVENTS.PAYMENT_FAUCET_PRESSED, {
         network_key: activeNetworkKey,
@@ -635,7 +650,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
           </SovereignCard>
 
           {gasWarning && (
-            <SovereignCard backgroundColor={colors.warningBg} padding={0} style={{ marginBottom: 24 }}>
+            <SovereignCard backgroundColor="transparent" padding={0} style={{ marginBottom: 24, borderRadius: 0, borderWidth: 1, borderColor: colors.accent }}>
               <View style={styles.gasWarningContent}>
                 <View style={styles.gasWarningIconWrap}>
                   <Icon name="warning" size={20} color={colors.accent} />
@@ -677,7 +692,10 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
               <SovereignButton
                 title={isWalletVerificationPending ? 'VERIFYING WALLET...' : 'CONFIRM & SEND'}
                 variant={isSendDisabled ? 'outline' : 'primary'}
-                onPress={handleConfirmSend}
+                onPress={() => {
+                  void triggerLightImpactHaptic();
+                  handleConfirmSend();
+                }}
                 disabled={isSendDisabled}
               />
             )}
@@ -986,12 +1004,12 @@ const themeStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.outlineSubtle,
   },
   privacyBadge: {
-    backgroundColor: colors.accentContainer,
-    borderWidth: 0,
-    borderColor: 'transparent',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.accent,
     paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 0,
   },
   privacyBadgeText: {
     fontFamily: typography.fontFamily.mono,
@@ -1044,8 +1062,10 @@ const themeStyles = (colors: any) => StyleSheet.create({
   gasWarningIconWrap: {
     width: 32,
     height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.accentContainer,
+    borderRadius: 0,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,

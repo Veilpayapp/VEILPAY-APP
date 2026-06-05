@@ -71,11 +71,12 @@ const themeStyles = (colors: any) => StyleSheet.create({
   },
   inputContainer: {
     width: "100%",
-    backgroundColor: colors.surfaceInput,
-    borderRadius: 16,
-    borderWidth: 0,
-    borderColor: "transparent",
-    overflow: "hidden",
+    backgroundColor: colors.bgPrimary,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderBottomWidth: 3,
+    borderColor: colors.textPrimary,
+    overflow: "visible",
   },
   inputContainerMassive: {
     backgroundColor: "transparent",
@@ -92,8 +93,9 @@ const themeStyles = (colors: any) => StyleSheet.create({
     paddingVertical: 16,
   },
   textStandard: {
-    fontFamily: typography.fontFamily.body,
-    fontSize: 16,
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 14,
+    textTransform: 'uppercase',
   },
   textMassive: {
     fontFamily: typography.fontFamily.mono,

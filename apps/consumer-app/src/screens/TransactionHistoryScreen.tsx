@@ -29,6 +29,8 @@ import { BottomNavBar } from '../components/BottomNavBar';
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { TransactionSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
+import * as Haptics from 'expo-haptics';
 import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
 import type { TransactionRecord } from '../types/transactions';
@@ -111,6 +113,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setRefreshing(true);
     trackEvent(ANALYTICS_EVENTS.TRANSACTION_HISTORY_REFRESH_REQUESTED, {
       chain_key: activeChain?.key || 'unknown',
@@ -148,7 +151,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
   }, [activeChain?.key, filter, hasMoreTransactions, isLoadingTransactions, loadMoreTransactions]);
 
   // Handle transaction press
-  const handleTransactionPress = (transaction: TransactionRecord) => {
+  const handleTransactionPress = useCallback((transaction: TransactionRecord) => {
     trackEvent(ANALYTICS_EVENTS.TRANSACTION_DETAILS_OPENED_FROM_HISTORY, {
       transaction_type: transaction.type,
       transaction_status: transaction.status,
@@ -157,7 +160,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     });
 
     navigation.navigate(SCREENS.TRANSACTION_DETAILS, { transaction });
-  };
+  }, [navigation]);
   
   const handleNavPress = (screen: keyof RootStackParamList) => {
     // If it's a tab, navigate to it. History is not a tab but reached from Home.
@@ -173,6 +176,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
         key={value}
         style={[styles.filterButton, isActive && styles.filterButtonActive]}
         onPress={() => {
+          Haptics.selectionAsync().catch(() => {});
           setFilter(value);
           trackEvent(ANALYTICS_EVENTS.TRANSACTION_HISTORY_FILTER_CHANGED, {
             filter: value,
@@ -191,7 +195,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
   };
 
   // Render transaction item
-  const renderTransaction = ({ item }: { item: any }) => {
+  const renderTransaction = useCallback(({ item }: { item: any }) => {
     const isSent = item.type === 'sent';
     const amountColor = isSent ? colors.error : colors.success;
     const amountPrefix = isSent ? '-' : '+';
@@ -205,7 +209,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
         accessibilityLabel={`${isSent ? 'Sent' : 'Received'} ${item.amount} ${item.tokenSymbol}, ${item.status}`}
         accessibilityHint="Opens transaction details"
       >
-          <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ borderRadius: 16 }}>
+          <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ borderRadius: 0 }}>
           <View style={styles.transactionContent}>
             {/* Left side - Type icon and info */}
             <View style={styles.transactionLeft}>
@@ -241,17 +245,32 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
         </SovereignCard>
       </TouchableOpacity>
     );
-  };
+  }, [colors, styles, handleTransactionPress]);
 
   // Render empty state
-  const renderEmpty = () => (
-    isLoadingTransactions ? (
-      <View style={styles.skeletonContainer}>
-        {Array.from({ length: 5 }).map((_, index) => (
-          <TransactionSkeleton key={`tx-skeleton-${index}`} />
-        ))}
-      </View>
-    ) : (
+  const renderEmpty = () => {
+    if (isLoadingTransactions) {
+      return (
+        <View style={styles.skeletonContainer}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <TransactionSkeleton key={`tx-skeleton-${index}`} />
+          ))}
+        </View>
+      );
+    }
+
+    if (transactionsError) {
+      return (
+        <ErrorState
+          title="Could not load history"
+          description={transactionsError}
+          actionLabel="Try again"
+          onAction={handleRefresh}
+        />
+      );
+    }
+
+    return (
       <EmptyState
         icon={<Icon name="inbox" size={48} color={colors.textTertiary} />}
         title="No transactions yet"
@@ -268,8 +287,8 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
           navigation.navigate(SCREENS.SEND_PAYMENT, {});
         }}
       />
-    )
-  );
+    );
+  };
 
   const renderFooter = () => {
     if (!isLoadingTransactions || filteredTransactions.length === 0) {
@@ -394,7 +413,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     minHeight: 44,
-    borderRadius: 8,
+    borderRadius: 0,
     backgroundColor: colors.surfaceCard,
     alignItems: 'center',
     justifyContent: 'center',
@@ -433,7 +452,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
   typeIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -475,7 +494,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.accentContainer,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 0,
   },
   pendingText: {
     fontFamily: typography.fontFamily.mono,
@@ -487,7 +506,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.accentContainer,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 0,
   },
   privacyText: {
     fontFamily: typography.fontFamily.mono,

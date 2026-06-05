@@ -1,6 +1,6 @@
 import { fetchNativeBalance, fetchAllBalances, formatBalanceForDisplay, fetchERC20Balances } from '../balanceFetcher';
 import { poolCall } from '../rpcPool';
-import { useWalletStore } from '../stores/walletStore';
+import { useWalletStore } from '../../stores/walletStore';
 
 jest.mock('expo-secure-store', () => ({
   WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'WHEN_UNLOCKED_THIS_DEVICE_ONLY',

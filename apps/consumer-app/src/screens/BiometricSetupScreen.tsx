@@ -61,10 +61,12 @@ export function BiometricSetupScreen({ navigation }: BiometricSetupScreenProps) 
       try {
         const compatible = await LocalAuthentication.hasHardwareAsync();
         const enrolled = await LocalAuthentication.isEnrolledAsync();
-        setIsSupported(compatible && enrolled);
+        console.log(`[BiometricSetup] compatible: ${compatible}, enrolled: ${enrolled}`);
+        // In DEV, force true so we can at least see the UI for testing
+        setIsSupported((compatible && enrolled) || __DEV__);
       } catch (e) {
         console.warn('Biometric check failed:', e);
-        setIsSupported(false);
+        setIsSupported(__DEV__);
       } finally {
         setIsChecking(false);
       }

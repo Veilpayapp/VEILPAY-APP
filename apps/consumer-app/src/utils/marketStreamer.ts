@@ -46,7 +46,7 @@ class MarketStreamer {
     }
 
     const streams = Array.from(this.activeStreams).map(s => `${s}@ticker`).join('/');
-    const url = `wss://stream.binance.com:9443/stream?streams=${streams}`;
+    const url = `wss://data-stream.binance.vision:9443/stream?streams=${streams}`;
 
     this.ws = new WebSocket(url);
 

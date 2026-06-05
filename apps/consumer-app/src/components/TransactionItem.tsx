@@ -67,7 +67,7 @@ function TransactionItemComponent({ item, onPress }: TransactionItemProps) {
       accessibilityHint="Opens transaction details"
     >
       <Swipeable renderRightActions={renderRightActions} containerStyle={styles.swipeableContainer}>
-        <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ borderRadius: 16 }}>
+        <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ borderRadius: 0 }}>
           <View style={styles.transactionContent}>
             {/* Left side - Type icon and info */}
             <View style={styles.transactionLeft}>
@@ -79,7 +79,7 @@ function TransactionItemComponent({ item, onPress }: TransactionItemProps) {
               </Animated.View>
               <View style={styles.transactionInfo}>
               <Text style={styles.transactionType}>
-                {counterparty ? formatAddress(counterparty) : (isSent ? 'Sent' : 'Received')}
+                {counterparty ? formatAddress(counterparty) : (isSent ? 'SENT' : 'RECEIVED')}
               </Text>
               <Text style={styles.transactionTime}>{formatTime(item.timestamp)}</Text>
             </View>
@@ -141,7 +141,9 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   typeIcon: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -150,11 +152,11 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     flex: 1,
   },
   transactionType: {
-    fontFamily: typography.fontFamily.body,
-    fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'JetBrainsMono_400Regular',
+    fontSize: 14,
+    fontWeight: '700',
     color: colors.textPrimary,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   transactionTime: {
     fontFamily: typography.fontFamily.mono,
@@ -175,10 +177,12 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     gap: 8,
   },
   pendingBadge: {
-    backgroundColor: colors.accentContainer,
-    paddingHorizontal: 8,
+    backgroundColor: colors.bgPrimary,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.accent,
   },
   pendingText: {
     fontFamily: typography.fontFamily.mono,
@@ -187,10 +191,12 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     fontWeight: '600',
   },
   privacyBadge: {
-    backgroundColor: colors.accentContainer,
-    paddingHorizontal: 8,
+    backgroundColor: colors.bgPrimary,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: 4,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
   privacyText: {
     fontFamily: typography.fontFamily.mono,
@@ -199,14 +205,14 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     fontWeight: '600',
   },
   swipeableContainer: {
-    borderRadius: 16,
+    borderRadius: 0,
     overflow: 'hidden',
   },
   quickAction: {
     width: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    borderTopRightRadius: 16,
-    borderBottomRightRadius: 16,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
   },
 });

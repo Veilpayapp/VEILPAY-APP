@@ -13,6 +13,7 @@ interface NetworkSelectorModalProps {
   chains: ChainConfig[];
   onSelect: (chain: ChainConfig) => void;
   onClose: () => void;
+  onAddCustomNetwork?: () => void;
   title?: string;
 }
 
@@ -22,6 +23,7 @@ export function NetworkSelectorModal({
   chains = [],
   onSelect,
   onClose,
+  onAddCustomNetwork,
   title = 'SELECT NETWORK',
 }: NetworkSelectorModalProps) {
   const { colors } = useTheme();
@@ -84,8 +86,14 @@ export function NetworkSelectorModal({
               onChangeText={setSearchQuery}
               selectionColor={colors.accent}
               autoCorrect={false}
+              autoCapitalize="none"
               returnKeyType="search"
             />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Icon name="close" size={16} color={colors.textTertiary} />
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Network Selection Warning */}
@@ -100,7 +108,7 @@ export function NetworkSelectorModal({
             {mainnets.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionHeaderText}>PRODUCTION MAINNETS</Text>
+                  <Text style={styles.sectionHeaderText}>[ PRODUCTION MAINNETS ]</Text>
                   <View style={styles.sectionLine} />
                 </View>
                 {mainnets.map((chain) => (
@@ -119,7 +127,7 @@ export function NetworkSelectorModal({
             {testnets.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionHeaderText}>DEVELOPMENT TESTNETS</Text>
+                  <Text style={styles.sectionHeaderText}>[ DEVELOPMENT TESTNETS ]</Text>
                   <View style={styles.sectionLine} />
                 </View>
                 {testnets.map((chain) => (
@@ -140,6 +148,22 @@ export function NetworkSelectorModal({
                 <Text style={styles.emptyText}>No results found for "{searchQuery}"</Text>
               </View>
             )}
+
+            {onAddCustomNetwork && (
+              <View style={styles.addNetworkContainer}>
+                <TouchableOpacity
+                  style={styles.addNetworkButton}
+                  onPress={() => {
+                    import('../utils/haptics').then(h => h.triggerLightImpactHaptic());
+                    onAddCustomNetwork();
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Icon name="plus" size={14} color={colors.textPrimary} />
+                  <Text style={styles.addNetworkText}>ADD CUSTOM NETWORK</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             <View style={{ height: 40 }} />
           </ScrollView>
         </View>
@@ -151,13 +175,8 @@ export function NetworkSelectorModal({
 // Sub-component for individual chain items to keep the main modal clean
 function ChainItem({ chain, selected, onSelect, styles, colors }: any) {
   const getDisplayType = (chain: any) => {
-    if (chain.key === 'arbitrum' || chain.key === 'polygon') return 'L2 NETWORK';
-    if (chain.key === 'bsc') return 'BNB CHAIN';
-    if (chain.type === 'evm') return 'EVM NETWORK';
-    if (chain.type === 'svm') return 'SVM NETWORK';
-    if (chain.type === 'mvm') return 'MVM NETWORK';
-    if (chain.type === 'xlm') return 'STELLAR NETWORK';
-    return 'NETWORK';
+    const env = chain.isTestnet ? 'TESTNET' : 'MAINNET';
+    return `[ ${chain.symbol.toUpperCase()} • ${env} ]`;
   };
 
   return (
@@ -217,13 +236,13 @@ function ChainItem({ chain, selected, onSelect, styles, colors }: any) {
 const themeStyles = (colors: any) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: colors.opacityOverlayHeavy,
     justifyContent: 'flex-end',
   },
   content: {
     backgroundColor: colors.surfaceScreen,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
     paddingHorizontal: 24,
     paddingBottom: 20,
     maxHeight: '80%',
@@ -235,7 +254,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     width: 44,
     height: 5,
     backgroundColor: colors.outlineSubtle,
-    borderRadius: 2.5,
+    borderRadius: 0,
     alignSelf: 'center',
     marginTop: 12,
     marginBottom: 8,
@@ -259,14 +278,15 @@ const themeStyles = (colors: any) => StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceInput,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 14,
-    marginBottom: 20,
+    backgroundColor: colors.bgPrimary,
+    borderRadius: 0,
     borderWidth: 1,
-    borderColor: colors.outlineSubtle,
+    borderBottomWidth: 3,
+    borderColor: colors.textPrimary,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     gap: 12,
+    marginBottom: 24,
   },
   searchPlaceholder: {
     fontFamily: typography.fontFamily.body,
@@ -275,10 +295,11 @@ const themeStyles = (colors: any) => StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontFamily: typography.fontFamily.body,
-    fontSize: 14,
+    fontFamily: 'JetBrainsMono_400Regular',
+    fontSize: 13,
     color: colors.textPrimary,
     paddingVertical: 0,
+    textTransform: 'uppercase',
   },
   emptyState: {
     padding: 32,
@@ -322,7 +343,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: colors.warningBg + '15',
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 0,
     marginBottom: 20,
     gap: 10,
     alignItems: 'center',
@@ -347,24 +368,19 @@ const themeStyles = (colors: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    borderRadius: 18,
+    borderRadius: 0,
     backgroundColor: colors.surfaceCard,
     borderWidth: 1,
-    borderColor: colors.outlineSubtle,
+    borderColor: colors.outlineVariant,
   },
   chainItemActive: {
     backgroundColor: colors.accent,
     borderColor: colors.accent,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   chainIconContainer: {
     width: 38,
     height: 38,
-    borderRadius: 12,
+    borderRadius: 0,
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
@@ -415,10 +431,33 @@ const themeStyles = (colors: any) => StyleSheet.create({
   activeIndicator: {
     width: 20,
     height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 0,
+    backgroundColor: colors.opacityButtonBackdrop,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  addNetworkContainer: {
+    marginTop: 12,
+    paddingHorizontal: 4,
+  },
+  addNetworkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 0,
+    backgroundColor: colors.surfaceCard,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    borderStyle: 'dashed',
+    gap: 8,
+  },
+  addNetworkText: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 12,
+    color: colors.textPrimary,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });
 

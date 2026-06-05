@@ -1,6 +1,6 @@
 {
   "statistics": {
-    "detectionDate": "2026-05-31T17:31:19.625Z",
+    "detectionDate": "2026-06-05T12:29:56.176Z",
     "formats": {
       "typescript": {
         "sources": {
@@ -5241,14 +5241,14 @@
             "newClones": 0
           },
           "apps/consumer-app/src/screens/TransactionHistoryScreen.tsx": {
-            "lines": 159,
-            "tokens": 1555,
+            "lines": 174,
+            "tokens": 1631,
             "sources": 1,
             "clones": 2,
             "duplicatedLines": 30,
             "duplicatedTokens": 355,
-            "percentage": 18.87,
-            "percentageTokens": 22.83,
+            "percentage": 17.24,
+            "percentageTokens": 21.77,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
@@ -5258,9 +5258,9 @@
             "sources": 1,
             "clones": 1,
             "duplicatedLines": 18,
-            "duplicatedTokens": 204,
+            "duplicatedTokens": 187,
             "percentage": 15.65,
-            "percentageTokens": 12.27,
+            "percentageTokens": 11.24,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
@@ -5313,20 +5313,20 @@
             "newClones": 0
           },
           "apps/consumer-app/src/screens/ReceiveQRScreen.tsx": {
-            "lines": 167,
-            "tokens": 1792,
+            "lines": 171,
+            "tokens": 1681,
             "sources": 1,
             "clones": 2,
             "duplicatedLines": 30,
-            "duplicatedTokens": 337,
-            "percentage": 17.96,
-            "percentageTokens": 18.81,
+            "duplicatedTokens": 320,
+            "percentage": 17.54,
+            "percentageTokens": 19.04,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
           "apps/consumer-app/src/screens/QRScannerScreen.tsx": {
             "lines": 128,
-            "tokens": 1228,
+            "tokens": 1121,
             "sources": 1,
             "clones": 0,
             "duplicatedLines": 0,
@@ -5756,6 +5756,18 @@
             "newDuplicatedLines": 0,
             "newClones": 0
           },
+          "apps/consumer-app/src/components/ErrorState.tsx": {
+            "lines": 32,
+            "tokens": 376,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 25,
+            "duplicatedTokens": 250,
+            "percentage": 78.13,
+            "percentageTokens": 66.49,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
           "apps/consumer-app/src/components/ErrorBoundary.tsx": {
             "lines": 68,
             "tokens": 680,
@@ -5769,14 +5781,14 @@
             "newClones": 0
           },
           "apps/consumer-app/src/components/EmptyState.tsx": {
-            "lines": 10,
-            "tokens": 122,
+            "lines": 36,
+            "tokens": 372,
             "sources": 1,
-            "clones": 0,
-            "duplicatedLines": 0,
-            "duplicatedTokens": 0,
-            "percentage": 0,
-            "percentageTokens": 0,
+            "clones": 1,
+            "duplicatedLines": 25,
+            "duplicatedTokens": 250,
+            "percentage": 69.44,
+            "percentageTokens": 67.2,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
@@ -6298,14 +6310,14 @@
           }
         },
         "total": {
-          "lines": 16403,
-          "tokens": 142226,
-          "sources": 188,
-          "clones": 51,
-          "duplicatedLines": 872,
-          "duplicatedTokens": 9859,
-          "percentage": 5.32,
-          "percentageTokens": 6.93,
+          "lines": 16480,
+          "tokens": 142710,
+          "sources": 189,
+          "clones": 52,
+          "duplicatedLines": 897,
+          "duplicatedTokens": 10092,
+          "percentage": 5.44,
+          "percentageTokens": 7.07,
           "newDuplicatedLines": 0,
           "newClones": 0
         }
@@ -7134,9 +7146,9 @@
             "sources": 1,
             "clones": 4,
             "duplicatedLines": 69,
-            "duplicatedTokens": 532,
+            "duplicatedTokens": 515,
             "percentage": 9.75,
-            "percentageTokens": 7.09,
+            "percentageTokens": 6.86,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
@@ -7153,14 +7165,14 @@
             "newClones": 0
           },
           "apps/consumer-app/src/screens/TransactionHistoryScreen.tsx": {
-            "lines": 529,
-            "tokens": 4807,
+            "lines": 548,
+            "tokens": 4957,
             "sources": 1,
             "clones": 10,
             "duplicatedLines": 217,
             "duplicatedTokens": 1796,
-            "percentage": 41.02,
-            "percentageTokens": 37.36,
+            "percentage": 39.6,
+            "percentageTokens": 36.23,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
@@ -7170,9 +7182,9 @@
             "sources": 1,
             "clones": 1,
             "duplicatedLines": 35,
-            "duplicatedTokens": 273,
+            "duplicatedTokens": 238,
             "percentage": 6.38,
-            "percentageTokens": 5.09,
+            "percentageTokens": 4.44,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
@@ -7182,9 +7194,9 @@
             "sources": 1,
             "clones": 2,
             "duplicatedLines": 31,
-            "duplicatedTokens": 243,
+            "duplicatedTokens": 227,
             "percentage": 6.95,
-            "percentageTokens": 5.8,
+            "percentageTokens": 5.42,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
@@ -7225,26 +7237,26 @@
             "newClones": 0
           },
           "apps/consumer-app/src/screens/ReceiveQRScreen.tsx": {
-            "lines": 624,
-            "tokens": 5740,
+            "lines": 629,
+            "tokens": 5190,
             "sources": 1,
             "clones": 5,
             "duplicatedLines": 109,
-            "duplicatedTokens": 831,
-            "percentage": 17.47,
-            "percentageTokens": 14.48,
+            "duplicatedTokens": 763,
+            "percentage": 17.33,
+            "percentageTokens": 14.7,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
           "apps/consumer-app/src/screens/QRScannerScreen.tsx": {
             "lines": 464,
-            "tokens": 4128,
+            "tokens": 3692,
             "sources": 1,
             "clones": 1,
             "duplicatedLines": 12,
             "duplicatedTokens": 93,
             "percentage": 2.59,
-            "percentageTokens": 2.25,
+            "percentageTokens": 2.52,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
@@ -7333,14 +7345,14 @@
             "newClones": 0
           },
           "apps/consumer-app/src/screens/HomeDashboardScreen.tsx": {
-            "lines": 599,
-            "tokens": 5379,
+            "lines": 607,
+            "tokens": 5560,
             "sources": 1,
             "clones": 1,
             "duplicatedLines": 15,
             "duplicatedTokens": 212,
-            "percentage": 2.5,
-            "percentageTokens": 3.94,
+            "percentage": 2.47,
+            "percentageTokens": 3.81,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
@@ -7680,6 +7692,18 @@
             "newDuplicatedLines": 0,
             "newClones": 0
           },
+          "apps/consumer-app/src/components/ErrorState.tsx": {
+            "lines": 117,
+            "tokens": 1025,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 38,
+            "duplicatedTokens": 283,
+            "percentage": 32.48,
+            "percentageTokens": 27.61,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
           "apps/consumer-app/src/components/ErrorBoundary.tsx": {
             "lines": 251,
             "tokens": 2147,
@@ -7693,14 +7717,14 @@
             "newClones": 0
           },
           "apps/consumer-app/src/components/EmptyState.tsx": {
-            "lines": 71,
-            "tokens": 619,
+            "lines": 99,
+            "tokens": 892,
             "sources": 1,
-            "clones": 0,
-            "duplicatedLines": 0,
-            "duplicatedTokens": 0,
-            "percentage": 0,
-            "percentageTokens": 0,
+            "clones": 2,
+            "duplicatedLines": 38,
+            "duplicatedTokens": 283,
+            "percentage": 38.38,
+            "percentageTokens": 31.73,
             "newDuplicatedLines": 0,
             "newClones": 0
           },
@@ -7850,14 +7874,14 @@
           }
         },
         "total": {
-          "lines": 26391,
-          "tokens": 241570,
-          "sources": 128,
-          "clones": 117,
-          "duplicatedLines": 2447,
-          "duplicatedTokens": 23178,
-          "percentage": 9.27,
-          "percentageTokens": 9.59,
+          "lines": 26568,
+          "tokens": 242213,
+          "sources": 129,
+          "clones": 119,
+          "duplicatedLines": 2485,
+          "duplicatedTokens": 23393,
+          "percentage": 9.35,
+          "percentageTokens": 9.66,
           "newDuplicatedLines": 0,
           "newClones": 0
         }
@@ -10556,6 +10580,18 @@
             "newDuplicatedLines": 0,
             "newClones": 0
           },
+          "packages/circuits/finish_build.sh": {
+            "lines": 77,
+            "tokens": 362,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
           "packages/circuits/compile.sh": {
             "lines": 182,
             "tokens": 584,
@@ -10606,9 +10642,9 @@
           }
         },
         "total": {
-          "lines": 3706,
-          "tokens": 4459,
-          "sources": 43,
+          "lines": 3783,
+          "tokens": 4821,
+          "sources": 44,
           "clones": 0,
           "duplicatedLines": 0,
           "duplicatedTokens": 0,
@@ -11721,8 +11757,8 @@
             "newClones": 0
           },
           "packages/contracts-evm/src/Groth16Verifier.sol": {
-            "lines": 35,
-            "tokens": 90,
+            "lines": 229,
+            "tokens": 2247,
             "sources": 1,
             "clones": 0,
             "duplicatedLines": 0,
@@ -11794,8 +11830,8 @@
           }
         },
         "total": {
-          "lines": 1891,
-          "tokens": 12005,
+          "lines": 2085,
+          "tokens": 14162,
           "sources": 18,
           "clones": 0,
           "duplicatedLines": 0,
@@ -11972,14 +12008,14 @@
       }
     },
     "total": {
-      "lines": 133865,
-      "tokens": 1069175,
-      "sources": 976,
-      "clones": 403,
-      "duplicatedLines": 6836,
-      "duplicatedTokens": 66854,
-      "percentage": 5.11,
-      "percentageTokens": 6.25,
+      "lines": 134390,
+      "tokens": 1072821,
+      "sources": 979,
+      "clones": 406,
+      "duplicatedLines": 6899,
+      "duplicatedTokens": 67302,
+      "percentage": 5.13,
+      "percentageTokens": 6.27,
       "newDuplicatedLines": 0,
       "newClones": 0
     }
@@ -22720,17 +22756,17 @@
       "tokens": 0,
       "firstFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 341,
-        "end": 357,
+        "start": 360,
+        "end": 376,
         "startLoc": {
-          "line": 341,
+          "line": 360,
           "column": 7,
-          "position": 3363
+          "position": 3513
         },
         "endLoc": {
-          "line": 357,
+          "line": 376,
           "column": 25,
-          "position": 3480
+          "position": 3630
         }
       },
       "secondFile": {
@@ -22756,17 +22792,17 @@
       "tokens": 0,
       "firstFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 346,
-        "end": 362,
+        "start": 365,
+        "end": 381,
         "startLoc": {
-          "line": 346,
+          "line": 365,
           "column": 7,
-          "position": 3398
+          "position": 3548
         },
         "endLoc": {
-          "line": 362,
+          "line": 381,
           "column": 22,
-          "position": 3517
+          "position": 3667
         }
       },
       "secondFile": {
@@ -22808,16 +22844,16 @@
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\WalletConnectScreen.tsx",
         "start": 613,
-        "end": 362,
+        "end": 381,
         "startLoc": {
           "line": 613,
           "column": 3,
           "position": 6667
         },
         "endLoc": {
-          "line": 362,
+          "line": 381,
           "column": 25,
-          "position": 3520
+          "position": 3670
         }
       }
     },
@@ -22879,12 +22915,12 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 339,
+        "start": 358,
         "end": 484,
         "startLoc": {
-          "line": 339,
+          "line": 358,
           "column": 93,
-          "position": 3357
+          "position": 3507
         },
         "endLoc": {
           "line": 484,
@@ -22915,38 +22951,38 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 339,
-        "end": 356,
+        "start": 358,
+        "end": 375,
         "startLoc": {
-          "line": 339,
+          "line": 358,
           "column": 7,
-          "position": 3340
+          "position": 3490
         },
         "endLoc": {
-          "line": 356,
+          "line": 375,
           "column": 9,
-          "position": 3470
+          "position": 3620
         }
       }
     },
     {
       "format": "javascript",
       "lines": 19,
-      "fragment": "}\r\n          />\r\n\r\n          {/* Privacy Notice */}\r\n          <View style={styles.privacyNoticeContainer}>\r\n            <View style={styles.privacyHazardTape} />\r\n            <View style={styles.privacyContent}>\r\n              <Icon name=\"private\" size={24} color={colors.success} />\r\n              <View style={styles.privacyTextGroup}>\r\n                <Text style={styles.privacyTitle}>STEALTH ADDRESS ACTIVE</Text>\r\n                <Text style={styles.privacyText}>\r\n                  Each incoming payment uses a unique stealth address. Your real address stays private.\r\n                </Text>\r\n              </View>\r\n            </View>\r\n          </View>\r\n\r\n          {/* Network Info */}\r\n          <View style={styles.networkInfo",
+      "fragment": "}\n          />\n\n          {/* Privacy Notice */}\n          <View style={styles.privacyNoticeContainer}>\n            <View style={styles.privacyHazardTape} />\n            <View style={styles.privacyContent}>\n              <Icon name=\"private\" size={24} color={colors.success} />\n              <View style={styles.privacyTextGroup}>\n                <Text style={styles.privacyTitle}>STEALTH ADDRESS ACTIVE</Text>\n                <Text style={styles.privacyText}>\n                  Each incoming payment uses a unique stealth address. Your real address stays private.\n                </Text>\n              </View>\n            </View>\n          </View>\n\n          {/* Network Info */}\n          <View style={styles.networkInfo",
       "tokens": 0,
       "firstFile": {
         "name": "apps\\consumer-app\\src\\screens\\ReceiveQRScreen.tsx",
-        "start": 294,
-        "end": 312,
+        "start": 299,
+        "end": 317,
         "startLoc": {
-          "line": 294,
+          "line": 299,
           "column": 40,
-          "position": 2960
+          "position": 2730
         },
         "endLoc": {
-          "line": 312,
+          "line": 317,
           "column": 42,
-          "position": 3164
+          "position": 2917
         }
       },
       "secondFile": {
@@ -22968,21 +23004,21 @@
     {
       "format": "tsx",
       "lines": 18,
-      "fragment": ") => StyleSheet.create({\r\n  container: {\r\n    flex: 1,\r\n    backgroundColor: colors.surfaceScreen,\r\n  },\r\n  header: {\r\n    flexDirection: 'row',\r\n    alignItems: 'center',\r\n    justifyContent: 'space-between',\r\n    paddingHorizontal: 24,\r\n    height: 64,\r\n    // No-Line Rule: Removed borderBottomWidth and borderBottomColor\r\n  },\r\n  backButton: {\r\n    width: 80,\r\n    paddingVertical: 8,\r\n    minHeight: 44,\r\n    justifyContent: 'center',",
+      "fragment": ") => StyleSheet.create({\n  container: {\n    flex: 1,\n    backgroundColor: colors.surfaceScreen,\n  },\n  header: {\n    flexDirection: 'row',\n    alignItems: 'center',\n    justifyContent: 'space-between',\n    paddingHorizontal: 24,\n    height: 64,\n    // No-Line Rule: Removed borderBottomWidth and borderBottomColor\n  },\n  backButton: {\n    width: 80,\n    paddingVertical: 8,\n    minHeight: 44,\n    justifyContent: 'center',",
       "tokens": 0,
       "firstFile": {
         "name": "apps\\consumer-app\\src\\screens\\ReceiveQRScreen.tsx",
-        "start": 363,
-        "end": 380,
+        "start": 368,
+        "end": 385,
         "startLoc": {
-          "line": 363,
+          "line": 368,
           "column": 36,
-          "position": 3646
+          "position": 3358
         },
         "endLoc": {
-          "line": 380,
+          "line": 385,
           "column": 30,
-          "position": 3779
+          "position": 3474
         }
       },
       "secondFile": {
@@ -23004,21 +23040,21 @@
     {
       "format": "tsx",
       "lines": 17,
-      "fragment": ",\r\n    justifyContent: 'center',\r\n  },\r\n  backButtonText: {\r\n    fontFamily: typography.fontFamily.mono,\r\n    color: colors.textMuted,\r\n    fontSize: 13,\r\n    fontWeight: 'bold',\r\n  },\r\n  headerTitle: {\r\n    fontFamily: typography.fontFamily.mono,\r\n    fontSize: 16,\r\n    fontWeight: 'bold',\r\n    color: colors.textPrimary,\r\n    letterSpacing: 1,\r\n  },\r\n  content",
+      "fragment": ",\n    justifyContent: 'center',\n  },\n  backButtonText: {\n    fontFamily: typography.fontFamily.mono,\n    color: colors.textMuted,\n    fontSize: 13,\n    fontWeight: 'bold',\n  },\n  headerTitle: {\n    fontFamily: typography.fontFamily.mono,\n    fontSize: 16,\n    fontWeight: 'bold',\n    color: colors.textPrimary,\n    letterSpacing: 1,\n  },\n  content",
       "tokens": 0,
       "firstFile": {
         "name": "apps\\consumer-app\\src\\screens\\ReceiveQRScreen.tsx",
-        "start": 379,
-        "end": 395,
+        "start": 384,
+        "end": 400,
         "startLoc": {
-          "line": 379,
+          "line": 384,
           "column": 18,
-          "position": 3771
+          "position": 3467
         },
         "endLoc": {
-          "line": 395,
+          "line": 400,
           "column": 10,
-          "position": 3896
+          "position": 3576
         }
       },
       "secondFile": {
@@ -23040,21 +23076,21 @@
     {
       "format": "tsx",
       "lines": 36,
-      "fragment": ",\r\n  },\r\n  privacyHazardTape: {\r\n    position: 'absolute',\r\n    top: 0,\r\n    left: 0,\r\n    width: '100%',\r\n    height: 4,\r\n    backgroundColor: colors.success,\r\n  },\r\n  privacyContent: {\r\n    flexDirection: 'row',\r\n    padding: 20,\r\n    alignItems: 'center',\r\n    backgroundColor: colors.success + '15',\r\n  },\r\n  privacyTextGroup: {\r\n    marginLeft: 16,\r\n    flex: 1,\r\n  },\r\n  privacyTitle: {\r\n    fontFamily: typography.fontFamily.mono,\r\n    fontSize: 12,\r\n    color: colors.success,\r\n    fontWeight: \"900\",\r\n    letterSpacing: 1,\r\n    marginBottom: 4,\r\n  },\r\n  privacyText: {\r\n    fontFamily: typography.fontFamily.mono,\r\n    fontSize: 11,\r\n    color: colors.textPrimary,\r\n    lineHeight: 16,\r\n    opacity: 0.9,\r\n  },\r\n  networkInfo",
+      "fragment": ",\n  },\n  privacyHazardTape: {\n    position: 'absolute',\n    top: 0,\n    left: 0,\n    width: '100%',\n    height: 4,\n    backgroundColor: colors.success,\n  },\n  privacyContent: {\n    flexDirection: 'row',\n    padding: 20,\n    alignItems: 'center',\n    backgroundColor: colors.success + '15',\n  },\n  privacyTextGroup: {\n    marginLeft: 16,\n    flex: 1,\n  },\n  privacyTitle: {\n    fontFamily: typography.fontFamily.mono,\n    fontSize: 12,\n    color: colors.success,\n    fontWeight: \"900\",\n    letterSpacing: 1,\n    marginBottom: 4,\n  },\n  privacyText: {\n    fontFamily: typography.fontFamily.mono,\n    fontSize: 11,\n    color: colors.textPrimary,\n    lineHeight: 16,\n    opacity: 0.9,\n  },\n  networkInfo",
       "tokens": 0,
       "firstFile": {
         "name": "apps\\consumer-app\\src\\screens\\ReceiveQRScreen.tsx",
-        "start": 496,
-        "end": 531,
+        "start": 501,
+        "end": 536,
         "startLoc": {
-          "line": 496,
+          "line": 501,
           "column": 21,
-          "position": 4683
+          "position": 4262
         },
         "endLoc": {
-          "line": 531,
+          "line": 536,
           "column": 14,
-          "position": 4956
+          "position": 4500
         }
       },
       "secondFile": {
@@ -23096,16 +23132,16 @@
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\WithdrawFiatScreen.tsx",
         "start": 460,
-        "end": 366,
+        "end": 385,
         "startLoc": {
           "line": 460,
           "column": 7,
           "position": 4960
         },
         "endLoc": {
-          "line": 366,
+          "line": 385,
           "column": 20,
-          "position": 3547
+          "position": 3697
         }
       }
     },
@@ -23131,17 +23167,17 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\ReceiveQRScreen.tsx",
-        "start": 375,
-        "end": 403,
+        "start": 380,
+        "end": 408,
         "startLoc": {
-          "line": 375,
+          "line": 380,
           "column": 3,
-          "position": 3739
+          "position": 3439
         },
         "endLoc": {
-          "line": 403,
+          "line": 408,
           "column": 12,
-          "position": 3952
+          "position": 3624
         }
       }
     },
@@ -23167,17 +23203,17 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\ReceiveQRScreen.tsx",
-        "start": 359,
-        "end": 372,
+        "start": 364,
+        "end": 377,
         "startLoc": {
-          "line": 359,
+          "line": 364,
           "column": 27,
-          "position": 3622
+          "position": 3338
         },
         "endLoc": {
-          "line": 372,
+          "line": 377,
           "column": 26,
-          "position": 3722
+          "position": 3425
         }
       }
     },
@@ -23311,17 +23347,17 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\ReceiveQRScreen.tsx",
-        "start": 197,
-        "end": 208,
+        "start": 198,
+        "end": 209,
         "startLoc": {
-          "line": 197,
+          "line": 198,
           "column": 46,
-          "position": 1910
+          "position": 1733
         },
         "endLoc": {
-          "line": 208,
+          "line": 209,
           "column": 40,
-          "position": 2035
+          "position": 1850
         }
       }
     },
@@ -23384,16 +23420,16 @@
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\PrivacyLevelScreen.tsx",
         "start": 386,
-        "end": 403,
+        "end": 408,
         "startLoc": {
           "line": 386,
           "column": 25,
           "position": 3355
         },
         "endLoc": {
-          "line": 403,
+          "line": 408,
           "column": 12,
-          "position": 3952
+          "position": 3624
         }
       }
     },
@@ -23404,32 +23440,32 @@
       "tokens": 0,
       "firstFile": {
         "name": "apps\\consumer-app\\src\\screens\\HomeDashboardScreen.tsx",
-        "start": 498,
-        "end": 507,
+        "start": 506,
+        "end": 515,
         "startLoc": {
-          "line": 498,
+          "line": 506,
           "column": 41,
-          "position": 4639
+          "position": 4820
         },
         "endLoc": {
-          "line": 507,
+          "line": 515,
           "column": 91,
-          "position": 4722
+          "position": 4903
         }
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\HomeDashboardScreen.tsx",
-        "start": 450,
-        "end": 456,
+        "start": 458,
+        "end": 464,
         "startLoc": {
-          "line": 450,
+          "line": 458,
           "column": 11,
-          "position": 4136
+          "position": 4317
         },
         "endLoc": {
-          "line": 456,
+          "line": 464,
           "column": 91,
-          "position": 4208
+          "position": 4389
         }
       }
     },
@@ -23440,32 +23476,32 @@
       "tokens": 0,
       "firstFile": {
         "name": "apps\\consumer-app\\src\\screens\\HomeDashboardScreen.tsx",
-        "start": 515,
-        "end": 523,
+        "start": 523,
+        "end": 531,
         "startLoc": {
-          "line": 515,
+          "line": 523,
           "column": 37,
-          "position": 4768
+          "position": 4949
         },
         "endLoc": {
-          "line": 523,
+          "line": 531,
           "column": 91,
-          "position": 4846
+          "position": 5027
         }
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\HomeDashboardScreen.tsx",
-        "start": 450,
-        "end": 456,
+        "start": 458,
+        "end": 464,
         "startLoc": {
-          "line": 450,
+          "line": 458,
           "column": 11,
-          "position": 4136
+          "position": 4317
         },
         "endLoc": {
-          "line": 456,
+          "line": 464,
           "column": 91,
-          "position": 4208
+          "position": 4389
         }
       }
     },
@@ -23476,32 +23512,32 @@
       "tokens": 0,
       "firstFile": {
         "name": "apps\\consumer-app\\src\\screens\\HomeDashboardScreen.tsx",
-        "start": 533,
-        "end": 541,
+        "start": 541,
+        "end": 549,
         "startLoc": {
-          "line": 533,
+          "line": 541,
           "column": 55,
-          "position": 4904
+          "position": 5085
         },
         "endLoc": {
-          "line": 541,
+          "line": 549,
           "column": 91,
-          "position": 4982
+          "position": 5163
         }
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\HomeDashboardScreen.tsx",
-        "start": 450,
-        "end": 456,
+        "start": 458,
+        "end": 464,
         "startLoc": {
-          "line": 450,
+          "line": 458,
           "column": 11,
-          "position": 4136
+          "position": 4317
         },
         "endLoc": {
-          "line": 456,
+          "line": 464,
           "column": 91,
-          "position": 4208
+          "position": 4389
         }
       }
     },
@@ -23512,32 +23548,32 @@
       "tokens": 0,
       "firstFile": {
         "name": "apps\\consumer-app\\src\\screens\\HomeDashboardScreen.tsx",
-        "start": 548,
-        "end": 556,
+        "start": 556,
+        "end": 564,
         "startLoc": {
-          "line": 548,
+          "line": 556,
           "column": 33,
-          "position": 5022
+          "position": 5203
         },
         "endLoc": {
-          "line": 556,
+          "line": 564,
           "column": 91,
-          "position": 5100
+          "position": 5281
         }
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\HomeDashboardScreen.tsx",
-        "start": 450,
-        "end": 456,
+        "start": 458,
+        "end": 464,
         "startLoc": {
-          "line": 450,
+          "line": 458,
           "column": 11,
-          "position": 4136
+          "position": 4317
         },
         "endLoc": {
-          "line": 456,
+          "line": 464,
           "column": 91,
-          "position": 4208
+          "position": 4389
         }
       }
     },
@@ -23548,32 +23584,32 @@
       "tokens": 0,
       "firstFile": {
         "name": "apps\\consumer-app\\src\\screens\\HomeDashboardScreen.tsx",
-        "start": 407,
-        "end": 422,
+        "start": 415,
+        "end": 430,
         "startLoc": {
-          "line": 407,
+          "line": 415,
           "column": 31,
-          "position": 3718
+          "position": 3899
         },
         "endLoc": {
-          "line": 422,
+          "line": 430,
           "column": 8,
-          "position": 3930
+          "position": 4111
         }
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 98,
-        "end": 112,
+        "start": 100,
+        "end": 114,
         "startLoc": {
-          "line": 98,
+          "line": 100,
           "column": 20,
-          "position": 931
+          "position": 960
         },
         "endLoc": {
-          "line": 112,
+          "line": 114,
           "column": 20,
-          "position": 1156
+          "position": 1185
         }
       }
     },
@@ -23599,12 +23635,12 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 345,
+        "start": 364,
         "end": 628,
         "startLoc": {
-          "line": 345,
+          "line": 364,
           "column": 31,
-          "position": 3397
+          "position": 3547
         },
         "endLoc": {
           "line": 628,
@@ -24176,16 +24212,16 @@
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\WithdrawFiatScreen.tsx",
         "start": 259,
-        "end": 208,
+        "end": 209,
         "startLoc": {
           "line": 259,
           "column": 24,
           "position": 2704
         },
         "endLoc": {
-          "line": 208,
+          "line": 209,
           "column": 30,
-          "position": 2033
+          "position": 1848
         }
       }
     },
@@ -24212,16 +24248,16 @@
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\PrivacyLevelScreen.tsx",
         "start": 361,
-        "end": 403,
+        "end": 408,
         "startLoc": {
           "line": 361,
           "column": 9,
           "position": 3177
         },
         "endLoc": {
-          "line": 403,
+          "line": 408,
           "column": 12,
-          "position": 3952
+          "position": 3624
         }
       }
     },
@@ -24252,12 +24288,12 @@
         "startLoc": {
           "line": 376,
           "column": 24,
-          "position": 3409
+          "position": 3062
         },
         "endLoc": {
           "line": 386,
           "column": 4,
-          "position": 3510
+          "position": 3153
         }
       }
     },
@@ -24895,17 +24931,17 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 211,
-        "end": 223,
+        "start": 215,
+        "end": 227,
         "startLoc": {
-          "line": 211,
+          "line": 215,
           "column": 48,
-          "position": 2133
+          "position": 2207
         },
         "endLoc": {
-          "line": 223,
+          "line": 227,
           "column": 29,
-          "position": 2316
+          "position": 2390
         }
       }
     },
@@ -24931,17 +24967,17 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 222,
-        "end": 235,
+        "start": 226,
+        "end": 239,
         "startLoc": {
-          "line": 222,
+          "line": 226,
           "column": 49,
-          "position": 2305
+          "position": 2379
         },
         "endLoc": {
-          "line": 235,
+          "line": 239,
           "column": 53,
-          "position": 2493
+          "position": 2567
         }
       }
     },
@@ -24967,17 +25003,17 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 97,
-        "end": 424,
+        "start": 99,
+        "end": 432,
         "startLoc": {
-          "line": 97,
+          "line": 99,
           "column": 3,
-          "position": 923
+          "position": 952
         },
         "endLoc": {
-          "line": 424,
+          "line": 432,
           "column": 21,
-          "position": 3960
+          "position": 4141
         }
       }
     },
@@ -25003,17 +25039,17 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 225,
-        "end": 242,
+        "start": 229,
+        "end": 246,
         "startLoc": {
-          "line": 225,
+          "line": 229,
           "column": 21,
-          "position": 2352
+          "position": 2426
         },
         "endLoc": {
-          "line": 242,
+          "line": 246,
           "column": 25,
-          "position": 2538
+          "position": 2612
         }
       }
     },
@@ -25039,17 +25075,17 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 419,
-        "end": 441,
+        "start": 438,
+        "end": 460,
         "startLoc": {
-          "line": 419,
+          "line": 438,
           "column": 3,
-          "position": 3956
+          "position": 4106
         },
         "endLoc": {
-          "line": 441,
+          "line": 460,
           "column": 15,
-          "position": 4116
+          "position": 4266
         }
       }
     },
@@ -25075,17 +25111,17 @@
       },
       "secondFile": {
         "name": "apps\\consumer-app\\src\\screens\\TransactionHistoryScreen.tsx",
-        "start": 444,
-        "end": 498,
+        "start": 463,
+        "end": 517,
         "startLoc": {
-          "line": 444,
+          "line": 463,
           "column": 23,
-          "position": 4145
+          "position": 4295
         },
         "endLoc": {
-          "line": 498,
+          "line": 517,
           "column": 17,
-          "position": 4562
+          "position": 4712
         }
       }
     },
@@ -25266,6 +25302,114 @@
           "line": 66,
           "column": 30,
           "position": 696
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 26,
+      "fragment": "}\r\n      >\r\n        {icon}\r\n      </MotiView>\r\n      <MotiText\r\n        from={{ opacity: 0, translateY: 20 }}\r\n        animate={{ opacity: 1, translateY: 0 }}\r\n        transition={{ type: 'spring', delay: 200 }}\r\n        style={styles.title}\r\n      >\r\n        {title}\r\n      </MotiText>\r\n      <MotiText\r\n        from={{ opacity: 0, translateY: 20 }}\r\n        animate={{ opacity: 1, translateY: 0 }}\r\n        transition={{ type: 'spring', delay: 300 }}\r\n        style={styles.description}\r\n      >\r\n        {description}\r\n      </MotiText>\r\n      {actionLabel && onAction && (\r\n        <MotiView\r\n          from={{ opacity: 0, translateY: 20 }}\r\n          animate={{ opacity: 1, translateY: 0 }}\r\n          transition={{ type: 'spring', delay: 400 }}\r\n          style={styles.actionContainer}",
+      "tokens": 0,
+      "firstFile": {
+        "name": "apps\\consumer-app\\src\\components\\EmptyState.tsx",
+        "start": 30,
+        "end": 55,
+        "startLoc": {
+          "line": 30,
+          "column": 36,
+          "position": 325
+        },
+        "endLoc": {
+          "line": 55,
+          "column": 41,
+          "position": 575
+        }
+      },
+      "secondFile": {
+        "name": "apps\\consumer-app\\src\\components\\ErrorState.tsx",
+        "start": 39,
+        "end": 63,
+        "startLoc": {
+          "line": 39,
+          "column": 59,
+          "position": 424
+        },
+        "endLoc": {
+          "line": 63,
+          "column": 41,
+          "position": 660
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 18,
+      "fragment": "</MotiView>\r\n      )}\r\n    </View>\r\n  );\r\n}\r\n\r\nconst themeStyles = (colors: Colors) => StyleSheet.create({\r\n  container: {\r\n    flex: 1,\r\n    justifyContent: 'center',\r\n    alignItems: 'center',\r\n    paddingHorizontal: 32,\r\n    paddingVertical: 48,\r\n  },\r\n  iconContainer: {\r\n    marginBottom: 24,\r\n  },\r\n  title",
+      "tokens": 0,
+      "firstFile": {
+        "name": "apps\\consumer-app\\src\\components\\EmptyState.tsx",
+        "start": 64,
+        "end": 81,
+        "startLoc": {
+          "line": 64,
+          "column": 9,
+          "position": 618
+        },
+        "endLoc": {
+          "line": 81,
+          "column": 8,
+          "position": 739
+        }
+      },
+      "secondFile": {
+        "name": "apps\\consumer-app\\src\\components\\ErrorState.tsx",
+        "start": 75,
+        "end": 92,
+        "startLoc": {
+          "line": 75,
+          "column": 9,
+          "position": 742
+        },
+        "endLoc": {
+          "line": 92,
+          "column": 13,
+          "position": 846
+        }
+      }
+    },
+    {
+      "format": "tsx",
+      "lines": 22,
+      "fragment": ",\r\n  },\r\n  title: {\r\n    fontFamily: typography.fontFamily.headline,\r\n    fontSize: 20,\r\n    fontWeight: '600',\r\n    color: colors.textPrimary,\r\n    textAlign: 'center',\r\n    marginBottom: 8,\r\n  },\r\n  description: {\r\n    fontFamily: typography.fontFamily.body,\r\n    fontSize: 14,\r\n    color: colors.textMuted,\r\n    textAlign: 'center',\r\n    lineHeight: 20,\r\n  },\r\n  actionContainer: {\r\n    marginTop: 24,\r\n    width: '100%',\r\n  },\r\n});",
+      "tokens": 0,
+      "firstFile": {
+        "name": "apps\\consumer-app\\src\\components\\EmptyState.tsx",
+        "start": 79,
+        "end": 100,
+        "startLoc": {
+          "line": 79,
+          "column": 21,
+          "position": 730
+        },
+        "endLoc": {
+          "line": 100,
+          "column": 4,
+          "position": 892
+        }
+      },
+      "secondFile": {
+        "name": "apps\\consumer-app\\src\\components\\ErrorState.tsx",
+        "start": 97,
+        "end": 118,
+        "startLoc": {
+          "line": 97,
+          "column": 29,
+          "position": 884
+        },
+        "endLoc": {
+          "line": 118,
+          "column": 4,
+          "position": 1025
         }
       }
     },

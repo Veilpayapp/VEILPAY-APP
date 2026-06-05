@@ -15,6 +15,7 @@ import { ScreenBackButton } from '../components/ScreenBackButton';
 import { SovereignCard } from '../components/SovereignCard';
 import { Icon } from '../components/Icon';
 import { useWalletStore } from '../stores/walletStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { SCREENS } from '../constants/screens';
 import { triggerLightImpactHaptic } from '../utils/haptics';
 import { buildTransakDepositUrl } from '../utils/transak';
@@ -44,6 +45,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const { address } = useWalletStore();
+  const { nativeCurrency } = useSettingsStore();
   const { getOnrampUrl } = useOnramp();
   
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -55,7 +57,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
     setError(null);
     try {
       const baseUrl = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || '';
-      const response = await fetch(`${baseUrl}/api/v1/onramp/quotes?fiatAmount=${fiatAmount}&fiatCurrency=INR&cryptoToken=${cryptoToken}&flow=${flow}`);
+      const response = await fetch(`${baseUrl}/api/v1/onramp/quotes?fiatAmount=${fiatAmount}&fiatCurrency=${nativeCurrency}&cryptoToken=${cryptoToken}&flow=${flow}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch quotes');
@@ -91,7 +93,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
       const url = buildTransakDepositUrl({
         walletAddress: address,
         fiatAmount: parseFloat(fiatAmount),
-        fiatCurrency: 'INR',
+        fiatCurrency: nativeCurrency,
         cryptoToken: cryptoToken,
         network: chainKey, // Using chainKey directly, Transak utils might map it internally
         paymentMethod: 'credit_debit_card',
@@ -181,7 +183,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
                 onPress={() => handleProviderSelect(quote.provider)}
                 activeOpacity={0.9}
               >
-                <SovereignCard backgroundColor={colors.surfaceCard} style={styles.quoteCard}>
+                <SovereignCard backgroundColor="transparent" style={[styles.quoteCard, { borderRadius: 0, borderWidth: 1, borderColor: colors.textPrimary }] as any}>
                   <View style={styles.quoteHeader}>
                     <View style={styles.providerInfo}>
                       <Icon name={getProviderIcon(quote.provider)} size={18} color={colors.accent} />
@@ -267,8 +269,10 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   },
   errorContainer: {
     padding: 20,
-    backgroundColor: colors.errorBg,
-    borderRadius: 16,
+    backgroundColor: 'transparent',
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.error,
     alignItems: 'center',
   },
   errorText: {
@@ -278,14 +282,16 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: colors.error,
+    backgroundColor: 'transparent',
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.error,
   },
   retryText: {
     fontFamily: typography.fontFamily.mono,
-    color: '#fff',
+    color: colors.error,
     fontWeight: 'bold',
   },
   quotesContainer: {
@@ -313,10 +319,12 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     fontWeight: '700',
   },
   bestRateBadge: {
-    backgroundColor: colors.successBg,
+    backgroundColor: 'transparent',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.success,
     marginLeft: 8,
   },
   bestRateText: {

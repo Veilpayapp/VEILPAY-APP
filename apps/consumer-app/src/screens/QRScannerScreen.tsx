@@ -8,8 +8,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  Text,  StyleSheet,  TouchableOpacity,
-  Dimensions,  Animated,
+  Text,  StyleSheet,  TouchableOpacity,
+  Dimensions,  Animated,
   Linking,
   Platform,
 } from 'react-native';
@@ -23,7 +23,7 @@ import { validateAddress, ChainType } from '../stores/walletStore';
 import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../navigation/AppNavigator';type QRScannerScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'QRScanner'>;const { width, height } = Dimensions.get('window');
+import type { RootStackParamList } from '../navigation/AppNavigator';type QRScannerScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'QRScanner'>;const { width, height } = Dimensions.get('window');
 const SCAN_AREA_SIZE = width * 0.7;
 
 interface QRScannerScreenRouteParams {
@@ -70,10 +70,10 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
           toValue: 0,
           duration: 2000,
           useNativeDriver: true,
-        }),      ])
+        }),      ])
     );
     animation.start();
-    return () => animation.stop();  }, []);
+    return () => animation.stop();  }, []);
 
   const handleBarCodeScanned = (result: BarcodeScanningResult) => {
     if (scanned) return;
@@ -82,7 +82,7 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
     const { data } = result;
 
     // Try to validate as different chain types
-    const chainTypes: ChainType[] = ['evm', 'svm', 'mvm'];
+    const chainTypes: ChainType[] = ['evm', 'svm', 'mvm', 'xlm'];
     let validatedAddress: string | null = null;
     let detectedChainType: ChainType | null = null;
 
@@ -146,10 +146,10 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
     } else {
       Linking.openSettings();
     }
-  };  // Permission not granted
+  };  // Permission not granted
   if (!permission) {
     return (
-      <View style={styles.container}>        <Text style={styles.loadingText}>Requesting camera permission...</Text>
+      <View style={styles.container}>        <Text style={styles.loadingText}>Requesting camera permission...</Text>
       </View>
     );
   }
@@ -267,7 +267,7 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
             Point your camera at a wallet address QR code
           </Text>
           <Text style={styles.instructionSubtext}>
-            Supports Ethereum addresses and EIP-681 URIs
+            Supports Ethereum, Solana, Aptos, and Stellar addresses
           </Text>
         </View>
       </CameraView>
@@ -311,7 +311,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 22,
+    borderRadius: 0,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   closeIcon: {
@@ -330,7 +330,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 22,
+    borderRadius: 0,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   flashIcon: {
@@ -369,17 +369,17 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     left: 0,
     borderBottomWidth: 3,
     borderLeftWidth: 3,
-  },  cornerBottomRight: {
+  },  cornerBottomRight: {
     bottom: 0,
     right: 0,
     borderBottomWidth: 3,
     borderRightWidth: 3,
-  },  scanLine: {
+  },  scanLine: {
     position: 'absolute',
     left: 0,
     right: 0,
     height: 2,
-    backgroundColor: colors.accent,    shadowColor: colors.accent,
+    backgroundColor: colors.accent,    shadowColor: colors.accent,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 8,
@@ -434,7 +434,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     backgroundColor: colors.accent,
     paddingHorizontal: 32,
     paddingVertical: 16,
-    borderRadius: 8,
+    borderRadius: 0,
     marginBottom: 16,
     minHeight: 44,
     alignItems: 'center',

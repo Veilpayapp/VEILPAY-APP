@@ -209,6 +209,7 @@ export interface WalletAccount {
   id: string;
   name: string;
   index: number;
+  addresses?: Record<string, string | null>;
 }
 
 // Wallet connection state
@@ -245,6 +246,8 @@ export interface WalletState {
   
   addAccount: (name?: string) => Promise<void>;
   switchAccount: (accountId: string) => Promise<void>;
+  updateAccountName: (accountId: string, newName: string) => void;
+  deleteAccount: (accountId: string) => Promise<void>;
 }
 
 export const useWalletStore = create<WalletState>()(
@@ -299,8 +302,13 @@ export const useWalletStore = create<WalletState>()(
             const mnemonic = await getStoredMnemonic();
             if (mnemonic) {
               const activeAccount = accounts.find(a => a.id === activeAccountId) || accounts[0];
-              const derived = await deriveAddressesForAllChains(mnemonic, activeAccount.index);
-              allAddresses = { ...derived };
+              if (activeAccount.addresses) {
+                allAddresses = activeAccount.addresses;
+              } else {
+                const derived = await deriveAddressesForAllChains(mnemonic, activeAccount.index);
+                allAddresses = { ...derived };
+                accounts = accounts.map(a => a.id === activeAccount.id ? { ...a, addresses: derived } : a);
+              }
             }
           } catch (e) {
             console.warn('[walletStore] Multi-chain derivation failed, using single address', e);
@@ -399,9 +407,9 @@ export const useWalletStore = create<WalletState>()(
       
       addAccount: async (name?: string) => {
         const state = get() as WalletState;
-        const newIndex = state.accounts.length;
+        const newIndex = state.accounts.length > 0 ? Math.max(...state.accounts.map(a => a.index)) + 1 : 0;
         const newAccount: WalletAccount = {
-          id: newIndex.toString(),
+          id: Date.now().toString(),
           name: name || `Account ${newIndex + 1}`,
           index: newIndex,
         };
@@ -411,7 +419,7 @@ export const useWalletStore = create<WalletState>()(
         });
         
         // Immediately switch to the new account
-        await state.switchAccount(newAccount.id);
+        await get().switchAccount(newAccount.id);
       },
       
       switchAccount: async (accountId: string) => {
@@ -419,22 +427,48 @@ export const useWalletStore = create<WalletState>()(
         const account = state.accounts.find(a => a.id === accountId);
         if (!account) return;
         
+        // If we already have the derived addresses cached, switching is INSTANT
+        if (account.addresses) {
+          const activeChain = state.activeChain || SUPPORTED_CHAINS[0];
+          const newAddress = account.addresses[activeChain.type];
+          useTransactionStore.getState().clearTransactions();
+          
+          set({
+            activeAccountId: account.id,
+            addresses: account.addresses as any,
+            address: newAddress,
+            balance: null,
+            balanceUsd: null,
+            isConnecting: false,
+          });
+          return;
+        }
+
         set({ isConnecting: true });
+        
+        // Yield to the UI thread so the loading state can render before heavy derivation
+        await new Promise(resolve => setTimeout(resolve, 50));
         
         try {
           const mnemonic = await getStoredMnemonic();
           if (mnemonic) {
             const derived = await deriveAddressesForAllChains(mnemonic, account.index);
-            const activeChain = state.activeChain || SUPPORTED_CHAINS[0];
+            const activeChain = get().activeChain || SUPPORTED_CHAINS[0];
             const newAddress = derived[activeChain.type];
             
             // Clear transactions when switching accounts
             useTransactionStore.getState().clearTransactions();
             
+            // Cache the derived addresses so future switches to this account are instant
+            const updatedAccounts = get().accounts.map(a => a.id === account.id ? { ...a, addresses: derived } : a);
+            
             set({
+              accounts: updatedAccounts,
               activeAccountId: account.id,
               addresses: derived as any,
               address: newAddress,
+              balance: null,
+              balanceUsd: null,
               isConnecting: false,
             });
           } else {
@@ -443,6 +477,25 @@ export const useWalletStore = create<WalletState>()(
         } catch (error) {
           console.error('Failed to switch account:', error);
           set({ isConnecting: false });
+        }
+      },
+
+      updateAccountName: (accountId: string, newName: string) => {
+        set((state) => ({
+          accounts: state.accounts.map(a => a.id === accountId ? { ...a, name: newName } : a)
+        }));
+      },
+
+      deleteAccount: async (accountId: string) => {
+        const state = get() as WalletState;
+        if (state.accounts.length <= 1) return; // Cannot delete the last account
+        
+        const newAccounts = state.accounts.filter(a => a.id !== accountId);
+        set({ accounts: newAccounts });
+        
+        if (state.activeAccountId === accountId) {
+          // If we deleted the active account, switch to the first available one
+          await get().switchAccount(newAccounts[0].id);
         }
       },
     }),

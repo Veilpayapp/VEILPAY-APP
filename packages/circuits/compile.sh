@@ -32,7 +32,7 @@ BUILD="$CIRCUITS_DIR/build"
 CONTRACTS_DIR="$CIRCUITS_DIR/../contracts-evm/src"
 WRAPPER_TEMPLATE="$CONTRACTS_DIR/Groth16VerifierWrapperTemplate.txt"
 VERIFIER_TARGET="$CONTRACTS_DIR/Groth16Verifier.sol"
-PTAU="$CIRCUITS_DIR/pot12_final.ptau"
+PTAU="$CIRCUITS_DIR/pot14_final.ptau"
 
 test -f "$WRAPPER_TEMPLATE" || {
   echo "compile.sh: missing wrapper template at $WRAPPER_TEMPLATE" >&2
@@ -56,10 +56,10 @@ cp "$WITNESS_WASM" "$BUILD_TMP/withdraw.wasm"
 
 echo "[2/6] powers of tau (cached at $PTAU)..." >&2
 if [ ! -f "$PTAU" ]; then
-  snarkjs powersoftau new bn128 12 "$BUILD_TMP/pot12_0000.ptau" -v
-  snarkjs powersoftau contribute "$BUILD_TMP/pot12_0000.ptau" "$BUILD_TMP/pot12_0001.ptau" \
+  snarkjs powersoftau new bn128 14 "$BUILD_TMP/pot14_0000.ptau" -v
+  snarkjs powersoftau contribute "$BUILD_TMP/pot14_0000.ptau" "$BUILD_TMP/pot14_0001.ptau" \
     --name="dev" -v -e="random text"
-  snarkjs powersoftau prepare phase2 "$BUILD_TMP/pot12_0001.ptau" "$PTAU" -v
+  snarkjs powersoftau prepare phase2 "$BUILD_TMP/pot14_0001.ptau" "$PTAU" -v
 fi
 
 echo "[3/6] groth16 setup + contribute + beacon..." >&2

@@ -103,7 +103,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     marginTop: 16,
     padding: 12,
     backgroundColor: 'rgba(0,0,0,0.1)',
-    borderRadius: 12,
+    borderRadius: 0,
     alignItems: 'center',
     width: '100%',
   },
@@ -141,6 +141,6 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     textAlign: 'center',
     backgroundColor: 'rgba(255,255,255,0.2)',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 0,
   },
 });

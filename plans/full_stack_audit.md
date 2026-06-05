@@ -606,3 +606,13 @@ VeilPay is a **well-engineered, production-approaching codebase** with a distinc
 - **Summary of Changes:**
   - Score reflects findings captured by the consolidated production-readiness audit.
 - **Cross-Reference:** [PRODUCTION_READINESS_AUDIT.md](./PRODUCTION_READINESS_AUDIT.md)
+
+## Audit Refresh — 2026-06-05
+
+- **Refreshed:** 2026-06-05
+- **Auditor:** automated
+- **Plan_Score:** Security 95 | Code Quality 95 | UX Polish 85 | Performance 85 | Production-Readiness 95
+- **Disposition:** updated
+- **Summary of Changes:**
+  - Score reflects findings captured by the consolidated production-readiness audit.
+- **Cross-Reference:** [PRODUCTION_READINESS_AUDIT.md](./PRODUCTION_READINESS_AUDIT.md)

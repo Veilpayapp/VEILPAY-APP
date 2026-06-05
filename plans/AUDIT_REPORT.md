@@ -1,5 +1,5 @@
 > [!WARNING]
-> **SUPERSEDED 2026-05-31**
+> **SUPERSEDED 2026-06-05**
 > This plan has been superseded by [PRODUCTION_READINESS_AUDIT.md](./PRODUCTION_READINESS_AUDIT.md).
 > Refer to that document for the current production-readiness assessment.
 > Original content preserved below for historical reference.

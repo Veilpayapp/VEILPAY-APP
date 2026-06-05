@@ -6,6 +6,11 @@ import { derivePath } from 'ed25519-hd-key';
 import { Keypair } from '@solana/web3.js';
 import { Ed25519Account } from '@aptos-labs/ts-sdk';
 import { Buffer } from 'buffer';
+import * as StellarSdk from 'stellar-sdk';
+
+// Cache seed to avoid massive blocking delay on every account derivation
+let cachedMnemonic: string | null = null;
+let cachedSeed: Uint8Array | null = null;
 
 export async function deriveAddressesForAllChains(mnemonicWords: string[], accountIndex: number = 0): Promise<Record<ChainType, string>> {
   const mnemonicPhrase = mnemonicWords.join(' ');
@@ -19,9 +24,17 @@ export async function deriveAddressesForAllChains(mnemonicWords: string[], accou
   // 1. EVM
   const evmAddress = account.address.toLowerCase();
 
+  // Cache the seed derivation because mnemonicToSeed takes ~1.5s on mobile JS thread
+  let seed: Uint8Array;
+  if (cachedMnemonic === mnemonicPhrase && cachedSeed) {
+    seed = cachedSeed;
+  } else {
+    seed = await mnemonicToSeed(mnemonicPhrase);
+    cachedMnemonic = mnemonicPhrase;
+    cachedSeed = seed;
+  }
+
   // 2. SVM (Genuine Solana Derivation)
-  // Derive seed asynchronously to avoid blocking the main thread and ensure RN compatibility
-  const seed = await mnemonicToSeed(mnemonicPhrase);
   // Solana standard path: m/44'/501'/accountIndex'/0'
   const derivedSeed = derivePath(`m/44'/501'/${accountIndex}'/0'`, Buffer.from(seed).toString('hex')).key;
   const solanaKeypair = Keypair.fromSeed(derivedSeed);
@@ -35,9 +48,6 @@ export async function deriveAddressesForAllChains(mnemonicWords: string[], accou
   // 4. XLM (Genuine Stellar Derivation)
   // Derive Stellar standard path: m/44'/148'/${accountIndex}'
   const stellarDerivedSeed = derivePath(`m/44'/148'/${accountIndex}'`, Buffer.from(seed).toString('hex')).key;
-  // We use dynamic import for stellar-sdk to keep initial bundle size small, 
-  // just like we do in multiChainSigner.ts
-  const StellarSdk = await import('stellar-sdk');
   const stellarKeypair = StellarSdk.Keypair.fromRawEd25519Seed(stellarDerivedSeed as Buffer);
   const stellarAddress = stellarKeypair.publicKey();
 

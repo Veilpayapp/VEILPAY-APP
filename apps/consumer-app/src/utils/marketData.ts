@@ -187,7 +187,7 @@ async function fetchFromBinance(symbols: readonly string[]): Promise<MarketQuote
 
   // Binance API supports multiple symbols in one request via JSON array in query
   const symbolsJson = JSON.stringify(binanceSymbols);
-  const url = `https://api.binance.com/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbolsJson)}`;
+  const url = `https://data-api.binance.vision/api/v3/ticker/24hr?symbols=${encodeURIComponent(symbolsJson)}`;
 
   let data: BinanceTicker[] | null = null;  for (let attempt = 0; attempt <= BINANCE_MAX_RETRIES; attempt++) {
     try {      const response = await fetch(url, {

@@ -64,9 +64,14 @@ interface WithdrawFiatScreenProps {
       balance: state.balance,
     }))
   );
-  const biometricsEnabled = useSettingsStore((state: any) => state.biometricsEnabled);  const [cryptoAmount, setCryptoAmount] = useState("0.5");
-  const [selectedCurrency, setSelectedCurrency] = useState<FiatCurrency>("USD");
-  const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<PayoutMethodId>("neft_rtgs");  const [selectedNetwork, setSelectedNetwork] = useState<string>(activeChain?.key || "ethereum");
+  const { biometricsEnabled, nativeCurrency, setNativeCurrency } = useSettingsStore((state: any) => ({
+    biometricsEnabled: state.biometricsEnabled,
+    nativeCurrency: state.nativeCurrency,
+    setNativeCurrency: state.setNativeCurrency,
+  }));
+  const [cryptoAmount, setCryptoAmount] = useState("0.5");
+  const [selectedCurrency, setSelectedCurrency] = useState<FiatCurrency>((nativeCurrency as FiatCurrency) || "USD");
+  const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<PayoutMethodId>("neft_rtgs");  const [selectedNetwork, setSelectedNetwork] = useState<string>(activeChain?.key || "ethereum");
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoToken>(CRYPTO_TOKENS[0]);
   const [selectedPercent, setSelectedPercent] = useState<number | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
@@ -311,7 +316,8 @@ interface WithdrawFiatScreenProps {
               <TouchableOpacity
                 key={currency}
                 onPress={() => {
-                  setSelectedCurrency(currency);
+                  setSelectedCurrency(currency as FiatCurrency);
+                  setNativeCurrency(currency);
                   triggerLightImpactHaptic();
                 }}
                 style={[

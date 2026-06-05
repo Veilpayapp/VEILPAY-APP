@@ -39,6 +39,7 @@ import { FALLBACK_ETH_PRICE } from '../utils/priceFeed';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useMarketData } from '../hooks/useMarketData';
 import { formatFiat as formatFiatValue } from '../utils/formatters';
+import { USD_TO_FIAT, type FiatCurrency } from '../utils/transak';
 import type { PaymentToken } from '../types/tokens';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -83,7 +84,9 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
 
   const { getQuote } = useMarketData([selectedToken.symbol]);
   const marketData = getQuote(selectedToken.symbol);
-  const currentFiatPrice = marketData?.price || 0;
+  const currentFiatUsdPrice = marketData?.price || 0;
+  const fiatMultiplier = USD_TO_FIAT[(nativeCurrency as FiatCurrency) || 'USD'] || 1.0;
+  const currentFiatPrice = currentFiatUsdPrice * fiatMultiplier;
 
   const chainType = (activeChain?.type as ChainType) || 'evm';
   const trimmedRecipientAddress = recipientAddress.trim();
@@ -514,7 +517,7 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
               <View style={styles.fiatRow}>
                 <Text style={styles.fiatLabel}>
                   {isUsdInput
-                    ? `≈ ${parsedAmount.toFixed(6)} ${selectedToken.symbol}`
+                    ? `≈ ${(parsedAmount / currentFiatPrice).toFixed(6)} ${selectedToken.symbol}`
                     : `≈ ${nativeCurrency === 'EUR' ? '€' : nativeCurrency === 'GBP' ? '£' : nativeCurrency === 'INR' ? '₹' : '$'}${formatFiatValue(parsedAmount * currentFiatPrice)}`}
                 </Text>
               </View>
@@ -652,7 +655,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
   iconCircle: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 0,
     backgroundColor: colors.bgContainerHigh,
     alignItems: 'center',
     justifyContent: 'center',
@@ -741,7 +744,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.bgTertiary,
-    borderRadius: 8,
+    borderRadius: 0,
     paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 8,
@@ -763,7 +766,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 12,
+    borderRadius: 0,
     backgroundColor: colors.surfaceCard,
     borderWidth: 1,
     borderColor: colors.outlineSubtle,
@@ -816,7 +819,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(245, 158, 11, 0.08)',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 0,
     marginBottom: 24,
     borderWidth: 1,
     borderColor: 'rgba(245, 158, 11, 0.2)',

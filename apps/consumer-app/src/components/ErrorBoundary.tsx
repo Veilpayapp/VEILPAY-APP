@@ -10,7 +10,9 @@
  * - "Restart App" reloads the JS bundle via Updates module
  * - Tracks error count; after 3 crashes shows persistent-failure UI
  * - Reports all errors to Sentry
- */import React, { Component, ErrorInfo, ReactNode } from 'react';import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+ */
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import * as Updates from 'expo-updates';
 import { typography, lightColors, darkColors, type Colors } from '../styles/design-tokens';
 import { useWalletStore } from '../stores/walletStore';
@@ -173,8 +175,10 @@ export class ErrorBoundary extends Component<Props, State> {
 }
 
 /**
- * Functional wrapper for use with hooks */
-function withErrorBoundary<P extends object>(  WrappedComponent: React.ComponentType<P>,
+ * Functional wrapper for use with hooks
+ */
+function withErrorBoundary<P extends object>(
+  WrappedComponent: React.ComponentType<P>,
   fallback?: ReactNode,
   onError?: (error: Error, errorInfo: ErrorInfo) => void
 ): React.FC<P> {
@@ -223,7 +227,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   button: {
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 0,
     minHeight: 44,
     justifyContent: 'center',
   },

@@ -20,6 +20,7 @@ export const SCREENS = {
 
   // Priority 2: Wallet Management
   CREATE_WALLET: 'CreateWallet',
+  VERIFY_WALLET: 'VerifyWallet',
   IMPORT_WALLET: 'ImportWallet',
   SET_PASSWORD: 'SetPassword',
   BIOMETRIC_SETUP: 'BiometricSetup',
@@ -34,6 +35,7 @@ export const SCREENS = {
   // Priority 4: History & Settings
   TRANSACTION_HISTORY: 'TransactionHistory',
   TRANSACTION_DETAILS: 'TransactionDetails',
+  TOKEN_DETAIL: 'TokenDetail',
   SETTINGS: 'Settings',
   ADD_CUSTOM_NETWORK: 'AddCustomNetwork',
 
@@ -66,6 +68,7 @@ export const SCREEN_TITLES: Record<ScreenName, string> = {
   [SCREENS.PAYMENT_CONFIRMATION]: 'Confirm Payment',
   [SCREENS.PAYMENT_SUCCESS]: 'Payment Sent',
   [SCREENS.CREATE_WALLET]: 'Create Wallet',
+  [SCREENS.VERIFY_WALLET]: 'Verify Phrase',
   [SCREENS.IMPORT_WALLET]: 'Import Wallet',
   [SCREENS.SET_PASSWORD]: 'Set Cipher',
   [SCREENS.BIOMETRIC_SETUP]: 'Biometric Setup',
@@ -76,6 +79,7 @@ export const SCREEN_TITLES: Record<ScreenName, string> = {
   [SCREENS.QR_SCANNER]: 'Scan QR Code',
   [SCREENS.TRANSACTION_HISTORY]: 'History',
   [SCREENS.TRANSACTION_DETAILS]: 'Transaction',
+  [SCREENS.TOKEN_DETAIL]: 'Token Detail',
   [SCREENS.SETTINGS]: 'Settings',
   [SCREENS.ADD_CUSTOM_NETWORK]: 'Add Network',
   [SCREENS.DEPOSIT_CRYPTO]: 'Deposit',

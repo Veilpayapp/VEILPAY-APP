@@ -1,4 +1,5 @@
-import React from 'react';import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 
 // ─── SelectablePill ──────────────────────────────────────────────────────────
@@ -54,7 +55,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   pill: {
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 999,
+    borderRadius: 0,
     backgroundColor: colors.bgTertiary,
     borderWidth: 0,
     borderColor: 'transparent',
@@ -76,7 +77,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   },
   choiceCard: {
     padding: 16,
-    borderRadius: 18,
+    borderRadius: 0,
     backgroundColor: colors.surfaceCard,
     borderWidth: 2,
     borderColor: colors.surfaceElevated,

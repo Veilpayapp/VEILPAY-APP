@@ -10,7 +10,7 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import {
   View,
-  Text,  StyleSheet,  TouchableOpacity,
+  Text,  StyleSheet,  TouchableOpacity,
   ScrollView,
   StatusBar,
   Share,
@@ -44,7 +44,7 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 type ReceiveQRScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ReceiveQR'>;
 
 interface ReceiveQRScreenProps {
-  navigation: ReceiveQRScreenNavigationProp;}export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
+  navigation: ReceiveQRScreenNavigationProp;}export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const [requestedAmount, setRequestedAmount] = useState('');
@@ -74,8 +74,8 @@ interface ReceiveQRScreenProps {
       };
       const scheme = schemeMap[activeChain?.type || 'evm'] || 'ethereum';
       return `${scheme}:${address}?amount=${requestedAmount}`;
-    }    // Otherwise just encode the address
-    return address;  }, [address, requestedAmount]);
+    }    // Otherwise just encode the address
+    return address;  }, [address, requestedAmount]);
 
   const handleBack = () => {
     trackEvent(ANALYTICS_EVENTS.RECEIVE_QR_BACK_PRESSED, {
@@ -136,6 +136,7 @@ interface ReceiveQRScreenProps {
   };
 
   const handleRequestAmount = async () => {
+    void triggerLightImpactHaptic();
     if (!address) {
       trackEvent(ANALYTICS_EVENTS.RECEIVE_REQUEST_LINK_FAILED, {
         reason: 'missing_address',
@@ -212,7 +213,11 @@ interface ReceiveQRScreenProps {
 
           {/* QR Code Card */}
             <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
-            <View style={styles.qrContainer}>
+            <View 
+              style={styles.qrContainer}
+              accessibilityRole="image"
+              accessibilityLabel={`QR Code for wallet address ${address || 'not connected'}`}
+            >
               {address ? (
                 <QRCode
                   value={qrValue}
@@ -489,8 +494,8 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   },
   privacyNoticeContainer: {
     borderWidth: 1,
-    borderColor: colors.success,
-    borderRadius: 8,
+    borderColor: colors.textPrimary,
+    borderRadius: 0,
     overflow: 'hidden',
     position: 'relative',
     marginBottom: 24,
@@ -501,13 +506,13 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     left: 0,
     width: '100%',
     height: 4,
-    backgroundColor: colors.success,
+    backgroundColor: colors.textPrimary,
   },
   privacyContent: {
     flexDirection: 'row',
     padding: 20,
     alignItems: 'center',
-    backgroundColor: colors.success + '15',
+    backgroundColor: 'transparent',
   },
   privacyTextGroup: {
     marginLeft: 16,
@@ -547,13 +552,14 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   },
   warningBanner: {
     flexDirection: 'row',
-    backgroundColor: colors.warningBg + '15',
+    backgroundColor: 'transparent',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.textPrimary,
     marginBottom: 24,
     gap: 10,
     alignItems: 'center',
-    // No-Line Rule: Removed borderWidth and borderColor
   },
   warningText: {
     flex: 1,
@@ -572,7 +578,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     backgroundColor: colors.surfaceScreen,
     padding: 40,
     alignItems: 'center',
-    borderRadius: 24,
+    borderRadius: 0,
     borderWidth: 1,
     borderColor: colors.accent + '20',
   },
@@ -583,24 +589,22 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   },
   shareImageNetwork: {
     fontFamily: typography.fontFamily.mono,
-    fontSize: 14,    color: colors.accent,
+    fontSize: 14,    color: colors.accent,
     fontWeight: '900',
     letterSpacing: 2,
-  },  shareImageQrWrapper: {
+  },  shareImageQrWrapper: {
     padding: 24,
     backgroundColor: colors.surfaceCard,
-    borderRadius: 16,
-    marginBottom: 40,    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.05,
-    shadowRadius: 16,
-    elevation: 4,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.textPrimary,
+    marginBottom: 40,
   },
   shareImageAddressBox: {
     width: '100%',
     backgroundColor: colors.surfaceCard,
     padding: 24,
-    borderRadius: 12,
+    borderRadius: 0,
     borderWidth: 1,
     borderColor: colors.accent + '20',
     alignItems: 'center',
@@ -623,4 +627,3 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
 });
 
 export default ReceiveQRScreen;
-

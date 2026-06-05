@@ -13,6 +13,7 @@ import type { RouteProp } from "@react-navigation/native";
 import { OnboardingScreen } from "../screens/OnboardingScreen";
 import { WalletConnectScreen } from "../screens/WalletConnectScreen";
 import { CreateWalletScreen } from "../screens/CreateWalletScreen";
+import { VerifyWalletScreen } from "../screens/VerifyWalletScreen";
 import { ImportWalletScreen } from "../screens/ImportWalletScreen";
 import { HomeDashboardScreen } from "../screens/HomeDashboardScreen";
 import { SendPaymentScreen } from "../screens/SendPaymentScreen";
@@ -24,9 +25,12 @@ import { BackupWalletScreen } from "../screens/BackupWalletScreen";
 import { ExportPrivateKeyScreen } from "../screens/ExportPrivateKeyScreen";
 import { TransactionHistoryScreen } from "../screens/TransactionHistoryScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
+import { SetPasswordScreen } from "../screens/SetPasswordScreen";
+import { BiometricSetupScreen } from "../screens/BiometricSetupScreen";
 import { QRScannerScreen } from "../screens/QRScannerScreen";
 import { TransactionDetailsScreen } from "../screens/TransactionDetailsScreen";
 import { TokenSelectorScreen } from "../screens/TokenSelectorScreen";
+import { TokenDetailScreen } from "../screens/TokenDetailScreen";
 import { DepositCryptoScreen } from "../screens/DepositCryptoScreen";
 import { WithdrawFiatScreen } from "../screens/WithdrawFiatScreen";
 import {
@@ -84,6 +88,10 @@ export type RootStackParamList = {
   }
   | undefined;
   [SCREENS.CREATE_WALLET]: undefined;
+  [SCREENS.VERIFY_WALLET]: {
+    seedWords: string[];
+    derivedAddress: string;
+  };
   [SCREENS.IMPORT_WALLET]: undefined;
   [SCREENS.HOME]: undefined;
   [SCREENS.SEND_PAYMENT]: {
@@ -109,6 +117,7 @@ export type RootStackParamList = {
   [SCREENS.RECEIVE_QR]: undefined;
   [SCREENS.TRANSACTION_HISTORY]: undefined;
   [SCREENS.TRANSACTION_DETAILS]: { transaction: TransactionRecord };
+  [SCREENS.TOKEN_DETAIL]: { tokenSymbol: string; chainKey: string; };
   [SCREENS.SETTINGS]: undefined;
   [SCREENS.ADD_CUSTOM_NETWORK]: undefined;
   [SCREENS.DEPOSIT_CRYPTO]: undefined;
@@ -296,6 +305,11 @@ export function AppNavigator({ initialRouteName = SCREENS.ONBOARDING }: AppNavig
           options={getScreenTransition(SCREENS.CREATE_WALLET)}
         />
         <Stack.Screen
+          name={SCREENS.VERIFY_WALLET}
+          component={VerifyWalletScreen}
+          options={getScreenTransition(SCREENS.VERIFY_WALLET)}
+        />
+        <Stack.Screen
           name={SCREENS.IMPORT_WALLET}
           component={ImportWalletScreen}
           options={getScreenTransition(SCREENS.IMPORT_WALLET)}
@@ -365,6 +379,11 @@ export function AppNavigator({ initialRouteName = SCREENS.ONBOARDING }: AppNavig
           component={TransactionDetailsScreen}
           options={getScreenTransition(SCREENS.TRANSACTION_DETAILS)}
         />
+        <Stack.Screen
+          name={SCREENS.TOKEN_DETAIL}
+          component={TokenDetailScreen}
+          options={getScreenTransition(SCREENS.TOKEN_DETAIL)}
+        />
     <Stack.Screen
       name={SCREENS.SETTINGS}
       component={SettingsScreen}
@@ -401,6 +420,16 @@ export function AppNavigator({ initialRouteName = SCREENS.ONBOARDING }: AppNavig
           name={SCREENS.ONRAMP_AMOUNT}
           component={OnrampAmountScreen}
           options={getScreenTransition(SCREENS.ONRAMP_AMOUNT)}
+        />
+        <Stack.Screen
+          name={SCREENS.SET_PASSWORD}
+          component={SetPasswordScreen}
+          options={getScreenTransition(SCREENS.SET_PASSWORD)}
+        />
+        <Stack.Screen
+          name={SCREENS.BIOMETRIC_SETUP}
+          component={BiometricSetupScreen}
+          options={getScreenTransition(SCREENS.BIOMETRIC_SETUP)}
         />
       </Stack.Navigator>
     </NavigationContainer>

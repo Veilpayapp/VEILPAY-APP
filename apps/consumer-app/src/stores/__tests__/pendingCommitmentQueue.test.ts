@@ -11,9 +11,9 @@ describe('pendingCommitmentQueue', () => {
     expect(Module).toBeDefined();
     // execute all exported functions with dummy args to trigger coverage
     for (const key of Object.keys(Module)) {
-      if (typeof Module[key] === 'function') {
+      if (typeof (Module as any)[key] === 'function') {
         try {
-          Module[key]({} as any, {} as any, {} as any);
+          (Module as any)[key]({} as any, {} as any, {} as any);
         } catch(e) {}
       }
     }

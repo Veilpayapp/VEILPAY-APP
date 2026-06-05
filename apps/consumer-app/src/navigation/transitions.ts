@@ -126,18 +126,17 @@ export const screenTransitions: Record<string, NativeStackNavigationOptions> = {
     ...transitionPresets.none,
   },
   
-  // Payment Flow - Nav-level animation is 'none' so the internal
-  // FadeInDown (Reanimated) is the sole animation, preventing a flash.
+  // Payment Flow
   SendPayment: {
-    ...transitionPresets.none,
+    ...transitionPresets.push,
   },
   
   PrivacyLevel: {
-    ...transitionPresets.none,
+    ...transitionPresets.push,
   },
   
   PaymentConfirmation: {
-    ...transitionPresets.none,
+    ...transitionPresets.push,
   },
   
   PaymentSuccess: {
@@ -145,7 +144,7 @@ export const screenTransitions: Record<string, NativeStackNavigationOptions> = {
   },
   
   ReceiveQR: {
-    ...transitionPresets.none,
+    ...transitionPresets.push,
   },
   
   // Wallet Security & Backup

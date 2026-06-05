@@ -76,8 +76,8 @@ export function BottomNavBar({ currentScreen, onNavigate }: BottomNavBarProps) {
               >
                 <View style={styles.prominentInner}>
                   <Icon name={item.icon} size={28} color={colors.bgPrimary} />
+                  <Text style={styles.prominentLabel}>[{item.label.toUpperCase()}]</Text>
                 </View>
-                <Text style={styles.prominentLabel}>{item.label}</Text>
               </TouchableOpacity>
             );
           }
@@ -98,9 +98,9 @@ export function BottomNavBar({ currentScreen, onNavigate }: BottomNavBarProps) {
               accessibilityState={isActive ? { selected: true } : undefined}
             >
               <View style={[styles.iconWrapper, isActive && styles.iconWrapperActive]}>
-                <Icon name={item.icon} size={22} color={isActive ? colors.accent : colors.textTertiary} />
+                <Icon name={item.icon} size={22} color={isActive ? colors.bgPrimary : colors.textTertiary} />
               </View>
-              <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>{item.label}</Text>
+              <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>[{item.label.toUpperCase()}]</Text>
             </TouchableOpacity>
           );
         })}
@@ -116,7 +116,9 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: colors.bgPrimary,
-    // No-Line Rule: Removed borderTopWidth and borderTopColor
+    borderTopWidth: 1,
+    borderTopColor: colors.textPrimary,
+    overflow: 'visible',
   },
   navBar: {
     flexDirection: "row",
@@ -124,22 +126,26 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     justifyContent: "space-around",
     paddingHorizontal: 8,
     height: TAB_BAR_HEIGHT,
+    overflow: 'visible',
   },
   navItem: {
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
+    borderRightWidth: 1,
+    borderRightColor: colors.outlineVariant,
+    height: '100%',
   },
   iconWrapper: {
     width: 44,
     height: 44,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 12,
+    borderRadius: 0,
     backgroundColor: "transparent",
   },
   iconWrapperActive: {
-    backgroundColor: `${colors.accent}20`,
+    backgroundColor: colors.textPrimary,
   },
   navLabel: {
     fontFamily: typography.fontFamily.mono,
@@ -154,24 +160,27 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   },
   prominentButton: {
     alignItems: "center",
-    justifyContent: "center",
-    flex: 1.2,    marginTop: PROMINENT_OFFSET,
-  },  prominentInner: {
+    justifyContent: "flex-start",
+    flex: 1.2,
+    height: '100%',
+    borderRightWidth: 1,
+    borderRightColor: colors.outlineVariant,
+  },
+  prominentInner: {
     width: PROMINENT_BUTTON_SIZE,
     height: PROMINENT_BUTTON_SIZE,
-    borderRadius: PROMINENT_BUTTON_SIZE / 2,
-    backgroundColor: colors.accent,    alignItems: "center",
+    marginTop: PROMINENT_OFFSET,
+    borderRadius: 0,
+    backgroundColor: colors.accent,
+    alignItems: "center",
     justifyContent: "center",
-    // No-Line Rule: Removed borderWidth and borderColor    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 8,
+    borderWidth: 1,
+    borderColor: colors.textPrimary,
   },
   prominentLabel: {
     fontFamily: typography.fontFamily.mono,
     fontSize: 10,
-    color: colors.accent,
+    color: colors.bgPrimary,
     marginTop: 4,
     fontWeight: "bold",
     letterSpacing: 0.5,

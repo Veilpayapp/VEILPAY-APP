@@ -251,19 +251,25 @@ backgroundColor={isSelected ? colors.bgTertiary : colors.bgSecondary}
       </View>
 
       <Animated.View entering={FadeInDown.duration(260)} style={styles.content}>
-        <SovereignCard backgroundColor={colors.surfaceCard} style={styles.searchCard}>
+        <View style={styles.searchContainer}>
+          <Icon name="search" size={18} color={colors.textTertiary} />
           <TextInput
             style={styles.searchInput}
             value={query}
             onChangeText={setQuery}
-            placeholder="Search token"
+            placeholder="SEARCH TOKEN..."
             placeholderTextColor={colors.textFaint}
             autoCapitalize="none"
             autoCorrect={false}
             accessibilityLabel="Search token"
             accessibilityHint="Filters the token list by name or symbol"
           />
-        </SovereignCard>
+          {query.length > 0 && (
+            <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Icon name="close" size={16} color={colors.textTertiary} />
+            </TouchableOpacity>
+          )}
+        </View>
 
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -335,14 +341,26 @@ const themeStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
   },
-  searchCard: {
-    marginBottom: 16,
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgPrimary,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderBottomWidth: 3,
+    borderColor: colors.textPrimary,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+    marginBottom: 24,
   },
   searchInput: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 14,
+    flex: 1,
+    fontFamily: 'JetBrainsMono_400Regular',
+    fontSize: 13,
     color: colors.textPrimary,
-    padding: 14,
+    paddingVertical: 0,
+    textTransform: 'uppercase',
   },
   listContent: {
     paddingBottom: 24,

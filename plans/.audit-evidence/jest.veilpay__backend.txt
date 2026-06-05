@@ -1,5 +1,58 @@
-PASS src/controllers/__tests__/webhookController.test.ts (16.627 s)
-PASS src/controllers/__tests__/invoiceController.test.ts (16.837 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/middleware/__tests__/auth.test.ts (42.143 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/controllers/__tests__/paymentController.test.ts (49.032 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/controllers/__tests__/webhookController.test.ts (48.974 s)
+PASS src/middleware/__tests__/rateLimiter.test.ts (49.076 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/controllers/__tests__/onrampController.replay.property.test.ts (49.96 s)
+  ● Console
+
+    console.log
+      Order order-1 updated to completed
+
+      at log (src/controllers/onrampController.ts:313:13)
+
+    console.log
+      Order order-1 updated to completed
+
+      at log (src/controllers/onrampController.ts:313:13)
+
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/controllers/__tests__/merchantController.test.ts (51.126 s)
+PASS src/controllers/__tests__/invoiceController.test.ts (51.701 s)
   ● Console
 
     console.error
@@ -33,77 +86,87 @@ PASS src/controllers/__tests__/invoiceController.test.ts (16.837 s)
       at next (src/controllers/invoiceController.ts:77:5)
       at Object.<anonymous> (src/controllers/__tests__/invoiceController.test.ts:117:7)
 
-PASS src/controllers/__tests__/paymentController.test.ts (16.916 s)
-PASS src/controllers/__tests__/onrampController.replay.property.test.ts (16.833 s)
-  ● Console
-
-    console.log
-      Order order-1 updated to completed
-
-      at log (src/controllers/onrampController.ts:313:13)
-
-    console.log
-      Order order-1 updated to completed
-
-      at log (src/controllers/onrampController.ts:313:13)
-
-PASS src/middleware/__tests__/auth.test.ts (17.389 s)
-PASS src/middleware/__tests__/rateLimiter.test.ts (17.517 s)
-PASS src/routes/__tests__/onramp.test.ts
-PASS src/controllers/__tests__/merchantController.test.ts (18.817 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/controllers/__tests__/relayerController.revert.property.test.ts (54.667 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/lib/__tests__/onramp.test.ts (7.72 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/controllers/__tests__/relayerController.validation.property.test.ts (60.157 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/controllers/__tests__/relayerController.503.property.test.ts (60.746 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/controllers/__tests__/relayerController.forwarding.property.test.ts (61.176 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/routes/__tests__/relayer.test.ts (9.827 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/routes/__tests__/webhook.test.ts (12.778 s)
+PASS src/routes/__tests__/payment.test.ts (8.231 s)
+PASS src/lib/__tests__/chain.test.ts (14.669 s)
 
   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
+    Attempted to log "[Redis] Connection error: connect ETIMEDOUT".
 
     [0m[0m
 
       at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
       at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
       at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+      at ../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:178:61)
 
-PASS src/utils/__tests__/metrics.test.ts
-PASS src/routes/__tests__/merchant.test.ts
-PASS src/controllers/__tests__/relayerController.revert.property.test.ts (19.644 s)
-PASS src/routes/__tests__/webhook.test.ts
-PASS src/routes/__tests__/payment.test.ts
-PASS src/routes/__tests__/health.test.ts
-PASS src/controllers/__tests__/relayerController.forwarding.property.test.ts (19.95 s)
-PASS src/jobs/__tests__/webhookWorker.test.ts
-PASS src/jobs/__tests__/webhookDelivery.test.ts
-[2026-05-31 22:58:46.958 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
-[2026-05-31 22:58:46.941 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
-[2026-05-31 22:58:46.974 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
-[2026-05-31 22:58:46.975 +0530] [33mWARN[39m: [36m[WebhookWorker] No webhook URL for merchant m-1, skipping[39m
-[2026-05-31 22:58:47.111 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
-[2026-05-31 22:58:47.112 +0530] [32mINFO[39m: [36m[WebhookWorker] Delivering job j-1 to http://example.com[39m
-PASS src/services/__tests__/paymentProcessor.test.ts
-PASS src/controllers/__tests__/relayerController.validation.property.test.ts (20.399 s)
-PASS src/jobs/__tests__/webhookQueue.test.ts
-PASS src/services/__tests__/goldrush.test.ts
-[2026-05-31 22:58:47.000 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
-[2026-05-31 22:58:47.003 +0530] [32mINFO[39m: [36m[WebhookWorker] Delivering job j-1 to http://example.com[39m
-[2026-05-31 22:58:46.988 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
-[2026-05-31 22:58:46.988 +0530] [32mINFO[39m: [36m[WebhookWorker] Delivering job j-1 to http://example.com[39m
-[2026-05-31 22:58:46.988 +0530] [32mINFO[39m: [36m[WebhookWorker] Successfully delivered job j-1[39m
-PASS src/lib/__tests__/redisLock.test.ts
-  ● Console
-
-    console.warn
-      [RedisLock] Redis not available, running my-key locally.
-
-    [0m [90m 19 |[39m   [36mif[39m ([33m![39mredis) {
-     [90m 20 |[39m     [90m// If Redis is not available, default to running the function (local only)[39m
-    [31m[1m>[22m[39m[90m 21 |[39m     console[33m.[39mwarn([32m`[RedisLock] Redis not available, running ${key} locally.`[39m)[33m;[39m
-     [90m    |[39m             [31m[1m^[22m[39m
-     [90m 22 |[39m     [36mreturn[39m fn()[33m;[39m
-     [90m 23 |[39m   }
-     [90m 24 |[39m[0m
-
-      at warn (src/lib/redisLock.ts:21:13)
-      at Object.<anonymous> (src/lib/__tests__/redisLock.test.ts:42:39)
-
-PASS src/jobs/__tests__/chainIndexer.test.ts
+PASS src/routes/__tests__/invoice.test.ts (14.586 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/jobs/__tests__/webhookWorker.test.ts (8.259 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/routes/__tests__/docs.test.ts (7.03 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+[2026-06-05 17:57:08.491 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-06-05 17:57:08.515 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-06-05 17:57:08.439 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-06-05 17:57:08.517 +0530] [32mINFO[39m: [36m[WebhookWorker] Delivering job j-1 to http://example.com[39m
+[2026-06-05 17:57:08.492 +0530] [32mINFO[39m: [36m[WebhookWorker] Delivering job j-1 to http://example.com[39m
+[2026-06-05 17:57:08.492 +0530] [32mINFO[39m: [36m[WebhookWorker] Successfully delivered job j-1[39m
+[2026-06-05 17:57:08.626 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-06-05 17:57:08.627 +0530] [32mINFO[39m: [36m[WebhookWorker] Delivering job j-1 to http://example.com[39m
+[2026-06-05 17:57:08.462 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-06-05 17:57:08.477 +0530] [32mINFO[39m: [36m[WebhookWorker] Consumer initialized successfully[39m
+[2026-06-05 17:57:08.477 +0530] [33mWARN[39m: [36m[WebhookWorker] No webhook URL for merchant m-1, skipping[39m
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/jobs/__tests__/chainIndexer.test.ts (7.747 s)
   ● Console
 
     console.log
@@ -121,11 +184,81 @@ PASS src/jobs/__tests__/chainIndexer.test.ts
 
       at log (src/jobs/chainIndexer.ts:79:13)
 
-PASS src/controllers/__tests__/directoryController.test.ts
-PASS src/controllers/__tests__/healthController.test.ts
-PASS tests/e2e/webhookDelivery.test.ts
-PASS src/routes/__tests__/docs.test.ts
-PASS src/lib/__tests__/invoiceExpiry.test.ts
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/services/__tests__/paymentProcessor.test.ts (7.354 s)
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+PASS src/services/__tests__/goldrush.test.ts (8.034 s)
+PASS src/routes/__tests__/health.test.ts (8.209 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/routes/__tests__/onramp.test.ts (7.586 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/routes/__tests__/directory.test.ts (6.043 s)
+PASS tests/e2e/invoiceFlow.test.ts (28.913 s)
+  ● Console
+
+    console.log
+      [HTTP] POST /api/v1/invoices 404 48ms req=fcdf07d1-625b-4d79-8613-d4137eab76e0 merchant=-
+
+      at ServerResponse.log (src/middleware/requestLogger.ts:16:13)
+
+    console.log
+      [HTTP] GET /api/v1/invoices/inv_123/status 404 2ms req=c5ae74dc-fc29-480c-bba5-852238d25434 merchant=-
+
+      at ServerResponse.log (src/middleware/requestLogger.ts:16:13)
+
+PASS tests/health.test.ts (22.195 s)
+  ● Console
+
+    console.log
+      [HTTP] GET / 200 8ms req=4e2f1508-a050-482d-a6fe-cabc5f410b4e merchant=-
+
+      at ServerResponse.log (src/middleware/requestLogger.ts:16:13)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+PASS src/routes/__tests__/merchant.test.ts (7.605 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/lib/__tests__/redisLock.test.ts (5.494 s)
+  ● Console
+
+    console.warn
+      [RedisLock] Redis not available, running my-key locally.
+
+    [0m [90m 19 |[39m   [36mif[39m ([33m![39mredis) {
+     [90m 20 |[39m     [90m// If Redis is not available, default to running the function (local only)[39m
+    [31m[1m>[22m[39m[90m 21 |[39m     console[33m.[39mwarn([32m`[RedisLock] Redis not available, running ${key} locally.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 22 |[39m     [36mreturn[39m fn()[33m;[39m
+     [90m 23 |[39m   }
+     [90m 24 |[39m[0m
+
+      at warn (src/lib/redisLock.ts:21:13)
+      at Object.<anonymous> (src/lib/__tests__/redisLock.test.ts:42:39)
+
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/lib/__tests__/invoiceExpiry.test.ts (6.149 s)
   ● Console
 
     console.log
@@ -153,70 +286,14 @@ PASS src/lib/__tests__/invoiceExpiry.test.ts
 
       at log (src/lib/invoiceExpiry.ts:36:13)
 
-PASS src/lib/__tests__/redis.test.ts
-PASS src/routes/__tests__/directory.test.ts
-PASS src/middleware/__tests__/errorHandler.test.ts
-PASS src/utils/__tests__/openapi.test.ts
-PASS src/controllers/__tests__/relayerController.503.property.test.ts (20.782 s)
-PASS src/middleware/__tests__/requestLogger.test.ts
-PASS src/routes/__tests__/relayer.test.ts
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-PASS src/lib/__tests__/chain.test.ts
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-PASS src/routes/__tests__/invoice.test.ts
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/jobs/__tests__/webhookQueue.test.ts (5.995 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/utils/__tests__/openapi.test.ts (7.885 s)
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/lib/__tests__/redis.test.ts (8.402 s)
+PASS src/jobs/__tests__/webhookDelivery.test.ts (8.186 s)
 
   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
     Attempted to log "[Redis] Connection error: Redis error".
@@ -272,6 +349,43 @@ PASS src/routes/__tests__/invoice.test.ts
       at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
       at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
 
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/middleware/__tests__/requestLogger.test.ts (8.257 s)
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/utils/__tests__/metrics.test.ts (8.903 s)
 
   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
     Attempted to log "[Redis] Connection error: Redis error".
@@ -316,6 +430,32 @@ PASS src/routes/__tests__/invoice.test.ts
       at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
       at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
 
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/middleware/__tests__/errorHandler.test.ts (8.906 s)
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/controllers/__tests__/healthController.test.ts (9.217 s)
 
   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
     Attempted to log "[Redis] Connection error: Redis error".
@@ -349,267 +489,8 @@ PASS src/routes/__tests__/invoice.test.ts
       at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
       at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
 
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-PASS tests/health.test.ts (5.281 s)
-  ● Console
-
-    console.log
-      [HTTP] GET / 200 6ms req=460bb583-290c-487f-8297-66b8fb6754f9 merchant=-
-
-      at ServerResponse.log (src/middleware/requestLogger.ts:16:13)
-
-    console.warn
-      [Redis] Connection error: Redis error
-
-    [0m[0m
-
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-PASS tests/e2e/invoiceFlow.test.ts (7.459 s)
-  ● Console
-
-    console.log
-      [HTTP] POST /api/v1/invoices 404 16ms req=6e24e2c2-2f45-47bd-80e8-eb74eead584f merchant=-
-
-      at ServerResponse.log (src/middleware/requestLogger.ts:16:13)
-
-    console.log
-      [HTTP] GET /api/v1/invoices/inv_123/status 404 3ms req=14748574-9de7-4137-ad88-f0a16d004224 merchant=-
-
-      at ServerResponse.log (src/middleware/requestLogger.ts:16:13)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
-
-  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
-    Attempted to log "[Redis] Connection error: Redis error".
-
-    [0m[0m
-
-      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
-      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
-      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
-      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
-
+ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
+PASS src/controllers/__tests__/directoryController.test.ts (9.085 s)
 
   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
     Attempted to log "[Redis] Connection error: Redis error".
@@ -710,7 +591,51 @@ PASS tests/e2e/invoiceFlow.test.ts (7.459 s)
       at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
 
 ts-jest[config] (WARN) [94mmessage[0m[90m TS151002: [0mUsing hybrid module kind (Node16/18/Next) is only supported in "isolatedModules: true". Please set "isolatedModules: true" in your tsconfig.json. To disable this message, you can set "diagnostics.ignoreCodes" to include 151002 in your ts-jest config. See more at https://kulshekhar.github.io/ts-jest/docs/getting-started/options/diagnostics
-PASS src/lib/__tests__/onramp.test.ts (5.929 s)
+PASS tests/e2e/webhookDelivery.test.ts (8.741 s)
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
+
+  ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
+    Attempted to log "[Redis] Connection error: Redis error".
+
+    [0m[0m
+
+      at console.warn (../../node_modules/.pnpm/@jest+console@29.7.0/node_modules/@jest/console/build/BufferedConsole.js:191:10)
+      at EventEmitter.<anonymous> (src/lib/redis.ts:1349:15)
+      at EventEmitter.silentEmit (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/Redis.js:529:30)
+      at Socket.<anonymous> (../../node_modules/.pnpm/ioredis@5.10.1/node_modules/ioredis/built/redis/event_handler.js:221:14)
+
 
   ●  Cannot log after tests are done. Did you forget to wait for something async in your test?
     Attempted to log "[Redis] Connection error: Redis error".
@@ -749,5 +674,5 @@ A worker process has failed to exit gracefully and has been force exited. This i
 Test Suites: 40 passed, 40 total
 Tests:       2 skipped, 142 passed, 144 total
 Snapshots:   0 total
-Time:        28.996 s, estimated 72 s
+Time:        84.246 s, estimated 86 s
 Ran all test suites.

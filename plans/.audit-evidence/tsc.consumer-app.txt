@@ -3,6 +3,10 @@ jest.setup.ts(130,1): error TS2322: Type 'Mock<Promise<{ ok: true; json: () => P
     Type '{ ok: true; json: () => Promise<{}>; }' is missing the following properties from type 'Response': headers, redirected, status, statusText, and 10 more.
 src/components/__tests__/ZkpProver.property.test.tsx(97,25): error TS2347: Untyped function calls may not accept type arguments.
 src/components/dashboard/AccountSelectorModal.tsx(148,39): error TS2339: Property 'display' does not exist on type '{ headline: string; headlineBold: string; headlineSovereign: string; body: string; bodyMedium: string; bodyBold: string; mono: string; }'.
+src/components/EmptyState.tsx(62,13): error TS2322: Type '{ title: string; onPress: () => void; variant: "primary"; accessibilityLabel: string; accessibilityRole: string; }' is not assignable to type 'IntrinsicAttributes & SovereignButtonProps'.
+  Property 'accessibilityRole' does not exist on type 'IntrinsicAttributes & SovereignButtonProps'. Did you mean 'accessibilityLabel'?
+src/components/ErrorState.tsx(73,13): error TS2322: Type '{ title: string; onPress: () => void; variant: "outline"; accessibilityLabel: string; accessibilityRole: string; }' is not assignable to type 'IntrinsicAttributes & SovereignButtonProps'.
+  Property 'accessibilityRole' does not exist on type 'IntrinsicAttributes & SovereignButtonProps'. Did you mean 'accessibilityLabel'?
 src/hooks/__tests__/useBalance.test.ts(32,18): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'typeof import("D:/Veilpay/apps/consumer-app/src/hooks/useBalance")'.
   No index signature with a parameter of type 'string' was found on type 'typeof import("D:/Veilpay/apps/consumer-app/src/hooks/useBalance")'.
 src/hooks/__tests__/useBalance.test.ts(34,46): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'typeof import("D:/Veilpay/apps/consumer-app/src/hooks/useBalance")'.

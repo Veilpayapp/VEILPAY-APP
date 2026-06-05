@@ -22,13 +22,14 @@ interface TokenAssetItemProps {
   asset: BalanceResult | TokenBalance;
   price: number;
   onSend: (symbol: string) => void;
+  onPress: (symbol: string) => void;
   fiatRate: number;
   nativeCurrency: string;
   colors: any;
   styles: any;
 }
 
-const TokenAssetItemComponent = ({ asset, price, onSend, fiatRate, nativeCurrency, colors, styles }: TokenAssetItemProps) => {
+const TokenAssetItemComponent = ({ asset, price, onSend, onPress, fiatRate, nativeCurrency, colors, styles }: TokenAssetItemProps) => {
   const isNative = !('tokenAddress' in asset);
   const symbol = asset.symbol || 'UNK';
   const name = isNative ? symbol : (asset as TokenBalance).tokenName;
@@ -51,23 +52,25 @@ const TokenAssetItemComponent = ({ asset, price, onSend, fiatRate, nativeCurrenc
   return (
     <View style={styles.itemWrapper}>
       <Swipeable renderRightActions={renderRightActions} containerStyle={styles.swipeableContainer}>
-        <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ borderRadius: 16 }}>
-          <View style={styles.row}>
-            <View style={styles.left}>
-              <View style={styles.iconWrap}>
-                <Text style={styles.iconText}>{getTokenIcon(symbol)}</Text>
+        <TouchableOpacity activeOpacity={0.7} onPress={() => onPress(symbol)}>
+          <SovereignCard backgroundColor={colors.bgPrimary} padding={0} style={{ borderRadius: 0, borderWidth: 1, borderColor: colors.textPrimary }}>
+            <View style={styles.row}>
+              <View style={styles.left}>
+                <View style={styles.iconWrap}>
+                  <Text style={styles.iconText}>{getTokenIcon(symbol)}</Text>
+                </View>
+                <View>
+                  <Text style={styles.symbol}>{symbol}</Text>
+                  <Text style={styles.name}>{name.toUpperCase()}</Text>
+                </View>
               </View>
-              <View>
-                <Text style={styles.symbol}>{symbol}</Text>
-                <Text style={styles.name}>{name}</Text>
+              <View style={styles.right}>
+                <Text style={styles.balance}>{parseFloat(asset.balanceFormatted).toFixed(4).replace(/\.?0+$/, '') || '0'} {symbol}</Text>
+                <Text style={styles.usdValue}>{displayUsd}</Text>
               </View>
             </View>
-            <View style={styles.right}>
-              <Text style={styles.balance}>{parseFloat(asset.balanceFormatted).toFixed(4).replace(/\.?0+$/, '') || '0'} {symbol}</Text>
-              <Text style={styles.usdValue}>{displayUsd}</Text>
-            </View>
-          </View>
-        </SovereignCard>
+          </SovereignCard>
+        </TouchableOpacity>
       </Swipeable>
     </View>
   );
@@ -82,10 +85,11 @@ interface TokenAssetsListProps {
   nativeBalance: BalanceResult | null;
   tokenBalances: TokenBalance[];
   onSend: (symbol: string) => void;
+  onTokenPress: (symbol: string) => void;
   fiatRate: number;
 }
 
-function TokenAssetsListComponent({ isLoading, nativeBalance, tokenBalances, onSend, fiatRate }: TokenAssetsListProps) {
+function TokenAssetsListComponent({ isLoading, nativeBalance, tokenBalances, onSend, onTokenPress, fiatRate }: TokenAssetsListProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const nativeCurrency = useSettingsStore((state) => state.nativeCurrency) || 'USD';
@@ -138,7 +142,7 @@ function TokenAssetsListComponent({ isLoading, nativeBalance, tokenBalances, onS
   return (
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>ASSETS</Text>
+        <Text style={styles.sectionTitle}>[ ASSETS ]</Text>
       </View>
 
       <View style={styles.list}>
@@ -151,6 +155,7 @@ function TokenAssetsListComponent({ isLoading, nativeBalance, tokenBalances, onS
               asset={asset}
               price={price}
               onSend={onSend}
+              onPress={onTokenPress}
               fiatRate={fiatRate}
               nativeCurrency={nativeCurrency}
               colors={colors}
@@ -195,15 +200,15 @@ const themeStyles = (colors: any) => StyleSheet.create({
     marginHorizontal: 24,
   },
   swipeableContainer: {
-    borderRadius: 16,
+    borderRadius: 0,
     overflow: 'hidden',
   },
   quickAction: {
     width: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    borderTopRightRadius: 16,
-    borderBottomRightRadius: 16,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
   },
   row: {
     flexDirection: 'row',
@@ -219,7 +224,9 @@ const themeStyles = (colors: any) => StyleSheet.create({
   iconWrap: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.surfaceElevated,
@@ -235,10 +242,11 @@ const themeStyles = (colors: any) => StyleSheet.create({
     fontWeight: 'bold',
   },
   name: {
-    fontFamily: typography.fontFamily.body,
-    fontSize: 12,
-    color: colors.textMuted,
+    fontFamily: 'JetBrainsMono_400Regular',
+    fontSize: 10,
+    color: colors.textTertiary,
     marginTop: 2,
+    letterSpacing: 0.5,
   },
   right: {
     alignItems: 'flex-end',

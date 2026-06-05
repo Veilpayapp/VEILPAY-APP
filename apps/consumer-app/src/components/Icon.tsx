@@ -27,6 +27,7 @@ export type IconName =
   // Actions
   | 'copy'
   | 'paste'
+  | 'edit'
   | 'chevron-right'
   | 'chevron-down'
   | 'chevron-up'
@@ -143,6 +144,13 @@ const ICONS: Record<IconName, React.ReactNode> = {
       <Rect x="8" y="8" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/>
       <Path d="M16 8V6a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" 
         stroke="currentColor" strokeWidth="2" fill="none"/>
+    </G>
+  ),
+  
+  edit: (
+    <G>
+      <Path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" 
+        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
     </G>
   ),
   

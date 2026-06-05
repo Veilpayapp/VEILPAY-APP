@@ -1191,16 +1191,16 @@ Clone found (javascript):
    [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [561:120 - 577:29]
 
 Clone found (tsx):
- - [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [341:7 - 357:25] (16 lines, 117 tokens)
+ - [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [360:7 - 376:25] (16 lines, 117 tokens)
    [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [460:7 - 476:25]
 
 Clone found (tsx):
- - [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [346:7 - 362:22] (16 lines, 119 tokens)
+ - [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [365:7 - 381:22] (16 lines, 119 tokens)
    [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [612:5 - 628:69]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\screens\TokenSelectorScreen.tsx[39m[22m [293:5 - 308:25] (15 lines, 118 tokens)
-   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [613:3 - 362:25]
+   [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [613:3 - 381:25]
 
 Clone found (javascript):
  - [1m[32mapps\consumer-app\src\screens\SettingsScreen.tsx[39m[22m [481:24 - 491:55] (10 lines, 129 tokens)
@@ -1208,39 +1208,39 @@ Clone found (javascript):
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\screens\SettingsScreen.tsx[39m[22m [536:7 - 562:13] (26 lines, 183 tokens)
-   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [339:93 - 484:14]
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [358:93 - 484:14]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\screens\SendPaymentScreen.tsx[39m[22m [592:7 - 609:15] (17 lines, 130 tokens)
-   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [339:7 - 356:9]
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [358:7 - 375:9]
 
 Clone found (javascript):
- - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [294:40 - 312:42] (18 lines, 204 tokens)
+ - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [299:40 - 317:42] (18 lines, 187 tokens)
    [1m[32mapps\consumer-app\src\screens\TransactionDetailsScreen.tsx[39m[22m [290:71 - 302:42]
 
 Clone found (tsx):
- - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [363:36 - 380:30] (17 lines, 133 tokens)
+ - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [368:36 - 385:30] (17 lines, 116 tokens)
    [1m[32mapps\consumer-app\src\screens\WalletConnectScreen.tsx[39m[22m [617:33 - 630:89]
 
 Clone found (tsx):
- - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [379:18 - 395:10] (16 lines, 125 tokens)
+ - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [384:18 - 400:10] (16 lines, 109 tokens)
    [1m[32mapps\consumer-app\src\screens\TokenSelectorScreen.tsx[39m[22m [314:32 - 330:15]
 
 Clone found (tsx):
- - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [496:21 - 531:14] (35 lines, 273 tokens)
+ - [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [501:21 - 536:14] (35 lines, 238 tokens)
    [1m[32mapps\consumer-app\src\screens\TransactionDetailsScreen.tsx[39m[22m [510:25 - 545:16]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\screens\PrivacyLevelScreen.tsx[39m[22m [365:7 - 390:10] (25 lines, 184 tokens)
-   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [460:7 - 366:20]
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [460:7 - 385:20]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\screens\PrivacyLevelScreen.tsx[39m[22m [388:3 - 416:13] (28 lines, 213 tokens)
-   [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [375:3 - 403:12]
+   [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [380:3 - 408:12]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\screens\OnrampQuotesScreen.tsx[39m[22m [215:19 - 228:26] (13 lines, 87 tokens)
-   [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [359:27 - 372:26]
+   [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [364:27 - 377:26]
 
 Clone found (javascript):
  - [1m[32mapps\consumer-app\src\screens\OnrampAmountScreen.tsx[39m[22m [55:24 - 66:41] (11 lines, 206 tokens)
@@ -1256,7 +1256,7 @@ Clone found (javascript):
 
 Clone found (javascript):
  - [1m[32mapps\consumer-app\src\screens\ImportWalletScreen.tsx[39m[22m [199:61 - 211:40] (12 lines, 133 tokens)
-   [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [197:46 - 208:40]
+   [1m[32mapps\consumer-app\src\screens\ReceiveQRScreen.tsx[39m[22m [198:46 - 209:40]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\screens\ImportWalletScreen.tsx[39m[22m [307:27 - 328:18] (21 lines, 162 tokens)
@@ -1264,31 +1264,31 @@ Clone found (tsx):
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\screens\ImportWalletScreen.tsx[39m[22m [322:25 - 352:12] (30 lines, 227 tokens)
-   [1m[32mapps\consumer-app\src\screens\PrivacyLevelScreen.tsx[39m[22m [386:25 - 403:12]
+   [1m[32mapps\consumer-app\src\screens\PrivacyLevelScreen.tsx[39m[22m [386:25 - 408:12]
 
 Clone found (javascript):
- - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [498:41 - 507:91] (9 lines, 83 tokens)
-   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [450:11 - 456:91]
+ - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [506:41 - 515:91] (9 lines, 83 tokens)
+   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [458:11 - 464:91]
 
 Clone found (javascript):
- - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [515:37 - 523:91] (8 lines, 78 tokens)
-   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [450:11 - 456:91]
+ - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [523:37 - 531:91] (8 lines, 78 tokens)
+   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [458:11 - 464:91]
 
 Clone found (javascript):
- - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [533:55 - 541:91] (8 lines, 78 tokens)
-   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [450:11 - 456:91]
+ - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [541:55 - 549:91] (8 lines, 78 tokens)
+   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [458:11 - 464:91]
 
 Clone found (javascript):
- - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [548:33 - 556:91] (8 lines, 78 tokens)
-   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [450:11 - 456:91]
+ - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [556:33 - 564:91] (8 lines, 78 tokens)
+   [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [458:11 - 464:91]
 
 Clone found (tsx):
- - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [407:31 - 422:8] (15 lines, 212 tokens)
-   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [98:20 - 112:20]
+ - [1m[32mapps\consumer-app\src\screens\HomeDashboardScreen.tsx[39m[22m [415:31 - 430:8] (15 lines, 212 tokens)
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [100:20 - 114:20]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\screens\ExportPrivateKeyScreen.tsx[39m[22m [183:34 - 200:4] (17 lines, 120 tokens)
-   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [345:31 - 628:69]
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [364:31 - 628:69]
 
 Clone found (javascript):
  - [1m[32mapps\consumer-app\src\screens\DepositCryptoScreen.tsx[39m[22m [270:24 - 286:32] (16 lines, 266 tokens)
@@ -1352,11 +1352,11 @@ Clone found (tsx):
 
 Clone found (javascript):
  - [1m[32mapps\consumer-app\src\screens\CreateWalletScreen.tsx[39m[22m [165:24 - 178:34] (13 lines, 192 tokens)
-   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [259:24 - 208:30]
+   [1m[32mapps\consumer-app\src\screens\WithdrawFiatScreen.tsx[39m[22m [259:24 - 209:30]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\screens\CreateWalletScreen.tsx[39m[22m [283:9 - 338:17] (55 lines, 405 tokens)
-   [1m[32mapps\consumer-app\src\screens\PrivacyLevelScreen.tsx[39m[22m [361:9 - 403:12]
+   [1m[32mapps\consumer-app\src\screens\PrivacyLevelScreen.tsx[39m[22m [361:9 - 408:12]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\screens\BiometricSetupScreen.tsx[39m[22m [204:39 - 216:14] (12 lines, 93 tokens)
@@ -1432,27 +1432,27 @@ Clone found (typescript):
 
 Clone found (javascript):
  - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [75:57 - 91:46] (16 lines, 184 tokens)
-   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [211:48 - 223:29]
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [215:48 - 227:29]
 
 Clone found (javascript):
  - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [91:57 - 105:51] (14 lines, 171 tokens)
-   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [222:49 - 235:53]
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [226:49 - 239:53]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [15:1 - 32:19] (17 lines, 245 tokens)
-   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [97:3 - 424:21]
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [99:3 - 432:21]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [95:28 - 112:18] (17 lines, 169 tokens)
-   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [225:21 - 242:25]
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [229:21 - 246:25]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [127:3 - 149:18] (22 lines, 138 tokens)
-   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [419:3 - 441:15]
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [438:3 - 460:15]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\components\TransactionItem.tsx[39m[22m [147:20 - 201:21] (54 lines, 363 tokens)
-   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [444:23 - 498:17]
+   [1m[32mapps\consumer-app\src\screens\TransactionHistoryScreen.tsx[39m[22m [463:23 - 517:17]
 
 Clone found (tsx):
  - [1m[32mapps\consumer-app\src\components\Skeleton.tsx[39m[22m [79:30 - 90:10] (11 lines, 169 tokens)
@@ -1473,6 +1473,18 @@ Clone found (tsx):
 Clone found (javascript):
  - [1m[32mapps\consumer-app\src\components\FiatGatewayModal.tsx[39m[22m [66:30 - 85:30] (19 lines, 200 tokens)
    [1m[32mapps\consumer-app\src\components\FiatGatewayModal.tsx[39m[22m [47:29 - 66:30]
+
+Clone found (javascript):
+ - [1m[32mapps\consumer-app\src\components\EmptyState.tsx[39m[22m [30:36 - 55:41] (25 lines, 250 tokens)
+   [1m[32mapps\consumer-app\src\components\ErrorState.tsx[39m[22m [39:59 - 63:41]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\EmptyState.tsx[39m[22m [64:9 - 81:8] (17 lines, 121 tokens)
+   [1m[32mapps\consumer-app\src\components\ErrorState.tsx[39m[22m [75:9 - 92:13]
+
+Clone found (tsx):
+ - [1m[32mapps\consumer-app\src\components\EmptyState.tsx[39m[22m [79:21 - 100:4] (21 lines, 162 tokens)
+   [1m[32mapps\consumer-app\src\components\ErrorState.tsx[39m[22m [97:29 - 118:4]
 
 Clone found (typescript):
  - [1m[32mapps\backend\src\types\index.ts[39m[22m [118:42 - 135:45] (17 lines, 187 tokens)
@@ -1611,7 +1623,7 @@ Clone found (javascript):
    [1m[32mapps\consumer-app\fix_tests.js[39m[22m [5:68 - 15:10]
 
 [32mJSON report saved to .audit-evidence\jscpd-report.json[39m
-[3m[90mtime[39m[23m: 11.662s
+[3m[90mtime[39m[23m: 9.235s
 
 [90m💡 Auto-refactor with AI: npx skills add kucherenko/jscpd[39m
 [90m🎩 New: Gangsta Agents — discipline your AI coding → gangsta.page[39m

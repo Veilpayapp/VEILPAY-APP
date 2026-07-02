@@ -6,6 +6,7 @@ import {console} from "forge-std/console.sol";
 import {VeilPool} from "../src/VeilPool.sol";
 import {Groth16Verifier} from "../src/Groth16Verifier.sol";
 import {IPoseidonHasher} from "../src/IPoseidonHasher.sol";
+import {IGroth16Verifier} from "../src/IGroth16Verifier.sol";
 
 contract DeployPool is Script {
     address public verifierAddress;
@@ -20,7 +21,7 @@ contract DeployPool is Script {
         
         vm.startBroadcast(deployerPrivateKey);
         
-        VeilPool pool = new VeilPool(verifierAddress, IPoseidonHasher(poseidonHasher), feeRecipient, feeBps);
+        VeilPool pool = new VeilPool(IGroth16Verifier(verifierAddress), IPoseidonHasher(poseidonHasher), feeRecipient, feeBps);
         
         vm.stopBroadcast();
         

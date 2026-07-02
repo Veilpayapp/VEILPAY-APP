@@ -355,7 +355,7 @@ export const handleOnrampWebhook = async (
       const parsedMoonpay = MoonPayWebhookBodySchema.safeParse(req.body);
       if (parsedMoonpay.success && parsedMoonpay.data.data?.externalTransactionId) {
         const mpData = parsedMoonpay.data.data;
-        gatewayOrderId = mpData.externalTransactionId;
+        gatewayOrderId = mpData.externalTransactionId || '';
         // MoonPay emits: 'completed', 'failed', 'pending', 'waitingPayment',
         // 'waitingAuthorization'. Normalize the in-progress states so the
         // nextStatus mapping below doesn't terminalize a live order (see

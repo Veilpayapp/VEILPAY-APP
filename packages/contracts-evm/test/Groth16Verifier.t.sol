@@ -24,6 +24,6 @@ contract Groth16VerifierTest is Test {
         uint256[2] memory c;
         uint256[4] memory input;
 
-        assertFalse(verifier.verifyProofWithInputs(a, b, c, input));
+        assertFalse(verifier._verifyProofRaw(a, b, c, input));
     }
 }

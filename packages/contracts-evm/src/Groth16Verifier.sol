@@ -224,7 +224,7 @@ contract Groth16Verifier is IGroth16Verifier {
         pub[1] = uint256(publicInputs[1]); // nullifierHash
         pub[2] = uint256(publicInputs[2]); // recipient
         pub[3] = uint256(publicInputs[3]); // amount
-        return _verifyProofRaw(a, b, c, pub);
+        return this._verifyProofRaw(a, b, c, pub);
     }
 
 }

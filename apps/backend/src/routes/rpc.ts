@@ -206,7 +206,7 @@ type AsyncHandler = (
   req: Request,
   res: Response,
   next: NextFunction,
-) => Promise<any>;
+) => Promise<unknown>;
 
 function asyncRoute(fn: AsyncHandler): (req: Request, res: Response, next: NextFunction) => void {
   return (req, res, next) => {

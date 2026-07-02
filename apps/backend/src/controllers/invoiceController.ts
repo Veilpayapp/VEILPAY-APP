@@ -13,10 +13,10 @@ import {
   PayInvoiceRequestSchema,
 } from "../types";
 import { enqueueWebhook } from "../jobs/webhookQueue";
-import { createPublicClient, http, parseEther } from "viem";
+import { createPublicClient, http, parseEther, type Chain } from "viem";
 import { mainnet, polygon, arbitrum, sepolia } from "viem/chains";
 
-const getViemChain = (chainKey: string) => {
+const getViemChain = (chainKey: string): Chain => {
   switch (chainKey) {
     case 'ethereum': return mainnet;
     case 'polygon': return polygon;

@@ -25,7 +25,7 @@ export class OnrampService {
     cryptoToken?: string;
     network?: string;
     orderId?: string;
-  }) {
+  }): string {
     const {
       userAddress,
       fiatAmount,

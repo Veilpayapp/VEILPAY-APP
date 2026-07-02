@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { prisma } from "../lib/prisma";
 import { withRedisLock } from "./redisLock";
 
@@ -17,7 +18,7 @@ export function startInvoiceExpiryWorker(): void {
   // synchronous handler that swallows rejections (and logs them) to
   // satisfy `no-misused-promises`.
   intervalHandle = setInterval(() => {
-    void (async () => {
+    void (async (): Promise<void> => {
       try {
         await withRedisLock('invoice_expiry', 50000, async () => {
           await expirePendingInvoices();

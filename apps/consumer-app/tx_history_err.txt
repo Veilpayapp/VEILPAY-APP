@@ -1,0 +1,26 @@
+FAIL src/screens/__tests__/TransactionHistoryScreen.test.tsx
+  ÔùÅ Test suite failed to run
+
+    TypeError: _reactNativeReanimated.default.createAnimatedComponent is not a function
+
+      1 | import React, { useEffect } from 'react';
+      2 | import { View, StyleSheet } from 'react-native';
+    > 3 | import { MotiView, MotiText } from 'moti';
+        | ^
+      4 | import * as Haptics from 'expo-haptics';
+      5 | import { SovereignButton } from './SovereignButton';
+      6 | import { Icon } from './Icon';
+
+      at createAnimatedComponent (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/core/motify.tsx:23:30)
+      at Object.<anonymous> (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/image.tsx:5:28)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/index.ts:1:1)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/index.tsx:2:1)
+      at Object.require (src/components/ErrorState.tsx:3:1)
+      at Object.require (src/screens/TransactionHistoryScreen.tsx:32:1)
+      at Object.require (src/screens/__tests__/TransactionHistoryScreen.test.tsx:136:38)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        1.725 s
+Ran all test suites matching /src\\screens\\__tests__\\TransactionHistoryScreen.test.tsx/i.

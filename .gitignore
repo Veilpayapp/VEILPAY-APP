@@ -19,6 +19,9 @@ build/
 *.swp
 *.swo
 
+# Agents / Local Tools
+.agents/anthropics-skills/
+
 # OS
 .DS_Store
 Thumbs.db

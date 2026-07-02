@@ -18,7 +18,7 @@ import { useWalletStore } from '../stores/walletStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { SCREENS } from '../constants/screens';
 import { triggerLightImpactHaptic } from '../utils/haptics';
-import { buildTransakDepositUrl } from '../utils/transak';
+import { buildTransakDepositUrl, FIAT_CURRENCIES, type FiatCurrency } from '../utils/transak';
 import { useOnramp } from '../features/fiat-gateway';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -57,8 +57,14 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
     setError(null);
     try {
       const baseUrl = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || '';
-      const response = await fetch(`${baseUrl}/api/v1/onramp/quotes?fiatAmount=${fiatAmount}&fiatCurrency=${nativeCurrency}&cryptoToken=${cryptoToken}&flow=${flow}`);
-      
+      const query = new URLSearchParams({
+        fiatAmount,
+        fiatCurrency: nativeCurrency,
+        cryptoToken,
+        flow,
+      });
+      const response = await fetch(`${baseUrl}/api/v1/onramp/quotes?${query.toString()}`);
+
       if (!response.ok) {
         throw new Error('Failed to fetch quotes');
       }
@@ -84,6 +90,12 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
       return;
     }
 
+    // Narrow the persisted currency string to Transak's FiatCurrency union.
+    const fiatCurrency: FiatCurrency =
+      (FIAT_CURRENCIES as readonly string[]).includes(nativeCurrency)
+        ? (nativeCurrency as FiatCurrency)
+        : 'USD';
+
     if (provider === 'transak') {
       if (chainKey === 'aptos') {
         alert('Transak does not natively support Aptos. Please select Onramp.money or another provider.');
@@ -93,7 +105,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
       const url = buildTransakDepositUrl({
         walletAddress: address,
         fiatAmount: parseFloat(fiatAmount),
-        fiatCurrency: nativeCurrency,
+        fiatCurrency,
         cryptoToken: cryptoToken,
         network: chainKey, // Using chainKey directly, Transak utils might map it internally
         paymentMethod: 'credit_debit_card',
@@ -104,13 +116,14 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
         title: flow === 'buy' ? 'Buy via Transak' : 'Sell via Transak',
         flow,
       });
-    } else if (provider === 'onramp_money') {
+    } else if (provider === 'onramp_money' || provider === 'moonpay') {
       setIsLoading(true);
       const session = await getOnrampUrl({
         fiatAmount,
         cryptoToken,
         chainKey,
         flow,
+        provider,
       });
       setIsLoading(false);
 
@@ -118,7 +131,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
         navigation.navigate(SCREENS.ONRAMP_WIDGET, {
           url: session.url,
           orderId: session.orderId,
-          title: flow === 'buy' ? 'Buy via Onramp.money' : 'Sell via Onramp.money',
+          title: flow === 'buy' ? `Buy via ${getProviderName(provider)}` : `Sell via ${getProviderName(provider)}`,
         });
       }
     } else {

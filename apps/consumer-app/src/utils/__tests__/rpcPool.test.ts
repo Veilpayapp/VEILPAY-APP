@@ -33,12 +33,12 @@ function loadRpcPool() {
   return require('../rpcPool');
 }
 
-function getAlchemyUrl(): string {
-  return 'https://eth-mainnet.g.alchemy.com/v2/alchemy-key';
+function getProxyUrl(): string {
+  return 'https://api.veilpay.app/api/v1/rpc/ethereum';
 }
 
-function getInfuraUrl(): string {
-  return 'https://mainnet.infura.io/v3/infura-key';
+function getPublicUrl(): string {
+  return 'https://ethereum-rpc.publicnode.com';
 }
 
 function getProvider(url: string): MockProvider {
@@ -63,8 +63,7 @@ describe('rpcPool', () => {
 
     process.env = {
       ...ORIGINAL_ENV,
-      EXPO_PUBLIC_ALCHEMY_API_KEY: 'alchemy-key',
-      EXPO_PUBLIC_INFURA_API_KEY: 'infura-key',
+      EXPO_PUBLIC_BACKEND_BASE_URL: 'https://api.veilpay.app',
     };
   });
 
@@ -79,24 +78,24 @@ describe('rpcPool', () => {
 
     const provider = getPoolProvider('ethereum') as MockProvider;
 
-    expect(provider.url).toBe(getAlchemyUrl());
+    expect(provider.url).toBe(getProxyUrl());
     expect(createPublicClientMock).toHaveBeenCalledTimes(1);
     expect(createPublicClientMock).toHaveBeenCalledWith(
-      { transport: { url: getAlchemyUrl() } }
+      { transport: { url: getProxyUrl() } }
     );
   });
 
   it('fails over to the next provider after the first circuit opens', async () => {
     const { poolCall, getPoolStatus } = loadRpcPool();
 
-    const alchemyUrl = getAlchemyUrl();
-    const infuraUrl = getInfuraUrl();
+    const proxyUrl = getProxyUrl();
+    const publicUrl = getPublicUrl();
 
     const callPromise = poolCall('ethereum', async (provider: any) => {
       const typedProvider = provider as MockProvider;
   
-      if (typedProvider.url === alchemyUrl) {
-        throw new Error('alchemy down');
+      if (typedProvider.url === proxyUrl) {
+        throw new Error('proxy down');
       }
   
       return typedProvider.url;
@@ -104,26 +103,26 @@ describe('rpcPool', () => {
 
     await jest.advanceTimersByTimeAsync(900);
 
-    await expect(callPromise).resolves.toBe(infuraUrl);
+    await expect(callPromise).resolves.toBe(publicUrl);
 
     const status = getPoolStatus('ethereum');
 
-    expect(status['alchemy-ethereum'].status).toBe('open');
-    expect(status['infura-ethereum'].status).toBe('healthy');
+    expect(status['backend-proxy-ethereum'].status).toBe('open');
+    expect(status['public-ethereum'].status).toBe('healthy');
     expect(captureErrorMock).not.toHaveBeenCalled();
   });
 
   it('recovers an open circuit after a successful health check', async () => {
     const { poolCall, getPoolStatus, getPoolProvider } = loadRpcPool();
 
-    const alchemyUrl = getAlchemyUrl();
-    const infuraUrl = getInfuraUrl();
+    const proxyUrl = getProxyUrl();
+    const publicUrl = getPublicUrl();
 
     const callPromise = poolCall('ethereum', async (provider: any) => {
       const typedProvider = provider as MockProvider;
   
-      if (typedProvider.url === alchemyUrl) {
-        throw new Error('alchemy down');
+      if (typedProvider.url === proxyUrl) {
+        throw new Error('proxy down');
       }
   
       return 'fallback-ok';
@@ -132,15 +131,15 @@ describe('rpcPool', () => {
     await jest.advanceTimersByTimeAsync(900);
     await expect(callPromise).resolves.toBe('fallback-ok');
 
-    getProvider(alchemyUrl).getBlockNumber.mockResolvedValue(1234);
-    getProvider(infuraUrl).getBlockNumber.mockResolvedValue(1234);
+    getProvider(proxyUrl).getBlockNumber.mockResolvedValue(1234);
+    getProvider(publicUrl).getBlockNumber.mockResolvedValue(1234);
 
     await jest.advanceTimersByTimeAsync(60_000);
 
     const status = getPoolStatus('ethereum');
 
-    expect(status['alchemy-ethereum'].status).toBe('healthy');
-    expect(status['alchemy-ethereum'].failureCount).toBe(0);
-    expect(getPoolProvider('ethereum').url).toBe(alchemyUrl);
+    expect(status['backend-proxy-ethereum'].status).toBe('healthy');
+    expect(status['backend-proxy-ethereum'].failureCount).toBe(0);
+    expect(getPoolProvider('ethereum').url).toBe(proxyUrl);
   });
 });

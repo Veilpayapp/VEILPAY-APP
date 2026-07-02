@@ -42,15 +42,17 @@ export async function initializePinning() {
         includeSubdomains: true,
         publicKeyHashes: ['AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='],
       },
-      'eth-mainnet.g.alchemy.com': {
-        includeSubdomains: true,
-        publicKeyHashes: ['AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='],
-      },
+      // NOTE: The mobile client no longer calls Alchemy directly — all RPC
+      // traffic flows through the VeilPay backend proxy. Pin the backend
+      // domain instead once real SPKI hashes are available.
       'veilpay-backend.com': {
         includeSubdomains: true,
         publicKeyHashes: ['AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='],
       }
     });
+    // SECURITY TODO: All publicKeyHashes above are dummy placeholders.
+    // Replace with real SPKI hashes (sha256/base64) before production rollout,
+    // and add the actual backend API domain (e.g. api.veilpay.app).
     console.log('[Security] SSL Pinning initialized with dummy hashes');
   } catch (error) {
     console.warn('[Security] SSL Pinning initialization failed:', error);

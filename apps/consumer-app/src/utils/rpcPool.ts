@@ -24,26 +24,6 @@ const MAX_RETRIES = 3;
 const RETRY_BASE_DELAY_MS = 300;
 
 function buildEndpoints(chainKey: string): RpcEndpoint[] {
-  const alchemyKey = process.env.EXPO_PUBLIC_ALCHEMY_API_KEY?.trim();
-  const infuraKey = process.env.EXPO_PUBLIC_INFURA_API_KEY?.trim();
-
-  const alchemyNetworks: Record<string, string> = {
-    ethereum: 'eth-mainnet',
-    polygon: 'polygon-mainnet',
-    arbitrum: 'arb-mainnet',
-    base: 'base-mainnet',
-    sepolia: 'eth-sepolia',
-    solana: 'solana-mainnet',
-  };
-
-  const infuraNetworks: Record<string, string> = {
-    ethereum: 'mainnet',
-    polygon: 'polygon-mainnet',
-    arbitrum: 'arbitrum-mainnet',
-    base: 'base-mainnet',
-    sepolia: 'sepolia',
-  };
-
   const publicFallbacks: Record<string, string> = {
     ethereum: 'https://ethereum-rpc.publicnode.com',
     polygon: 'https://polygon-rpc.com',
@@ -76,20 +56,12 @@ function buildEndpoints(chainKey: string): RpcEndpoint[] {
     return endpoints;
   }
 
-  const alchemyNetwork = alchemyNetworks[chainKey];
-  if (alchemyKey && alchemyNetwork) {
-    const url = chainKey === 'solana'
-      ? `https://solana-mainnet.g.alchemy.com/v2/${alchemyKey}`
-      : `https://${alchemyNetwork}.g.alchemy.com/v2/${alchemyKey}`;
-    endpoints.push({ name: `alchemy-${chainKey}`, url, weight: 3 });
-  }
-
-  const infuraNetwork = infuraNetworks[chainKey];
-  if (infuraKey && infuraNetwork) {
+  const backendBase = process.env.EXPO_PUBLIC_BACKEND_BASE_URL?.trim();
+  if (backendBase) {
     endpoints.push({
-      name: `infura-${chainKey}`,
-      url: `https://${infuraNetwork}.infura.io/v3/${infuraKey}`,
-      weight: 2,
+      name: `backend-proxy-${chainKey}`,
+      url: `${backendBase}/api/v1/rpc/${chainKey}`,
+      weight: 5
     });
   }
 

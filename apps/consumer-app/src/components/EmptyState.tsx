@@ -59,7 +59,6 @@ export function EmptyState({
             onPress={onAction}
             variant="primary"
             accessibilityLabel={actionLabel}
-            accessibilityRole="button"
           />
         </MotiView>
       )}

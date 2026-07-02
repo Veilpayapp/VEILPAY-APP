@@ -19,7 +19,6 @@ jest.mock('../rpc', () => ({
     };
     return urls[key] || 'https://rpc.example';
   }),
-  buildAlchemyUrl: jest.fn((key: string) => key === 'ethereum' ? 'https://alchemy.com/eth' : null),
 }));
 
 jest.mock('../rpcPool', () => ({

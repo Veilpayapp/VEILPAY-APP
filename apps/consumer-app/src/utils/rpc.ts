@@ -45,48 +45,6 @@ const RPC_ENV_VARS: Record<string, string | undefined> = {
   aptos:          process.env.EXPO_PUBLIC_RPC_APTOS,
 };
 
-// ─── Key-based URL builder ────────────────────────────────────────────────────
-
-export function buildAlchemyUrl(chainKey: string): string | null {
-  const apiKey = process.env.EXPO_PUBLIC_ALCHEMY_API_KEY?.trim();
-  if (!apiKey) return null;
-
-  const slugs: Record<string, string> = {
-    ethereum:  'eth-mainnet',
-    polygon:   'polygon-mainnet',
-    arbitrum:  'arb-mainnet',
-    base:      'base-mainnet',
-    sepolia:   'eth-sepolia',
-    solana:    'solana-mainnet',
-    bsc:       'bnb-mainnet',
-  };
-
-  const slug = slugs[chainKey];
-  if (!slug) return null;
-
-  return chainKey === 'solana'
-    ? `https://solana-mainnet.g.alchemy.com/v2/${apiKey}`
-    : `https://${slug}.g.alchemy.com/v2/${apiKey}`;
-}
-
-function buildInfuraUrl(chainKey: string): string | null {
-  const apiKey = process.env.EXPO_PUBLIC_INFURA_API_KEY?.trim();
-  if (!apiKey) return null;
-
-  const slugs: Record<string, string> = {
-    ethereum: 'mainnet',
-    polygon:  'polygon-mainnet',
-    arbitrum: 'arbitrum-mainnet',
-    base:     'base-mainnet',
-    sepolia:  'sepolia',
-  };
-
-  const slug = slugs[chainKey];
-  if (!slug) return null;
-
-  return `https://${slug}.infura.io/v3/${apiKey}`;
-}
-
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -94,10 +52,11 @@ function buildInfuraUrl(chainKey: string): string | null {
  *
  * Priority:
  *   1. Explicit env override (EXPO_PUBLIC_RPC_<CHAIN>)
- *   2. Alchemy keyed endpoint (EXPO_PUBLIC_ALCHEMY_API_KEY)
- *   3. Infura keyed endpoint  (EXPO_PUBLIC_INFURA_API_KEY)
- *   4. Public fallback (dev/emergency only)
- *   5. '' in production if nothing is configured (triggers Sentry alert)
+ *   2. Backend RPC Proxy (EXPO_PUBLIC_BACKEND_BASE_URL + /api/v1/rpc/<CHAIN>)
+ *   3. Public fallback (read-only). Used in dev, and as an emergency
+ *      degradation path in production when the backend proxy is not
+ *      configured — a public node keeps balance/tx reads working (though
+ *      Alchemy-enhanced methods will be rejected) instead of failing all reads.
  *
  * For resilient multi-provider failover, use rpcPool.ts instead:
  *   import { getPoolProvider, poolCall } from './rpcPool';
@@ -107,22 +66,28 @@ export function getRpcUrl(chainKey: string): string {
   const override = RPC_ENV_VARS[chainKey]?.trim();
   if (override) return override;
 
-  // 2. Alchemy
-  const alchemyUrl = buildAlchemyUrl(chainKey);
-  if (alchemyUrl) return alchemyUrl;
+  // 2. Proxy via Backend (Production default)
+  const backendBase = process.env.EXPO_PUBLIC_BACKEND_BASE_URL?.trim();
+  if (backendBase) {
+    return `${backendBase}/api/v1/rpc/${chainKey}`;
+  }
 
-  // 3. Infura
-  const infuraUrl = buildInfuraUrl(chainKey);
-  if (infuraUrl) return infuraUrl;
-
-  // 4. Public fallback — only allowed outside production
+  // 3. Public fallback in dev — no alerting needed.
   if (process.env.NODE_ENV !== 'production') {
     return PUBLIC_FALLBACKS[chainKey] || '';
   }
 
-  // 5. Production with no configuration — alert and return empty
-  const err = new Error(`Missing RPC configuration for chain: ${chainKey}`);
+  // 4. Production with no backend configured. This is a misconfiguration
+  //    (the backend base URL should always be set in prod), so alert — but
+  //    degrade to a read-only public node so the app keeps functioning
+  //    instead of failing every blockchain read.
+  const err = new Error(`Missing RPC backend configuration for chain: ${chainKey}`);
   captureError(err, { scope: 'rpc-config', chain: chainKey });
+  const publicFallback = PUBLIC_FALLBACKS[chainKey] || '';
+  if (publicFallback) {
+    console.warn('[rpc] Backend RPC proxy not configured for', chainKey, '— degrading to public node.');
+    return publicFallback;
+  }
   console.error('[rpc] No RPC endpoint for', chainKey, '— blockchain calls will fail.');
   return '';
 }

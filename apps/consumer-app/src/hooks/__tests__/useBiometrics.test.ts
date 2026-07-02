@@ -32,8 +32,8 @@ describe('useBiometrics', () => {
       if (typeof (Module as any)[key] === 'function' && key.startsWith('use')) {
         try {
           const {unmount} = renderHook(() => (Module as any)[key]({} as any, {} as any)); unmount();
-        } catch(e) {
-          console.warn("Hook error:", key, e.message);
+        } catch(e: unknown) {
+          console.warn("Hook error:", key, (e as Error).message);
         }
       }
     }

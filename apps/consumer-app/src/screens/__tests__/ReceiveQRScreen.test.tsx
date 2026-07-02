@@ -16,7 +16,7 @@ describe('ReceiveQRScreen', () => {
   it('renders without crashing', () => {
     const { queryAllByText } = render(
       <NavigationContainer>
-        <ReceiveQRScreen navigation={{} as any} route={{ params: {} } as any} />
+        <ReceiveQRScreen {...({ navigation: {}, route: { params: {} } } as any)} />
       </NavigationContainer>
     );
     expect(queryAllByText(/Receive/i).length).toBeGreaterThan(0);

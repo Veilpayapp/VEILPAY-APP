@@ -46,7 +46,6 @@ export const SCREENS = {
   ONRAMP_WIDGET: 'OnrampWidget',
   ONRAMP_AMOUNT: 'OnrampAmount',
   ONRAMP_QUOTES: 'OnrampQuotes',
-  OFFRAMP_QUOTES: 'OfframpQuotes',
 } as const;
 
 /**
@@ -88,7 +87,6 @@ export const SCREEN_TITLES: Record<ScreenName, string> = {
   [SCREENS.ONRAMP_WIDGET]: 'Onramp',
   [SCREENS.ONRAMP_AMOUNT]: 'Buy Crypto',
   [SCREENS.ONRAMP_QUOTES]: 'Compare Providers',
-  [SCREENS.OFFRAMP_QUOTES]: 'Sell Crypto',
 } as const;
 
 /**

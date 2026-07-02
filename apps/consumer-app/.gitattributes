@@ -1,0 +1,3 @@
+# Ensure the Doppler hook keeps LF line endings (bash scripts must not use CRLF)
+# and is marked executable on every platform.
+eas-hooks/install-doppler.sh text eol=lf

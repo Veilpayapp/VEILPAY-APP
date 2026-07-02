@@ -228,7 +228,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.opacityButtonBackdrop,
   },
   currencySymbol: {
-    fontFamily: typography.fontFamily.display,
+    fontFamily: typography.fontFamily.headlineBold,
     fontSize: 18,
     color: colors.textPrimary,
     fontWeight: 'bold',

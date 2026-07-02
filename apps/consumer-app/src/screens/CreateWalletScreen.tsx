@@ -145,7 +145,7 @@ interface CreateWalletScreenProps {
       setIsCreating(false);
     }
 
-    navigation.navigate(SCREENS.VERIFY_WALLET as any, {
+    navigation.navigate(SCREENS.VERIFY_WALLET, {
       seedWords,
       derivedAddress: addressToConnect,
     });

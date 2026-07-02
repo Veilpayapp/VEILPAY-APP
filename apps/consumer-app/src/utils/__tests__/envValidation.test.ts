@@ -18,7 +18,6 @@ describe('envValidation', () => {
 
   it('fails when EXPO_PUBLIC_BACKEND_BASE_URL is missing', () => {
     delete process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
-    delete process.env.EXPO_PUBLIC_ALCHEMY_API_KEY;
 
     const result = validateEnvironment();
 
@@ -29,7 +28,6 @@ describe('envValidation', () => {
 
   it('passes when EXPO_PUBLIC_BACKEND_BASE_URL is valid', () => {
     process.env.EXPO_PUBLIC_BACKEND_BASE_URL = 'https://api.veilpay.app';
-    process.env.EXPO_PUBLIC_ALCHEMY_API_KEY = 'test-key';
 
     const result = validateEnvironment();
 
@@ -39,8 +37,6 @@ describe('envValidation', () => {
 
   it('warns when important but non-critical vars are missing', () => {
     process.env.EXPO_PUBLIC_BACKEND_BASE_URL = 'https://api.veilpay.app';
-    process.env.EXPO_PUBLIC_ALCHEMY_API_KEY = 'test-key';
-    delete process.env.EXPO_PUBLIC_INFURA_API_KEY;
     delete process.env.EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID;
     delete process.env.EXPO_PUBLIC_SENTRY_DSN;
 
@@ -52,7 +48,6 @@ describe('envValidation', () => {
 
   it('rejects invalid URL format for EXPO_PUBLIC_BACKEND_BASE_URL', () => {
     process.env.EXPO_PUBLIC_BACKEND_BASE_URL = 'not-a-url';
-    process.env.EXPO_PUBLIC_ALCHEMY_API_KEY = 'test-key';
 
     const result = validateEnvironment();
 
@@ -62,7 +57,6 @@ describe('envValidation', () => {
 
   it('generates user-friendly summary', () => {
     delete process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
-    delete process.env.EXPO_PUBLIC_ALCHEMY_API_KEY;
 
     const result = validateEnvironment();
     const summary = getEnvValidationSummary(result);
@@ -71,12 +65,5 @@ describe('envValidation', () => {
     expect(summary).toContain('Backend server URL');
   });
 
-  it('passes in dev mode even without Alchemy key', () => {
-    process.env.EXPO_PUBLIC_BACKEND_BASE_URL = 'https://api.veilpay.app';
-    delete process.env.EXPO_PUBLIC_ALCHEMY_API_KEY;
 
-    const result = validateEnvironment();
-
-    expect(result.isValid).toBe(true);
-  });
 });

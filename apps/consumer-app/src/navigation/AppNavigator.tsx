@@ -38,6 +38,7 @@ import {
   OnrampWidgetScreen,
   OnrampAmountScreen,
 } from "../features/fiat-gateway/screens";
+import { OnrampQuotesScreen } from "../screens/OnrampQuotesScreen";
 import { AddCustomNetworkScreen } from "../screens/AddCustomNetworkScreen";
 import type { TransactionRecord } from "../types/transactions";
 import type { PaymentToken } from "../types/tokens";
@@ -420,6 +421,11 @@ export function AppNavigator({ initialRouteName = SCREENS.ONBOARDING }: AppNavig
           name={SCREENS.ONRAMP_AMOUNT}
           component={OnrampAmountScreen}
           options={getScreenTransition(SCREENS.ONRAMP_AMOUNT)}
+        />
+        <Stack.Screen
+          name={SCREENS.ONRAMP_QUOTES}
+          component={OnrampQuotesScreen}
+          options={getScreenTransition(SCREENS.ONRAMP_QUOTES)}
         />
         <Stack.Screen
           name={SCREENS.SET_PASSWORD}

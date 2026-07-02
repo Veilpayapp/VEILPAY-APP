@@ -13,7 +13,7 @@ describe('AddCustomNetworkScreen', () => {
   it('renders without crashing', () => {
     const { queryAllByText } = render(
       <NavigationContainer>
-        <AddCustomNetworkScreen navigation={{} as any} route={{ params: {} } as any} />
+        <AddCustomNetworkScreen {...({ navigation: {}, route: { params: {} } } as any)} />
       </NavigationContainer>
     );
     expect(queryAllByText(/Network/i).length).toBeGreaterThan(0);

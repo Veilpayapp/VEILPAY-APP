@@ -1,0 +1,3250 @@
+FAIL src/screens/__tests__/CreateWalletScreen.test.tsx
+  ÔùÅ Console
+
+    console.warn
+      InteractionManager has been deprecated and will be removed in a future release. Please refactor long tasks into smaller ones, and  use 'requestIdleCallback' instead.
+
+      93 |
+      94 |     // Run after screen transition to ensure smooth entering animation
+    > 95 |     const interaction = InteractionManager.runAfterInteractions(() => {
+         |                         ^
+      96 |       generateSecureSeed();
+      97 |     });
+      98 |
+
+      at warn (../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-config@0.85.3_@babel+core@7.29.0_b_t5pm7gotxyjuz553c5kcpxldyu/node_modules/react-native/Libraries/Utilities/warnOnce.js:27:11)
+      at Object.warnOnce [as InteractionManager] (../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-config@0.85.3_@babel+core@7.29.0_b_t5pm7gotxyjuz553c5kcpxldyu/node_modules/react-native/index.js:233:5)
+      at InteractionManager (src/screens/CreateWalletScreen.tsx:95:25)
+      at Object.react_stack_bottom_frame (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:15755:20)
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at commitHookEffectListMount (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:9530:29)
+      at commitHookPassiveMountEffects (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:9617:11)
+      at commitPassiveMountOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11205:13)
+      at recursivelyTraversePassiveMountEffects (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11160:11)
+      at commitPassiveMountOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:11240:11)
+      at flushPendingEffects (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14086:11)
+      at performWorkOnRootViaSchedulerTask (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2896:11)
+      at flushActQueue (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:590:34)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.act (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:884:10)
+      at actImplementation (../../node_modules/.pnpm/@testing-library+react-native@13.3.3_jest@29.7.0_@types+node@20.19.39_ts-node@10.9.2_@types+n_rshtlkxnyqpewejfvxc4etzl5y/node_modules/@testing-library/react-native/src/act.ts:30:25)
+      at renderWithAct (../../node_modules/.pnpm/@testing-library+react-native@13.3.3_jest@29.7.0_@types+node@20.19.39_ts-node@10.9.2_@types+n_rshtlkxnyqpewejfvxc4etzl5y/node_modules/@testing-library/react-native/src/render-act.ts:13:11)
+      at renderInternal (../../node_modules/.pnpm/@testing-library+react-native@13.3.3_jest@29.7.0_@types+node@20.19.39_ts-node@10.9.2_@types+n_rshtlkxnyqpewejfvxc4etzl5y/node_modules/@testing-library/react-native/src/render.tsx:69:33)
+      at renderInternal (../../node_modules/.pnpm/@testing-library+react-native@13.3.3_jest@29.7.0_@types+node@20.19.39_ts-node@10.9.2_@types+n_rshtlkxnyqpewejfvxc4etzl5y/node_modules/@testing-library/react-native/src/render.tsx:44:10)
+      at Object.<anonymous> (src/screens/__tests__/CreateWalletScreen.test.tsx:127:33)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+      at node_modules/@babel/runtime/helpers/asyncToGenerator.js:22:7
+      at Object.<anonymous> (node_modules/@babel/runtime/helpers/asyncToGenerator.js:14:12)
+
+    console.error
+      [CreateWallet] Seed generation error: Error: Entropy failure
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\screens\__tests__\CreateWalletScreen.test.tsx:139:59)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:22:7
+          at new Promise (<anonymous>)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:14:12)
+          at Promise.then.completed (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:316:40)
+          at _runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12)
+
+      77 |         }
+      78 |       } catch (error) {
+    > 79 |         console.error('[CreateWallet] Seed generation error:', error);
+         |                 ^
+      80 |         if (isMounted) {
+      81 |           const errorMessage = error instanceof Error
+      82 |             ? `Failed to generate seed: ${error.message}`
+
+      at error (src/screens/CreateWalletScreen.tsx:79:17)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+  ÔùÅ CreateWalletScreen ÔÇ║ checkbox enables the confirm button, which navigates on press
+
+    Unable to find an element with testID: btn-CONTINUE
+
+    [
+      <View>
+        <View
+          accessible={true}
+          testID="back-btn"
+        >
+          <Text>
+            BACK
+          </Text>
+        </View>
+        <Text>
+          CREATE WALLET
+        </Text>
+        <View />
+      </View>,
+      <View>
+        <RCTScrollView>
+          <View>
+            <View>
+              <View>
+                <View>
+                  <View
+                    testID="icon"
+                  />
+                </View>
+                <View>
+                  <Text>
+                    KEEP THIS SAFE
+                  </Text>
+                  <Text>
+                    Write down your seed phrase and store it offline. Anyone with these words can access your funds.
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <Text>
+              YOUR RECOVERY PHRASE
+            </Text>
+            <Text>
+              12 words ÔÇö do not share with anyone
+            </Text>
+            <View>
+              <View>
+                <View>
+                  <Text>
+                    1
+                  </Text>
+                  <Text>
+                    word1
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    2
+                  </Text>
+                  <Text>
+                    word2
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    3
+                  </Text>
+                  <Text>
+                    word3
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    4
+                  </Text>
+                  <Text>
+                    word4
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    5
+                  </Text>
+                  <Text>
+                    word5
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    6
+                  </Text>
+                  <Text>
+                    word6
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    7
+                  </Text>
+                  <Text>
+                    word7
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    8
+                  </Text>
+                  <Text>
+                    word8
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    9
+                  </Text>
+                  <Text>
+                    word9
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    10
+                  </Text>
+                  <Text>
+                    word10
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    11
+                  </Text>
+                  <Text>
+                    word11
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    12
+                  </Text>
+                  <Text>
+                    word12
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={true}
+              testID="btn-COPY TO CLIPBOARD"
+            >
+              <Text>
+                COPY TO CLIPBOARD
+              </Text>
+            </View>
+            <View
+              accessibilityHint="Required before continuing"
+              accessibilityLabel="I have saved my seed phrase securely"
+              accessibilityRole="checkbox"
+              accessibilityState={
+                {
+                  "checked": true,
+                }
+              }
+              accessible={true}
+            >
+              <View>
+                <View
+                  testID="icon"
+                />
+              </View>
+              <Text>
+                I've written down my seed phrase and stored it securely
+              </Text>
+            </View>
+            <View>
+              <View>
+                <Text>
+                  YOUR WALLET ADDRESS
+                </Text>
+                <Text>
+                  0xAbCdEf1234567890AbCdEf1234567890AbCdEf12
+                </Text>
+              </View>
+            </View>
+            <View
+              accessibilityState={
+                {
+                  "disabled": false,
+                }
+              }
+              accessible={true}
+              testID="btn-CONTINUE TO VERIFY"
+            >
+              <Text>
+                CONTINUE TO VERIFY
+              </Text>
+            </View>
+          </View>
+        </RCTScrollView>
+      </View>,
+      <View
+        testID="toast"
+      />,
+    ]
+
+      179 |     fireEvent.press(checkbox);
+      180 |     // After checkbox: button is enabled and text changes to CONTINUE
+    > 181 |     const btnEnabled = getByTestId('btn-CONTINUE');
+          |                        ^
+      182 |     expect(btnEnabled.props.accessibilityState.disabled).toBe(false);
+      183 |     fireEvent.press(btnEnabled);
+      184 |     await waitFor(() => {
+
+      at Object.getByTestId (src/screens/__tests__/CreateWalletScreen.test.tsx:181:24)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+  ÔùÅ CreateWalletScreen ÔÇ║ shows error toast when wallet creation fails
+
+    Unable to find an element with testID: btn-CONTINUE
+
+    [
+      <View>
+        <View
+          accessible={true}
+          testID="back-btn"
+        >
+          <Text>
+            BACK
+          </Text>
+        </View>
+        <Text>
+          CREATE WALLET
+        </Text>
+        <View />
+      </View>,
+      <View>
+        <RCTScrollView>
+          <View>
+            <View>
+              <View>
+                <View>
+                  <View
+                    testID="icon"
+                  />
+                </View>
+                <View>
+                  <Text>
+                    KEEP THIS SAFE
+                  </Text>
+                  <Text>
+                    Write down your seed phrase and store it offline. Anyone with these words can access your funds.
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <Text>
+              YOUR RECOVERY PHRASE
+            </Text>
+            <Text>
+              12 words ÔÇö do not share with anyone
+            </Text>
+            <View>
+              <View>
+                <View>
+                  <Text>
+                    1
+                  </Text>
+                  <Text>
+                    word1
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    2
+                  </Text>
+                  <Text>
+                    word2
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    3
+                  </Text>
+                  <Text>
+                    word3
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    4
+                  </Text>
+                  <Text>
+                    word4
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    5
+                  </Text>
+                  <Text>
+                    word5
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    6
+                  </Text>
+                  <Text>
+                    word6
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    7
+                  </Text>
+                  <Text>
+                    word7
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    8
+                  </Text>
+                  <Text>
+                    word8
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    9
+                  </Text>
+                  <Text>
+                    word9
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    10
+                  </Text>
+                  <Text>
+                    word10
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    11
+                  </Text>
+                  <Text>
+                    word11
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    12
+                  </Text>
+                  <Text>
+                    word12
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={true}
+              testID="btn-COPY TO CLIPBOARD"
+            >
+              <Text>
+                COPY TO CLIPBOARD
+              </Text>
+            </View>
+            <View
+              accessibilityHint="Required before continuing"
+              accessibilityLabel="I have saved my seed phrase securely"
+              accessibilityRole="checkbox"
+              accessibilityState={
+                {
+                  "checked": true,
+                }
+              }
+              accessible={true}
+            >
+              <View>
+                <View
+                  testID="icon"
+                />
+              </View>
+              <Text>
+                I've written down my seed phrase and stored it securely
+              </Text>
+            </View>
+            <View>
+              <View>
+                <Text>
+                  YOUR WALLET ADDRESS
+                </Text>
+                <Text>
+                  0xAbCdEf1234567890AbCdEf1234567890AbCdEf12
+                </Text>
+              </View>
+            </View>
+            <View
+              accessibilityState={
+                {
+                  "disabled": false,
+                }
+              }
+              accessible={true}
+              testID="btn-CONTINUE TO VERIFY"
+            >
+              <Text>
+                CONTINUE TO VERIFY
+              </Text>
+            </View>
+          </View>
+        </RCTScrollView>
+      </View>,
+      <View
+        testID="toast"
+      />,
+    ]
+
+      197 |     });
+      198 |     fireEvent.press(getByText("I've written down my seed phrase and stored it securely"));
+    > 199 |     const btn = getByTestId('btn-CONTINUE');
+          |                 ^
+      200 |     fireEvent.press(btn);
+      201 |     await waitFor(() => {
+      202 |       expect(mockShow).toHaveBeenCalledWith('Failed to create wallet. Please try again.', 'error');
+
+      at Object.getByTestId (src/screens/__tests__/CreateWalletScreen.test.tsx:199:17)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+PASS src/stores/__tests__/walletStore.test.ts (7.04 s)
+PASS src/utils/__tests__/multiChainDerivation.test.ts (7.34 s)
+PASS src/stores/__tests__/sensitiveKeyIsolation.property.test.ts (8.041 s)
+PASS src/stores/__tests__/transactionStore.test.ts
+  ÔùÅ Console
+
+    console.error
+      Error: SyntaxError: "undefined" is not valid JSON
+          at JSON.parse (<anonymous>)
+          at parse (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:292:21)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5) Context: { scope: 'wallet-store' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/stores/walletStore.ts:508:23
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:437:50
+
+    console.error
+      Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+      1. You might have mismatching versions of React and the renderer (such as React DOM)
+      2. You might be breaking the Rules of Hooks
+      3. You might have more than one copy of React in the same app
+      See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.
+
+      14 |       if (typeof (Module as any)[key] === 'function') {
+      15 |         try {
+    > 16 |           (Module as any)[key]({} as any, {} as any, {} as any);
+         |                               ^
+      17 |         } catch(e) {}
+      18 |       }
+      19 |     }
+
+      at resolveDispatcher (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:518:17)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.useCallback (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:1204:14)
+      at useStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:10:11)
+      at Object.useBoundStore [as useTransactionStore] (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:18:39)
+      at Object.<anonymous> (src/stores/__tests__/transactionStore.test.ts:16:31)
+
+    console.error
+      Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+      1. You might have mismatching versions of React and the renderer (such as React DOM)
+      2. You might be breaking the Rules of Hooks
+      3. You might have more than one copy of React in the same app
+      See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.
+
+      215 |
+      216 | // Helper hooks
+    > 217 | export const useTransactions = () => useTransactionStore((state) => state.transactions);
+          |                                      ^
+      218 |
+
+      at resolveDispatcher (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:518:17)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.useCallback (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:1204:14)
+      at useStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:10:11)
+      at useBoundStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:18:39)
+      at Object.useTransactionStore [as useTransactions] (src/stores/transactionStore.ts:217:38)
+      at Object.<anonymous> (src/stores/__tests__/transactionStore.test.ts:16:31)
+
+PASS src/screens/__tests__/OnrampWidgetScreen.test.tsx (10.065 s)
+  ÔùÅ Console
+
+    console.error
+      Error: TypeError: Cannot read properties of undefined (reading 'getItem')
+          at Object.getItem (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:294:33)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:307:20
+          at hydrate (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:390:53)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:470:5
+          at createStoreImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:21:32)
+          at Object.createStore (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:24:53)
+          at createImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\react.js:17:23)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\stores\walletStore.ts:253:52)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\styles\design-tokens.ts:12:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\OnrampWidgetScreen.tsx:5:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\__tests__\OnrampWidgetScreen.test.tsx:3:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12) Context: { scope: 'wallet-store' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/stores/walletStore.ts:508:23
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:437:50
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:307:20
+      at Object.catch (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:325:38)
+      at hydrate (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:433:13)
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:470:5
+      at createStoreImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:21:32)
+      at Object.createStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:24:53)
+      at createImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:17:23)
+      at Object.<anonymous> (src/stores/walletStore.ts:253:52)
+      at Object.require (src/styles/design-tokens.ts:12:1)
+      at Object.require (src/screens/OnrampWidgetScreen.tsx:5:1)
+      at Object.require (src/screens/__tests__/OnrampWidgetScreen.test.tsx:3:1)
+
+PASS src/screens/__tests__/PaymentSuccessScreen.test.tsx (10.035 s)
+  ÔùÅ Console
+
+    console.error
+      Error: TypeError: Cannot read properties of undefined (reading 'getItem')
+          at Object.getItem (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:294:33)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:307:20
+          at hydrate (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:390:53)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:470:5
+          at createStoreImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:21:32)
+          at Object.createStore (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:24:53)
+          at createImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\react.js:17:23)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\stores\walletStore.ts:253:52)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\styles\design-tokens.ts:12:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\PaymentSuccessScreen.tsx:31:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\__tests__\PaymentSuccessScreen.test.tsx:3:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12) Context: { scope: 'wallet-store' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/stores/walletStore.ts:508:23
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:437:50
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:307:20
+      at Object.catch (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:325:38)
+      at hydrate (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:433:13)
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:470:5
+      at createStoreImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:21:32)
+      at Object.createStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:24:53)
+      at createImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:17:23)
+      at Object.<anonymous> (src/stores/walletStore.ts:253:52)
+      at Object.require (src/styles/design-tokens.ts:12:1)
+      at Object.require (src/screens/PaymentSuccessScreen.tsx:31:1)
+      at Object.require (src/screens/__tests__/PaymentSuccessScreen.test.tsx:3:1)
+
+    console.warn
+      Skipping generic render for PaymentSuccessScreen Cannot read properties of undefined (reading 'params')
+
+      30 |       }
+      31 |     } catch(e: unknown) {
+    > 32 |       console.warn("Skipping generic render for PaymentSuccessScreen", (e as Error).message);
+         |               ^
+      33 |     }
+      34 |   });
+      35 | });
+
+      at Object.warn (src/screens/__tests__/PaymentSuccessScreen.test.tsx:32:15)
+
+PASS src/screens/__tests__/OnboardingScreen.test.tsx (7.687 s)
+PASS src/hooks/__tests__/usePaymentTransaction.test.ts (10.615 s)
+  ÔùÅ Console
+
+    console.warn
+      bigint: Failed to load bindings, pure JS will be used (try npm run rebuild?)
+
+      1 | import { Transaction, SystemProgram, Keypair, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+    > 2 | import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+        | ^
+      3 | import { derivePath } from 'ed25519-hd-key';
+      4 | import { mnemonicToSeed } from '@scure/bip39';
+      5 | import { Buffer } from 'buffer';
+
+      at Object.<anonymous> (../../node_modules/.pnpm/bigint-buffer-fixed@1.1.6/node_modules/bigint-buffer-fixed/dist/node.js:11:17)
+      at Object.require (../../node_modules/.pnpm/@solana+buffer-layout-utils@0.2.0_bufferutil@4.1.0_encoding@0.1.13_typescript@5.9.3_utf-8-validate@6.0.6/node_modules/@solana/buffer-layout-utils/src/bigint.ts:2:1)
+      at Object.require (../../node_modules/.pnpm/@solana+buffer-layout-utils@0.2.0_bufferutil@4.1.0_encoding@0.1.13_typescript@5.9.3_utf-8-validate@6.0.6/node_modules/@solana/buffer-layout-utils/src/index.ts:2:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/instructions/amountToUiAmount.ts:2:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/actions/amountToUiAmount.ts:4:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/actions/index.ts:1:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/index.ts:1:1)
+      at Object.require (src/utils/solanaSigner.ts:2:1)
+      at Object.require (src/hooks/usePaymentTransaction.ts:71:1)
+      at Object.require (src/hooks/__tests__/usePaymentTransaction.test.ts:1:1)
+
+PASS src/screens/__tests__/TokenSelectorScreen.test.tsx (11.632 s)
+  ÔùÅ Console
+
+    console.warn
+      SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context
+
+      1 | import React from 'react';
+      2 | import { View, Text, StyleSheet } from 'react-native';
+    > 3 | import { MotiView, MotiText } from 'moti';
+        | ^
+      4 | import { SovereignButton } from './SovereignButton';
+      5 | import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
+      6 |
+
+      at warn (../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-config@0.85.3_@babel+core@7.29.0_b_t5pm7gotxyjuz553c5kcpxldyu/node_modules/react-native/Libraries/Utilities/warnOnce.js:27:11)
+      at Object.warnOnce [as SafeAreaView] (../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-config@0.85.3_@babel+core@7.29.0_b_t5pm7gotxyjuz553c5kcpxldyu/node_modules/react-native/index.js:98:5)
+      at Object.RSafeAreaView (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/safe-area-view.tsx:5:36)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/index.ts:3:1)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/index.tsx:2:1)
+      at Object.require (src/components/EmptyState.tsx:3:1)
+      at Object.require (src/screens/TokenSelectorScreen.tsx:23:1)
+      at Object.require (src/screens/__tests__/TokenSelectorScreen.test.tsx:3:1)
+
+    console.warn
+      Failed to fetch live market data: TypeError: data.map is not a function
+          at map (D:\Veilpay\apps\consumer-app\src\utils\marketData.ts:229:32)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+      323 |       return liveQuotes;
+      324 |     } catch (error) {
+    > 325 |       console.warn('Failed to fetch live market data:', error);
+          |               ^
+      326 |       return cachedQuotes;
+      327 |     } finally {
+      328 |       inFlightRequests.delete(requestKey);
+
+      at warn (src/utils/marketData.ts:325:15)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.error
+      An update to TokenSelectorScreen inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      47 |     try {
+      48 |       const nextQuotes = await getTokenMarketData(normalizedSymbols);
+    > 49 |       setQuotes(nextQuotes);
+         |       ^
+      50 |
+      51 |       const timestamps = Object.values(nextQuotes).map((quote) => quote.lastUpdated);
+      52 |       const latestTimestamp = timestamps.length > 0 ? Math.max(...timestamps) : null;
+
+      at ../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at warnIfUpdatesNotWrappedWithActDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14401:9)
+      at scheduleUpdateOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:12086:9)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6208:13)
+      at dispatchSetState (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6165:7)
+      at setQuotes (src/hooks/useMarketData.ts:49:7)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+    console.error
+      An update to TokenSelectorScreen inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      51 |       const timestamps = Object.values(nextQuotes).map((quote) => quote.lastUpdated);
+      52 |       const latestTimestamp = timestamps.length > 0 ? Math.max(...timestamps) : null;
+    > 53 |       setLastUpdated(latestTimestamp);
+         |       ^
+      54 |     } catch (fetchError) {
+      55 |       setError(fetchError instanceof Error ? fetchError.message : 'Failed to load market data');
+      56 |     } finally {
+
+      at ../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at warnIfUpdatesNotWrappedWithActDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14401:9)
+      at scheduleUpdateOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:12086:9)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6208:13)
+      at dispatchSetState (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6165:7)
+      at setLastUpdated (src/hooks/useMarketData.ts:53:7)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+    console.error
+      An update to TokenSelectorScreen inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      55 |       setError(fetchError instanceof Error ? fetchError.message : 'Failed to load market data');
+      56 |     } finally {
+    > 57 |       setIsLoading(false);
+         |       ^
+      58 |     }
+      59 |   }, [normalizedSymbols]);
+      60 |
+
+      at ../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at warnIfUpdatesNotWrappedWithActDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14401:9)
+      at scheduleUpdateOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:12086:9)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6208:13)
+      at dispatchSetState (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6165:7)
+      at setIsLoading (src/hooks/useMarketData.ts:57:7)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+PASS src/utils/__tests__/balanceFetcher.test.ts
+PASS src/screens/__tests__/PaymentConfirmationScreen.test.tsx (11.757 s)
+  ÔùÅ Console
+
+    console.error
+      Error: TypeError: Cannot read properties of undefined (reading 'getItem')
+          at Object.getItem (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:294:33)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:307:20
+          at hydrate (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:390:53)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:470:5
+          at createStoreImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:21:32)
+          at Object.createStore (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:24:53)
+          at createImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\react.js:17:23)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\stores\walletStore.ts:253:52)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\styles\design-tokens.ts:12:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\PaymentConfirmationScreen.tsx:37:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\__tests__\PaymentConfirmationScreen.test.tsx:3:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12) Context: { scope: 'wallet-store' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/stores/walletStore.ts:508:23
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:437:50
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:307:20
+      at Object.catch (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:325:38)
+      at hydrate (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:433:13)
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:470:5
+      at createStoreImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:21:32)
+      at Object.createStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:24:53)
+      at createImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:17:23)
+      at Object.<anonymous> (src/stores/walletStore.ts:253:52)
+      at Object.require (src/styles/design-tokens.ts:12:1)
+      at Object.require (src/screens/PaymentConfirmationScreen.tsx:37:1)
+      at Object.require (src/screens/__tests__/PaymentConfirmationScreen.test.tsx:3:1)
+
+    console.warn
+      bigint: Failed to load bindings, pure JS will be used (try npm run rebuild?)
+
+      1 | import { Transaction, SystemProgram, Keypair, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+    > 2 | import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+        | ^
+      3 | import { derivePath } from 'ed25519-hd-key';
+      4 | import { mnemonicToSeed } from '@scure/bip39';
+      5 | import { Buffer } from 'buffer';
+
+      at Object.<anonymous> (../../node_modules/.pnpm/bigint-buffer-fixed@1.1.6/node_modules/bigint-buffer-fixed/dist/node.js:11:17)
+      at Object.require (../../node_modules/.pnpm/@solana+buffer-layout-utils@0.2.0_bufferutil@4.1.0_encoding@0.1.13_typescript@5.9.3_utf-8-validate@6.0.6/node_modules/@solana/buffer-layout-utils/src/bigint.ts:2:1)
+      at Object.require (../../node_modules/.pnpm/@solana+buffer-layout-utils@0.2.0_bufferutil@4.1.0_encoding@0.1.13_typescript@5.9.3_utf-8-validate@6.0.6/node_modules/@solana/buffer-layout-utils/src/index.ts:2:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/instructions/amountToUiAmount.ts:2:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/actions/amountToUiAmount.ts:4:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/actions/index.ts:1:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/index.ts:1:1)
+      at Object.require (src/utils/solanaSigner.ts:2:1)
+      at Object.require (src/hooks/usePaymentTransaction.ts:71:1)
+      at Object.require (src/screens/PaymentConfirmationScreen.tsx:68:1)
+      at Object.require (src/screens/__tests__/PaymentConfirmationScreen.test.tsx:3:1)
+
+    console.warn
+      Skipping generic render for PaymentConfirmationScreen Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+      
+      Check the render method of `PaymentConfirmationScreen`.
+
+      30 |       }
+      31 |     } catch(e: unknown) {
+    > 32 |       console.warn("Skipping generic render for PaymentConfirmationScreen", (e as Error).message);
+         |               ^
+      33 |     }
+      34 |   });
+      35 | });
+
+      at Object.warn (src/screens/__tests__/PaymentConfirmationScreen.test.tsx:32:15)
+
+PASS src/screens/__tests__/QRScannerScreen.test.tsx (5.236 s)
+PASS src/utils/__tests__/solanaRpcPool.test.ts
+PASS src/screens/__tests__/SendPaymentScreen.test.tsx (9.256 s)
+  ÔùÅ Console
+
+    console.warn
+      The global process.env.EXPO_OS is not defined. This should be inlined by babel-preset-expo during transformation.
+
+      15 |  */
+      16 |
+    > 17 | import * as LocalAuthentication from 'expo-local-authentication';
+         | ^
+      18 | import { useState, useEffect } from 'react';
+      19 | import { Platform } from 'react-native';
+      20 |
+
+      at Object.warn (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/Platform.ts:15:11)
+      at Object.require (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/index.ts:11:1)
+      at Object.require (../../node_modules/.pnpm/expo-local-authentication@55.0.14_expo@55.0.26/node_modules/expo-local-authentication/src/LocalAuthentication.ts:1:1)
+      at Object.require (src/hooks/useBiometrics.ts:17:1)
+      at Object.require (src/screens/SendPaymentScreen.tsx:37:1)
+      at Object.require (src/screens/__tests__/SendPaymentScreen.test.tsx:3:1)
+
+    console.error
+      An update to SendPaymentScreen inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      107 |
+      108 |         if (isMounted) {
+    > 109 |           setStatus(prev => ({
+          |           ^
+      110 |             ...prev,
+      111 |             isAvailable: compatible && enrolled,
+      112 |             supportedTypes: types,
+
+      at ../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at warnIfUpdatesNotWrappedWithActDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14401:9)
+      at scheduleUpdateOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:12086:9)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6208:13)
+      at dispatchSetState (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6165:7)
+      at setStatus (src/hooks/useBiometrics.ts:109:11)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+    console.warn
+      Failed to fetch live market data: TypeError: data.map is not a function
+          at map (D:\Veilpay\apps\consumer-app\src\utils\marketData.ts:229:32)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+      323 |       return liveQuotes;
+      324 |     } catch (error) {
+    > 325 |       console.warn('Failed to fetch live market data:', error);
+          |               ^
+      326 |       return cachedQuotes;
+      327 |     } finally {
+      328 |       inFlightRequests.delete(requestKey);
+
+      at warn (src/utils/marketData.ts:325:15)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.error
+      An update to SendPaymentScreen inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      47 |     try {
+      48 |       const nextQuotes = await getTokenMarketData(normalizedSymbols);
+    > 49 |       setQuotes(nextQuotes);
+         |       ^
+      50 |
+      51 |       const timestamps = Object.values(nextQuotes).map((quote) => quote.lastUpdated);
+      52 |       const latestTimestamp = timestamps.length > 0 ? Math.max(...timestamps) : null;
+
+      at ../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at warnIfUpdatesNotWrappedWithActDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14401:9)
+      at scheduleUpdateOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:12086:9)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6208:13)
+      at dispatchSetState (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6165:7)
+      at setQuotes (src/hooks/useMarketData.ts:49:7)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+    console.error
+      An update to SendPaymentScreen inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      51 |       const timestamps = Object.values(nextQuotes).map((quote) => quote.lastUpdated);
+      52 |       const latestTimestamp = timestamps.length > 0 ? Math.max(...timestamps) : null;
+    > 53 |       setLastUpdated(latestTimestamp);
+         |       ^
+      54 |     } catch (fetchError) {
+      55 |       setError(fetchError instanceof Error ? fetchError.message : 'Failed to load market data');
+      56 |     } finally {
+
+      at ../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at warnIfUpdatesNotWrappedWithActDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14401:9)
+      at scheduleUpdateOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:12086:9)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6208:13)
+      at dispatchSetState (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6165:7)
+      at setLastUpdated (src/hooks/useMarketData.ts:53:7)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+    console.error
+      An update to SendPaymentScreen inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      55 |       setError(fetchError instanceof Error ? fetchError.message : 'Failed to load market data');
+      56 |     } finally {
+    > 57 |       setIsLoading(false);
+         |       ^
+      58 |     }
+      59 |   }, [normalizedSymbols]);
+      60 |
+
+      at ../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at warnIfUpdatesNotWrappedWithActDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14401:9)
+      at scheduleUpdateOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:12086:9)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6208:13)
+      at dispatchSetState (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6165:7)
+      at setIsLoading (src/hooks/useMarketData.ts:57:7)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+PASS src/utils/__tests__/marketData.test.ts
+  ÔùÅ Console
+
+    console.warn
+      Failed to fetch live market data: Error: API failure
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\utils\__tests__\marketData.test.ts:91:50)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:22:7
+          at new Promise (<anonymous>)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:14:12)
+          at Promise.then.completed (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at _runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12)
+
+      323 |       return liveQuotes;
+      324 |     } catch (error) {
+    > 325 |       console.warn('Failed to fetch live market data:', error);
+          |               ^
+      326 |       return cachedQuotes;
+      327 |     } finally {
+      328 |       inFlightRequests.delete(requestKey);
+
+      at warn (src/utils/marketData.ts:325:15)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.warn
+      Failed to fetch live market data: Error: Binance API error: 429
+          at D:\Veilpay\apps\consumer-app\src\utils\marketData.ts:215:13
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+      323 |       return liveQuotes;
+      324 |     } catch (error) {
+    > 325 |       console.warn('Failed to fetch live market data:', error);
+          |               ^
+      326 |       return cachedQuotes;
+      327 |     } finally {
+      328 |       inFlightRequests.delete(requestKey);
+
+      at warn (src/utils/marketData.ts:325:15)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.warn
+      Failed to fetch live market data: Error: Binance API error: 500
+          at D:\Veilpay\apps\consumer-app\src\utils\marketData.ts:215:13
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+      323 |       return liveQuotes;
+      324 |     } catch (error) {
+    > 325 |       console.warn('Failed to fetch live market data:', error);
+          |               ^
+      326 |       return cachedQuotes;
+      327 |     } finally {
+      328 |       inFlightRequests.delete(requestKey);
+
+      at warn (src/utils/marketData.ts:325:15)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.warn
+      Failed to load market data cache: SyntaxError: Unexpected token 'c', "corrupted-payload{[" is not valid JSON
+          at JSON.parse (<anonymous>)
+          at parse (D:\Veilpay\apps\consumer-app\src\utils\marketData.ts:115:25)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+      129 |     }
+      130 |   } catch (error) {
+    > 131 |     console.warn('Failed to load market data cache:', error);
+          |             ^
+      132 |   }
+      133 | }
+      134 |
+
+      at warn (src/utils/marketData.ts:131:13)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+    console.warn
+      Failed to fetch live market data: Error: Network offline
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\utils\__tests__\marketData.test.ts:307:50)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:22:7
+          at new Promise (<anonymous>)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:14:12)
+          at Promise.then.completed (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at _runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12)
+
+      323 |       return liveQuotes;
+      324 |     } catch (error) {
+    > 325 |       console.warn('Failed to fetch live market data:', error);
+          |               ^
+      326 |       return cachedQuotes;
+      327 |     } finally {
+      328 |       inFlightRequests.delete(requestKey);
+
+      at warn (src/utils/marketData.ts:325:15)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.warn
+      Failed to fetch live market data: Error: Network offline
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\utils\__tests__\marketData.test.ts:326:50)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:22:7
+          at new Promise (<anonymous>)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:14:12)
+          at Promise.then.completed (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at _runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12)
+
+      323 |       return liveQuotes;
+      324 |     } catch (error) {
+    > 325 |       console.warn('Failed to fetch live market data:', error);
+          |               ^
+      326 |       return cachedQuotes;
+      327 |     } finally {
+      328 |       inFlightRequests.delete(requestKey);
+
+      at warn (src/utils/marketData.ts:325:15)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.warn
+      Failed to fetch live market data: Error: Network offline
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\utils\__tests__\marketData.test.ts:347:50)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:22:7
+          at new Promise (<anonymous>)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:14:12)
+          at Promise.then.completed (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at _runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12)
+
+      323 |       return liveQuotes;
+      324 |     } catch (error) {
+    > 325 |       console.warn('Failed to fetch live market data:', error);
+          |               ^
+      326 |       return cachedQuotes;
+      327 |     } finally {
+      328 |       inFlightRequests.delete(requestKey);
+
+      at warn (src/utils/marketData.ts:325:15)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+PASS src/services/__tests__/relayerClient.property.test.ts
+PASS src/utils/__tests__/security.test.ts
+  ÔùÅ Console
+
+    console.log
+      [Security] SSL Pinning initialized with dummy hashes
+
+      at log (src/utils/security.ts:56:13)
+
+PASS src/utils/__tests__/secureSigner.test.ts
+PASS src/utils/__tests__/transactionHistory.test.ts
+  ÔùÅ Console
+
+    console.warn
+      Invalid evm address format: not-a-vali...
+
+      319 |   const chainType = getChainTypeFromKey(chainKey);
+      320 |   if (chainType && !validateAddress(address, chainType)) {
+    > 321 |     console.warn(`Invalid ${chainType} address format: ${address.substring(0, 10)}...`);
+          |             ^
+      322 |     return {
+      323 |       transactions: [],
+      324 |       nextCursor: null,
+
+      at warn (src/utils/transactionHistory.ts:321:13)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+      at node_modules/@babel/runtime/helpers/asyncToGenerator.js:22:7
+      at node_modules/@babel/runtime/helpers/asyncToGenerator.js:14:12
+      at apply (src/utils/transactionHistory.ts:352:2)
+      at apply (src/utils/transactionHistory.ts:305:50)
+      at Object.fetchTransactionHistoryPage (src/utils/__tests__/transactionHistory.test.ts:49:26)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+      at node_modules/@babel/runtime/helpers/asyncToGenerator.js:22:7
+      at Object.<anonymous> (node_modules/@babel/runtime/helpers/asyncToGenerator.js:14:12)
+
+    console.warn
+      Indexer fetch failed, falling back to blockchain: Error: Indexer request failed with status 500
+          at D:\Veilpay\apps\consumer-app\src\utils\transactionHistory.ts:282:13
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+      336 |
+      337 |       if (!isAbort) {
+    > 338 |         console.warn('Indexer fetch failed, falling back to blockchain:', error);
+          |                 ^
+      339 |         captureError(error instanceof Error ? error : new Error('Indexer fetch failed'), {
+      340 |           scope: 'transaction-history',
+      341 |           chain: chainKey,
+
+      at warn (src/utils/transactionHistory.ts:338:17)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.error
+      Error: Error: Indexer request failed with status 500
+          at D:\Veilpay\apps\consumer-app\src\utils\transactionHistory.ts:282:13
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5) Context: { scope: 'transaction-history', chain: 'ethereum' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/utils/transactionHistory.ts:339:21
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.error
+      Error: TypeError: response.json is not a function
+          at json (D:\Veilpay\apps\consumer-app\src\utils\publicIndexers.ts:48:33)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5) Context: { chain: 'ethereum' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/utils/publicIndexers.ts:81:19
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+PASS src/utils/__tests__/gasEstimator.test.ts
+PASS src/screens/__tests__/ReceiveQRScreen.test.tsx
+  ÔùÅ Console
+
+    console.warn
+      The global process.env.EXPO_OS is not defined. This should be inlined by babel-preset-expo during transformation.
+
+      22 | import QRCode from 'react-native-qrcode-svg';
+      23 | import { captureRef } from 'react-native-view-shot';
+    > 24 | import * as Sharing from 'expo-sharing';
+         | ^
+      25 | import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
+      26 | import { useWalletStore } from '../stores/walletStore';
+      27 | import { SCREENS } from '../constants/screens';
+
+      at Object.warn (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/Platform.ts:15:11)
+      at Object.require (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/index.ts:11:1)
+      at Object.require (../../node_modules/.pnpm/expo-sharing@55.0.20_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-_jnwf2h5u6zapvydxf6vggd64ny/node_modules/expo-sharing/src/Sharing.ts:1:1)
+      at Object.require (../../node_modules/.pnpm/expo-sharing@55.0.20_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-_jnwf2h5u6zapvydxf6vggd64ny/node_modules/expo-sharing/src/useIncomingShare.ts:4:1)
+      at Object.require (../../node_modules/.pnpm/expo-sharing@55.0.20_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-_jnwf2h5u6zapvydxf6vggd64ny/node_modules/expo-sharing/src/index.ts:3:1)
+      at Object.require (src/screens/ReceiveQRScreen.tsx:24:1)
+      at Object.require (src/screens/__tests__/ReceiveQRScreen.test.tsx:3:1)
+
+PASS src/utils/__tests__/walletConnectSession.test.ts
+PASS src/utils/__tests__/stealthEngine.property.test.ts
+PASS src/screens/__tests__/PrivacyLevelScreen.property.test.tsx
+  ÔùÅ Console
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+    console.error
+      You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one.
+
+      at popActScope (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:556:17)
+      at ../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:844:17
+
+PASS src/screens/__tests__/BiometricSetupScreen.test.tsx (8.744 s)
+  ÔùÅ Console
+
+    console.error
+      Error: TypeError: Cannot read properties of undefined (reading 'getItem')
+          at Object.getItem (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:294:33)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:307:20
+          at hydrate (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:390:53)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:470:5
+          at createStoreImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:21:32)
+          at Object.createStore (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:24:53)
+          at createImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\react.js:17:23)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\stores\walletStore.ts:253:52)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\styles\design-tokens.ts:12:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\BiometricSetupScreen.tsx:11:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\__tests__\BiometricSetupScreen.test.tsx:3:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12) Context: { scope: 'wallet-store' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/stores/walletStore.ts:508:23
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:437:50
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:307:20
+      at Object.catch (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:325:38)
+      at hydrate (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:433:13)
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:470:5
+      at createStoreImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:21:32)
+      at Object.createStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:24:53)
+      at createImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:17:23)
+      at Object.<anonymous> (src/stores/walletStore.ts:253:52)
+      at Object.require (src/styles/design-tokens.ts:12:1)
+      at Object.require (src/screens/BiometricSetupScreen.tsx:11:1)
+      at Object.require (src/screens/__tests__/BiometricSetupScreen.test.tsx:3:1)
+
+    console.warn
+      The global process.env.EXPO_OS is not defined. This should be inlined by babel-preset-expo during transformation.
+
+      13 | import { SovereignButton } from "../components/SovereignButton";
+      14 | import { useSettingsStore } from '../stores/settingsStore';
+    > 15 | import * as LocalAuthentication from 'expo-local-authentication';
+         | ^
+      16 | import Animated, { 
+      17 |   FadeInDown, 
+      18 |   useAnimatedStyle, 
+
+      at Object.warn (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/Platform.ts:15:11)
+      at Object.require (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/index.ts:11:1)
+      at Object.require (../../node_modules/.pnpm/expo-local-authentication@55.0.14_expo@55.0.26/node_modules/expo-local-authentication/src/LocalAuthentication.ts:1:1)
+      at Object.require (src/screens/BiometricSetupScreen.tsx:15:1)
+      at Object.require (src/screens/__tests__/BiometricSetupScreen.test.tsx:3:1)
+
+    console.warn
+      Skipping generic render for BiometricSetupScreen _reactNativeReanimated.Easing.inOut is not a function
+
+      30 |       }
+      31 |     } catch(e: unknown) {
+    > 32 |       console.warn("Skipping generic render for BiometricSetupScreen", (e as Error).message);
+         |               ^
+      33 |     }
+      34 |   });
+      35 | });
+
+      at Object.warn (src/screens/__tests__/BiometricSetupScreen.test.tsx:32:15)
+
+PASS src/utils/__tests__/rpcPool.test.ts
+  ÔùÅ Console
+
+    console.warn
+      [rpcPool] Circuit OPEN for backend-proxy-ethereum ÔÇö cooldown 30s
+
+      112 |     state.status = 'open';
+      113 |     state.openUntil = Date.now() + CIRCUIT_RESET_MS;
+    > 114 |     console.warn(`[rpcPool] Circuit OPEN for ${endpointName} ÔÇö cooldown 30s`);
+          |             ^
+      115 |   } else {
+      116 |     state.status = 'degraded';
+      117 |   }
+
+      at warn (src/utils/rpcPool.ts:114:13)
+      at RpcProviderPool.recordFailure (src/utils/rpcPool.ts:173:11)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.warn
+      [rpcPool] Circuit OPEN for backend-proxy-ethereum ÔÇö cooldown 30s
+
+      112 |     state.status = 'open';
+      113 |     state.openUntil = Date.now() + CIRCUIT_RESET_MS;
+    > 114 |     console.warn(`[rpcPool] Circuit OPEN for ${endpointName} ÔÇö cooldown 30s`);
+          |             ^
+      115 |   } else {
+      116 |     state.status = 'degraded';
+      117 |   }
+
+      at warn (src/utils/rpcPool.ts:114:13)
+      at RpcProviderPool.recordFailure (src/utils/rpcPool.ts:173:11)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.log
+      [rpcPool] Health check passed: backend-proxy-ethereum
+
+      at RpcProviderPool.log (src/utils/rpcPool.ts:208:17)
+
+    console.log
+      [rpcPool] Health check passed: public-ethereum
+
+      at RpcProviderPool.log (src/utils/rpcPool.ts:208:17)
+
+PASS src/screens/__tests__/TransakWebViewScreen.test.tsx
+PASS src/utils/__tests__/stealthEngine.test.ts
+PASS src/screens/__tests__/PrivacyLevelScreen.test.tsx
+  ÔùÅ Console
+
+    console.error
+      Error: TypeError: Cannot read properties of undefined (reading 'getItem')
+          at Object.getItem (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:294:33)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:307:20
+          at hydrate (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:390:53)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:470:5
+          at createStoreImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:21:32)
+          at Object.createStore (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:24:53)
+          at createImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\react.js:17:23)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\stores\walletStore.ts:253:52)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\styles\design-tokens.ts:12:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\PrivacyLevelScreen.tsx:17:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\__tests__\PrivacyLevelScreen.test.tsx:3:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12) Context: { scope: 'wallet-store' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/stores/walletStore.ts:508:23
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:437:50
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:307:20
+      at Object.catch (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:325:38)
+      at hydrate (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:433:13)
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:470:5
+      at createStoreImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:21:32)
+      at Object.createStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:24:53)
+      at createImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:17:23)
+      at Object.<anonymous> (src/stores/walletStore.ts:253:52)
+      at Object.require (src/styles/design-tokens.ts:12:1)
+      at Object.require (src/screens/PrivacyLevelScreen.tsx:17:1)
+      at Object.require (src/screens/__tests__/PrivacyLevelScreen.test.tsx:3:1)
+
+    console.warn
+      Skipping generic render for PrivacyLevelScreen Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+      
+      Check the render method of `PrivacyLevelScreen`.
+
+      30 |       }
+      31 |     } catch(e: unknown) {
+    > 32 |       console.warn("Skipping generic render for PrivacyLevelScreen", (e as Error).message);
+         |               ^
+      33 |     }
+      34 |   });
+      35 | });
+
+      at Object.warn (src/screens/__tests__/PrivacyLevelScreen.test.tsx:32:15)
+
+PASS src/utils/__tests__/encryption.test.ts
+PASS src/screens/__tests__/SetPasswordScreen.test.tsx
+  ÔùÅ Console
+
+    console.error
+      Error: TypeError: Cannot read properties of undefined (reading 'getItem')
+          at Object.getItem (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:294:33)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:307:20
+          at hydrate (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:390:53)
+          at D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\middleware.js:470:5
+          at createStoreImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:21:32)
+          at Object.createStore (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\vanilla.js:24:53)
+          at createImpl (D:\Veilpay\node_modules\.pnpm\zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_\node_modules\zustand\react.js:17:23)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\stores\walletStore.ts:253:52)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\styles\design-tokens.ts:12:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\SetPasswordScreen.tsx:12:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at Runtime.requireModuleOrMock (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1048:21)
+          at Object.require (D:\Veilpay\apps\consumer-app\src\screens\__tests__\SetPasswordScreen.test.tsx:3:1)
+          at Runtime._execModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1439:24)
+          at Runtime._loadModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:1022:12)
+          at Runtime.requireModule (D:\Veilpay\apps\consumer-app\node_modules\jest-runtime\build\index.js:882:12)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:77:13)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12) Context: { scope: 'wallet-store' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/stores/walletStore.ts:508:23
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:437:50
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:307:20
+      at Object.catch (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:325:38)
+      at hydrate (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:433:13)
+      at ../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/middleware.js:470:5
+      at createStoreImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:21:32)
+      at Object.createStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/vanilla.js:24:53)
+      at createImpl (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:17:23)
+      at Object.<anonymous> (src/stores/walletStore.ts:253:52)
+      at Object.require (src/styles/design-tokens.ts:12:1)
+      at Object.require (src/screens/SetPasswordScreen.tsx:12:1)
+      at Object.require (src/screens/__tests__/SetPasswordScreen.test.tsx:3:1)
+
+    console.warn
+      Skipping generic render for SetPasswordScreen Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: undefined. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+      
+      Check the render method of `SetPasswordScreen`.
+
+      30 |       }
+      31 |     } catch(e: unknown) {
+    > 32 |       console.warn("Skipping generic render for SetPasswordScreen", (e as Error).message);
+         |               ^
+      33 |     }
+      34 |   });
+      35 | });
+
+      at Object.warn (src/screens/__tests__/SetPasswordScreen.test.tsx:32:15)
+
+PASS src/utils/__tests__/pushNotifications.test.ts
+PASS src/utils/__tests__/multiChainSigner.test.ts
+  ÔùÅ Console
+
+    console.error
+      Error: Error: Aptos API error
+          at D:\Veilpay\apps\consumer-app\src\utils\multiChainSigner.ts:394:18
+          at Generator.throw (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _throw (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:20:9)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5) Context: { scope: 'multi-chain-signer', chain: 'aptos' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/utils/multiChainSigner.ts:394:17
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+PASS src/hooks/__tests__/useOnramp.test.ts
+PASS src/screens/__tests__/HomeDashboardScreen.test.tsx
+  ÔùÅ Console
+
+    console.warn
+      SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context
+
+      1 | import React, { memo } from 'react';
+      2 | import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+    > 3 | import { MotiView } from 'moti';
+        | ^
+      4 | import { useTheme, useStyles, typography } from '../../styles/design-tokens';
+      5 | import { TransactionItem } from '../TransactionItem';
+      6 | import { TransactionSkeleton } from '../Skeleton';
+
+      at warn (../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-config@0.85.3_@babel+core@7.29.0_b_t5pm7gotxyjuz553c5kcpxldyu/node_modules/react-native/Libraries/Utilities/warnOnce.js:27:11)
+      at Object.warnOnce [as SafeAreaView] (../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-config@0.85.3_@babel+core@7.29.0_b_t5pm7gotxyjuz553c5kcpxldyu/node_modules/react-native/index.js:98:5)
+      at Object.RSafeAreaView (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/safe-area-view.tsx:5:36)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/index.ts:3:1)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/index.tsx:2:1)
+      at Object.require (src/components/dashboard/RecentTransactionsList.tsx:3:1)
+      at Object.require (src/screens/HomeDashboardScreen.tsx:34:1)
+      at Object.require (src/screens/__tests__/HomeDashboardScreen.test.tsx:187:33)
+
+PASS src/utils/__tests__/demoWallet.test.ts
+PASS src/utils/__tests__/transak.test.ts
+PASS src/navigation/__tests__/AppNavigator.test.tsx (18.815 s)
+  ÔùÅ Console
+
+    console.warn
+      SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/AppAndFlow/react-native-safe-area-context
+
+      1 | import React, { memo } from 'react';
+      2 | import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+    > 3 | import { MotiView } from 'moti';
+        | ^
+      4 | import { useTheme, useStyles, typography } from '../../styles/design-tokens';
+      5 | import { TransactionItem } from '../TransactionItem';
+      6 | import { TransactionSkeleton } from '../Skeleton';
+
+      at warn (../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-config@0.85.3_@babel+core@7.29.0_b_t5pm7gotxyjuz553c5kcpxldyu/node_modules/react-native/Libraries/Utilities/warnOnce.js:27:11)
+      at Object.warnOnce [as SafeAreaView] (../../node_modules/.pnpm/react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-config@0.85.3_@babel+core@7.29.0_b_t5pm7gotxyjuz553c5kcpxldyu/node_modules/react-native/index.js:98:5)
+      at Object.RSafeAreaView (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/safe-area-view.tsx:5:36)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/index.ts:3:1)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/index.tsx:2:1)
+      at Object.require (src/components/dashboard/RecentTransactionsList.tsx:3:1)
+      at Object.require (src/screens/HomeDashboardScreen.tsx:34:1)
+      at Object.require (src/navigation/AppNavigator.tsx:18:1)
+      at Object.require (src/navigation/__tests__/AppNavigator.test.tsx:3:1)
+
+    console.warn
+      The global process.env.EXPO_OS is not defined. This should be inlined by babel-preset-expo during transformation.
+
+      15 |  */
+      16 |
+    > 17 | import * as LocalAuthentication from 'expo-local-authentication';
+         | ^
+      18 | import { useState, useEffect } from 'react';
+      19 | import { Platform } from 'react-native';
+      20 |
+
+      at Object.warn (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/Platform.ts:15:11)
+      at Object.require (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/index.ts:11:1)
+      at Object.require (../../node_modules/.pnpm/expo-local-authentication@55.0.14_expo@55.0.26/node_modules/expo-local-authentication/src/LocalAuthentication.ts:1:1)
+      at Object.require (src/hooks/useBiometrics.ts:17:1)
+      at Object.require (src/screens/SendPaymentScreen.tsx:37:1)
+      at Object.require (src/navigation/AppNavigator.tsx:19:1)
+      at Object.require (src/navigation/__tests__/AppNavigator.test.tsx:3:1)
+
+    console.warn
+      bigint: Failed to load bindings, pure JS will be used (try npm run rebuild?)
+
+      1 | import { Transaction, SystemProgram, Keypair, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+    > 2 | import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+        | ^
+      3 | import { derivePath } from 'ed25519-hd-key';
+      4 | import { mnemonicToSeed } from '@scure/bip39';
+      5 | import { Buffer } from 'buffer';
+
+      at Object.<anonymous> (../../node_modules/.pnpm/bigint-buffer-fixed@1.1.6/node_modules/bigint-buffer-fixed/dist/node.js:11:17)
+      at Object.require (../../node_modules/.pnpm/@solana+buffer-layout-utils@0.2.0_bufferutil@4.1.0_encoding@0.1.13_typescript@5.9.3_utf-8-validate@6.0.6/node_modules/@solana/buffer-layout-utils/src/bigint.ts:2:1)
+      at Object.require (../../node_modules/.pnpm/@solana+buffer-layout-utils@0.2.0_bufferutil@4.1.0_encoding@0.1.13_typescript@5.9.3_utf-8-validate@6.0.6/node_modules/@solana/buffer-layout-utils/src/index.ts:2:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/instructions/amountToUiAmount.ts:2:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/actions/amountToUiAmount.ts:4:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/actions/index.ts:1:1)
+      at Object.require (../../node_modules/.pnpm/@solana+spl-token@0.4.14_@solana+web3.js@1.98.4_bufferutil@4.1.0_encoding@0.1.13_typescript@5_p7k3cpkbvjucy5zcjxui5vwxzq/node_modules/@solana/spl-token/src/index.ts:1:1)
+      at Object.require (src/utils/solanaSigner.ts:2:1)
+      at Object.require (src/hooks/usePaymentTransaction.ts:71:1)
+      at Object.require (src/screens/PaymentConfirmationScreen.tsx:68:1)
+      at Object.require (src/navigation/AppNavigator.tsx:21:1)
+      at Object.require (src/navigation/__tests__/AppNavigator.test.tsx:3:1)
+
+PASS src/hooks/__tests__/useSessionBootstrap.test.ts
+  ÔùÅ Console
+
+    console.error
+      Error: TypeError: _walletStore.useWalletStore.getState is not a function
+          at getState (D:\Veilpay\apps\consumer-app\src\hooks\useSessionBootstrap.ts:43:40)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5) Context: { scope: 'wallet-session-bootstrap', attempt: '1' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/hooks/useSessionBootstrap.ts:139:21
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+    console.warn
+      [WARNING] [bootstrap] Retry 2/3 in 2s
+
+      38 |     console.error(`[${level.toUpperCase()}]`, message);
+      39 |   } else if (level === 'warning') {
+    > 40 |     console.warn(`[${level.toUpperCase()}]`, message);
+         |             ^
+      41 |   } else if (__DEV__) {
+      42 |     console.log(`[${level.toUpperCase()}]`, message);
+      43 |   }
+
+      at warn (src/utils/sentry.ts:40:13)
+      at src/hooks/useSessionBootstrap.ts:147:25
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+    console.error
+      An update to HookContainer inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      148 |
+      149 |           if (!cancelled) {
+    > 150 |             setBootstrapRetryCount(attempt + 1);
+          |             ^
+      151 |           }
+      152 |
+      153 |           await new Promise((resolve) => {
+
+      at ../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at warnIfUpdatesNotWrappedWithActDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14401:9)
+      at scheduleUpdateOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:12086:9)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6208:13)
+      at dispatchSetState (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6165:7)
+      at setBootstrapRetryCount (src/hooks/useSessionBootstrap.ts:150:13)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+PASS src/utils/__tests__/priceFeed.test.ts
+PASS tests/e2e/walletFlow.test.ts
+PASS src/screens/__tests__/TransactionDetailsScreen.test.tsx
+PASS src/utils/__tests__/envValidation.test.ts
+PASS src/screens/__tests__/SettingsScreen.test.tsx
+PASS src/hooks/__tests__/useBiometrics.test.ts
+  ÔùÅ Console
+
+    console.warn
+      The global process.env.EXPO_OS is not defined. This should be inlined by babel-preset-expo during transformation.
+
+      15 |  */
+      16 |
+    > 17 | import * as LocalAuthentication from 'expo-local-authentication';
+         | ^
+      18 | import { useState, useEffect } from 'react';
+      19 | import { Platform } from 'react-native';
+      20 |
+
+      at Object.warn (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/Platform.ts:15:11)
+      at Object.require (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/index.ts:11:1)
+      at Object.require (../../node_modules/.pnpm/expo-local-authentication@55.0.14_expo@55.0.26/node_modules/expo-local-authentication/src/LocalAuthentication.ts:1:1)
+      at Object.require (src/hooks/useBiometrics.ts:17:1)
+      at Object.require (src/hooks/__tests__/useBiometrics.test.ts:1:1)
+
+PASS src/utils/__tests__/directory.test.ts
+PASS src/screens/__tests__/ImportWalletScreen.test.tsx
+PASS src/hooks/__tests__/useBalance.test.ts
+PASS src/screens/__tests__/DepositCryptoScreen.test.tsx
+PASS src/utils/__tests__/rpc.test.ts
+  ÔùÅ Console
+
+    console.error
+      Error: Error: Missing RPC backend configuration for chain: ethereum
+          at getRpcUrl (D:\Veilpay\apps\consumer-app\src\utils\rpc.ts:84:15)
+          at Object.getRpcUrl (D:\Veilpay\apps\consumer-app\src\utils\__tests__\rpc.test.ts:68:22)
+          at Promise.then.completed (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at _runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12) Context: { scope: 'rpc-config', chain: 'ethereum' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at getRpcUrl (src/utils/rpc.ts:85:15)
+      at Object.getRpcUrl (src/utils/__tests__/rpc.test.ts:68:22)
+
+PASS src/hooks/__tests__/usePaymentTransaction.dispatch.property.test.ts
+PASS src/stores/__tests__/commitmentStore.property.test.ts
+PASS src/utils/__tests__/publicIndexers.test.ts
+  ÔùÅ Console
+
+    console.error
+      Error: Error: API Down
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\utils\__tests__\publicIndexers.test.ts:55:50)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:22:7
+          at new Promise (<anonymous>)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:14:12)
+          at Promise.then.completed (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at _runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12) Context: { chain: 'ethereum' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/utils/publicIndexers.ts:81:19
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+    console.error
+      Error: Error: Network error
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\src\utils\__tests__\publicIndexers.test.ts:99:50)
+          at Generator.next (<anonymous>)
+          at asyncGeneratorStep (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:3:17)
+          at _next (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:17:9)
+          at D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:22:7
+          at new Promise (<anonymous>)
+          at Object.<anonymous> (D:\Veilpay\apps\consumer-app\node_modules\@babel\runtime\helpers\asyncToGenerator.js:14:12)
+          at Promise.then.completed (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\utils.js:231:10)
+          at _callCircusTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:316:40)
+          at processTicksAndRejections (node:internal/process/task_queues:104:5)
+          at _runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:252:3)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:126:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at _runTestsForDescribeBlock (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:121:9)
+          at run (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\run.js:71:3)
+          at runAndTransformResultsToJestFormat (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapterInit.js:122:21)
+          at jestAdapter (D:\Veilpay\apps\consumer-app\node_modules\jest-circus\build\legacy-code-todo-rewrite\jestAdapter.js:79:19)
+          at runTestInternal (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:367:16)
+          at runTest (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\runTest.js:444:34)
+          at Object.worker (D:\Veilpay\apps\consumer-app\node_modules\jest-runner\build\testWorker.js:106:12) Context: { chain: 'stellar' }
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at error (src/utils/sentry.ts:14:11)
+      at src/utils/publicIndexers.ts:258:19
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+PASS src/screens/__tests__/WithdrawFiatScreen.test.tsx
+PASS src/utils/__tests__/transak.test.test.ts
+PASS src/stores/__tests__/addressBookStore.test.ts
+  ÔùÅ Console
+
+    console.error
+      Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+      1. You might have mismatching versions of React and the renderer (such as React DOM)
+      2. You might be breaking the Rules of Hooks
+      3. You might have more than one copy of React in the same app
+      See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.
+
+      14 |       if (typeof (Module as any)[key] === 'function') {
+      15 |         try {
+    > 16 |           (Module as any)[key]({} as any, {} as any, {} as any);
+         |                               ^
+      17 |         } catch(e) {}
+      18 |       }
+      19 |     }
+
+      at resolveDispatcher (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:518:17)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.useCallback (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:1204:14)
+      at useStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:10:11)
+      at Object.useBoundStore [as useAddressBookStore] (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:18:39)
+      at Object.<anonymous> (src/stores/__tests__/addressBookStore.test.ts:16:31)
+
+PASS src/screens/__tests__/BackupWalletScreen.test.tsx
+PASS src/services/__tests__/depositPersistence.banner.test.tsx
+PASS src/hooks/__tests__/useStealthScanner.property.test.ts
+PASS src/screens/__tests__/OnrampQuotesScreen.test.tsx
+  ÔùÅ Console
+
+    console.error
+      An update to OnrampQuotesScreen inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      71 |       
+      72 |       const data = await response.json();
+    > 73 |       setQuotes(data.quotes || []);
+         |       ^
+      74 |     } catch (err) {
+      75 |       setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      76 |     } finally {
+
+      at ../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at warnIfUpdatesNotWrappedWithActDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14401:9)
+      at scheduleUpdateOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:12086:9)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6208:13)
+      at dispatchSetState (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6165:7)
+      at setQuotes (src/screens/OnrampQuotesScreen.tsx:73:7)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+    console.error
+      An update to OnrampQuotesScreen inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      75 |       setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      76 |     } finally {
+    > 77 |       setIsLoading(false);
+         |       ^
+      78 |     }
+      79 |   }, [fiatAmount, cryptoToken, flow]);
+      80 |
+
+      at ../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at warnIfUpdatesNotWrappedWithActDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14401:9)
+      at scheduleUpdateOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:12086:9)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6208:13)
+      at dispatchSetState (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6165:7)
+      at setIsLoading (src/screens/OnrampQuotesScreen.tsx:77:7)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+PASS src/screens/__tests__/WalletConnectScreen.test.tsx
+PASS src/screens/__tests__/AddCustomNetworkScreen.test.tsx
+PASS src/utils/__tests__/clipboard.test.ts
+PASS src/utils/__tests__/externalLink.test.ts
+PASS src/utils/__tests__/solanaSigner.test.ts
+PASS src/utils/__tests__/secureStateStorage.test.ts
+PASS src/stores/__tests__/settingsStore.test.ts
+  ÔùÅ Console
+
+    console.error
+      Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+      1. You might have mismatching versions of React and the renderer (such as React DOM)
+      2. You might be breaking the Rules of Hooks
+      3. You might have more than one copy of React in the same app
+      See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.
+
+      81 | export const useThemeState = () => useSettingsStore((state) => state.theme);
+      82 | export const usePrivacyLevel = () => useSettingsStore((state) => state.defaultPrivacyLevel);
+    > 83 | export const useNativeCurrency = () => useSettingsStore((state) => state.nativeCurrency);
+         |                                        ^
+      84 |
+
+      at resolveDispatcher (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:518:17)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.useCallback (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:1204:14)
+      at useStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:10:11)
+      at useBoundStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:18:39)
+      at Object.useSettingsStore [as useNativeCurrency] (src/stores/settingsStore.ts:83:40)
+      at Object.<anonymous> (src/stores/__tests__/settingsStore.test.ts:16:31)
+
+    console.error
+      Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+      1. You might have mismatching versions of React and the renderer (such as React DOM)
+      2. You might be breaking the Rules of Hooks
+      3. You might have more than one copy of React in the same app
+      See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.
+
+      80 | // Helper hooks
+      81 | export const useThemeState = () => useSettingsStore((state) => state.theme);
+    > 82 | export const usePrivacyLevel = () => useSettingsStore((state) => state.defaultPrivacyLevel);
+         |                                      ^
+      83 | export const useNativeCurrency = () => useSettingsStore((state) => state.nativeCurrency);
+      84 |
+
+      at resolveDispatcher (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:518:17)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.useCallback (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:1204:14)
+      at useStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:10:11)
+      at useBoundStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:18:39)
+      at Object.useSettingsStore [as usePrivacyLevel] (src/stores/settingsStore.ts:82:38)
+      at Object.<anonymous> (src/stores/__tests__/settingsStore.test.ts:16:31)
+
+    console.error
+      Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+      1. You might have mismatching versions of React and the renderer (such as React DOM)
+      2. You might be breaking the Rules of Hooks
+      3. You might have more than one copy of React in the same app
+      See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.
+
+      14 |       if (typeof (Module as any)[key] === 'function') {
+      15 |         try {
+    > 16 |           (Module as any)[key]({} as any, {} as any, {} as any);
+         |                               ^
+      17 |         } catch(e) {}
+      18 |       }
+      19 |     }
+
+      at resolveDispatcher (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:518:17)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.useCallback (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:1204:14)
+      at useStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:10:11)
+      at Object.useBoundStore [as useSettingsStore] (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:18:39)
+      at Object.<anonymous> (src/stores/__tests__/settingsStore.test.ts:16:31)
+
+    console.error
+      Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+      1. You might have mismatching versions of React and the renderer (such as React DOM)
+      2. You might be breaking the Rules of Hooks
+      3. You might have more than one copy of React in the same app
+      See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.
+
+      79 |
+      80 | // Helper hooks
+    > 81 | export const useThemeState = () => useSettingsStore((state) => state.theme);
+         |                                    ^
+      82 | export const usePrivacyLevel = () => useSettingsStore((state) => state.defaultPrivacyLevel);
+      83 | export const useNativeCurrency = () => useSettingsStore((state) => state.nativeCurrency);
+      84 |
+
+      at resolveDispatcher (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:518:17)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.useCallback (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:1204:14)
+      at useStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:10:11)
+      at useBoundStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:18:39)
+      at Object.useSettingsStore [as useThemeState] (src/stores/settingsStore.ts:81:36)
+      at Object.<anonymous> (src/stores/__tests__/settingsStore.test.ts:16:31)
+
+PASS src/utils/__tests__/transakQuote.test.ts
+PASS src/utils/__tests__/analyticsEvents.test.ts
+PASS src/screens/__tests__/ExportPrivateKeyScreen.test.tsx
+PASS src/utils/__tests__/haptics.test.ts
+PASS tests/e2e/paymentFlow.test.ts
+PASS src/utils/__tests__/transactions.test.ts
+PASS src/utils/__tests__/sentry.test.ts
+  ÔùÅ Console
+
+    console.error
+      Error: {} Context: {}
+
+      12 |
+      13 | export function captureError(error: Error, context?: Record<string, unknown>) {
+    > 14 |   console.error('Error:', error, 'Context:', context);
+         |           ^
+      15 | }
+      16 |
+      17 | export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {
+
+      at Object.error [as captureError] (src/utils/sentry.ts:14:11)
+      at Object.<anonymous> (src/utils/__tests__/sentry.test.ts:16:31)
+
+    console.log
+      [sentry-stub] Telemetry disabled.
+
+      at Object.log [as initSentry] (src/utils/sentry.ts:9:13)
+
+PASS src/stores/__tests__/pendingCommitmentQueue.test.ts
+  ÔùÅ Console
+
+    console.error
+      Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:
+      1. You might have mismatching versions of React and the renderer (such as React DOM)
+      2. You might be breaking the Rules of Hooks
+      3. You might have more than one copy of React in the same app
+      See https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.
+
+      14 |       if (typeof (Module as any)[key] === 'function') {
+      15 |         try {
+    > 16 |           (Module as any)[key]({} as any, {} as any, {} as any);
+         |                               ^
+      17 |         } catch(e) {}
+      18 |       }
+      19 |     }
+
+      at resolveDispatcher (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:518:17)
+      at Object.<anonymous>.process.env.NODE_ENV.exports.useCallback (../../node_modules/.pnpm/react@19.2.0/node_modules/react/cjs/react.development.js:1204:14)
+      at useStore (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:10:11)
+      at Object.useBoundStore [as usePendingCommitmentQueue] (../../node_modules/.pnpm/zustand@5.0.12_@types+react@19.2.14_react@19.2.0_use-sync-external-store@1.6.0_react@19.2.0_/node_modules/zustand/react.js:18:39)
+      at Object.<anonymous> (src/stores/__tests__/pendingCommitmentQueue.test.ts:16:31)
+
+PASS src/utils/__tests__/txStatusPoller.test.ts
+PASS src/hooks/__tests__/useStealthScanner.test.ts
+PASS src/utils/__tests__/formatters.test.ts
+PASS src/hooks/__tests__/useSecureScreen.test.tsx
+PASS src/utils/__tests__/chains.test.ts
+PASS src/utils/__tests__/timing.test.ts
+PASS src/utils/__tests__/marketStreamer.test.ts
+PASS src/utils/__tests__/stellarSigner.test.ts
+PASS src/utils/transak.test.ts
+PASS src/hooks/__tests__/useOTAUpdates.test.ts
+  ÔùÅ Console
+
+    console.warn
+      The global process.env.EXPO_OS is not defined. This should be inlined by babel-preset-expo during transformation.
+
+    > 1 | import * as Updates from 'expo-updates';
+        | ^
+      2 | import { useState, useEffect } from 'react';
+      3 |
+      4 | export type UpdateStatus = {
+
+      at Object.warn (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/Platform.ts:15:11)
+      at Object.require (../../node_modules/.pnpm/expo-modules-core@55.0.25_react-native-worklets@0.7.4_@babel+core@7.29.0_react-native@0.83.6__ixsb5zz7vxzuh7q7ppe7ji5yky/node_modules/expo-modules-core/src/index.ts:11:1)
+      at Object.require (../../node_modules/.pnpm/expo-updates@55.0.24_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-_elknq3htu2lpzcklpi2g2g4xlu/node_modules/expo-updates/src/Updates.ts:1:1)
+      at Object.require (../../node_modules/.pnpm/expo-updates@55.0.24_expo@55.0.26_react-native@0.83.6_@babel+core@7.29.0_@react-native+metro-_elknq3htu2lpzcklpi2g2g4xlu/node_modules/expo-updates/src/index.ts:1:1)
+      at Object.require (src/hooks/useOTAUpdates.ts:1:1)
+      at Object.require (src/hooks/__tests__/useOTAUpdates.test.ts:1:1)
+
+PASS src/utils/__tests__/fiatGateway.test.ts
+PASS src/hooks/__tests__/useNetworkPrivacySupport.test.ts
+PASS src/utils/__tests__/aptosSigner.test.ts
+PASS src/hooks/__tests__/useTransakQuote.test.ts
+PASS src/utils/__tests__/validation.test.ts
+PASS src/screens/__tests__/OnrampAmountScreen.test.tsx
+PASS src/hooks/__tests__/useStealthScanner.lifecycle.test.tsx
+PASS src/hooks/__tests__/useBalancePolling.test.ts
+  ÔùÅ Console
+
+    console.error
+      An update to HookContainer inside a test was not wrapped in act(...).
+      
+      When testing, code that causes React state updates should be wrapped into act(...):
+      
+      act(() => {
+        /* fire events that update state */
+      });
+      /* assert on the output */
+      
+      This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      107 |
+      108 |  const balance = result.balanceFormatted;
+    > 109 |  setStatus({
+          |  ^
+      110 |  balance,
+      111 |  balanceUsd,
+      112 |  isLoading: false,
+
+      at ../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14402:19
+      at runWithFiberInDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:2315:13)
+      at warnIfUpdatesNotWrappedWithActDEV (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:14401:9)
+      at scheduleUpdateOnFiber (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:12086:9)
+      at dispatchSetStateInternal (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6208:13)
+      at dispatchSetState (../../node_modules/.pnpm/react-test-renderer@19.2.0_react@19.2.0/node_modules/react-test-renderer/cjs/react-test-renderer.development.js:6165:7)
+      at setStatus (src/hooks/useBalancePolling.ts:109:2)
+          at Generator.throw (<anonymous>)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _throw (node_modules/@babel/runtime/helpers/asyncToGenerator.js:20:9)
+
+PASS src/hooks/__tests__/useNetworkStatus.test.ts
+PASS src/hooks/__tests__/useDepositPersistenceRecovery.test.ts
+PASS src/utils/__tests__/deepLinking.test.ts
+  ÔùÅ Console
+
+    console.warn
+      [deepLink] Rejected invalid address from deep link: 0xabc123
+
+      108 |     if (address) {
+      109 |       if (!validateAddress(address, params.chainType)) {
+    > 110 |         console.warn('[deepLink] Rejected invalid address from deep link:', address);
+          |                 ^
+      111 |         return null;
+      112 |       }
+      113 |       params.address = address;
+
+      at warn (src/utils/deepLinking.ts:110:17)
+      at Object.<anonymous> (src/utils/__tests__/deepLinking.test.ts:61:25)
+
+    console.warn
+      [deepLink] Rejected invalid transactionHash from deep link: 0xdeadbeef
+
+      153 |       // Validate tx hash format: 0x + 64 hex chars (EVM) or base58 (SVM)
+      154 |       if (!/^0x[0-9a-fA-F]{64}$/.test(transactionHash) && !/^[1-9A-HJ-NP-Za-km-z]{88}$/.test(transactionHash)) {
+    > 155 |         console.warn('[deepLink] Rejected invalid transactionHash from deep link:', transactionHash.substring(0, 20));
+          |                 ^
+      156 |         return null;
+      157 |       }
+      158 |       params.transactionHash = transactionHash;
+
+      at warn (src/utils/deepLinking.ts:155:17)
+      at Object.<anonymous> (src/utils/__tests__/deepLinking.test.ts:66:25)
+
+PASS src/hooks/__tests__/usePushNotifications.test.ts
+PASS src/hooks/__tests__/useMarketData.test.ts
+  ÔùÅ Console
+
+    console.warn
+      Hook error: useMarketData symbols.join is not a function
+
+      34 |           const {unmount} = renderHook(() => (Module as any)[key]({} as any, {} as any)); unmount();
+      35 |         } catch(e: unknown) {
+    > 36 |           console.warn("Hook error:", key, (e as Error).message);
+         |                   ^
+      37 |         }
+      38 |       }
+      39 |     }
+
+      at warn (src/hooks/__tests__/useMarketData.test.ts:36:19)
+      at Object._loop (src/hooks/__tests__/useMarketData.test.ts:31:42)
+
+PASS src/utils/__tests__/onramp.test.ts
+PASS src/navigation/__tests__/transitions.test.ts
+PASS src/utils/__tests__/bip39.test.ts
+PASS src/utils/__tests__/analytics.test.ts
+  ÔùÅ Console
+
+    console.log
+      [analytics:consent] enabled
+
+      at log (src/utils/analytics.ts:58:13)
+
+PASS src/stores/__tests__/commitmentStore.test.ts
+FAIL src/screens/__tests__/TransactionHistoryScreen.test.tsx
+  ÔùÅ Test suite failed to run
+
+    TypeError: _reactNativeReanimated.default.createAnimatedComponent is not a function
+
+      1 | import React, { useEffect } from 'react';
+      2 | import { View, StyleSheet } from 'react-native';
+    > 3 | import { MotiView, MotiText } from 'moti';
+        | ^
+      4 | import * as Haptics from 'expo-haptics';
+      5 | import { SovereignButton } from './SovereignButton';
+      6 | import { Icon } from './Icon';
+
+      at createAnimatedComponent (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/core/motify.tsx:23:30)
+      at Object.<anonymous> (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/image.tsx:5:28)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/index.ts:1:1)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/index.tsx:2:1)
+      at Object.require (src/components/ErrorState.tsx:3:1)
+      at Object.require (src/screens/TransactionHistoryScreen.tsx:32:1)
+      at Object.require (src/screens/__tests__/TransactionHistoryScreen.test.tsx:136:38)
+
+A worker process has failed to exit gracefully and has been force exited. This is likely caused by tests leaking due to improper teardown. Try running with --detectOpenHandles to find leaks. Active timers can also cause this, ensure that .unref() was called on them.
+Summary of all failing tests
+FAIL src/screens/__tests__/CreateWalletScreen.test.tsx
+  ÔùÅ CreateWalletScreen ÔÇ║ checkbox enables the confirm button, which navigates on press
+
+    Unable to find an element with testID: btn-CONTINUE
+
+    [
+      <View>
+        <View
+          accessible={true}
+          testID="back-btn"
+        >
+          <Text>
+            BACK
+          </Text>
+        </View>
+        <Text>
+          CREATE WALLET
+        </Text>
+        <View />
+      </View>,
+      <View>
+        <RCTScrollView>
+          <View>
+            <View>
+              <View>
+                <View>
+                  <View
+                    testID="icon"
+                  />
+                </View>
+                <View>
+                  <Text>
+                    KEEP THIS SAFE
+                  </Text>
+                  <Text>
+                    Write down your seed phrase and store it offline. Anyone with these words can access your funds.
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <Text>
+              YOUR RECOVERY PHRASE
+            </Text>
+            <Text>
+              12 words ÔÇö do not share with anyone
+            </Text>
+            <View>
+              <View>
+                <View>
+                  <Text>
+                    1
+                  </Text>
+                  <Text>
+                    word1
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    2
+                  </Text>
+                  <Text>
+                    word2
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    3
+                  </Text>
+                  <Text>
+                    word3
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    4
+                  </Text>
+                  <Text>
+                    word4
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    5
+                  </Text>
+                  <Text>
+                    word5
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    6
+                  </Text>
+                  <Text>
+                    word6
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    7
+                  </Text>
+                  <Text>
+                    word7
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    8
+                  </Text>
+                  <Text>
+                    word8
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    9
+                  </Text>
+                  <Text>
+                    word9
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    10
+                  </Text>
+                  <Text>
+                    word10
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    11
+                  </Text>
+                  <Text>
+                    word11
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    12
+                  </Text>
+                  <Text>
+                    word12
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={true}
+              testID="btn-COPY TO CLIPBOARD"
+            >
+              <Text>
+                COPY TO CLIPBOARD
+              </Text>
+            </View>
+            <View
+              accessibilityHint="Required before continuing"
+              accessibilityLabel="I have saved my seed phrase securely"
+              accessibilityRole="checkbox"
+              accessibilityState={
+                {
+                  "checked": true,
+                }
+              }
+              accessible={true}
+            >
+              <View>
+                <View
+                  testID="icon"
+                />
+              </View>
+              <Text>
+                I've written down my seed phrase and stored it securely
+              </Text>
+            </View>
+            <View>
+              <View>
+                <Text>
+                  YOUR WALLET ADDRESS
+                </Text>
+                <Text>
+                  0xAbCdEf1234567890AbCdEf1234567890AbCdEf12
+                </Text>
+              </View>
+            </View>
+            <View
+              accessibilityState={
+                {
+                  "disabled": false,
+                }
+              }
+              accessible={true}
+              testID="btn-CONTINUE TO VERIFY"
+            >
+              <Text>
+                CONTINUE TO VERIFY
+              </Text>
+            </View>
+          </View>
+        </RCTScrollView>
+      </View>,
+      <View
+        testID="toast"
+      />,
+    ]
+
+      179 |     fireEvent.press(checkbox);
+      180 |     // After checkbox: button is enabled and text changes to CONTINUE
+    > 181 |     const btnEnabled = getByTestId('btn-CONTINUE');
+          |                        ^
+      182 |     expect(btnEnabled.props.accessibilityState.disabled).toBe(false);
+      183 |     fireEvent.press(btnEnabled);
+      184 |     await waitFor(() => {
+
+      at Object.getByTestId (src/screens/__tests__/CreateWalletScreen.test.tsx:181:24)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+  ÔùÅ CreateWalletScreen ÔÇ║ shows error toast when wallet creation fails
+
+    Unable to find an element with testID: btn-CONTINUE
+
+    [
+      <View>
+        <View
+          accessible={true}
+          testID="back-btn"
+        >
+          <Text>
+            BACK
+          </Text>
+        </View>
+        <Text>
+          CREATE WALLET
+        </Text>
+        <View />
+      </View>,
+      <View>
+        <RCTScrollView>
+          <View>
+            <View>
+              <View>
+                <View>
+                  <View
+                    testID="icon"
+                  />
+                </View>
+                <View>
+                  <Text>
+                    KEEP THIS SAFE
+                  </Text>
+                  <Text>
+                    Write down your seed phrase and store it offline. Anyone with these words can access your funds.
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <Text>
+              YOUR RECOVERY PHRASE
+            </Text>
+            <Text>
+              12 words ÔÇö do not share with anyone
+            </Text>
+            <View>
+              <View>
+                <View>
+                  <Text>
+                    1
+                  </Text>
+                  <Text>
+                    word1
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    2
+                  </Text>
+                  <Text>
+                    word2
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    3
+                  </Text>
+                  <Text>
+                    word3
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    4
+                  </Text>
+                  <Text>
+                    word4
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    5
+                  </Text>
+                  <Text>
+                    word5
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    6
+                  </Text>
+                  <Text>
+                    word6
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    7
+                  </Text>
+                  <Text>
+                    word7
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    8
+                  </Text>
+                  <Text>
+                    word8
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    9
+                  </Text>
+                  <Text>
+                    word9
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    10
+                  </Text>
+                  <Text>
+                    word10
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    11
+                  </Text>
+                  <Text>
+                    word11
+                  </Text>
+                </View>
+                <View>
+                  <Text>
+                    12
+                  </Text>
+                  <Text>
+                    word12
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              accessible={true}
+              testID="btn-COPY TO CLIPBOARD"
+            >
+              <Text>
+                COPY TO CLIPBOARD
+              </Text>
+            </View>
+            <View
+              accessibilityHint="Required before continuing"
+              accessibilityLabel="I have saved my seed phrase securely"
+              accessibilityRole="checkbox"
+              accessibilityState={
+                {
+                  "checked": true,
+                }
+              }
+              accessible={true}
+            >
+              <View>
+                <View
+                  testID="icon"
+                />
+              </View>
+              <Text>
+                I've written down my seed phrase and stored it securely
+              </Text>
+            </View>
+            <View>
+              <View>
+                <Text>
+                  YOUR WALLET ADDRESS
+                </Text>
+                <Text>
+                  0xAbCdEf1234567890AbCdEf1234567890AbCdEf12
+                </Text>
+              </View>
+            </View>
+            <View
+              accessibilityState={
+                {
+                  "disabled": false,
+                }
+              }
+              accessible={true}
+              testID="btn-CONTINUE TO VERIFY"
+            >
+              <Text>
+                CONTINUE TO VERIFY
+              </Text>
+            </View>
+          </View>
+        </RCTScrollView>
+      </View>,
+      <View
+        testID="toast"
+      />,
+    ]
+
+      197 |     });
+      198 |     fireEvent.press(getByText("I've written down my seed phrase and stored it securely"));
+    > 199 |     const btn = getByTestId('btn-CONTINUE');
+          |                 ^
+      200 |     fireEvent.press(btn);
+      201 |     await waitFor(() => {
+      202 |       expect(mockShow).toHaveBeenCalledWith('Failed to create wallet. Please try again.', 'error');
+
+      at Object.getByTestId (src/screens/__tests__/CreateWalletScreen.test.tsx:199:17)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+FAIL src/screens/__tests__/TransactionHistoryScreen.test.tsx
+  ÔùÅ Test suite failed to run
+
+    TypeError: _reactNativeReanimated.default.createAnimatedComponent is not a function
+
+      1 | import React, { useEffect } from 'react';
+      2 | import { View, StyleSheet } from 'react-native';
+    > 3 | import { MotiView, MotiText } from 'moti';
+        | ^
+      4 | import * as Haptics from 'expo-haptics';
+      5 | import { SovereignButton } from './SovereignButton';
+      6 | import { Icon } from './Icon';
+
+      at createAnimatedComponent (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/core/motify.tsx:23:30)
+      at Object.<anonymous> (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/image.tsx:5:28)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/components/index.ts:1:1)
+      at Object.require (../../node_modules/.pnpm/moti@0.30.0_react-dom@19.2.0_react@19.2.0__react-native-reanimated@4.2.1_react-native-worklet_n4rk6oou2wg3dww2jocm5bhykq/node_modules/moti/src/index.tsx:2:1)
+      at Object.require (src/components/ErrorState.tsx:3:1)
+      at Object.require (src/screens/TransactionHistoryScreen.tsx:32:1)
+      at Object.require (src/screens/__tests__/TransactionHistoryScreen.test.tsx:136:38)
+
+
+Test Suites: 2 failed, 1 skipped, 103 passed, 105 of 106 total
+Tests:       2 failed, 1 skipped, 471 passed, 474 total
+Snapshots:   0 total
+Time:        25.7 s, estimated 217 s
+Ran all test suites.
+Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?

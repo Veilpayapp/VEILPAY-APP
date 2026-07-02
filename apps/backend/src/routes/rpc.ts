@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { config } from '../config';
 
 const router = Router();
@@ -202,10 +202,22 @@ function handleUpstreamError(error: unknown, chainKey: string, res: Response): R
   return res.status(502).json({ error: 'Bad Gateway: Failed to reach RPC provider' });
 }
 
+type AsyncHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => Promise<void>;
+
+function asyncRoute(fn: AsyncHandler): (req: Request, res: Response, next: NextFunction) => void {
+  return (req, res, next) => {
+    fn(req, res, next).catch(next);
+  };
+}
+
 // ─── Routes ────────────────────────────────────────────────────────────────
 
 // JSON-RPC POST proxy — used by EVM (viem) and Solana JSON-RPC clients.
-router.post('/:chainKey', async (req: Request, res: Response) => {
+router.post('/:chainKey', asyncRoute(async (req: Request, res: Response) => {
   const { chainKey } = req.params;
 
   const targetUrl = getRpcUrl(chainKey);
@@ -244,11 +256,11 @@ router.post('/:chainKey', async (req: Request, res: Response) => {
   } catch (error) {
     return handleUpstreamError(error, chainKey, res);
   }
-});
+}));
 
 // REST GET passthrough — used by Aptos (`/v1/accounts/...`) and Stellar
 // (`/accounts/...`) which expose HTTP REST APIs rather than JSON-RPC. (C2 fix)
-router.get('/:chainKey/*', async (req: Request, res: Response) => {
+router.get('/:chainKey/*', asyncRoute(async (req: Request, res: Response) => {
   const { chainKey } = req.params;
   const subPath: string = req.params[0] || '';
 
@@ -308,6 +320,6 @@ router.get('/:chainKey/*', async (req: Request, res: Response) => {
   } catch (error) {
     return handleUpstreamError(error, chainKey, res);
   }
-});
+}));
 
 export { router as rpcRoutes };

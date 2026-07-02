@@ -71,6 +71,22 @@ const OnrampWebhookBodySchema = z
   })
   .strip();
 
+const MoonPayWebhookBodySchema = z
+  .object({
+    data: z
+      .object({
+        externalTransactionId: z.string().optional(),
+        status: z.string().optional(),
+        cryptoTransactionId: z.string().optional(),
+        quoteCurrencyAmount: z.string().optional(),
+        createdAt: z.union([z.string(), z.number()]).optional(),
+      })
+      .optional(),
+    createdAt: z.union([z.string(), z.number()]).optional(),
+    type: z.string().optional(),
+  })
+  .strip();
+
 /**
  * Best-effort timestamp extractor for an Onramp.money webhook body.
  * Onramp.money's payload shape varies by event type and version; we look
@@ -336,20 +352,21 @@ export const handleOnrampWebhook = async (
 
     if (moonpaySignature) {
       // Moonpay webhook extraction
-      const body = req.body as any;
-      if (body?.data?.externalTransactionId) {
-        gatewayOrderId = body.data.externalTransactionId;
+      const parsedMoonpay = MoonPayWebhookBodySchema.safeParse(req.body);
+      if (parsedMoonpay.success && parsedMoonpay.data.data?.externalTransactionId) {
+        const mpData = parsedMoonpay.data.data;
+        gatewayOrderId = mpData.externalTransactionId;
         // MoonPay emits: 'completed', 'failed', 'pending', 'waitingPayment',
         // 'waitingAuthorization'. Normalize the in-progress states so the
         // nextStatus mapping below doesn't terminalize a live order (see
         // normalizeMoonPayStatus).
-        status = normalizeMoonPayStatus(body.data.status);
-        txHash = body.data.cryptoTransactionId;
-        cryptoAmount = body.data.quoteCurrencyAmount;
+        status = normalizeMoonPayStatus(mpData.status);
+        txHash = mpData.cryptoTransactionId;
+        cryptoAmount = mpData.quoteCurrencyAmount;
         // MoonPay nests the event timestamp under `data` (top-level `createdAt`
         // is not part of the envelope). Fall back to the top level defensively
         // so a freshness window still applies if the shape ever changes.
-        const rawCreatedAt = body?.data?.createdAt ?? body?.createdAt;
+        const rawCreatedAt = mpData.createdAt ?? parsedMoonpay.data.createdAt;
         const parsedCreatedAt = rawCreatedAt ? new Date(rawCreatedAt).getTime() : NaN;
         eventTimestampMs = Number.isFinite(parsedCreatedAt) ? parsedCreatedAt : null;
       }

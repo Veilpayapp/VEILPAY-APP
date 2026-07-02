@@ -20,14 +20,23 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
+jest.mock('expo-haptics', () => ({
+  selectionAsync: jest.fn().mockResolvedValue(undefined),
+  notificationAsync: jest.fn().mockResolvedValue(undefined),
+  NotificationFeedbackType: { Error: 'Error', Success: 'Success', Warning: 'Warning' },
+}));
+
 jest.mock('react-native-reanimated', () => {
   const React = require('react');
   const View = (props: any) => React.createElement('View', props, props.children);
   return {
     __esModule: true,
     FadeInDown: { duration: () => ({}) },
-    default: { View },
+    default: { View, createAnimatedComponent: (c: any) => c },
     createAnimatedComponent: (c: any) => c,
+    useSharedValue: jest.fn(() => ({ value: 0 })),
+    useAnimatedStyle: jest.fn(() => ({})),
+    withTiming: jest.fn((v) => v),
   };
 });
 

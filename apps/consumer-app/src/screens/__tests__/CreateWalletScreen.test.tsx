@@ -1,4 +1,5 @@
 import React from 'react';
+import { SCREENS } from '../../constants/screens';
 import { fireEvent, render, waitFor, act } from '@testing-library/react-native';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
@@ -19,14 +20,23 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
+jest.mock('expo-haptics', () => ({
+  selectionAsync: jest.fn().mockResolvedValue(undefined),
+  notificationAsync: jest.fn().mockResolvedValue(undefined),
+  NotificationFeedbackType: { Error: 'Error', Success: 'Success', Warning: 'Warning' },
+}));
+
 jest.mock('react-native-reanimated', () => {
   const React = require('react');
   const View = (props: any) => React.createElement('View', props, props.children);
   return {
     __esModule: true,
     FadeInDown: { duration: () => ({ springify: () => ({ damping: () => ({ stiffness: () => ({}) }) }) }) },
-    default: { View },
+    default: { View, createAnimatedComponent: (c: any) => c },
     createAnimatedComponent: (c: any) => c,
+    useSharedValue: jest.fn(() => ({ value: 0 })),
+    useAnimatedStyle: jest.fn(() => ({})),
+    withTiming: jest.fn((v) => v),
   };
 });
 
@@ -178,28 +188,23 @@ describe('CreateWalletScreen', () => {
     const checkbox = getByText("I've written down my seed phrase and stored it securely");
     fireEvent.press(checkbox);
     // After checkbox: button is enabled and text changes to CONTINUE
-    const btnEnabled = getByTestId('btn-CONTINUE');
+    const btnEnabled = getByTestId('btn-CONTINUE TO VERIFY');
     expect(btnEnabled.props.accessibilityState.disabled).toBe(false);
     fireEvent.press(btnEnabled);
     await waitFor(() => {
-      expect(storeMnemonic).toHaveBeenCalledWith(Array(12).fill('').map((_, i) => `word${i+1}`));
-      expect(mockConnect).toHaveBeenCalledWith('0xAbCdEf1234567890AbCdEf1234567890AbCdEf12', 'evm');
-      expect(mockReset).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith(SCREENS.VERIFY_WALLET, {
+        seedWords: Array(12).fill('').map((_, i) => `word${i+1}`),
+        derivedAddress: '0xAbCdEf1234567890AbCdEf1234567890AbCdEf12'
+      });
     });
   });
 
-  it('shows error toast when wallet creation fails', async () => {
-    mockConnect.mockRejectedValueOnce(new Error('connect failed'));
-    const { getByText, getByTestId } = render(<CreateWalletScreen navigation={navigation} />);
-    await waitFor(() => expect(getByText('word1')).toBeTruthy());
+  it('shows error toast when wallet derivation fails', async () => {
+    const { deriveAddressFromMnemonic } = require('../../utils/bip39');
+    deriveAddressFromMnemonic.mockRejectedValueOnce(new Error('derive failed'));
+    render(<CreateWalletScreen navigation={navigation} />);
     await waitFor(() => {
-      expect(getByTestId('btn-CONFIRM TO CONTINUE')).toBeTruthy();
-    });
-    fireEvent.press(getByText("I've written down my seed phrase and stored it securely"));
-    const btn = getByTestId('btn-CONTINUE');
-    fireEvent.press(btn);
-    await waitFor(() => {
-      expect(mockShow).toHaveBeenCalledWith('Failed to create wallet. Please try again.', 'error');
+      expect(mockShow).toHaveBeenCalledWith('Failed to generate seed: derive failed', 'error');
     });
   });
 

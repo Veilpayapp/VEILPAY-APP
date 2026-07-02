@@ -176,13 +176,11 @@ interface CreateWalletScreenProps {
                   Write down your seed phrase and store it offline. Anyone with these words can access your funds.
                 </Text>
               </View>
-            {/* eslint-disable-next-line design-no-em-dash-in-jsx-text */}
             </View>
           </SovereignCard>
 
           {/* Title */}
           <Text style={styles.sectionTitle}>YOUR RECOVERY PHRASE</Text>
-          {/* eslint-disable-next-line design-no-em-dash-in-jsx-text */}
           <Text style={styles.sectionSubtitle}>12 words — do not share with anyone</Text>
 
           {/* Seed Grid */}

@@ -40,16 +40,12 @@ async function buildFixtureWorkspace(): Promise<string> {
 
 describe('cli in-process run for coverage', () => {
   let fixtureRoot: string | null = null;
-  let exitSpy: jest.SpyInstance;
-  let errorSpy: jest.SpyInstance;
-  let warnSpy: jest.SpyInstance;
-
   beforeEach(async () => {
-    exitSpy = jest.spyOn(process, 'exit').mockImplementation((code?: string | number | null | undefined) => {
+    jest.spyOn(process, 'exit').mockImplementation((code?: string | number | null | undefined) => {
       throw new Error(`process.exit(${code})`);
     });
-    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(async () => {

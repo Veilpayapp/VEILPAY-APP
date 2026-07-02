@@ -45,11 +45,11 @@ describe('routes success', () => {
     `);
 
     // JWT config
-    await fs.writeFile(path.join(workspaceRoot, 'apps', 'backend', 'src', 'auth.ts'), \`
+    await fs.writeFile(path.join(workspaceRoot, 'apps', 'backend', 'src', 'auth.ts'), `
       import jwt from 'jsonwebtoken';
       jwt.sign({ algorithm: 'RS256', expiresIn: '1h' });
       const refreshToken = 'abc';
-    \`);
+    `);
 
     const result = await runRouteVerifier({
       workspaceRoot,

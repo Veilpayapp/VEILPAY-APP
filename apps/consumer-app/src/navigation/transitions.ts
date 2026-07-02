@@ -209,10 +209,6 @@ export const screenTransitions: Record<string, NativeStackNavigationOptions> = {
   OnrampQuotes: {
     ...transitionPresets.none,
   },
-  
-  OfframpQuotes: {
-    ...transitionPresets.none,
-  },
 };
 
 // Animation timing functions

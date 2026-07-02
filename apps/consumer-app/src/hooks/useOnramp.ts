@@ -13,6 +13,7 @@ export interface OnrampQuoteRequest {
   cryptoToken: string;
   chainKey: string;
   flow: 'buy' | 'sell';
+  provider?: string;
 }
 
 export interface OnrampSession {
@@ -58,6 +59,7 @@ export const useOnramp = () => {
           cryptoToken: config.coinCode,
           chainKey: params.chainKey,
           flow: params.flow,
+          provider: params.provider || 'onramp_money',
         }),
       });
 
@@ -74,7 +76,7 @@ export const useOnramp = () => {
 
       // Track the order in local state
       setLatestOnrampOrder({
-        provider: 'onramp_money' as FiatGatewayProvider,
+        provider: (params.provider || 'onramp_money') as FiatGatewayProvider,
         id: orderId,
         orderId,
         walletAddress: address,
@@ -118,7 +120,7 @@ export const useOnramp = () => {
       // Sync local state if changed
       setLatestOnrampOrder({
         ...order,
-        provider: 'onramp_money',
+        provider: order.provider || 'onramp_money',
         id: order.id ?? normalizedOrderId,
         orderId: normalizedOrderId,
         walletAddress: order.walletAddress ?? order.userAddress,

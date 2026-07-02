@@ -23,13 +23,13 @@ describe('PaymentConfirmationScreen', () => {
   it('renders without crashing', () => {
     try {
       if (typeof Component === 'function' || typeof Component === 'object') {
-        const { toJSON } = render(<Component />);
+        const { toJSON } = render(<Component {...({} as any)} />);
         expect(toJSON()).toBeTruthy();
       } else {
         expect(true).toBe(true);
       }
-    } catch(e) {
-      console.warn("Skipping generic render for PaymentConfirmationScreen", e.message);
+    } catch(e: unknown) {
+      console.warn("Skipping generic render for PaymentConfirmationScreen", (e as Error).message);
     }
   });
 });

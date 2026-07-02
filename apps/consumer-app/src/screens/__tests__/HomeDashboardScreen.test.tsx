@@ -12,6 +12,14 @@ jest.mock('@react-native-community/netinfo', () => ({
   useNetInfo: () => ({ type: 'wifi', isConnected: true, isInternetReachable: true }),
 }));
 
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn().mockResolvedValue(undefined),
+  notificationAsync: jest.fn().mockResolvedValue(undefined),
+  selectionAsync: jest.fn().mockResolvedValue(undefined),
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
+  NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
+}));
+
 const mockShowToast = jest.fn();
 const mockOpenExternalUrl = jest.fn();
 const mockSetActiveChain = jest.fn();
@@ -241,7 +249,7 @@ describe('HomeDashboardScreen', () => {
       expect(screen.getByText(/1.20%/)).toBeTruthy();
     });
 
-    fireEvent.press(screen.getByText('NETWORK'));
+    fireEvent.press(screen.getByText('ETHEREUM'));
 
     await waitFor(() => {
       expect(screen.getByText('SELECT NETWORK')).toBeTruthy();

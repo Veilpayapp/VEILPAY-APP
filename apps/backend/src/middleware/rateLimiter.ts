@@ -203,3 +203,48 @@ export const webhookVerifyRateLimiter = rateLimit({
     code: "WEBHOOK_VERIFY_RATE_LIMIT",
   },
 });
+
+/**
+ * Dedicated limiter for the public RPC proxy (`/api/v1/rpc`).
+ *
+ * Tighter than the global limiter because the upstream provider keys are a
+ * shared, metered resource — an attacker who discovers the endpoint could
+ * otherwise burn Alchemy/Infura quota.
+ *
+ * Keying: the client IP is ALWAYS the anchor of the rate-limit key. The
+ * `x-veilpay-device-id` header is only used to sub-partition per device WITHIN
+ * an IP (fairness across multiple devices behind one NAT). Because the header
+ * is client-controlled, keying on it alone would let an attacker rotate the
+ * header to mint unlimited fresh buckets and bypass the limit — anchoring on
+ * IP prevents that while still preserving per-device fairness.
+ *
+ * SECURITY(hardening): This is a quota-protection layer, not authentication.
+ * Anyone can still call the endpoint. For production hardening, gate this route
+ * behind Apple App Attest / Google Play Integrity attestation so only genuine
+ * app builds can consume provider credits.
+ */
+export const rpcRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rpc'),
+  keyGenerator: (req) => {
+    const ip = req.ip || 'unknown';
+    const rawDeviceId = req.headers['x-veilpay-device-id'];
+    if (typeof rawDeviceId === 'string' && rawDeviceId.length > 0) {
+      // Cap the length so a maliciously huge header can't bloat the store, and
+      // anchor on IP so rotating the device id cannot escape the IP's bucket.
+      const deviceId = rawDeviceId.slice(0, 128);
+      return `${ip}:device:${deviceId}`;
+    }
+    return ip;
+  },
+  handler: (_req, res) => {
+    res.status(429).json({
+      error: 'RPC rate limit exceeded. Please slow down.',
+      code: 'RPC_RATE_LIMIT',
+      retryAfter: 60,
+    });
+  },
+});

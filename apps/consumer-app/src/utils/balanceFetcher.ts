@@ -1,7 +1,7 @@
 import { formatEther, formatUnits, parseAbi } from 'viem';
 import { captureError } from './sentry';
 import { poolCall } from './rpcPool';
-import { getRpcUrl, buildAlchemyUrl } from './rpc';
+import { getRpcUrl } from './rpc';
 import { useWalletStore } from '../stores/walletStore';
 import type { ChainConfig } from '../stores/walletStore';
 
@@ -349,11 +349,14 @@ export async function fetchNativeBalance(address: string, chainKey: string): Pro
 }
 
 export async function fetchERC20Balances(address: string, chainKey: string): Promise<TokenBalance[]> {
-  const alchemyUrl = buildAlchemyUrl(chainKey);
-  if (alchemyUrl) {
+  // Route Alchemy-enhanced token discovery through the backend RPC proxy.
+  // The proxy forwards to Alchemy (which supports alchemy_getTokenBalances) or
+  // falls back to a public node, which rejects the method and is caught below.
+  const rpcUrl = getRpcUrl(chainKey);
+  if (rpcUrl) {
     try {
       const response = await withTimeout(
-        fetch(alchemyUrl, {
+        fetch(rpcUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -385,7 +388,7 @@ export async function fetchERC20Balances(address: string, chainKey: string): Pro
         }));
 
         const metaResponse = await withTimeout(
-          fetch(alchemyUrl, {
+          fetch(rpcUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(metadataPayload)

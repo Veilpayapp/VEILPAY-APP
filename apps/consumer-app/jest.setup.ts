@@ -127,7 +127,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 
 
 jest.useFakeTimers();
-global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) }));
+global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) })) as unknown as typeof fetch;
 
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(),

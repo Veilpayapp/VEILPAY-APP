@@ -70,7 +70,6 @@ export function ErrorState({
             }}
             variant="outline"
             accessibilityLabel={actionLabel}
-            accessibilityRole="button"
           />
         </MotiView>
       )}

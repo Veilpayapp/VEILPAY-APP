@@ -92,7 +92,7 @@ type FakeWebViewInstance = {
 let lastWebViewInstance: FakeWebViewInstance | null = null;
 
 jest.mock('react-native-webview', () => {
-  const React = require('react');
+  const React = require('react') as typeof import('react');
   const WebView = React.forwardRef((props: any, ref: any) => {
     const instanceRef = React.useRef<FakeWebViewInstance>({
       onMessage: undefined,

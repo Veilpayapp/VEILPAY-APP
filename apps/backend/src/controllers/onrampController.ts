@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto';
 import { prisma } from '../lib/prisma';
 import { OnrampService } from '../lib/onramp';
+import { MoonPayService } from '../lib/moonpay';
 import { z } from 'zod';
 
 /**
@@ -29,6 +30,7 @@ const CreateOrderSchema = z.object({
   cryptoToken: z.string(),
   chainKey: z.string(),
   flow: z.enum(['buy', 'sell']),
+  provider: z.string().optional().default('onramp_money'),
 });
 
 /**
@@ -98,25 +100,61 @@ function extractEventTimestampMs(body: unknown): number | null {
   return null;
 }
 
-export const createOnrampUrl = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-  try {
+/**
+ * Normalizes a MoonPay transaction status into the vocabulary understood by
+ * the `nextStatus` mapping below.
+ *
+ * MoonPay emits several in-progress states — `pending`, `waitingPayment`,
+ * `waitingAuthorization` — that are NOT failures. Without this mapping they
+ * fall through the `nextStatus` chain to `'failed'`, which is a terminal state,
+ * so the first in-progress webhook would permanently mark a live order failed
+ * and the later `completed` event would be ignored by the terminal-state guard.
+ * We map those to `'processing'` so the order stays open until a genuine
+ * terminal event (`completed` / `failed`) arrives.
+ */
+function normalizeMoonPayStatus(raw: unknown): string {
+  if (typeof raw !== 'string') return '';
+  switch (raw) {
+    case 'waitingPayment':
+    case 'waitingAuthorization':
+    case 'pending':
+      return 'processing';
+    default:
+      // 'completed' and 'failed' pass through unchanged.
+      return raw;
+  }
+}
+
+export const createOnrampUrl = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {  try {
     const data = CreateOrderSchema.parse(req.body);
     const orderId = randomUUID();
 
-    const url = OnrampService.generateSignedUrl({
-      userAddress: data.userAddress,
-      fiatAmount: data.fiatAmount,
-      fiatCurrency: data.fiatCurrency,
-      cryptoToken: data.cryptoToken,
-      network: OnrampService.mapNetwork(data.chainKey),
-      orderId,
-    });
+    let url = '';
+    if (data.provider === 'moonpay') {
+      url = MoonPayService.generateSignedUrl({
+        userAddress: data.userAddress,
+        fiatAmount: data.fiatAmount,
+        fiatCurrency: data.fiatCurrency,
+        cryptoToken: data.cryptoToken,
+        chainKey: data.chainKey,
+        orderId,
+      });
+    } else {
+      url = OnrampService.generateSignedUrl({
+        userAddress: data.userAddress,
+        fiatAmount: data.fiatAmount,
+        fiatCurrency: data.fiatCurrency,
+        cryptoToken: data.cryptoToken,
+        network: OnrampService.mapNetwork(data.chainKey),
+        orderId,
+      });
+    }
 
     const order = await prisma.fiatOrder.create({
       data: {
         id: orderId,
         orderId,
-        provider: 'onramp_money',
+        provider: data.provider,
         userAddress: data.userAddress,
         fiatAmount: data.fiatAmount || '0',
         fiatCurrency: data.fiatCurrency,
@@ -134,28 +172,87 @@ export const createOnrampUrl = async (req: Request, res: Response, _next: NextFu
   }
 };
 
+// ─── Live crypto rate (Binance) with timeout + short cache ──────────────────
+
+const BINANCE_TIMEOUT_MS = 2_500;
+const RATE_CACHE_TTL_MS = 30_000;
+const rateCache = new Map<string, { priceInUsdt: number; expiresAt: number }>();
+
+/**
+ * Approximate USDT→fiat conversion factors for the currencies the quote ladder
+ * supports. These are intentionally coarse — the ladder is a heuristic estimate,
+ * not an executable price. INR additionally carries the local P2P premium at
+ * which USDT trades on Indian ramps. Unknown currencies fall back to USD parity.
+ */
+const USDT_TO_FIAT: Record<string, number> = {
+  INR: 101.5,
+  USD: 1.0,
+  EUR: 0.92,
+  GBP: 0.79,
+};
+
+/**
+ * Fetches the USDT price of `cryptoToken` from Binance, bounded by a timeout and
+ * cached briefly so the hot quotes path never blocks on a slow/hung upstream.
+ * Returns null when the symbol is unavailable (e.g. USDT itself, which has no
+ * USDTUSDT pair) or the request fails/aborts.
+ */
+async function fetchCryptoUsdtPrice(token: string): Promise<number | null> {
+  const symbol = `${token}USDT`;
+  const cached = rateCache.get(symbol);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.priceInUsdt;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), BINANCE_TIMEOUT_MS);
+  try {
+    const tickerRes = await fetch(
+      `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`,
+      { signal: controller.signal },
+    );
+    if (!tickerRes.ok) return null;
+    const data = (await tickerRes.json()) as { price?: string };
+    const priceInUsdt = data && data.price ? parseFloat(data.price) : NaN;
+    if (!Number.isFinite(priceInUsdt) || priceInUsdt <= 0) return null;
+    rateCache.set(symbol, { priceInUsdt, expiresAt: Date.now() + RATE_CACHE_TTL_MS });
+    return priceInUsdt;
+  } catch (e) {
+    console.warn('Failed to fetch live rates from Binance, using fallback', e);
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export const getOnrampQuotes = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
   try {
-    // `fiatCurrency` is captured from the query for forward compatibility
-    // (the multi-provider quote ladder will eventually need it for
-    // currency-aware exchange rates) but is not used in the current
-    // INR/USD heuristic. Renaming to `_fiatCurrency` keeps the rule's
-    // unused-var pattern happy without losing the signature.
-    const { fiatAmount, fiatCurrency: _fiatCurrency = 'INR', cryptoToken = 'ETH', flow = 'buy' } = req.query;
-    void _fiatCurrency;
+    const { fiatAmount, fiatCurrency = 'INR', cryptoToken = 'ETH', flow = 'buy' } = req.query;
     if (!fiatAmount) {
       res.status(400).json({ error: 'fiatAmount is required' });
       return;
     }
 
     const amount = parseFloat(fiatAmount as string);
-    const baseRate = cryptoToken === 'USDC' ? 83 : 250000;
 
-    // No await is needed in the current heuristic-only quote ladder, but
-    // the signature stays async to keep parity with the other route
-    // handlers in this controller and to leave room for a real provider
-    // call (which will be async) without a breaking change.
-    await Promise.resolve();
+    // Resolve the base rate as "fiat units per 1 crypto token" in the currency
+    // the caller actually requested (the quote math divides amount by baseRate).
+    const currency = (typeof fiatCurrency === 'string' ? fiatCurrency : 'INR').toUpperCase();
+    const usdtToFiat = USDT_TO_FIAT[currency] ?? USDT_TO_FIAT.USD;
+    const token = String(cryptoToken).toUpperCase();
+    const isStable = token === 'USDT' || token === 'USDC';
+
+    // Fallback base rate (used if the live price is unavailable). Expressed in
+    // USDT first, then converted to the requested fiat so non-INR quotes are
+    // no longer scaled with the INR premium.
+    const fallbackUsdt = isStable ? 1 : 2500;
+    let baseRate = fallbackUsdt * usdtToFiat;
+
+    // Stablecoins peg ~1 USDT, so skip the (nonexistent) USDTUSDT lookup.
+    const priceInUsdt = isStable ? 1 : await fetchCryptoUsdtPrice(token);
+    if (priceInUsdt && Number.isFinite(priceInUsdt)) {
+      baseRate = priceInUsdt * usdtToFiat;
+    }
     
     const quotes = [
       {
@@ -207,32 +304,90 @@ export const handleOnrampWebhook = async (
   _next: NextFunction,
 ): Promise<void> => {
   try {
-    const signatureHeader = req.headers['x-onramp-signature'];
-    const signature = typeof signatureHeader === 'string' ? signatureHeader : '';
+    const onrampSignatureHeader = req.headers['x-onramp-signature'];
+    const moonpaySignatureHeader = req.headers['moonpay-signature-v2'];
+    
+    const onrampSignature = typeof onrampSignatureHeader === 'string' ? onrampSignatureHeader : '';
+    const moonpaySignature = typeof moonpaySignatureHeader === 'string' ? moonpaySignatureHeader : '';
 
     // BE-M4 fix: Use properly typed rawBody for signature verification
     const payload =
       typeof req.rawBody === 'string' ? req.rawBody : JSON.stringify(req.body);
 
-    const isValid = OnrampService.verifyWebhook(payload, signature);
+    let isValid = false;
+    if (moonpaySignature) {
+      isValid = MoonPayService.verifyWebhook(payload, moonpaySignature);
+    } else {
+      isValid = OnrampService.verifyWebhook(payload, onrampSignature);
+    }
+
     if (!isValid) {
       res.status(401).json({ error: 'Invalid signature' });
       return;
     }
 
+    // Schema validation.
+    // For Moonpay, their webhook payload looks like: { data: { id, externalTransactionId, cryptoTransactionId, baseCurrencyAmount, status ... }, type: "transaction.updated" }
+    let gatewayOrderId = '';
+    let status: unknown;
+    let txHash: unknown;
+    let cryptoAmount: unknown;
+    let eventTimestampMs: number | null = null;
+
+    if (moonpaySignature) {
+      // Moonpay webhook extraction
+      const body = req.body as any;
+      if (body?.data?.externalTransactionId) {
+        gatewayOrderId = body.data.externalTransactionId;
+        // MoonPay emits: 'completed', 'failed', 'pending', 'waitingPayment',
+        // 'waitingAuthorization'. Normalize the in-progress states so the
+        // nextStatus mapping below doesn't terminalize a live order (see
+        // normalizeMoonPayStatus).
+        status = normalizeMoonPayStatus(body.data.status);
+        txHash = body.data.cryptoTransactionId;
+        cryptoAmount = body.data.quoteCurrencyAmount;
+        // MoonPay nests the event timestamp under `data` (top-level `createdAt`
+        // is not part of the envelope). Fall back to the top level defensively
+        // so a freshness window still applies if the shape ever changes.
+        const rawCreatedAt = body?.data?.createdAt ?? body?.createdAt;
+        const parsedCreatedAt = rawCreatedAt ? new Date(rawCreatedAt).getTime() : NaN;
+        eventTimestampMs = Number.isFinite(parsedCreatedAt) ? parsedCreatedAt : null;
+      }
+    } else {
+      // Onramp.money webhook extraction
+      eventTimestampMs = extractEventTimestampMs(req.body);
+      const parsedBody = OnrampWebhookBodySchema.safeParse(req.body);
+      if (!parsedBody.success) {
+        res.status(400).json({
+          error: 'Invalid webhook body',
+          details: parsedBody.error.flatten(),
+        });
+        return;
+      }
+      
+      const body = parsedBody.data;
+      status = body.status;
+      txHash = body.txHash;
+      cryptoAmount = body.cryptoAmount;
+      
+      gatewayOrderId =
+        typeof body.orderId === 'string' && body.orderId.length > 0
+          ? body.orderId
+          : typeof body.partnerOrderId === 'string' && body.partnerOrderId.length > 0
+            ? body.partnerOrderId
+            : typeof body.referenceId === 'string' && body.referenceId.length > 0
+              ? body.referenceId
+              : typeof body.id === 'string' && body.id.length > 0
+                ? body.id
+                : '';
+    }
+
+    if (!gatewayOrderId) {
+      res.status(400).json({ error: 'Missing order identifier' });
+      return;
+    }
+
     // Replay protection (defense in depth, runs only after signature passes):
-    //
-    // 1. Body-timestamp window — when Onramp.money includes an event
-    //    timestamp in the signed body, refuse events older than five
-    //    minutes. The signature alone proves authenticity but does not
-    //    prove freshness, so a captured payload could otherwise be
-    //    replayed indefinitely (auditor finding VULN-0002).
-    //
-    // 2. Terminal-state guard — runs further down once we know which
-    //    order this event refers to; rejects any attempt to move an
-    //    order out of `completed` / `cancelled` / `failed` regardless of
-    //    whether the body carried a usable timestamp.
-    const eventTimestampMs = extractEventTimestampMs(req.body);
     if (eventTimestampMs !== null) {
       if (Math.abs(Date.now() - eventTimestampMs) > WEBHOOK_MAX_AGE_MS) {
         res.status(401).json({ error: 'Invalid or expired timestamp' });
@@ -240,36 +395,7 @@ export const handleOnrampWebhook = async (
       }
     }
 
-    // Schema validation. Onramp.money's webhook envelope evolves across
-    // versions; we accept anything matching the documented shape plus
-    // the legacy aliases we've seen in the wild, and strip unknown
-    // fields so they cannot leak into the prisma update below.
-    // (Auditor finding VULN-0003.)
-    const parsedBody = OnrampWebhookBodySchema.safeParse(req.body);
-    if (!parsedBody.success) {
-      res.status(400).json({
-        error: 'Invalid webhook body',
-        details: parsedBody.error.flatten(),
-      });
-      return;
-    }
-    const body = parsedBody.data;
-    const { status, orderId, partnerOrderId, referenceId, id, txHash, cryptoAmount } = body;
-    const gatewayOrderId =
-      typeof orderId === 'string' && orderId.length > 0
-        ? orderId
-        : typeof partnerOrderId === 'string' && partnerOrderId.length > 0
-          ? partnerOrderId
-          : typeof referenceId === 'string' && referenceId.length > 0
-            ? referenceId
-            : typeof id === 'string' && id.length > 0
-              ? id
-              : '';
 
-    if (!gatewayOrderId) {
-      res.status(400).json({ error: 'Missing order identifier' });
-      return;
-    }
 
     const existingOrder = await prisma.fiatOrder.findFirst({
       where: {

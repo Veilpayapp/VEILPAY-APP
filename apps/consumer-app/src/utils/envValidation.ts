@@ -4,10 +4,16 @@
  * Validates required environment variables at app startup.
  * Fails fast with a user-friendly message if critical config is missing.
  *
+ * VALUES COME FROM DOPPLER:
+ *   During EAS builds, the `preInstallHook` downloads all EXPO_PUBLIC_* vars
+ *   from Doppler into `.env`, which Metro inlines into the JS bundle at build
+ *   time. At runtime, these become string literals — there is no process.env
+ *   read in production.
+ *
  * Priority levels:
- * - CRITICAL: App cannot function (no RPC, no backend)
+ * - CRITICAL: App cannot function (no backend)
  * - IMPORTANT: Feature degraded but app usable (no analytics, no WalletConnect)
- * - OPTIONAL: Nice-to-have (Sentry, OTA updates)
+ * - OPTIONAL: Nice-to-have (Sentry, Mixpanel)
  */
 
 export type EnvValidationLevel = 'critical' | 'important' | 'optional';
@@ -43,8 +49,8 @@ const ENV_SPECS: EnvVarSpec[] = [
   {
     key: 'EXPO_PUBLIC_BACKEND_BASE_URL',
     level: 'critical',
-    description: 'Backend API base URL for transaction history and push registration',
-    userMessage: 'Backend server URL is not configured. Transaction history and notifications will not work.',
+    description: 'Backend API base URL for RPC proxy, transaction history, and push registration',
+    userMessage: 'Backend server URL is not configured. The app cannot function.',
     validate: (v) => {
       if (!v) return false;
       try {
@@ -54,18 +60,6 @@ const ENV_SPECS: EnvVarSpec[] = [
         return false;
       }
     },
-  },
-  {
-    key: 'EXPO_PUBLIC_ALCHEMY_API_KEY',
-    level: 'critical',
-    description: 'Alchemy API key for reliable RPC access (free tier: 300M CU/month)',
-    userMessage: 'No RPC API key configured. Blockchain connections will use unreliable public endpoints and may fail.',
-  },
-  {
-    key: 'EXPO_PUBLIC_INFURA_API_KEY',
-    level: 'important',
-    description: 'Infura API key for RPC failover (free tier: 100K req/day)',
-    userMessage: 'No Infura backup key configured. RPC failover will rely on public endpoints only.',
   },
 
   // ── IMPORTANT: Feature degraded but app usable ────────────────────────────
@@ -94,12 +88,6 @@ const ENV_SPECS: EnvVarSpec[] = [
     level: 'optional',
     description: 'Mixpanel token for analytics tracking',
     userMessage: 'Analytics tracking is not configured.',
-  },
-  {
-    key: 'EXPO_PUBLIC_EAS_UPDATE_URL',
-    level: 'optional',
-    description: 'EAS update URL for OTA update checks',
-    userMessage: 'OTA update URL not set.',
   },
 ];
 
@@ -141,7 +129,6 @@ export function validateEnvironment(): EnvValidationResult {
   const criticalErrors = isDev
     ? errors.filter((e) => {
         // In dev, only EXPO_PUBLIC_BACKEND_BASE_URL is truly critical
-        // (public RPCs work fine for testing)
         return e.key === 'EXPO_PUBLIC_BACKEND_BASE_URL';
       })
     : errors;

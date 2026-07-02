@@ -11,8 +11,6 @@ describe('rpc utility tests', () => {
     jest.resetModules();
     // Clean out relevant env parameters
     delete process.env.EXPO_PUBLIC_RPC_ETHEREUM;
-    delete process.env.EXPO_PUBLIC_ALCHEMY_API_KEY;
-    delete process.env.EXPO_PUBLIC_INFURA_API_KEY;
     process.env.NODE_ENV = 'development';
   });
 
@@ -31,7 +29,7 @@ describe('rpc utility tests', () => {
   describe('getRpcUrl priority levels', () => {
     it('prioritizes explicit EXPO_PUBLIC_RPC_ override when set', () => {
       process.env.EXPO_PUBLIC_RPC_ETHEREUM = 'https://custom-node.local';
-      process.env.EXPO_PUBLIC_ALCHEMY_API_KEY = 'alchemy-secret-key';
+      process.env.EXPO_PUBLIC_BACKEND_BASE_URL = 'https://api.veilpay.app';
 
       // Require after setting env overrides so that RPC_ENV_VARS is populated correctly
       const { getRpcUrl } = require('../rpc');
@@ -39,48 +37,42 @@ describe('rpc utility tests', () => {
       expect(url).toBe('https://custom-node.local');
     });
 
-    it('falls back to Alchemy builder URL when API key is set', () => {
-      process.env.EXPO_PUBLIC_ALCHEMY_API_KEY = 'alchemy-secret-key';
+    it('falls back to backend proxy URL when backend base is set', () => {
+      process.env.EXPO_PUBLIC_BACKEND_BASE_URL = 'https://api.veilpay.app';
 
       const { getRpcUrl } = require('../rpc');
       const ethUrl = getRpcUrl('ethereum');
-      expect(ethUrl).toBe('https://eth-mainnet.g.alchemy.com/v2/alchemy-secret-key');
+      expect(ethUrl).toBe('https://api.veilpay.app/api/v1/rpc/ethereum');
 
       const solanaUrl = getRpcUrl('solana');
-      expect(solanaUrl).toBe('https://solana-mainnet.g.alchemy.com/v2/alchemy-secret-key');
+      expect(solanaUrl).toBe('https://api.veilpay.app/api/v1/rpc/solana');
     });
 
-    it('falls back to Infura builder URL when Alchemy is unset but Infura is set', () => {
-      process.env.EXPO_PUBLIC_INFURA_API_KEY = 'infura-secret-key';
-
-      const { getRpcUrl } = require('../rpc');
-      const ethUrl = getRpcUrl('ethereum');
-      expect(ethUrl).toBe('https://mainnet.infura.io/v3/infura-secret-key');
-    });
-
-    it('uses public fallbacks in non-production when no keys are provided', () => {
+    it('uses public fallbacks in non-production when no backend is provided', () => {
       process.env.NODE_ENV = 'development';
+      delete process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
       const { getRpcUrl } = require('../rpc');
       const ethUrl = getRpcUrl('ethereum');
       expect(ethUrl).toBe('https://ethereum-rpc.publicnode.com');
     });
 
-    it('triggers Sentry error and returns empty string in production when no keys or overrides exist', () => {
+    it('alerts and degrades to a read-only public node in production when no proxy or overrides exist', () => {
       process.env.NODE_ENV = 'production';
-      const spyError = jest.spyOn(console, 'error').mockImplementation(() => {});
+      delete process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
+      const captureError = require('../sentry').captureError;
+      const spyCapture = jest.spyOn({ captureError }, 'captureError').mockImplementation(() => {});
+      const spyWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
       const { getRpcUrl } = require('../rpc');
       const ethUrl = getRpcUrl('ethereum');
 
-      expect(ethUrl).toBe('');
-      
-      // Resolve captureError dynamically from the reset module system
-      
-      
-      
+      // A misconfigured prod deploy should keep reads working via a public node
+      // rather than returning '' and failing every blockchain read.
+      expect(ethUrl).toBe('https://ethereum-rpc.publicnode.com');
 
-      spyError.mockRestore();
+      spyCapture.mockRestore();
+      spyWarn.mockRestore();
     });
   });
 });

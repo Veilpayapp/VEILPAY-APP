@@ -23,8 +23,6 @@ const MAX_RETRIES = 3;
 const RETRY_BASE_DELAY_MS = 300;
 
 function buildSolanaEndpoints(chainKey: string): RpcEndpoint[] {
-  const alchemyKey = process.env.EXPO_PUBLIC_ALCHEMY_API_KEY?.trim();
-
   const endpoints: RpcEndpoint[] = [];
 
   const overrideEnvKey = `EXPO_PUBLIC_RPC_${chainKey.replace(/-/g, '_').toUpperCase()}`;
@@ -35,8 +33,13 @@ function buildSolanaEndpoints(chainKey: string): RpcEndpoint[] {
     return endpoints;
   }
 
-  if (chainKey === 'solana' && alchemyKey) {
-    endpoints.push({ name: `alchemy-${chainKey}`, url: `https://solana-mainnet.g.alchemy.com/v2/${alchemyKey}`, weight: 3 });
+  const backendBase = process.env.EXPO_PUBLIC_BACKEND_BASE_URL?.trim();
+  if (backendBase) {
+    endpoints.push({
+      name: `backend-proxy-${chainKey}`,
+      url: `${backendBase}/api/v1/rpc/${chainKey}`,
+      weight: 5
+    });
   }
 
   const publicUrl = chainKey === 'solana' 

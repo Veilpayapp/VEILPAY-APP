@@ -1,4 +1,4 @@
-export type FiatGatewayProvider = 'transak' | 'onramp_money';
+export type FiatGatewayProvider = 'transak' | 'onramp_money' | 'moonpay';
 
 export type FiatGatewayFlow = 'buy' | 'sell';
 
@@ -84,7 +84,12 @@ export function isAllowedOnrampUrl(url: string): boolean {
       return false;
     }
 
-    return parsed.hostname === 'onramp.money' || parsed.hostname.endsWith('.onramp.money');
+    const host = parsed.hostname;
+    return (
+      host === 'onramp.money' || host.endsWith('.onramp.money') ||
+      host === 'moonpay.com' || host.endsWith('.moonpay.com') ||
+      host === 'transak.com' || host.endsWith('.transak.com')
+    );
   } catch {
     return false;
   }

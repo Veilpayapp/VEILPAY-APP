@@ -13,9 +13,10 @@ import { webhookRoutes } from "./routes/webhook";
 import { healthRoutes } from "./routes/health";
 import { directoryRoutes } from "./routes/directory";
 import { docsRoutes } from "./routes/docs";
+import { rpcRoutes } from "./routes/rpc";
 import { errorHandler } from "./middleware/errorHandler";
 import { requestLogger } from "./middleware/requestLogger";
-import { globalRateLimiter, authRateLimiter, webhookRateLimiter, webhookVerifyRateLimiter } from "./middleware/rateLimiter";
+import { globalRateLimiter, authRateLimiter, webhookRateLimiter, webhookVerifyRateLimiter, rpcRateLimiter } from "./middleware/rateLimiter";
 import { startInvoiceExpiryWorker, stopInvoiceExpiryWorker } from "./lib/invoiceExpiry";
 import { closeWebhookQueue, initializeWebhookQueue } from "./jobs/webhookQueue";
 import { closeWebhookWorker, initializeWebhookWorker } from "./jobs/webhookWorker";
@@ -88,6 +89,8 @@ app.use("/api/v1/merchant/register", authRateLimiter);
 app.use("/api/v1/webhook", webhookRateLimiter);
 // Rate limit on webhook verification to prevent brute-force signature probing
 app.use("/api/v1/webhook/verify", webhookVerifyRateLimiter);
+// Dedicated limiter for the RPC proxy (protects provider key quota)
+app.use("/api/v1/rpc", rpcRateLimiter);
 
 app.get("/", (_req, res) => {
   res.json({
@@ -105,6 +108,7 @@ app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/webhook", webhookRoutes);
 app.use("/api/v1/onramp", onrampRoutes);
 app.use("/api/v1/relayer", relayerRoutes);
+app.use("/api/v1/rpc", rpcRoutes);
 app.use("/api/docs", docsRoutes);
 
 Sentry.setupExpressErrorHandler(app);

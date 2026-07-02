@@ -65,8 +65,19 @@ if (env.NODE_ENV === 'production') {
   }
 
   // ── CORS wildcard ─────────────────────────────────────────────────────────
-  if (env.CORS_ORIGINS.trim() === '*') {
-    console.warn('⚠️ WARNING: CORS_ORIGINS is set to "*". This is insecure for production. Please update your Doppler config with your frontend URL.');
+  // A wildcard CORS origin is unsafe for a production API that proxies paid
+  // RPC providers — any website could drive browser requests through the
+  // backend and burn provider credits. Fail fast rather than warn.
+  //
+  // NOTE: the schema default for CORS_ORIGINS is '*', so this also fires when
+  // the value is simply unset in production. Set an explicit origin list in
+  // Doppler BEFORE deploying, or the backend will refuse to boot (fail-closed).
+  const corsOrigins = env.CORS_ORIGINS.trim();
+  if (corsOrigins === '*' || corsOrigins === '') {
+    throw new Error(
+      'CORS_ORIGINS is unset or set to "*", which is insecure for production. ' +
+      'Set CORS_ORIGINS to your explicit frontend origin(s) via Doppler before deploying.'
+    );
   }
 
   // ── RPC provider keys ─────────────────────────────────────────────────────

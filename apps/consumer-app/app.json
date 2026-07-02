@@ -1,17 +1,16 @@
-﻿{
+{
   "expo": {
     "name": "Veilpay",
     "slug": "veilpay",
     "version": "1.0.1",
-    "entryPoint": "./index.ts",
     "orientation": "portrait",
     "icon": "./assets/logo-icon.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
+      "url": "https://u.expo.dev/b083fea1-cac0-4e6c-a07d-81ec0417cf36",
       "enabled": true,
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 30000
@@ -27,13 +26,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.veilpay.consumer",
-      "buildNumber": "2",
-      "jsEngine": "hermes"
+      "buildNumber": "2"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo-icon.png",
-        "backgroundImage": "./assets/android-icon-background.png"
+        "backgroundColor": "#0A0A0B"
       },
       "package": "com.veilpay.consumer",
       "versionCode": 2,
@@ -42,14 +40,7 @@
         "INTERNET",
         "VIBRATE",
         "POST_NOTIFICATIONS"
-      ],
-      "jsEngine": "hermes"
-    },
-    "notification": {
-      "icon": "./assets/icon.png",
-      "color": "#6366F1",
-      "androidMode": "default",
-      "androidCollapsedTitle": "Veilpay"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -58,13 +49,21 @@
       "expo-camera",
       "expo-secure-store",
       "expo-font",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#6366F1"
+        }
+      ],
       "expo-updates",
-      "@react-native-community/datetimepicker"],
+      "@react-native-community/datetimepicker"
+    ],
     "scheme": "veilpay",
     "extra": {
-      "eas": {}
+      "eas": {
+        "projectId": "b083fea1-cac0-4e6c-a07d-81ec0417cf36"
+      }
     }
   }
 }
-

@@ -1,16 +1,6 @@
 name: Consumer App EAS Build
 
 on:
-  push:
-    branches:
-      - main
-      - master
-    paths:
-      - 'apps/consumer-app/**'
-      - 'packages/**'
-      - 'pnpm-workspace.yaml'
-      - 'package.json'
-      - '.github/workflows/consumer-app-eas.yml'
   workflow_dispatch:
     inputs:
       profile:

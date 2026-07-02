@@ -518,17 +518,11 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
           </View>
 
           {/* Settings Sections */}
-          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("WALLET", walletSection, 0)}
-          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("SECURITY", securitySection, 1)}
-          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("PRIVACY", privacySection, 2)}
-          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("PREFERENCES", preferencesSection, 3)}
-          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("ABOUT", aboutSection, 4)}
-          {/* eslint-disable-next-line no-render-in-render */}
           {renderSection("DANGER ZONE", dangerSection, 5)}
 
           <View style={{ height: 120 }} />

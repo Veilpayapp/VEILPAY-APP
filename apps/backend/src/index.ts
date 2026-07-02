@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import express from "express";
 import * as Sentry from "@sentry/node";
 import { nodeProfilingIntegration } from "@sentry/profiling-node";
@@ -134,7 +135,7 @@ if (require.main === module) {
     startChainIndexer();
   });
 
-  const shutdown = async () => {
+  const shutdown = async (): Promise<void> => {
     console.log("[VeilPay] Shutting down...");
     stopInvoiceExpiryWorker();
     stopChainIndexer();

@@ -19,7 +19,7 @@ export class MoonPayService {
     cryptoToken?: string;
     chainKey?: string;
     orderId?: string;
-  }) {
+  }): string {
     const {
       userAddress,
       fiatAmount,

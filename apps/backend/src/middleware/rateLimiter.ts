@@ -4,7 +4,7 @@ import { config } from "../config";
 import { getRedisClient } from "../lib/redis";
 import RedisStore from "rate-limit-redis";
 
-function getStore(prefix: string) {
+function getStore(prefix: string): RedisStore | undefined {
   const client = getRedisClient();
   if (!client) return undefined; // Fallback to memory store if Redis is unavailable
   // ioredis's `call(command, ...args)` returns `Promise<unknown>`. The

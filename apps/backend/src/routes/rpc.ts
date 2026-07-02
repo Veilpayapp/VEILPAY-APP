@@ -125,7 +125,7 @@ function checkMethodAllowlist(body: unknown): { allowed: boolean; disallowed?: s
 }
 
 // Exported for unit testing of the allowlist logic.
-export const __test = { checkMethodAllowlist, extractMethods, redactUrl, isChainSupported: (k: string) => !!getRpcUrl(k) };
+export const __test = { checkMethodAllowlist, extractMethods, redactUrl, isChainSupported: (k: string): boolean => !!getRpcUrl(k) };
 
 // ─── Safe upstream fetch (S3 redaction, S4 timeout, S5 non-JSON, B7 headers) ──
 

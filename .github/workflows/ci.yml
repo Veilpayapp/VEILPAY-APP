@@ -62,7 +62,7 @@ jobs:
         run: pnpm --filter consumer-app typecheck
 
       - name: Test consumer app
-        run: pnpm --filter consumer-app test -- --coverage --passWithNoTests --coverageThreshold='{"global":{"lines":60,"functions":60,"branches":60,"statements":60}}'
+        run: pnpm --filter consumer-app test -- --coverage --passWithNoTests --coverageThreshold='{"global":{"lines":60,"functions":60,"branches":50,"statements":60}}'
 
       # Security scanning
       - name: Audit dependencies

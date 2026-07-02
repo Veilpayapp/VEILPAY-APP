@@ -122,7 +122,7 @@ app.use((_req, res) => {
 export { app };
 
 if (require.main === module) {
-  app.listen(config.port, () => {
+  app.listen(config.port, '0.0.0.0', () => {
     console.log(`[VeilPay] API server running on port ${config.port}`);
     console.log(`[VeilPay] Environment: ${config.nodeEnv}`);
     // BE-C2 fix: start invoice expiry background worker

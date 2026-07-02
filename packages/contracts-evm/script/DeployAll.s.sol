@@ -7,6 +7,7 @@ import {Groth16Verifier} from "../src/Groth16Verifier.sol";
 import {VeilRegistry} from "../src/VeilRegistry.sol";
 import {VeilPool} from "../src/VeilPool.sol";
 import {IPoseidonHasher} from "../src/IPoseidonHasher.sol";
+import {IGroth16Verifier} from "../src/IGroth16Verifier.sol";
 
 contract DeployAll is Script {
     struct DeploymentAddresses {
@@ -29,7 +30,7 @@ contract DeployAll is Script {
         VeilRegistry registry = new VeilRegistry();
         console.log("VeilRegistry deployed at:", address(registry));
         
-        VeilPool pool = new VeilPool(address(verifier), IPoseidonHasher(poseidonHasher), feeRecipient, feeBps);
+        VeilPool pool = new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(poseidonHasher), feeRecipient, feeBps);
         console.log("VeilPool deployed at:", address(pool));
         
         vm.stopBroadcast();

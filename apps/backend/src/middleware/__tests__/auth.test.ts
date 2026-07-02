@@ -1,3 +1,5 @@
+export {};  // Force TypeScript module boundary to avoid TS2451 cross-file conflicts
+
 const ORIGINAL_ENV = process.env;
 
 process.env = {

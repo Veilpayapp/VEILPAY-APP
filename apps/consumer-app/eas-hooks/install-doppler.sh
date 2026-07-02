@@ -34,10 +34,39 @@ if [ -z "${DOPPLER_TOKEN:-}" ]; then
 fi
 
 # Install the Doppler CLI on the EAS Linux build server.
+# The official install script (cli.doppler.com/install.sh) uses dpkg/apt which
+# requires root. EAS Build hooks do NOT run as root, so we download the
+# standalone binary directly and place it on PATH in a user-writable directory.
 if ! command -v doppler >/dev/null 2>&1; then
-  echo "[doppler-hook] Installing Doppler CLI..."
-  # Doppler's official install script for Linux
-  curl -Ls https://doppler.com/install.sh | sh
+  echo "[doppler-hook] Installing Doppler CLI (standalone binary)..."
+  DOPPLER_INSTALL_DIR="${HOME}/.local/bin"
+  mkdir -p "$DOPPLER_INSTALL_DIR"
+
+  # Detect architecture
+  ARCH="$(uname -m)"
+  case "$ARCH" in
+    x86_64)  DOPPLER_ARCH="amd64" ;;
+    aarch64) DOPPLER_ARCH="arm64" ;;
+    armv7l)  DOPPLER_ARCH="armv7" ;;
+    *)
+      echo "[doppler-hook] ERROR: Unsupported architecture: $ARCH"
+      exit 1
+      ;;
+  esac
+
+  DOPPLER_URL="https://github.com/DopplerHQ/cli/releases/latest/download/doppler_linux_${DOPPLER_ARCH}.tar.gz"
+  echo "[doppler-hook] Downloading from $DOPPLER_URL"
+  curl -fsSL "$DOPPLER_URL" -o /tmp/doppler.tar.gz
+  tar -xzf /tmp/doppler.tar.gz -C /tmp doppler
+  mv /tmp/doppler "$DOPPLER_INSTALL_DIR/doppler"
+  chmod +x "$DOPPLER_INSTALL_DIR/doppler"
+  rm -f /tmp/doppler.tar.gz
+
+  # Ensure the install dir is on PATH for this script
+  export PATH="$DOPPLER_INSTALL_DIR:$PATH"
+
+  echo "[doppler-hook] Doppler CLI installed to $DOPPLER_INSTALL_DIR/doppler"
+  doppler --version
 else
   echo "[doppler-hook] Doppler CLI already installed."
 fi

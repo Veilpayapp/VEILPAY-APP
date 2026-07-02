@@ -54,10 +54,29 @@ if ! command -v doppler >/dev/null 2>&1; then
       ;;
   esac
 
-  DOPPLER_URL="https://github.com/DopplerHQ/cli/releases/latest/download/doppler_linux_${DOPPLER_ARCH}.tar.gz"
+  # Resolve the latest version tag so we can build the correct versioned
+  # asset URL (e.g. doppler_3.76.0_linux_amd64.tar.gz).
+  # GitHub's /latest/download/ shortcut only works when the asset name is an
+  # exact match — Doppler includes the version in the tarball name, so the
+  # old unversioned URL 404s.
+  #
+  # We resolve the version via the /releases/latest redirect (no API rate
+  # limit) instead of the JSON API (which is capped at 60 req/hr for
+  # unauthenticated callers on shared EAS build IPs).
+  echo "[doppler-hook] Resolving latest Doppler CLI version..."
+  DOPPLER_VERSION=$(curl -fsSI "https://github.com/DopplerHQ/cli/releases/latest" \
+    | grep -i '^location:' | head -1 | sed -E 's|.*/tag/([^ \r]+).*|\1|')
+
+  if [ -z "$DOPPLER_VERSION" ]; then
+    echo "[doppler-hook] ERROR: Could not resolve latest Doppler CLI version."
+    exit 1
+  fi
+  echo "[doppler-hook] Latest version: $DOPPLER_VERSION"
+
+  DOPPLER_URL="https://github.com/DopplerHQ/cli/releases/download/${DOPPLER_VERSION}/doppler_${DOPPLER_VERSION}_linux_${DOPPLER_ARCH}.tar.gz"
   echo "[doppler-hook] Downloading from $DOPPLER_URL"
   curl -fsSL "$DOPPLER_URL" -o /tmp/doppler.tar.gz
-  tar -xzf /tmp/doppler.tar.gz -C /tmp doppler
+  tar -xzf /tmp/doppler.tar.gz -C /tmp
   mv /tmp/doppler "$DOPPLER_INSTALL_DIR/doppler"
   chmod +x "$DOPPLER_INSTALL_DIR/doppler"
   rm -f /tmp/doppler.tar.gz

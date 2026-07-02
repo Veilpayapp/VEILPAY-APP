@@ -70,10 +70,10 @@ describe('graphify success', () => {
     await fs.utimes(path.join(wikiDir, 'index.md'), oldTime, oldTime);
 
     mockedRunCommand.mockImplementation(async (cmd, args, evidencePath) => {
-      await fs.writeFile(path.join(graphifyOutDir, 'GRAPH_REPORT.md'), \`
+      await fs.writeFile(path.join(graphifyOutDir, 'GRAPH_REPORT.md'), `
 # Graph Report
 Some text
-      \`.trim());
+      `.trim());
       await fs.writeFile(path.join(graphifyOutDir, 'graph.json'), '{}');
       await fs.writeFile(path.join(graphifyOutDir, 'manifest.json'), '{}');
       

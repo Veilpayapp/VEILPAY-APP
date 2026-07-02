@@ -1,16 +1,12 @@
 import { parseArgs, main } from './index';
 
 describe('cli/index.ts', () => {
-  let exitSpy: jest.SpyInstance;
-  let errorSpy: jest.SpyInstance;
-  let logSpy: jest.SpyInstance;
-
   beforeEach(() => {
-    exitSpy = jest.spyOn(process, 'exit').mockImplementation((code?: string | number | null | undefined) => {
+    jest.spyOn(process, 'exit').mockImplementation((code?: string | number | null | undefined) => {
       throw new Error(`process.exit(${code})`);
     });
-    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   afterEach(() => {

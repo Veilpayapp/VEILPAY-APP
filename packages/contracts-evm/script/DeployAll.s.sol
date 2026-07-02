@@ -6,6 +6,7 @@ import {console} from "forge-std/console.sol";
 import {Groth16Verifier} from "../src/Groth16Verifier.sol";
 import {VeilRegistry} from "../src/VeilRegistry.sol";
 import {VeilPool} from "../src/VeilPool.sol";
+import {IPoseidonHasher} from "../src/IPoseidonHasher.sol";
 
 contract DeployAll is Script {
     struct DeploymentAddresses {
@@ -17,6 +18,8 @@ contract DeployAll is Script {
     function run() external returns (DeploymentAddresses memory) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address feeRecipient = vm.envOr("FEE_RECIPIENT", vm.addr(deployerPrivateKey));
+        address poseidonHasher = vm.envOr("POSEIDON_HASHER", address(0));
+        uint256 feeBps = vm.envOr("WITHDRAW_FEE_BPS", uint256(0));
         
         vm.startBroadcast(deployerPrivateKey);
         
@@ -26,7 +29,7 @@ contract DeployAll is Script {
         VeilRegistry registry = new VeilRegistry();
         console.log("VeilRegistry deployed at:", address(registry));
         
-        VeilPool pool = new VeilPool(address(verifier), feeRecipient);
+        VeilPool pool = new VeilPool(address(verifier), IPoseidonHasher(poseidonHasher), feeRecipient, feeBps);
         console.log("VeilPool deployed at:", address(pool));
         
         vm.stopBroadcast();

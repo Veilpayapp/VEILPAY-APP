@@ -423,7 +423,17 @@ export function TransakWebViewScreen({ navigation, route }: Props) {
                 allowsInlineMediaPlayback: true,
                 mixedContentMode: 'compatibility',
                 setSupportMultipleWindows: false,
-                originWhitelist: ['https://global.transak.com', 'https://global-stg.transak.com'],
+                originWhitelist: [
+                    'https://global.transak.com',
+                    'https://global-stg.transak.com',
+                    // KYC provider redirects (Veriff, Onfido, Sardine, etc.)
+                    'https://*.veriff.com',
+                    'https://*.onfido.com',
+                    'https://*.sardine.ai',
+                    // Payment redirects
+                    'https://*.stripe.com',
+                    'https://*.razorpay.com',
+                ],
                 javaScriptEnabled: true,
                 domStorageEnabled: true,
                 thirdPartyCookiesEnabled: true,

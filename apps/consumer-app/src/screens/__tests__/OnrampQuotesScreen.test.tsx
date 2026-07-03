@@ -9,20 +9,20 @@ jest.mock('@react-navigation/native', () => ({
 
 const mockWalletState = {
   address: '0xWALLET123',
-  activeChain: { id: 'ethereum', name: 'Ethereum', currency: 'ETH' },
+  addresses: { evm: '0xWALLET123', svm: null, mvm: null, xlm: null },
+  activeChain: { id: 1, key: 'ethereum', name: 'Ethereum', type: 'evm', symbol: 'ETH', nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 } },
 };
 
-jest.mock('../../stores/walletStore', () => ({
-  useWalletStore: () => mockWalletState,
-}));
-
-const mockSettingsState = { nativeCurrency: 'USD' };
-jest.mock('../../stores/settingsStore', () => ({
-  useSettingsStore: (() => mockSettingsState) as any,
-  useThemeState: () => 'dark',
-  usePrivacyLevel: () => 'standard',
-  useNativeCurrency: () => mockSettingsState.nativeCurrency,
-}));
+jest.mock('../../stores/walletStore', () => {
+  const state = {
+    address: '0xWALLET123',
+    addresses: { evm: '0xWALLET123', svm: null, mvm: null, xlm: null },
+    activeChain: { id: 1, key: 'ethereum', name: 'Ethereum', type: 'evm', symbol: 'ETH', nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 } },
+  };
+  const hook = () => state;
+  hook.getState = () => state;
+  return { useWalletStore: hook };
+});
 
 jest.mock('../../features/fiat-gateway', () => ({
   useOnramp: () => ({
@@ -40,7 +40,6 @@ describe('OnrampQuotesScreen', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSettingsState.nativeCurrency = 'USD';
   });
 
   afterEach(() => {
@@ -50,7 +49,7 @@ describe('OnrampQuotesScreen', () => {
   const defaultProps = {
     navigation: { navigate: jest.fn(), goBack: jest.fn() } as any,
     route: {
-      params: { flow: 'buy', fiatAmount: '5000', cryptoToken: 'ETH', chainKey: 'ethereum' },
+      params: { flow: 'buy', fiatAmount: '5000', fiatCurrency: 'USD', cryptoToken: 'ETH', chainKey: 'ethereum' },
     } as any,
   };
 

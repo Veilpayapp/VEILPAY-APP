@@ -150,6 +150,7 @@ export type RootStackParamList = {
   [SCREENS.ONRAMP_QUOTES]: {
     flow: 'buy' | 'sell';
     fiatAmount: string;
+    fiatCurrency: string;
     cryptoToken: string;
     chainKey: string;
   };

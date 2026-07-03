@@ -7,8 +7,8 @@ const appNodeModules = path.resolve(projectRoot, 'node_modules');
 
 const config = getDefaultConfig(projectRoot);
 
-// Watch all files within the monorepo
-config.watchFolders = [workspaceRoot];
+// Watch all files within the monorepo (preserving Expo's default watchFolders)
+config.watchFolders = [...(config.watchFolders || []), workspaceRoot];
 
 // Let Metro know where to resolve packages and in what order
 config.resolver.nodeModulesPaths = [

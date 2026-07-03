@@ -21,7 +21,7 @@ export class OnrampService {
   static generateSignedUrl(params: {
     userAddress: string;
     fiatAmount?: string;
-    fiatCurrency?: string;
+    fiatCurrency: string;
     cryptoToken?: string;
     network?: string;
     orderId?: string;
@@ -29,7 +29,7 @@ export class OnrampService {
     const {
       userAddress,
       fiatAmount,
-      fiatCurrency = 'INR',
+      fiatCurrency,
       cryptoToken = 'ETH',
       network = 'ethereum',
       orderId,

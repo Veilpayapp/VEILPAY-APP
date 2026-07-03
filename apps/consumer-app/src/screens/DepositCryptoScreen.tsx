@@ -226,6 +226,12 @@ interface DepositCryptoScreenProps {
       return;
     }
 
+    // Transak does not support Aptos — block before building the URL
+    if (selectedCrypto.network.toLowerCase() === 'aptos') {
+      toast.show("Transak does not support Aptos. Use the On-Ramp Aggregator instead.", "error");
+      return;
+    }
+
     if (biometricsEnabled) {
       if (!isAvailable) {
         toast.show("Biometrics not available on this device", "error");
@@ -273,7 +279,7 @@ interface DepositCryptoScreenProps {
       <View style={styles.header}>
         <ScreenBackButton onPress={() => navigation.goBack()} />
         <Text style={styles.headerTitle}>BUY CRYPTO</Text>
-        <View style={{ width: 80 }} />
+        <View style={{ width: 44 }} />
       </View>
 
       <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>

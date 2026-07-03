@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -40,6 +40,28 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
   const { activeChain } = useWalletStore();
   const { nativeCurrency, setNativeCurrency } = useSettingsStore();
 
+  // Build available tokens for the selected chain (native + stablecoins)
+  const availableTokens = useMemo(() => {
+    if (!activeChain) return [];
+    const tokens = [activeChain.nativeToken.symbol];
+    // Add stablecoins for EVM chains
+    if (activeChain.type === 'evm') {
+      tokens.push('USDC', 'USDT');
+    }
+    return tokens;
+  }, [activeChain]);
+
+  const [selectedToken, setSelectedToken] = useState<string>(
+    activeChain?.nativeToken.symbol ?? 'ETH',
+  );
+
+  // Reset token selection when chain changes
+  useEffect(() => {
+    if (activeChain && !availableTokens.includes(selectedToken)) {
+      setSelectedToken(activeChain.nativeToken.symbol);
+    }
+  }, [activeChain, availableTokens, selectedToken]);
+
   const currencyObj = useMemo(() => {
     return CURRENCIES.find(c => c.id === nativeCurrency) || CURRENCIES[0];
   }, [nativeCurrency]);
@@ -49,10 +71,11 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
     navigation.navigate(SCREENS.ONRAMP_QUOTES, {
       flow,
       fiatAmount: amount,
-      cryptoToken: activeChain.nativeToken.symbol,
+      fiatCurrency: nativeCurrency,
+      cryptoToken: selectedToken,
       chainKey: activeChain.key,
     });
-  }, [amount, activeChain, flow, navigation]);
+  }, [amount, activeChain, flow, navigation, nativeCurrency, selectedToken]);
 
   const handleQuickAmount = (val: string) => {
     triggerLightImpactHaptic();
@@ -104,6 +127,28 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
             ))}
           </View>
         </View>
+
+        {availableTokens.length > 1 && (
+          <View style={styles.tokenSection}>
+            <Text style={styles.label}>RECEIVE TOKEN</Text>
+            <View style={styles.tokenRow}>
+              {availableTokens.map((token) => (
+                <TouchableOpacity
+                  key={token}
+                  style={[styles.tokenBtn, selectedToken === token && styles.tokenBtnActive]}
+                  onPress={() => {
+                    triggerLightImpactHaptic();
+                    setSelectedToken(token);
+                  }}
+                >
+                  <Text style={[styles.tokenText, selectedToken === token && styles.tokenTextActive]}>
+                    {token}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
 
         <View style={styles.infoSection}>
           <SovereignCard backgroundColor="transparent" padding={16} style={{ borderRadius: 0, borderWidth: 1, borderColor: colors.textPrimary }}>
@@ -235,6 +280,37 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   },
   infoSection: {
     marginTop: 40,
+  },
+  tokenSection: {
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  tokenRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  tokenBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.textPrimary,
+    backgroundColor: 'transparent',
+  },
+  tokenBtnActive: {
+    backgroundColor: colors.textPrimary,
+    borderColor: colors.textPrimary,
+  },
+  tokenText: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 12,
+    color: colors.textPrimary,
+    fontWeight: '600',
+  },
+  tokenTextActive: {
+    color: colors.bgPrimary,
+    fontWeight: '700',
   },
   infoRow: {
     flexDirection: 'row',

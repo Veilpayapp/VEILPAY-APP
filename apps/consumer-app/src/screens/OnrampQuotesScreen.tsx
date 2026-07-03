@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,13 @@ import { useTheme, useStyles, typography, type Colors } from "../styles/design-t
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { SovereignCard } from '../components/SovereignCard';
 import { Icon } from '../components/Icon';
-import { useWalletStore } from '../stores/walletStore';
-import { useSettingsStore } from '../stores/settingsStore';
+import { CURRENCIES } from '../components/CurrencySelectorModal';
+import { useWalletStore, SUPPORTED_CHAINS, type ChainType } from '../stores/walletStore';
 import { SCREENS } from '../constants/screens';
 import { triggerLightImpactHaptic } from '../utils/haptics';
 import { buildTransakDepositUrl, FIAT_CURRENCIES, type FiatCurrency } from '../utils/transak';
+import { filterSupportedQuotes } from '../utils/onrampProviderMatrix';
+import { logQuotesFetched, logQuotesFetchError, logProviderSelected, logUnsupportedChain } from '../utils/onrampLogger';
 import { useOnramp } from '../features/fiat-gateway';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -40,26 +42,59 @@ interface Quote {
   networkFee: string;
 }
 
+/** Maps chain keys to their address type — derived from SUPPORTED_CHAINS to stay in sync */
+const CHAIN_KEY_TO_TYPE: Record<string, ChainType> = Object.fromEntries(
+  SUPPORTED_CHAINS.map(c => [c.key, c.type]),
+);
+
+/** Chains that no on-ramp provider currently supports */
+const UNSUPPORTED_ONRAMP_CHAINS = new Set([
+  'aptos',
+  'stellar',
+  'sepolia',
+  'solana-devnet',
+  'stellar-testnet',
+]);
+
 export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProps) {
-  const { flow, fiatAmount, cryptoToken, chainKey } = route.params;
+  const { flow, fiatAmount, fiatCurrency, cryptoToken, chainKey } = route.params;
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
-  const { address } = useWalletStore();
-  const { nativeCurrency } = useSettingsStore();
   const { getOnrampUrl } = useOnramp();
+  const addresses = useWalletStore(s => s.addresses);
   
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Resolve the correct wallet address for the target chain type (fund-safety fix)
+  const walletAddress = useMemo(() => {
+    const chainType = CHAIN_KEY_TO_TYPE[chainKey.toLowerCase()] || 'evm';
+    return addresses[chainType] ?? null;
+  }, [chainKey, addresses]);
+
+  // Resolve currency symbol for display (replaces hardcoded ₹)
+  const currencySymbol = useMemo(() => {
+    const match = CURRENCIES.find(c => c.id === fiatCurrency);
+    return match?.symbol ?? fiatCurrency;
+  }, [fiatCurrency]);
+
   const fetchQuotes = useCallback(async () => {
+    // Block unsupported chains before hitting the backend
+    if (UNSUPPORTED_ONRAMP_CHAINS.has(chainKey.toLowerCase())) {
+      logUnsupportedChain({ chainKey });
+      setError(`On-ramp is not available for ${chainKey}. Please switch to a supported chain.`);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
       const baseUrl = process.env.EXPO_PUBLIC_BACKEND_BASE_URL || '';
       const query = new URLSearchParams({
         fiatAmount,
-        fiatCurrency: nativeCurrency,
+        fiatCurrency,
         cryptoToken,
         flow,
       });
@@ -70,13 +105,26 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
       }
       
       const data = await response.json();
-      setQuotes(data.quotes || []);
+      const allQuotes = data.quotes || [];
+      // Filter out providers that don't support this chain + fiat combination
+      const filtered = filterSupportedQuotes(allQuotes, chainKey, fiatCurrency);
+      setQuotes(filtered);
+      logQuotesFetched({
+        fiatAmount,
+        fiatCurrency,
+        cryptoToken,
+        chainKey,
+        quoteCount: filtered.length,
+        providers: filtered.map((q: Quote) => q.provider),
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(errorMsg);
+      logQuotesFetchError({ fiatAmount, fiatCurrency, cryptoToken, error: errorMsg });
     } finally {
       setIsLoading(false);
     }
-  }, [fiatAmount, cryptoToken, flow]);
+  }, [fiatAmount, fiatCurrency, cryptoToken, flow, chainKey]);
 
   useEffect(() => {
     fetchQuotes();
@@ -84,16 +132,17 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
 
   const handleProviderSelect = async (provider: string) => {
     triggerLightImpactHaptic();
+    logProviderSelected({ provider, chainKey, fiatCurrency, fiatAmount });
 
-    if (!address) {
+    if (!walletAddress) {
       alert(`Wallet not connected for ${chainKey.toUpperCase()}`);
       return;
     }
 
-    // Narrow the persisted currency string to Transak's FiatCurrency union.
-    const fiatCurrency: FiatCurrency =
-      (FIAT_CURRENCIES as readonly string[]).includes(nativeCurrency)
-        ? (nativeCurrency as FiatCurrency)
+    // Narrow the route-param currency string to Transak's FiatCurrency union.
+    const transakFiatCurrency: FiatCurrency =
+      (FIAT_CURRENCIES as readonly string[]).includes(fiatCurrency)
+        ? (fiatCurrency as FiatCurrency)
         : 'USD';
 
     if (provider === 'transak') {
@@ -103,11 +152,11 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
       }
 
       const url = buildTransakDepositUrl({
-        walletAddress: address,
+        walletAddress,
         fiatAmount: parseFloat(fiatAmount),
-        fiatCurrency,
+        fiatCurrency: transakFiatCurrency,
         cryptoToken: cryptoToken,
-        network: chainKey, // Using chainKey directly, Transak utils might map it internally
+        network: chainKey,
         paymentMethod: 'credit_debit_card',
       });
 
@@ -119,7 +168,9 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
     } else if (provider === 'onramp_money' || provider === 'moonpay') {
       setIsLoading(true);
       const session = await getOnrampUrl({
+        walletAddress,
         fiatAmount,
+        fiatCurrency,
         cryptoToken,
         chainKey,
         flow,
@@ -135,8 +186,8 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
         });
       }
     } else {
-      // Moonpay / Stripe stub
-      alert(`${provider} integration coming soon! Please use Transak or Onramp.money.`);
+      // Filtered by the provider matrix — should be unreachable. Log defensively.
+      logUnsupportedChain({ chainKey, provider });
     }
   };
 
@@ -144,7 +195,6 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
     switch(providerId) {
       case 'onramp_money': return 'Onramp.money';
       case 'moonpay': return 'MoonPay';
-      case 'stripe': return 'Stripe';
       case 'transak': return 'Transak';
       default: return providerId;
     }
@@ -174,7 +224,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.summaryContainer}>
           <Text style={styles.summaryLabel}>YOU {flow === 'buy' ? 'PAY' : 'RECEIVE'}</Text>
-          <Text style={styles.summaryAmount}>₹{fiatAmount}</Text>
+          <Text style={styles.summaryAmount}>{currencySymbol}{fiatAmount}</Text>
         </View>
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -217,7 +267,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
                     </View>
                     <View style={styles.feeBox}>
                       <Text style={styles.feeLabel}>TOTAL FEES</Text>
-                      <Text style={styles.feeAmount}>₹{parseFloat(quote.providerFee) + parseFloat(quote.networkFee)}</Text>
+                      <Text style={styles.feeAmount}>{currencySymbol}{parseFloat(quote.providerFee) + parseFloat(quote.networkFee)}</Text>
                     </View>
                   </View>
                 </SovereignCard>

@@ -1,0 +1,4 @@
+{
+  "_comment": "Minimal stub required by Expo CLI at the monorepo root. The real config lives in apps/consumer-app/app.config.js.",
+  "expo": {}
+}

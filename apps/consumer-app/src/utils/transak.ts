@@ -146,7 +146,7 @@ export const TRANSAK_NETWORK_MAP: Record<string, string> = {
   arbitrum: 'arbitrum',
   solana: 'solana',
   'solana-devnet': 'solana',
-  aptos: 'avalanche',     // Closest available; Transak doesn't support Aptos natively
+  // aptos intentionally omitted — Transak does not support Aptos
   bsc: 'bsc',
   avalanche: 'avalanche',
   base: 'base',

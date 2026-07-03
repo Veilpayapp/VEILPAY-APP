@@ -117,5 +117,8 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.outlineVariant,
     elevation: 0,
+    // Clip children to the rounded corners so content (e.g. backgrounds,
+    // images, pressed-state fills) never bleeds past the card's borderRadius.
+    overflow: "hidden",
   },
 });

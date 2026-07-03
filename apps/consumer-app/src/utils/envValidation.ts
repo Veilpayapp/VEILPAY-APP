@@ -41,6 +41,13 @@ interface EnvVarSpec {
   level: EnvValidationLevel;
   description: string;
   userMessage: string;
+  /**
+   * Reads the variable's value. MUST use a static `process.env.EXPO_PUBLIC_*`
+   * member access — Metro inlines those as string literals at build time.
+   * Dynamic access (`process.env[key]`) is NOT inlined and returns undefined in
+   * production, which used to trigger a false "Configuration Error" on launch.
+   */
+  read: () => string | undefined;
   validate?: (value: string) => boolean;
 }
 
@@ -51,6 +58,7 @@ const ENV_SPECS: EnvVarSpec[] = [
     level: 'critical',
     description: 'Backend API base URL for RPC proxy, transaction history, and push registration',
     userMessage: 'Backend server URL is not configured. The app cannot function.',
+    read: () => process.env.EXPO_PUBLIC_BACKEND_BASE_URL,
     validate: (v) => {
       if (!v) return false;
       try {
@@ -68,18 +76,21 @@ const ENV_SPECS: EnvVarSpec[] = [
     level: 'important',
     description: 'WalletConnect Cloud project ID for dApp connections',
     userMessage: 'WalletConnect is not configured. You won\'t be able to connect to external dApps.',
+    read: () => process.env.EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID,
   },
   {
     key: 'EXPO_PUBLIC_SENTRY_DSN',
     level: 'important',
     description: 'Sentry DSN for production crash reporting',
     userMessage: 'Crash reporting is not configured. Errors won\'t be reported to the team.',
+    read: () => process.env.EXPO_PUBLIC_SENTRY_DSN,
   },
   {
     key: 'EXPO_PUBLIC_EAS_PROJECT_ID',
     level: 'important',
     description: 'EAS project ID for OTA updates',
     userMessage: 'Over-the-air updates are not configured. You\'ll need to reinstall for updates.',
+    read: () => process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
   },
 
   // ── OPTIONAL: Nice-to-have ───────────────────────────────────────────────
@@ -88,6 +99,7 @@ const ENV_SPECS: EnvVarSpec[] = [
     level: 'optional',
     description: 'Mixpanel token for analytics tracking',
     userMessage: 'Analytics tracking is not configured.',
+    read: () => process.env.EXPO_PUBLIC_MIXPANEL_TOKEN,
   },
 ];
 
@@ -102,7 +114,7 @@ export function validateEnvironment(): EnvValidationResult {
   const warnings: EnvValidationWarning[] = [];
 
   for (const spec of ENV_SPECS) {
-    const value = (process.env[spec.key] || '').trim();
+    const value = (spec.read() || '').trim();
     const isPresent = spec.validate ? spec.validate(value) : value.length > 0;
 
     if (!isPresent) {

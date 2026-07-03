@@ -5,15 +5,32 @@ jest.mock('expo-constants', () => ({
 import { validateEnvironment, getEnvValidationSummary } from '../envValidation';
 
 describe('envValidation', () => {
-  const originalEnv = process.env;
+  // The EXPO_PUBLIC_* accessors read process.env by static member access, which
+  // the expo babel transform binds to the process.env object present at module
+  // load. Tests must therefore MUTATE that object in place (clear/set keys) —
+  // reassigning `process.env = {...}` would leave the module reading the stale
+  // original object.
+  const PUBLIC_KEYS = [
+    'EXPO_PUBLIC_BACKEND_BASE_URL',
+    'EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID',
+    'EXPO_PUBLIC_SENTRY_DSN',
+    'EXPO_PUBLIC_EAS_PROJECT_ID',
+    'EXPO_PUBLIC_MIXPANEL_TOKEN',
+  ] as const;
+  const saved: Record<string, string | undefined> = {};
 
   beforeEach(() => {
-    jest.resetModules();
-    process.env = { ...originalEnv };
+    for (const key of PUBLIC_KEYS) {
+      saved[key] = process.env[key];
+      delete process.env[key];
+    }
   });
 
-  afterAll(() => {
-    process.env = originalEnv;
+  afterEach(() => {
+    for (const key of PUBLIC_KEYS) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
   });
 
   it('fails when EXPO_PUBLIC_BACKEND_BASE_URL is missing', () => {

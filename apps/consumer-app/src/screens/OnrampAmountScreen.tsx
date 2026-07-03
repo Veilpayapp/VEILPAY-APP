@@ -19,6 +19,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { CurrencySelectorModal, CURRENCIES } from '../components/CurrencySelectorModal';
 import { SCREENS } from '../constants/screens';
 import { triggerLightImpactHaptic } from '../utils/haptics';
+import { getMinDepositAmount, type FiatCurrency } from '../utils/transak';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -35,10 +36,37 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
   const { flow } = route.params;
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
-  const [amount, setAmount] = useState('5000');
-  const [showCurrencySelector, setShowCurrencySelector] = useState(false);
   const { activeChain } = useWalletStore();
   const { nativeCurrency, setNativeCurrency } = useSettingsStore();
+  const [showCurrencySelector, setShowCurrencySelector] = useState(false);
+
+  // Currency-aware quick amounts and defaults.
+  // minAmount is tied to the real provider floor (getMinDepositAmount) so the
+  // CONTINUE gate never lets a user through with an amount every provider will
+  // reject — which previously produced an empty quotes list. Every quickAmount
+  // preset is kept at or above minAmount so the presets never fight the gate.
+  const { quickAmounts, defaultAmount, minAmount } = useMemo(() => {
+    switch (nativeCurrency) {
+      case 'INR':
+        // Onramp.money INR floor (~₹1000 for most token/chain combos).
+        return { quickAmounts: ['1000', '5000', '10000', '25000'], defaultAmount: '5000', minAmount: 1000 };
+      case 'JPY':
+        return { quickAmounts: ['5000', '10000', '25000', '50000'], defaultAmount: '10000', minAmount: getMinDepositAmount('JPY') };
+      default: {
+        // USD, EUR, GBP, AUD, CAD — western fiat via Transak/MoonPay.
+        const min = getMinDepositAmount(nativeCurrency as FiatCurrency);
+        return { quickAmounts: ['50', '100', '250', '500'], defaultAmount: '100', minAmount: min };
+      }
+    }
+  }, [nativeCurrency]);
+
+  const [amount, setAmount] = useState(defaultAmount);
+
+  // Reset amount when currency changes so the user doesn't carry over
+  // an INR-scale value into a USD context (or vice-versa).
+  useEffect(() => {
+    setAmount(defaultAmount);
+  }, [defaultAmount]);
 
   // Build available tokens for the selected chain (native + stablecoins)
   const availableTokens = useMemo(() => {
@@ -88,8 +116,10 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
 
       <View style={styles.header}>
         <ScreenBackButton onPress={() => navigation.goBack()} />
-        <Text style={styles.headerTitle}>{flow === 'buy' ? 'BUY CRYPTO' : 'SELL CRYPTO'}</Text>
-        <View style={{ width: 44 }} />
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>{flow === 'buy' ? 'BUY CRYPTO' : 'SELL CRYPTO'}</Text>
+        </View>
+        <View style={styles.headerSpacer} />
       </View>
 
       <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>
@@ -114,7 +144,7 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
           </View>
           
           <View style={styles.quickAmountRow}>
-            {['1000', '5000', '10000', '25000'].map((val) => (
+            {quickAmounts.map((val) => (
               <TouchableOpacity
                 key={val}
                 style={[styles.quickAmountBtn, amount === val && styles.quickAmountBtnActive]}
@@ -167,7 +197,7 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
         <SovereignButton
           title="CONTINUE"
           onPress={handleContinue}
-          disabled={!amount || parseInt(amount) < 100}
+          disabled={!amount || parseInt(amount) < minAmount}
         />
       </View>
       </Animated.View>
@@ -193,9 +223,16 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  // Matches ScreenBackButton width (80) so the centered title is truly centered.
+  headerSpacer: {
+    width: 80,
   },
   headerTitle: {
     fontFamily: typography.fontFamily.mono,
@@ -203,6 +240,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: '700',
     letterSpacing: 1,
+    textAlign: 'center',
   },
   scrollContent: {
     padding: 24,

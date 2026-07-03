@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Path, Circle, Defs, ClipPath, G } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 export const MetaMaskIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
   <Svg width={width} height={height} viewBox="0 0 318.6 318.6">
@@ -27,42 +27,64 @@ export const WalletConnectIcon = ({ width = 24, height = 24 }: { width?: number,
   </Svg>
 );
 
+// Trust Wallet — brand shield with the two-tone blue gradient.
 export const TrustWalletIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
-  <Svg width={width} height={height} viewBox="0 0 1024 1024" fill="none">
-    <Path d="M512 110l-340 160v220c0 340 340 500 340 500s340-160 340-500V270L512 110z" fill="#3375BB"/>
-    <Path d="M512 280c-40 0-80 15-110 45l-140 140 80 80L432 435v395h160V435l90 90 80-80-140-140C592 295 552 280 512 280z" fill="#FFF"/>
+  <Svg width={width} height={height} viewBox="0 0 512 512" fill="none">
+    <Defs>
+      <LinearGradient id="trustShield" x1="256" y1="40" x2="256" y2="484" gradientUnits="userSpaceOnUse">
+        <Stop offset="0" stopColor="#0500FF" />
+        <Stop offset="0.6" stopColor="#3375BB" />
+      </LinearGradient>
+    </Defs>
+    <Path fill="url(#trustShield)" d="M256 40 88 104v192c0 100 80 156 168 188 88-32 168-88 168-188V104L256 40Z" />
+    {/* Lighter right-half highlight = Trust's signature two-tone shield */}
+    <Path fill="#fff" fillOpacity={0.18} d="M256 40v444c88-32 168-88 168-188V104L256 40Z" />
   </Svg>
 );
 
+// Phantom — purple squircle with the white ghost (eyes are cut-outs showing the bg).
 export const PhantomIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
-  <Svg width={width} height={height} viewBox="0 0 100 100" fill="none">
-    <Circle cx="50" cy="50" r="50" fill="#AB9FF2"/>
-    <Path d="M70.9 44.5c0-14.8-12-26.8-26.8-26.8S17.3 29.7 17.3 44.5v37.8L28 71.6l10.7 10.7 10.7-10.7 10.7 10.7L70.9 71.6V44.5z" fill="#FFF"/>
-    <Circle cx="35" cy="40" r="4" fill="#AB9FF2"/>
-    <Circle cx="53" cy="40" r="4" fill="#AB9FF2"/>
+  <Svg width={width} height={height} viewBox="0 0 128 128" fill="none">
+    <Rect width="128" height="128" rx="30" fill="#AB9FF2" />
+    <Path
+      fill="#fff"
+      d="M110 66.5c0-25.2-20.4-45.6-45.6-45.6C40 20.9 20 40.4 19.1 64.6c0 .5 0 .9 0 1.4v34.9c0 2 2.3 3.1 3.9 1.8l9.3-7.6c1.4-1.1 3.4-1 4.6.3l7.9 8.4c1.3 1.4 3.5 1.4 4.8 0l8-8.5c1.2-1.3 3.3-1.3 4.6 0l8 8.5c1.3 1.4 3.5 1.4 4.8 0l7.9-8.4c1.2-1.3 3.2-1.4 4.6-.3l9.3 7.6c1.6 1.3 3.9.2 3.9-1.8V66.5Z"
+    />
+    <Circle cx="47" cy="59" r="6.5" fill="#AB9FF2" />
+    <Circle cx="73" cy="59" r="6.5" fill="#AB9FF2" />
   </Svg>
 );
 
+// Petra — black squircle with the white "P" monogram.
 export const PetraIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
-  <Svg width={width} height={height} viewBox="0 0 100 100" fill="none">
-    <Circle cx="50" cy="50" r="50" fill="#E86C6A"/>
-    <Path d="M41 22L20 48L41 78h18l21-30L59 22H41z" fill="#FFF"/>
-    <Path d="M50 35l12 18-12 15-12-15L50 35z" fill="#E86C6A"/>
+  <Svg width={width} height={height} viewBox="0 0 128 128" fill="none">
+    <Rect width="128" height="128" rx="30" fill="#000000" />
+    <Path
+      fill="#fff"
+      d="M46 36h30c14 0 24 10 24 24s-10 24-24 24H60v24H46V36Zm14 34h14c6 0 10-4 10-10s-4-10-10-10H60v20Z"
+    />
   </Svg>
 );
 
+// LOBSTR — brand-blue squircle with a stylized white lobster (body + two claws).
 export const LobstrIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
-  <Svg width={width} height={height} viewBox="0 0 100 100" fill="none">
-    <Circle cx="50" cy="50" r="50" fill="#00C48C"/>
-    <Path d="M30 50h40M50 30v40" stroke="#FFF" strokeWidth="8" strokeLinecap="round"/>
-    <Circle cx="50" cy="50" r="10" fill="#FFF"/>
+  <Svg width={width} height={height} viewBox="0 0 128 128" fill="none">
+    <Rect width="128" height="128" rx="30" fill="#0F9BF0" />
+    <Path
+      fill="#fff"
+      d="M64 32c-5 0-9 4-9 9 0 3 1.6 5.7 4 7.3L57 58c-6 1-11 6-11 12v6c0 12 8 20 18 20s18-8 18-20v-6c0-6-5-11-11-12l-2-9.7c2.4-1.6 4-4.3 4-7.3 0-5-4-9-9-9Z"
+    />
+    <Path fill="#fff" d="M40 54c-5-3-9-2-11 2s0 8 5 10l10 4-1-9-3-7Zm48 0c5-3 9-2 11 2s0 8-5 10l-10 4 1-9 3-7Z" />
   </Svg>
 );
 
+// Ledger — black squircle with the white bracket/frame mark.
 export const LedgerIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
-  <Svg width={width} height={height} viewBox="0 0 100 100" fill="none">
-    <Circle cx="50" cy="50" r="50" fill="#000000"/>
-    <Path d="M35 35h10v10H35zM55 35h10v10H55zM35 55h10v10H35z" fill="#FFF"/>
-    <Path d="M45 45h20v20H45z" stroke="#FFF" strokeWidth="4"/>
+  <Svg width={width} height={height} viewBox="0 0 128 128" fill="none">
+    <Rect width="128" height="128" rx="30" fill="#000000" />
+    <Path
+      fill="#fff"
+      d="M38 38h34v11H49v23H38V38Zm52 0v34H79V49H56V38h34ZM38 79h11v12h23v11H38V79Zm52 0v23H56V91h23V79h11Z"
+    />
   </Svg>
 );

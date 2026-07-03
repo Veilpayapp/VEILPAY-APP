@@ -30,6 +30,7 @@ import { Icon } from '../components/Icon';
 import { useWalletStore } from '../stores/walletStore';
 import { useTransactionStore, type TransakOrderStatus } from '../stores/transactionStore';
 import { FiatGatewayWebViewShell } from '../features/fiat-gateway';
+import { getTransakReferrerDomain } from '../utils/transak';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -402,7 +403,13 @@ export function TransakWebViewScreen({ navigation, route }: Props) {
                 </View>
             ) : null}
             webViewProps={{
-                source: { uri: url },
+                source: {
+                    uri: url,
+                    headers: {
+                        Referer: `https://${getTransakReferrerDomain()}/`,
+                        Origin: `https://${getTransakReferrerDomain()}`,
+                    },
+                },
                 style: styles.webview,
                 onLoadStart: () => {
                     setLoading(true);

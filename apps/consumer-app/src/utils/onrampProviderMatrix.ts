@@ -29,7 +29,7 @@ const ONRAMP_MONEY: ProviderCapability = {
     'bsc',
     'solana',
   ]),
-  supportedFiatCurrencies: new Set(['INR', 'USD', 'TRY', 'AED']),
+  supportedFiatCurrencies: new Set(['INR']),
 };
 
 const MOONPAY: ProviderCapability = {

@@ -60,7 +60,12 @@ module.exports = () => {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: './assets/logo-icon.png',
+        // Use the purpose-built adaptive-icon assets (content sits inside the
+        // Android safe zone). Pointing this at the full-bleed logo-icon.png made
+        // the launcher icon look cropped/deformed under the circular/squircle mask.
+        foregroundImage: './assets/android-icon-foreground.png',
+        backgroundImage: './assets/android-icon-background.png',
+        monochromeImage: './assets/android-icon-monochrome.png',
         backgroundColor: '#0A0A0B',
       },
       package: 'com.veilpay.consumer',

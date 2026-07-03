@@ -79,7 +79,7 @@ export function getTransakConfigurationErrorMessage(): string {
 // Supported values
 // ---------------------------------------------------------------------------
 
-export const FIAT_CURRENCIES = ['USD', 'EUR', 'GBP', 'INR'] as const;
+export const FIAT_CURRENCIES = ['USD', 'EUR', 'GBP', 'INR', 'AUD', 'CAD', 'JPY'] as const;
 export type FiatCurrency = (typeof FIAT_CURRENCIES)[number];
 
 export const QUICK_AMOUNTS = [50, 100, 200] as const;
@@ -184,6 +184,9 @@ export const USD_TO_FIAT: Record<FiatCurrency, number> = {
   EUR: 0.92,
   GBP: 0.79,
   INR: 83.5,
+  AUD: 1.55,
+  CAD: 1.37,
+  JPY: 157.0,
 };
 
 export function calculateDepositFees(fiatAmount: number, currency: FiatCurrency = 'USD'): FeeBreakdown {
@@ -264,11 +267,11 @@ export function validateCryptoAmount(amount: number, availableBalance: number): 
 }
 
 export function getMinDepositAmount(currency: FiatCurrency): number {
-  return { USD: 30, EUR: 30, GBP: 25, INR: 2500 }[currency];
+  return ({ USD: 30, EUR: 30, GBP: 25, INR: 2500, AUD: 45, CAD: 40, JPY: 4500 })[currency] ?? 30;
 }
 
 export function getMaxDepositAmount(currency: FiatCurrency): number {
-  return { USD: 10_000, EUR: 10_000, GBP: 8_000, INR: 800_000 }[currency];
+  return ({ USD: 10_000, EUR: 10_000, GBP: 8_000, INR: 800_000, AUD: 15_000, CAD: 14_000, JPY: 1_500_000 })[currency] ?? 10_000;
 }
 
 // ---------------------------------------------------------------------------

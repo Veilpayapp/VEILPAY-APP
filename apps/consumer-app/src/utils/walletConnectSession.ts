@@ -37,34 +37,72 @@ const REUSE_WINDOW_MS = 60_000;
 
 const DEFAULT_REQUIRED_NAMESPACES: WalletConnectRequiredNamespaces = {};
 
-const DEFAULT_OPTIONAL_NAMESPACES: WalletConnectRequiredNamespaces = {
-  eip155: {
-    methods: [
-      'eth_sendTransaction',
-      'eth_sign',
-      'personal_sign',
-      'eth_signTypedData',
-      'eth_signTypedData_v4',
-    ],
-    chains: ['eip155:1', 'eip155:11155111'],
-    events: ['accountsChanged', 'chainChanged'],
-  },
-  solana: {
-    methods: ['solana_signTransaction', 'solana_signMessage'],
-    chains: ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1'],
-    events: ['accountsChanged'],
-  },
-  aptos: {
-    methods: ['aptos_signTransaction', 'aptos_signMessage'],
-    chains: ['aptos:1'],
-    events: ['accountsChanged'],
-  },
-  stellar: {
-    methods: ['stellar_signXDR', 'stellar_signMessage'],
-    chains: ['stellar:pubnet'],
-    events: [],
-  },
+// One WalletConnect namespace per chain family. Keeping these separate lets us
+// offer only the namespace(s) relevant to the chain the user is connecting for
+// (see buildOptionalNamespaces) instead of always requesting eip155 + solana +
+// aptos + stellar — wallets reject or clutter the approval sheet when asked for
+// scopes they can't serve.
+const NAMESPACE_EIP155: WalletConnectRequiredNamespace = {
+  methods: [
+    'eth_sendTransaction',
+    'eth_sign',
+    'personal_sign',
+    'eth_signTypedData',
+    'eth_signTypedData_v4',
+  ],
+  chains: ['eip155:1', 'eip155:11155111'],
+  events: ['accountsChanged', 'chainChanged'],
 };
+
+const NAMESPACE_SOLANA: WalletConnectRequiredNamespace = {
+  methods: ['solana_signTransaction', 'solana_signMessage'],
+  chains: ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1'],
+  events: ['accountsChanged'],
+};
+
+const NAMESPACE_APTOS: WalletConnectRequiredNamespace = {
+  methods: ['aptos_signTransaction', 'aptos_signMessage'],
+  // CAIP-2: `aptos:1` is Aptos mainnet (reference "1").
+  chains: ['aptos:1'],
+  events: ['accountsChanged'],
+};
+
+const NAMESPACE_STELLAR: WalletConnectRequiredNamespace = {
+  methods: ['stellar_signXDR', 'stellar_signMessage'],
+  chains: ['stellar:pubnet'],
+  events: [],
+};
+
+/** Maps our internal ChainType to the WalletConnect namespace it needs. */
+const CHAIN_TYPE_TO_NAMESPACE: Record<string, { key: string; namespace: WalletConnectRequiredNamespace }> = {
+  evm: { key: 'eip155', namespace: NAMESPACE_EIP155 },
+  svm: { key: 'solana', namespace: NAMESPACE_SOLANA },
+  mvm: { key: 'aptos', namespace: NAMESPACE_APTOS },
+  xlm: { key: 'stellar', namespace: NAMESPACE_STELLAR },
+};
+
+const DEFAULT_OPTIONAL_NAMESPACES: WalletConnectRequiredNamespaces = {
+  eip155: NAMESPACE_EIP155,
+  solana: NAMESPACE_SOLANA,
+  aptos: NAMESPACE_APTOS,
+  stellar: NAMESPACE_STELLAR,
+};
+
+/**
+ * Builds the optional-namespaces object scoped to a single chain type. Falls
+ * back to the full set when the chain type is unknown so we never send an empty
+ * request. Exported so the WalletConnect screen can pass the scope of the chain
+ * the user is actually connecting for.
+ */
+export function buildOptionalNamespaces(
+  chainType?: string | null,
+): WalletConnectRequiredNamespaces {
+  const entry = chainType ? CHAIN_TYPE_TO_NAMESPACE[chainType.toLowerCase()] : undefined;
+  if (!entry) {
+    return DEFAULT_OPTIONAL_NAMESPACES;
+  }
+  return { [entry.key]: entry.namespace };
+}
 
 let signClientPromise: Promise<any> | null = null;
 let pendingSessionRequest: WalletConnectSessionRequestInternal | null = null;

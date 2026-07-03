@@ -35,6 +35,35 @@ describe('OnrampService', () => {
     assert.match(url, /signature=/);
   });
 
+  it('maps supported chains to widget network names and uppercases the coin code', () => {
+    const url = OnrampService.generateSignedUrl({
+      userAddress: '0x1234567890abcdef1234567890abcdef12345678',
+      fiatAmount: '5000',
+      fiatCurrency: 'inr',
+      cryptoToken: 'usdt',
+      network: OnrampService.mapNetwork('base'),
+      orderId: 'order-9',
+    });
+
+    assert.match(url, /network=base/);
+    assert.match(url, /coinCode=USDT/);
+    assert.match(url, /fiatType=INR/);
+  });
+
+  it('maps every supported network key without throwing', () => {
+    for (const key of ['ethereum', 'polygon', 'bsc', 'arbitrum', 'optimism', 'base', 'solana']) {
+      assert.equal(typeof OnrampService.mapNetwork(key), 'string');
+    }
+    // Case-insensitive.
+    assert.equal(OnrampService.mapNetwork('BASE'), 'base');
+  });
+
+  it('rejects networks Onramp.money does not support', () => {
+    for (const key of ['aptos', 'stellar', 'sepolia', 'solana-devnet']) {
+      assert.throws(() => OnrampService.mapNetwork(key), /does not support/);
+    }
+  });
+
   it('verifies valid webhook signatures and rejects tampered payloads', () => {
     const payload = '{"status":"SUCCESS","orderId":"order-123"}';
     const signature = createHmac('sha256', 'test-secret').update(payload).digest('hex');

@@ -20,7 +20,7 @@ import { ScreenBackButton } from '../components/ScreenBackButton';
 import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
 import { createDemoEvmAddress } from '../utils/demoWallet';
-import { createWalletConnectSession, hasWalletConnectProjectId } from '../utils/walletConnectSession';
+import { createWalletConnectSession, hasWalletConnectProjectId, buildOptionalNamespaces } from '../utils/walletConnectSession';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -272,7 +272,11 @@ function resolveChainTypeFromWalletConnect(
           );
         }
 
-        const sessionRequest = await createWalletConnectSession();
+        const sessionRequest = await createWalletConnectSession({
+          // Only request the namespace for the chain the user is connecting for,
+          // so wallets aren't asked to approve scopes they can't serve.
+          optionalNamespaces: buildOptionalNamespaces(chainType),
+        });
         uri = sessionRequest.uri;
         waitForApproval = sessionRequest.waitForApproval;
         trackEvent(ANALYTICS_EVENTS.WALLET_CONNECT_SDK_URI_CREATED, {

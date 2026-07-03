@@ -129,6 +129,61 @@ describe('getOnrampQuotes', () => {
       expect(amounts[i - 1]).toBeGreaterThanOrEqual(amounts[i]);
     }
   });
+
+  it('ranks the lowest-cost provider as BEST RATE for the sell flow', async () => {
+    const { res, jsonFn } = mockResponse();
+    await getOnrampQuotes(
+      mockRequest({ fiatAmount: '5000', fiatCurrency: 'INR', cryptoToken: 'USDT', flow: 'sell' }) as Request,
+      res as Response,
+      noop,
+    );
+    const quotes = jsonFn.mock.calls[0][0].quotes;
+
+    // onramp_money has the lowest spread + fee, so for a sell it is the
+    // cheapest way to obtain the requested fiat and must rank first (BEST RATE).
+    expect(quotes[0].provider).toBe('onramp_money');
+
+    // The provider fee should be non-decreasing down the ranked list —
+    // onramp_money (cheapest) first, moonpay (priciest) last.
+    const fees = quotes.map((q: any) => parseFloat(q.providerFee));
+    for (let i = 1; i < fees.length; i++) {
+      expect(fees[i - 1]).toBeLessThanOrEqual(fees[i]);
+    }
+    // Sanity: every quote reports a finite positive crypto amount.
+    for (const q of quotes) {
+      expect(parseFloat(q.estimatedCryptoAmount)).toBeGreaterThan(0);
+    }
+  });
+
+  it('makes a worse spread cost MORE crypto on sell (direction correct)', async () => {
+    const { res, jsonFn } = mockResponse();
+    await getOnrampQuotes(
+      mockRequest({ fiatAmount: '5000', fiatCurrency: 'INR', cryptoToken: 'USDT', flow: 'sell' }) as Request,
+      res as Response,
+      noop,
+    );
+    const quotes = jsonFn.mock.calls[0][0].quotes;
+    const byProvider = Object.fromEntries(
+      quotes.map((q: any) => [q.provider, parseFloat(q.estimatedCryptoAmount)]),
+    );
+    // moonpay (2.5% spread) is worse than onramp_money (1% spread); on a sell a
+    // worse spread means you must part with MORE crypto for the same fiat.
+    expect(byProvider.moonpay).toBeGreaterThan(byProvider.onramp_money);
+    expect(byProvider.transak).toBeGreaterThan(byProvider.onramp_money);
+  });
+
+  it('does not leak the internal ranking key in the response', async () => {
+    const { res, jsonFn } = mockResponse();
+    await getOnrampQuotes(
+      mockRequest({ fiatAmount: '1000', fiatCurrency: 'USD', cryptoToken: 'ETH', flow: 'buy' }) as Request,
+      res as Response,
+      noop,
+    );
+    const quotes = jsonFn.mock.calls[0][0].quotes;
+    for (const q of quotes) {
+      expect(q).not.toHaveProperty('_netValue');
+    }
+  });
 });
 
 describe('createOnrampUrl', () => {

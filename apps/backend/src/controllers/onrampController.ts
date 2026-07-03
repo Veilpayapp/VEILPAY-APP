@@ -282,45 +282,69 @@ export const getOnrampQuotes = async (req: Request, res: Response, _next: NextFu
     }
     
     // ── Estimated quote construction ──────────────────────────────────────
-    // Fee assumptions (as of July 2025, subject to provider API updates):
-    //   Spread: added to baseRate as a multiplier (1.01 = 1% spread).
-    //   providerFee: percentage of fiatAmount.
-    //   networkFee: flat USD amount converted to fiat via usdtToFiat.
+    // Per-provider assumptions (as of July 2025, subject to provider API updates):
+    //   spread:      markup on baseRate as a multiplier (0.01 = 1% spread).
+    //   providerFeePct: percentage of fiatAmount charged by the provider.
+    //   networkFeeUsd: flat USD network fee (only applies to on-chain buys;
+    //                  sell settles to fiat so no on-chain send fee is quoted).
     //     onramp_money ~$0.50, moonpay ~$0.80, transak ~$0.60.
     // These are estimates for the quote comparison UI — the actual fees are
     // charged by the provider at transaction time.
-    const quotes = [
-      {
-        provider: 'onramp_money',
-        estimatedCryptoAmount: (amount / (baseRate * 1.01)).toFixed(6),
-        exchangeRate: (baseRate * 1.01).toFixed(2),
-        providerFee: (amount * 0.01).toFixed(2),
-        networkFee: (flow === 'buy' ? (0.50 * usdtToFiat) : 0).toFixed(2),
-        fiatCurrency: currency,
-      },
-      {
-        provider: 'moonpay',
-        estimatedCryptoAmount: (amount / (baseRate * 1.025)).toFixed(6),
-        exchangeRate: (baseRate * 1.025).toFixed(2),
-        providerFee: (amount * 0.025).toFixed(2),
-        networkFee: (flow === 'buy' ? (0.80 * usdtToFiat) : 0).toFixed(2),
-        fiatCurrency: currency,
-      },
-      {
-        provider: 'transak',
-        estimatedCryptoAmount: (amount / (baseRate * 1.02)).toFixed(6),
-        exchangeRate: (baseRate * 1.02).toFixed(2),
-        providerFee: (amount * 0.02).toFixed(2),
-        networkFee: (flow === 'buy' ? (0.60 * usdtToFiat) : 0).toFixed(2),
-        fiatCurrency: currency,
-      }
+    const PROVIDER_SPECS = [
+      { provider: 'onramp_money', spread: 0.01, providerFeePct: 0.01, networkFeeUsd: 0.5 },
+      { provider: 'moonpay', spread: 0.025, providerFeePct: 0.025, networkFeeUsd: 0.8 },
+      { provider: 'transak', spread: 0.02, providerFeePct: 0.02, networkFeeUsd: 0.6 },
     ];
 
-    quotes.sort((a, b) => 
-      flow === 'buy' 
-        ? parseFloat(b.estimatedCryptoAmount) - parseFloat(a.estimatedCryptoAmount)
-        : parseFloat(a.estimatedCryptoAmount) - parseFloat(b.estimatedCryptoAmount)
-    );
+    const isBuy = flow === 'buy';
+
+    const quotes = PROVIDER_SPECS.map((spec) => {
+      // Effective per-token price including the provider's spread.
+      //   buy:  you pay MORE fiat per token  → rate = baseRate * (1 + spread)
+      //   sell: you receive LESS fiat per token → rate = baseRate * (1 - spread)
+      const effectiveRate = isBuy
+        ? baseRate * (1 + spec.spread)
+        : baseRate * (1 - spec.spread);
+
+      // Crypto side of the quote.
+      //   buy:  amount fiat buys  amount / effectiveRate tokens (more = better)
+      //   sell: amount fiat requires amount / effectiveRate tokens to be sold.
+      //         A worse spread lowers effectiveRate, so MORE crypto is needed
+      //         (more = worse) — the opposite direction from buy.
+      const estimatedCrypto = amount / effectiveRate;
+
+      const providerFee = amount * spec.providerFeePct;
+      const networkFee = isBuy ? spec.networkFeeUsd * usdtToFiat : 0;
+
+      // True bottom line for ranking, expressed in fiat and fee-inclusive:
+      //   buy:  net fiat value of crypto received, minus fees you also pay.
+      //         (higher net value for the same fiat spend = better deal)
+      //   sell: total fiat cost of the crypto you hand over, plus fees.
+      //         (lower cost = better deal)
+      const cryptoValueFiat = estimatedCrypto * baseRate;
+      const netValue = isBuy
+        ? cryptoValueFiat - providerFee - networkFee
+        : cryptoValueFiat + providerFee + networkFee;
+
+      return {
+        provider: spec.provider,
+        estimatedCryptoAmount: estimatedCrypto.toFixed(6),
+        exchangeRate: effectiveRate.toFixed(2),
+        providerFee: providerFee.toFixed(2),
+        networkFee: networkFee.toFixed(2),
+        fiatCurrency: currency,
+        // Internal ranking key — not part of the public response.
+        _netValue: netValue,
+      };
+    });
+
+    // Rank so index 0 is the genuine best deal (fee-inclusive):
+    //   buy  → highest net value received first
+    //   sell → lowest total cost first
+    quotes.sort((a, b) => (isBuy ? b._netValue - a._netValue : a._netValue - b._netValue));
+
+    // Strip the internal ranking key before returning to clients.
+    const publicQuotes = quotes.map(({ _netValue, ...q }) => q);
 
     logger.info({
       event: 'onramp_quotes_served',
@@ -328,11 +352,11 @@ export const getOnrampQuotes = async (req: Request, res: Response, _next: NextFu
       cryptoToken: token,
       flow,
       fiatAmount: amount,
-      quoteCount: quotes.length,
-      providers: quotes.map(q => q.provider),
-    }, `Served ${quotes.length} onramp quotes`);
+      quoteCount: publicQuotes.length,
+      providers: publicQuotes.map(q => q.provider),
+    }, `Served ${publicQuotes.length} onramp quotes`);
 
-    res.json({ quotes });
+    res.json({ quotes: publicQuotes });
   } catch (error) {
     logger.error({ err: error, event: 'onramp_quotes_failed' }, 'Failed to fetch quotes');
     res.status(500).json({ error: 'Failed to fetch quotes' });

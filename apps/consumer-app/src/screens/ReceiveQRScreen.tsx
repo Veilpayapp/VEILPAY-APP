@@ -34,6 +34,7 @@ import { BottomNavBar } from '../components/BottomNavBar';
 import { Icon } from '../components/Icon';
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { setClipboardString } from '../utils/clipboard';
+import { createSendLink } from '../utils/deepLinking';
 import { triggerLightImpactHaptic } from '../utils/haptics';
 import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
@@ -153,8 +154,16 @@ interface ReceiveQRScreenProps {
       return;
     }
 
-    // Generate payment request link
-    const requestLink = `veilpay://pay?to=${address}&amount=${requestedAmount}&token=${activeChain?.symbol || 'ETH'}`;
+    // Generate a payment-request deep link the app can actually parse. The
+    // hand-built `veilpay://pay?to=...` form used an unknown action, so
+    // parseDeepLink() rejected it and the link opened nothing. createSendLink
+    // emits `veilpay://send?address=…&amount=…&token=…`, which the deep-link
+    // handler routes straight into the Send flow, pre-filled.
+    const requestLink = createSendLink(
+      address,
+      requestedAmount,
+      activeChain?.symbol,
+    );
     const copied = await setClipboardString(requestLink);
     if (!copied) {
       trackEvent(ANALYTICS_EVENTS.RECEIVE_REQUEST_LINK_FAILED, {

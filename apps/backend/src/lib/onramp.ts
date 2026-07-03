@@ -39,8 +39,10 @@ export class OnrampService {
       appId: this.API_KEY,
       walletAddress: userAddress,
       fiatAmount: fiatAmount || '',
-      fiatType: fiatCurrency,
-      coinCode: cryptoToken,
+      // Onramp.money's hosted widget expects an uppercase fiat symbol (e.g.
+      // "INR", "USD") and an uppercase coin symbol (e.g. "USDT", "ETH").
+      fiatType: this.mapFiat(fiatCurrency),
+      coinCode: cryptoToken.toUpperCase(),
       network: network,
     });
 
@@ -91,18 +93,42 @@ export class OnrampService {
   }
 
   /**
-   * Normalizes internal network keys to Onramp.money network names.
+   * Networks Onramp.money's hosted widget accepts, keyed by our internal chain
+   * key. The `/main/buy/` widget uses friendly lowercase network names — this
+   * is verified against live widget URLs such as
+   * `.../main/buy/?appId=1&coinCode=virtual&network=base`. (The numeric chain
+   * IDs like `erc20`/`matic20`/`spl` belong to the separate `allConfigMapping`
+   * REST API, not this widget URL, so they are deliberately NOT used here.)
+   *
+   * Testnets and chains Onramp.money doesn't support (aptos, stellar, sepolia,
+   * devnets) are intentionally absent so `mapNetwork` rejects them instead of
+   * silently handing the widget an unusable `network` value.
+   */
+  private static readonly NETWORK_MAP: Record<string, string> = {
+    ethereum: 'ethereum',
+    polygon: 'polygon',
+    bsc: 'bsc',
+    arbitrum: 'arbitrum',
+    optimism: 'optimism',
+    base: 'base',
+    solana: 'solana',
+  };
+
+  /**
+   * Normalizes an internal network key to the Onramp.money network name.
+   * @throws if the chain isn't supported, so callers surface a clear error
+   *         instead of the widget silently failing on a bad `network` value.
    */
   static mapNetwork(chainKey: string): string {
-    const map: Record<string, string> = {
-      'ethereum': 'ethereum',
-      'polygon': 'polygon',
-      'arbitrum': 'arbitrum',
-      'base': 'base',
-      'optimism': 'optimism',
-      'bsc': 'bsc',
-      'solana': 'solana',
-    };
-    return map[chainKey.toLowerCase()] || chainKey;
+    const mapped = this.NETWORK_MAP[chainKey.toLowerCase()];
+    if (!mapped) {
+      throw new Error(`Onramp.money does not support network "${chainKey}"`);
+    }
+    return mapped;
+  }
+
+  /** Normalizes a fiat currency to the uppercase symbol the widget expects. */
+  static mapFiat(fiatCurrency: string): string {
+    return (fiatCurrency || '').toUpperCase();
   }
 }

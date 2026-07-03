@@ -403,8 +403,10 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
         {/* Header */}
         <View style={styles.header}>
         <ScreenBackButton onPress={handleBack} />
-          <Text style={styles.headerTitle}>SEND PAYMENT</Text>
-          <View style={{ width: 44 }} />
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>SEND PAYMENT</Text>
+          </View>
+          <View style={styles.headerSpacer} />
         </View>
 
         <KeyboardAvoidingView 
@@ -621,17 +623,25 @@ const themeStyles = (colors: any) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.outlineSubtle,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  // Matches ScreenBackButton width (80) so the centered title is truly centered.
+  headerSpacer: {
+    width: 80,
   },
   headerTitle: {
     fontFamily: typography.fontFamily.headlineBold,
     fontSize: 16,
     color: colors.textPrimary,
     letterSpacing: 1,
+    textAlign: 'center',
   },
   cardHeader: {
     flexDirection: 'row',

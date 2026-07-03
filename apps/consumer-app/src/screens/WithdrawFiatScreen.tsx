@@ -266,8 +266,10 @@ interface WithdrawFiatScreenProps {
 
       <View style={styles.header}>
         <ScreenBackButton onPress={() => navigation.goBack()} />
-        <Text style={styles.headerTitle}>SELL CRYPTO</Text>
-        <View style={{ width: 44 }} />
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>SELL CRYPTO</Text>
+        </View>
+        <View style={styles.headerSpacer} />
       </View>
 
       <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>
@@ -481,11 +483,18 @@ const themeStyles = (colors: any) => StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 24,
     height: 64,
     borderBottomWidth: 1,
     borderBottomColor: colors.outlineSubtle,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
+  },
+  // Matches ScreenBackButton width (80) so the centered title is truly centered.
+  headerSpacer: {
+    width: 80,
   },
   headerTitle: {
     fontFamily: typography.fontFamily.mono,
@@ -493,6 +502,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: "700",
     letterSpacing: 1,
+    textAlign: "center",
   },
   scrollView: {
     flex: 1,

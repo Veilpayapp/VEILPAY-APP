@@ -29,13 +29,18 @@ export const getOnrampConfig = (tokenSymbol: string, chainKey: string): OnrampCo
     'solana': 'solana',
   };
 
-  // Token Override Mapping (if needed)
+  // Token Override Mapping — must match Onramp.money's expected coinCode values
   const tokenMap: Record<string, string> = {
     'USDC': 'USDC',
     'USDT': 'USDT',
     'ETH': 'ETH',
     'POL': 'POL',
     'MATIC': 'MATIC',
+    'SOL': 'SOL',
+    'BNB': 'BNB',
+    'AVAX': 'AVAX',
+    'TRX': 'TRX',
+    'DAI': 'DAI',
   };
 
   return {
@@ -45,11 +50,9 @@ export const getOnrampConfig = (tokenSymbol: string, chainKey: string): OnrampCo
 };
 
 /**
- * Supported Fiat Currencies for Onramp.money in VeilPay
+ * Supported Fiat Currencies for Onramp.money in VeilPay.
+ * Onramp.money's widget reliably supports INR only for most token/chain combos.
  */
 export const ONRAMP_FIAT_CURRENCIES = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-  { code: 'USD', symbol: '$', name: 'US Dollar' },
-  { code: 'TRY', symbol: '₺', name: 'Turkish Lira' },
-  { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
 ];

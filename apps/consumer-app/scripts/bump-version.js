@@ -1,66 +1,62 @@
 const fs = require('fs');
 const path = require('path');
 
-const appJsonPath = path.join(__dirname, '..', 'app.json');
+const versionJsonPath = path.join(__dirname, '..', 'version.json');
 
 try {
-  // Read app.json
-  const rawData = fs.readFileSync(appJsonPath, 'utf8');
-  const appData = JSON.parse(rawData);
-
-  if (!appData.expo) {
-    throw new Error('Could not find "expo" object in app.json');
-  }
+  // Read version.json
+  const rawData = fs.readFileSync(versionJsonPath, 'utf8');
+  const versionData = JSON.parse(rawData);
 
   // Bump version
-  const currentVersion = appData.expo.version;
+  const currentVersion = versionData.version;
   if (!currentVersion) {
-    throw new Error('Could not find "expo.version" in app.json');
+    throw new Error('Could not find "version" in version.json');
   }
   const versionParts = currentVersion.split('.');
   if (versionParts.length === 3) {
     const patch = parseInt(versionParts[2], 10);
     versionParts[2] = (patch + 1).toString();
-    appData.expo.version = versionParts.join('.');
+    versionData.version = versionParts.join('.');
   } else {
     console.warn(`Version string "${currentVersion}" does not follow standard semver (x.y.z). Skipping patch bump.`);
   }
 
   // Bump iOS buildNumber
-  if (appData.expo.ios && appData.expo.ios.buildNumber !== undefined) {
-    const currentIosBuildStr = appData.expo.ios.buildNumber;
+  if (versionData.ios && versionData.ios.buildNumber !== undefined) {
+    const currentIosBuildStr = versionData.ios.buildNumber;
     const currentIosBuild = parseInt(currentIosBuildStr, 10);
     if (!isNaN(currentIosBuild)) {
-      appData.expo.ios.buildNumber = (currentIosBuild + 1).toString();
+      versionData.ios.buildNumber = (currentIosBuild + 1).toString();
     } else {
       console.warn(`iOS buildNumber "${currentIosBuildStr}" is not an integer. Skipping.`);
     }
   } else {
-    console.warn('Could not find "expo.ios.buildNumber" in app.json');
+    console.warn('Could not find "ios.buildNumber" in version.json');
   }
 
   // Bump Android versionCode
-  if (appData.expo.android && appData.expo.android.versionCode !== undefined) {
-    const currentAndroidCode = appData.expo.android.versionCode;
+  if (versionData.android && versionData.android.versionCode !== undefined) {
+    const currentAndroidCode = versionData.android.versionCode;
     if (typeof currentAndroidCode === 'number') {
-      appData.expo.android.versionCode = currentAndroidCode + 1;
+      versionData.android.versionCode = currentAndroidCode + 1;
     } else {
       console.warn(`Android versionCode "${currentAndroidCode}" is not a number. Skipping.`);
     }
   } else {
-    console.warn('Could not find "expo.android.versionCode" in app.json');
+    console.warn('Could not find "android.versionCode" in version.json');
   }
 
-  // Write back to app.json with 2 spaces indentation
-  fs.writeFileSync(appJsonPath, JSON.stringify(appData, null, 2) + '\n', 'utf8');
+  // Write back to version.json with 2 spaces indentation
+  fs.writeFileSync(versionJsonPath, JSON.stringify(versionData, null, 2) + '\n', 'utf8');
 
   console.log(`Successfully bumped version:`);
-  console.log(`  Version: ${currentVersion} -> ${appData.expo.version}`);
-  if (appData.expo.ios) {
-    console.log(`  iOS buildNumber: ${appData.expo.ios.buildNumber}`);
+  console.log(`  Version: ${currentVersion} -> ${versionData.version}`);
+  if (versionData.ios) {
+    console.log(`  iOS buildNumber: ${versionData.ios.buildNumber}`);
   }
-  if (appData.expo.android) {
-    console.log(`  Android versionCode: ${appData.expo.android.versionCode}`);
+  if (versionData.android) {
+    console.log(`  Android versionCode: ${versionData.android.versionCode}`);
   }
 
 } catch (error) {

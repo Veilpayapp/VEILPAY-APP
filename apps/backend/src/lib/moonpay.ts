@@ -15,7 +15,7 @@ export class MoonPayService {
   static generateSignedUrl(params: {
     userAddress: string;
     fiatAmount?: string;
-    fiatCurrency?: string;
+    fiatCurrency: string;
     cryptoToken?: string;
     chainKey?: string;
     orderId?: string;
@@ -23,7 +23,7 @@ export class MoonPayService {
     const {
       userAddress,
       fiatAmount,
-      fiatCurrency = 'INR',
+      fiatCurrency,
       cryptoToken = 'ETH',
       chainKey = 'ethereum',
       orderId,

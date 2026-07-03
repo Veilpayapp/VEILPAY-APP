@@ -3,7 +3,8 @@ import { randomUUID } from 'crypto';
 import { prisma } from '../lib/prisma';
 import { OnrampService } from '../lib/onramp';
 import { MoonPayService } from '../lib/moonpay';
-import { z } from 'zod';
+import { logger } from '../lib/logger';
+import { z, ZodError } from 'zod';
 
 /**
  * Maximum age of an Onramp.money webhook event before we reject it as a
@@ -26,7 +27,7 @@ const TERMINAL_STATUSES: ReadonlySet<string> = new Set([
 const CreateOrderSchema = z.object({
   userAddress: z.string(),
   fiatAmount: z.string().optional(),
-  fiatCurrency: z.string().default('INR'),
+  fiatCurrency: z.string().min(1),
   cryptoToken: z.string(),
   chainKey: z.string(),
   flow: z.enum(['buy', 'sell']),
@@ -183,7 +184,12 @@ export const createOnrampUrl = async (req: Request, res: Response, _next: NextFu
 
     res.json({ url, orderId: order.id });
   } catch (error) {
-    console.error('Onramp URL error:', error);
+    if (error instanceof ZodError) {
+      const messages = error.issues.map(i => `${i.path.join('.')}: ${i.message}`);
+      res.status(400).json({ error: 'Validation failed', details: messages });
+      return;
+    }
+    logger.error({ err: error, event: 'onramp_url_create_failed' }, 'Failed to generate Onramp URL');
     res.status(400).json({ error: 'Failed to generate Onramp URL' });
   }
 };
@@ -234,7 +240,7 @@ async function fetchCryptoUsdtPrice(token: string): Promise<number | null> {
     rateCache.set(symbol, { priceInUsdt, expiresAt: Date.now() + RATE_CACHE_TTL_MS });
     return priceInUsdt;
   } catch (e) {
-    console.warn('Failed to fetch live rates from Binance, using fallback', e);
+    logger.warn({ err: e }, 'Failed to fetch live rates from Binance, using fallback');
     return null;
   } finally {
     clearTimeout(timeout);
@@ -243,9 +249,14 @@ async function fetchCryptoUsdtPrice(token: string): Promise<number | null> {
 
 export const getOnrampQuotes = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
   try {
-    const { fiatAmount, fiatCurrency = 'INR', cryptoToken = 'ETH', flow = 'buy' } = req.query;
+    const { fiatAmount, fiatCurrency, cryptoToken = 'ETH', flow = 'buy' } = req.query;
     if (!fiatAmount) {
       res.status(400).json({ error: 'fiatAmount is required' });
+      return;
+    }
+
+    if (!fiatCurrency || typeof fiatCurrency !== 'string') {
+      res.status(400).json({ error: 'fiatCurrency is required' });
       return;
     }
 
@@ -270,34 +281,38 @@ export const getOnrampQuotes = async (req: Request, res: Response, _next: NextFu
       baseRate = priceInUsdt * usdtToFiat;
     }
     
+    // ── Estimated quote construction ──────────────────────────────────────
+    // Fee assumptions (as of July 2025, subject to provider API updates):
+    //   Spread: added to baseRate as a multiplier (1.01 = 1% spread).
+    //   providerFee: percentage of fiatAmount.
+    //   networkFee: flat USD amount converted to fiat via usdtToFiat.
+    //     onramp_money ~$0.50, moonpay ~$0.80, transak ~$0.60.
+    // These are estimates for the quote comparison UI — the actual fees are
+    // charged by the provider at transaction time.
     const quotes = [
       {
         provider: 'onramp_money',
         estimatedCryptoAmount: (amount / (baseRate * 1.01)).toFixed(6),
         exchangeRate: (baseRate * 1.01).toFixed(2),
         providerFee: (amount * 0.01).toFixed(2),
-        networkFee: (flow === 'buy' ? 50 : 0).toString(),
+        networkFee: (flow === 'buy' ? (0.50 * usdtToFiat) : 0).toFixed(2),
+        fiatCurrency: currency,
       },
       {
         provider: 'moonpay',
         estimatedCryptoAmount: (amount / (baseRate * 1.025)).toFixed(6),
         exchangeRate: (baseRate * 1.025).toFixed(2),
         providerFee: (amount * 0.025).toFixed(2),
-        networkFee: (flow === 'buy' ? 80 : 0).toString(),
-      },
-      {
-        provider: 'stripe',
-        estimatedCryptoAmount: (amount / (baseRate * 1.015)).toFixed(6),
-        exchangeRate: (baseRate * 1.015).toFixed(2),
-        providerFee: (amount * 0.015).toFixed(2),
-        networkFee: (flow === 'buy' ? 40 : 0).toString(),
+        networkFee: (flow === 'buy' ? (0.80 * usdtToFiat) : 0).toFixed(2),
+        fiatCurrency: currency,
       },
       {
         provider: 'transak',
         estimatedCryptoAmount: (amount / (baseRate * 1.02)).toFixed(6),
         exchangeRate: (baseRate * 1.02).toFixed(2),
         providerFee: (amount * 0.02).toFixed(2),
-        networkFee: (flow === 'buy' ? 60 : 0).toString(),
+        networkFee: (flow === 'buy' ? (0.60 * usdtToFiat) : 0).toFixed(2),
+        fiatCurrency: currency,
       }
     ];
 
@@ -307,9 +322,19 @@ export const getOnrampQuotes = async (req: Request, res: Response, _next: NextFu
         : parseFloat(a.estimatedCryptoAmount) - parseFloat(b.estimatedCryptoAmount)
     );
 
+    logger.info({
+      event: 'onramp_quotes_served',
+      fiatCurrency: currency,
+      cryptoToken: token,
+      flow,
+      fiatAmount: amount,
+      quoteCount: quotes.length,
+      providers: quotes.map(q => q.provider),
+    }, `Served ${quotes.length} onramp quotes`);
+
     res.json({ quotes });
   } catch (error) {
-    console.error('Quotes fetch error:', error);
+    logger.error({ err: error, event: 'onramp_quotes_failed' }, 'Failed to fetch quotes');
     res.status(500).json({ error: 'Failed to fetch quotes' });
   }
 };
@@ -454,11 +479,17 @@ export const handleOnrampWebhook = async (
     });
 
     // eslint-disable-next-line no-console
-    console.log(`Order ${gatewayOrderId} updated to ${nextStatus}`);
+    logger.info({
+      event: 'onramp_webhook_processed',
+      gatewayOrderId,
+      previousStatus: existingOrder.status,
+      nextStatus,
+      txHash: typeof txHash === 'string' ? txHash : undefined,
+    }, `Order ${gatewayOrderId} updated to ${nextStatus}`);
 
     res.json({ received: true });
   } catch (error) {
-    console.error('Onramp webhook error:', error);
+    logger.error({ err: error, event: 'onramp_webhook_failed' }, 'Onramp webhook processing error');
     res.status(500).json({ error: 'Failed to process webhook' });
   }
 };

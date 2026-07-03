@@ -267,7 +267,7 @@ interface WithdrawFiatScreenProps {
       <View style={styles.header}>
         <ScreenBackButton onPress={() => navigation.goBack()} />
         <Text style={styles.headerTitle}>SELL CRYPTO</Text>
-        <View style={{ width: 80 }} />
+        <View style={{ width: 44 }} />
       </View>
 
       <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>

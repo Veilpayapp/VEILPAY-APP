@@ -1,4 +1,4 @@
-export type ChainType = "evm" | "svm" | "mvm";
+export type ChainType = "evm" | "svm" | "mvm" | "xlm";
 
 export interface ChainConfig {
   key: string;
@@ -62,6 +62,15 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
     nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
   },
   {
+    key: "bsc",
+    name: "BSC",
+    type: "evm",
+    chainId: 56,
+    rpcUrl: "https://bsc-dataseed1.binance.org",
+    explorerUrl: "https://bscscan.com",
+    nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+  },
+  {
     key: "solana",
     name: "Solana",
     type: "svm",
@@ -78,6 +87,15 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
     rpcUrl: "https://fullnode.mainnet.aptoslabs.com",
     explorerUrl: "https://explorer.aptoslabs.com",
     nativeCurrency: { name: "Aptos", symbol: "APT", decimals: 8 },
+  },
+  {
+    key: "stellar",
+    name: "Stellar",
+    type: "xlm",
+    chainId: null,
+    rpcUrl: "https://horizon.stellar.org",
+    explorerUrl: "https://stellar.expert/explorer/public",
+    nativeCurrency: { name: "Stellar Lumens", symbol: "XLM", decimals: 7 },
   },
   // Testnet chains for development
   {

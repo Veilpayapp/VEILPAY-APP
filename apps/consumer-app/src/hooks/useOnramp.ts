@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { useWalletStore } from '../stores/walletStore';
 import { useTransactionStore } from '../stores/transactionStore';
 import { getOnrampConfig } from '../utils/onramp';
 import { captureError } from '../utils/sentry';
@@ -8,8 +7,9 @@ import type { FiatGatewayProvider } from '../utils/fiatGateway';
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 
 export interface OnrampQuoteRequest {
+  walletAddress: string;
   fiatAmount?: string;
-  fiatCurrency?: string;
+  fiatCurrency: string;
   cryptoToken: string;
   chainKey: string;
   flow: 'buy' | 'sell';
@@ -24,14 +24,15 @@ export interface OnrampSession {
 export const useOnramp = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { address } = useWalletStore();
   const setLatestOnrampOrder = useTransactionStore(s => s.setLatestOnrampOrder);
 
   /**
    * Fetches a signed Onramp URL from the VeilPay backend.
+   * The caller must supply `walletAddress` (resolved per-chain-type) to prevent
+   * cross-chain fund loss.
    */
   const getOnrampUrl = useCallback(async (params: OnrampQuoteRequest): Promise<OnrampSession | null> => {
-    if (!address) {
+    if (!params.walletAddress) {
       setError('Wallet not connected');
       return null;
     }
@@ -53,9 +54,9 @@ export const useOnramp = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userAddress: address,
+          userAddress: params.walletAddress,
           fiatAmount: params.fiatAmount,
-          fiatCurrency: params.fiatCurrency || 'INR',
+          fiatCurrency: params.fiatCurrency,
           cryptoToken: config.coinCode,
           chainKey: params.chainKey,
           flow: params.flow,
@@ -79,12 +80,12 @@ export const useOnramp = () => {
         provider: (params.provider || 'onramp_money') as FiatGatewayProvider,
         id: orderId,
         orderId,
-        walletAddress: address,
-        userAddress: address,
+        walletAddress: params.walletAddress,
+        userAddress: params.walletAddress,
         flow: params.flow,
         status: 'pending',
         fiatAmount: params.fiatAmount || '0',
-        fiatCurrency: params.fiatCurrency || 'INR',
+        fiatCurrency: params.fiatCurrency,
         cryptoToken: params.cryptoToken,
         chainKey: params.chainKey,
         updatedAt: Date.now(),
@@ -102,7 +103,7 @@ export const useOnramp = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [address, setLatestOnrampOrder]);
+  }, [setLatestOnrampOrder]);
 
   /**
    * Polls the backend for the status of a specific order.

@@ -39,8 +39,10 @@ export class OnrampService {
       appId: this.API_KEY,
       walletAddress: userAddress,
       fiatAmount: fiatAmount || '',
-      // Onramp.money's hosted widget expects an uppercase fiat symbol (e.g.
-      // "INR", "USD") and an uppercase coin symbol (e.g. "USDT", "ETH").
+      // Onramp.money's hosted widget expects a NUMERIC fiatType id (e.g. INR=1,
+      // USD=21) — NOT the currency symbol — and an uppercase coin symbol (e.g.
+      // "USDT", "ETH"). Sending the symbol string makes the widget render
+      // "Currency not supported".
       fiatType: this.mapFiat(fiatCurrency),
       coinCode: cryptoToken.toUpperCase(),
       network: network,
@@ -127,8 +129,49 @@ export class OnrampService {
     return mapped;
   }
 
-  /** Normalizes a fiat currency to the uppercase symbol the widget expects. */
+  /**
+   * Onramp.money's numeric `fiatType` ids, keyed by ISO currency symbol.
+   * Sourced from Onramp.money's official "fiatType Mapping" table — the hosted
+   * `/main/buy/` widget rejects a currency symbol string ("INR") and only
+   * accepts these numeric ids.
+   */
+  private static readonly FIAT_TYPE_MAP: Record<string, number> = {
+    INR: 1,
+    TRY: 2,
+    AED: 3,
+    MXN: 4,
+    VND: 5,
+    NGN: 6,
+    BRL: 7,
+    PEN: 8,
+    COP: 9,
+    CLP: 10,
+    PHP: 11,
+    EUR: 12,
+    IDR: 14,
+    KES: 15,
+    GHS: 16,
+    ZAR: 17,
+    RWF: 18,
+    XAF: 19,
+    GBP: 20,
+    USD: 21,
+    THB: 27,
+    MYR: 28,
+    ARS: 29,
+    EGP: 31,
+  };
+
+  /**
+   * Maps a fiat currency symbol to the numeric `fiatType` id the widget expects.
+   * @throws if the currency isn't supported, so callers surface a clear error
+   *         instead of the widget silently showing "Currency not supported".
+   */
   static mapFiat(fiatCurrency: string): string {
-    return (fiatCurrency || '').toUpperCase();
+    const code = this.FIAT_TYPE_MAP[(fiatCurrency || '').toUpperCase()];
+    if (!code) {
+      throw new Error(`Onramp.money does not support currency "${fiatCurrency}"`);
+    }
+    return String(code);
   }
 }

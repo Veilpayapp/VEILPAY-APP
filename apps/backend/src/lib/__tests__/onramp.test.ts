@@ -47,7 +47,21 @@ describe('OnrampService', () => {
 
     assert.match(url, /network=base/);
     assert.match(url, /coinCode=USDT/);
-    assert.match(url, /fiatType=INR/);
+    // Onramp.money expects the numeric fiatType id (INR=1), not the symbol.
+    assert.match(url, /fiatType=1/);
+  });
+
+  it('maps fiat currencies to their numeric onramp fiatType ids', () => {
+    assert.equal(OnrampService.mapFiat('INR'), '1');
+    assert.equal(OnrampService.mapFiat('usd'), '21');
+    assert.equal(OnrampService.mapFiat('EUR'), '12');
+    assert.equal(OnrampService.mapFiat('GBP'), '20');
+  });
+
+  it('rejects fiat currencies Onramp.money does not support', () => {
+    for (const code of ['JPY', 'CAD', 'CHF', 'XYZ', '']) {
+      assert.throws(() => OnrampService.mapFiat(code), /does not support/);
+    }
   });
 
   it('maps every supported network key without throwing', () => {

@@ -19,7 +19,7 @@ import { useWalletStore, SUPPORTED_CHAINS, type ChainType } from '../stores/wall
 import { SCREENS } from '../constants/screens';
 import { triggerLightImpactHaptic } from '../utils/haptics';
 import { buildTransakDepositUrl, FIAT_CURRENCIES, type FiatCurrency } from '../utils/transak';
-import { filterSupportedQuotes } from '../utils/onrampProviderMatrix';
+import { filterSupportedQuotes, getSupportedTokens, isTokenSupported } from '../utils/onrampProviderMatrix';
 import { logQuotesFetched, logQuotesFetchError, logProviderSelected, logUnsupportedChain } from '../utils/onrampLogger';
 import { useOnramp } from '../features/fiat-gateway';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -47,6 +47,11 @@ const CHAIN_KEY_TO_TYPE: Record<string, ChainType> = Object.fromEntries(
   SUPPORTED_CHAINS.map(c => [c.key, c.type]),
 );
 
+/** Maps chain keys to their native token symbol — used to render provider token support */
+const CHAIN_KEY_TO_NATIVE_SYMBOL: Record<string, string> = Object.fromEntries(
+  SUPPORTED_CHAINS.map(c => [c.key, c.nativeToken.symbol]),
+);
+
 /** Chains that no on-ramp provider currently supports */
 const UNSUPPORTED_ONRAMP_CHAINS = new Set([
   'aptos',
@@ -72,6 +77,11 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
     const chainType = CHAIN_KEY_TO_TYPE[chainKey.toLowerCase()] || 'evm';
     return addresses[chainType] ?? null;
   }, [chainKey, addresses]);
+
+  // Native symbol of the target chain — used to render each provider's token
+  // support. Falls back to the requested token so we never wrongly flag a
+  // mismatch if the chain is somehow unknown.
+  const nativeSymbol = CHAIN_KEY_TO_NATIVE_SYMBOL[chainKey.toLowerCase()] ?? cryptoToken;
 
   // Resolve currency symbol for display (replaces hardcoded ₹)
   const currencySymbol = useMemo(() => {
@@ -133,6 +143,16 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
   const handleProviderSelect = async (provider: string) => {
     triggerLightImpactHaptic();
     logProviderSelected({ provider, chainKey, fiatCurrency, fiatAmount });
+
+    // Block the hand-off if the provider doesn't sell the chosen token on this
+    // chain — otherwise the user hits a dead-end inside the provider's widget.
+    if (!isTokenSupported(provider, chainKey, cryptoToken, nativeSymbol)) {
+      alert(
+        `${getProviderName(provider)} doesn't sell ${cryptoToken.toUpperCase()} on ${chainKey.toUpperCase()}. ` +
+        `Pick another provider, or go back and change your token.`,
+      );
+      return;
+    }
 
     if (!walletAddress) {
       alert(`Wallet not connected for ${chainKey.toUpperCase()}`);
@@ -242,13 +262,16 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
           </View>
         ) : (
           <View style={styles.quotesContainer}>
-            {quotes.map((quote, index) => (
+            {quotes.map((quote, index) => {
+              const supportedTokens = getSupportedTokens(quote.provider, chainKey, nativeSymbol);
+              const tokenOk = supportedTokens.includes(cryptoToken.toUpperCase());
+              return (
               <TouchableOpacity
                 key={quote.provider}
                 onPress={() => handleProviderSelect(quote.provider)}
                 activeOpacity={0.9}
               >
-                <SovereignCard backgroundColor="transparent" style={[styles.quoteCard, { borderRadius: 0, borderWidth: 1, borderColor: colors.textPrimary }] as any}>
+                <SovereignCard backgroundColor="transparent" style={[styles.quoteCard, { borderRadius: 0, borderWidth: 1, borderColor: colors.textPrimary }, !tokenOk && styles.quoteCardDimmed] as any}>
                   <View style={styles.quoteHeader}>
                     <View style={styles.providerInfo}>
                       <Icon name={getProviderIcon(quote.provider)} size={18} color={colors.accent} />
@@ -261,7 +284,13 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
                     </View>
                     <Icon name="chevron-right" size={20} color={colors.textMuted} />
                   </View>
-                  
+
+                  <Text style={[styles.providerTokens, !tokenOk && styles.providerTokensWarn]}>
+                    {tokenOk
+                      ? `Supports: ${supportedTokens.join(' · ')}`
+                      : `${cryptoToken.toUpperCase()} not available here · Supports: ${supportedTokens.join(' · ')}`}
+                  </Text>
+
                   <View style={styles.quoteDetails}>
                     <View style={styles.amountBox}>
                       <Text style={styles.amountLabel}>YOU {flow === 'buy' ? 'RECEIVE' : 'PAY'} (EST)</Text>
@@ -274,7 +303,8 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
                   </View>
                 </SovereignCard>
               </TouchableOpacity>
-            ))}
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -373,6 +403,20 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   quoteCard: {
     marginBottom: 0,
     padding: 20,
+  },
+  quoteCardDimmed: {
+    opacity: 0.55,
+  },
+  providerTokens: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 11,
+    color: colors.textMuted,
+    letterSpacing: 0.5,
+    marginTop: -8,
+    marginBottom: 16,
+  },
+  providerTokensWarn: {
+    color: colors.warning,
   },
   quoteHeader: {
     flexDirection: 'row',

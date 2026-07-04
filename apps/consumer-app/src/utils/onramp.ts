@@ -50,9 +50,35 @@ export const getOnrampConfig = (tokenSymbol: string, chainKey: string): OnrampCo
 };
 
 /**
- * Supported Fiat Currencies for Onramp.money in VeilPay.
- * Onramp.money's widget reliably supports INR only for most token/chain combos.
+ * Fiat currencies Onramp.money supports, mirroring the backend's
+ * `OnrampService.FIAT_TYPE_MAP` numeric `fiatType` ids one-for-one. The backend
+ * translates each `code` here into the numeric id the hosted widget requires
+ * (INR=1, USD=21, …); keep the two lists in sync so the picker never offers a
+ * currency the widget will reject with "Currency not supported".
  */
 export const ONRAMP_FIAT_CURRENCIES = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'GBP', symbol: '£', name: 'British Pound' },
+  { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
+  { code: 'TRY', symbol: '₺', name: 'Turkish Lira' },
+  { code: 'MXN', symbol: '$', name: 'Mexican Peso' },
+  { code: 'VND', symbol: '₫', name: 'Vietnamese Dong' },
+  { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
+  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
+  { code: 'PEN', symbol: 'S/', name: 'Peruvian Sol' },
+  { code: 'COP', symbol: '$', name: 'Colombian Peso' },
+  { code: 'CLP', symbol: '$', name: 'Chilean Peso' },
+  { code: 'PHP', symbol: '₱', name: 'Philippine Peso' },
+  { code: 'IDR', symbol: 'Rp', name: 'Indonesian Rupiah' },
+  { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
+  { code: 'GHS', symbol: '₵', name: 'Ghanaian Cedi' },
+  { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
+  { code: 'RWF', symbol: 'FRw', name: 'Rwandan Franc' },
+  { code: 'XAF', symbol: 'FCFA', name: 'Central African CFA Franc' },
+  { code: 'THB', symbol: '฿', name: 'Thai Baht' },
+  { code: 'MYR', symbol: 'RM', name: 'Malaysian Ringgit' },
+  { code: 'ARS', symbol: '$', name: 'Argentine Peso' },
+  { code: 'EGP', symbol: 'E£', name: 'Egyptian Pound' },
 ];

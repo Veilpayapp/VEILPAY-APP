@@ -33,6 +33,7 @@ import { BiometricPrompt } from './src/components/BiometricPrompt';
 import { BootSplash } from './src/components/BootSplash';
 import { NetworkStatusBanner } from './src/components/NetworkStatusBanner';
 import { CommitmentSaveBanner } from './src/components/CommitmentSaveBanner';
+import { UpdatePromptModal } from './src/components/UpdatePromptModal';
 import { useDepositPersistenceRecovery } from './src/hooks/useDepositPersistenceRecovery';
 import { useWalletStore } from './src/stores/walletStore';
 import { useSettingsStore } from './src/stores/settingsStore';
@@ -120,10 +121,12 @@ function MainApp() {
   
   const shownUpdatePromptRef = useRef(false);
   const pushRegistrationKeyRef = useRef<string | null>(null);
+  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
 
   const {
     isProduction,
     isUpdateAvailable,
+    isDownloading,
     downloadUpdate,
     applyUpdate,
     error: updateError,
@@ -213,33 +216,27 @@ function MainApp() {
     });
   }, [address, chainType, isConnected]);
 
+  // Surface the branded update prompt once per launch when an OTA is available.
   useEffect(() => {
     if (!isProduction || !isUpdateAvailable || shownUpdatePromptRef.current) {
       return;
     }
 
     shownUpdatePromptRef.current = true;
+    setShowUpdatePrompt(true);
+  }, [isProduction, isUpdateAvailable]);
 
-    Alert.alert(
-      'Update Available',
-      'A new Veilpay update is ready. Update now to get the latest fixes and improvements.',
-      [
-        {
-          text: 'Later',
-          style: 'cancel',
-        },
-        {
-          text: 'Update now',
-          onPress: async () => {
-            const downloaded = await downloadUpdate();
-            if (downloaded) {
-              await applyUpdate();
-            }
-          },
-        },
-      ]
-    );
-  }, [applyUpdate, downloadUpdate, isProduction, isUpdateAvailable]);
+  const handleApplyUpdate = async () => {
+    const downloaded = await downloadUpdate();
+    if (downloaded) {
+      // reloadAsync() tears down the JS context, so the modal never needs to
+      // be hidden explicitly on the success path.
+      await applyUpdate();
+      return;
+    }
+    // Download failed (updateError is set) — keep the modal open so the user
+    // sees the error and can retry or dismiss.
+  };
 
   useEffect(() => {
     if (updateError) {
@@ -374,6 +371,13 @@ function MainApp() {
           <StatusBar style="light" />
         <NetworkStatusBanner />
         <CommitmentSaveBanner />
+        <UpdatePromptModal
+          visible={showUpdatePrompt}
+          isDownloading={isDownloading}
+          error={updateError}
+          onLater={() => setShowUpdatePrompt(false)}
+          onUpdate={handleApplyUpdate}
+        />
         {shouldShowBiometricPrompt ? (
           <BiometricPrompt
             onSuccess={() => setIsBiometricUnlocked(true)}

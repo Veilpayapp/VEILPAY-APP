@@ -31,6 +31,16 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: '1.0.1',
+    build: 5,
+    date: '2026-07-05',
+    highlights: [
+      'Updates now ask before installing — you get a prompt instead of a silent background update.',
+      'App opens instantly again — removed the startup delay that could show a blank screen.',
+      'Fixed the pending Buy/Sell card stretching off the edge of the screen.',
+    ],
+  },
+  {
+    version: '1.0.1',
     build: 4,
     date: '2026-07-05',
     highlights: [

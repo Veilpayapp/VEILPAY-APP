@@ -57,7 +57,6 @@ export function FiatGatewayCard({
           <SovereignCard
             backgroundColor={colors.surfaceCard}
             borderRadius={24}
-            style={{ marginHorizontal: 24 }}
           >
             <View style={styles.transakOutcomeContent}>
               <View style={[styles.transakOutcomeIcon, { backgroundColor: transakOrderMeta.tint }]}>
@@ -87,7 +86,6 @@ export function FiatGatewayCard({
           <SovereignCard
             backgroundColor={colors.surfaceCard}
             borderRadius={24}
-            style={{ marginHorizontal: 24 }}
           >
             <View style={styles.transakOutcomeContent}>
               <View style={[styles.transakOutcomeIcon, { backgroundColor: onrampOrderMeta.tint }]}>
@@ -120,6 +118,11 @@ const themeStyles = (colors: any) => StyleSheet.create({
     marginBottom: 24,
   },
   transakOutcomeWrapper: {
+    // Horizontal inset lives on the wrapper (not as marginHorizontal on the
+    // card) because SovereignCard's surface is width: "100%". A horizontal
+    // margin on a 100%-wide box overflows the parent by 2× the margin, which
+    // pushed the pending-order card off the right edge of the screen.
+    paddingHorizontal: 24,
     marginBottom: 24,
   },
   transakOutcomeContent: {

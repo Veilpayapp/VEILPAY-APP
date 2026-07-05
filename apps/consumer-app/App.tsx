@@ -342,33 +342,46 @@ function MainApp() {
 
   const shouldShowBiometricPrompt = isConnected && biometricsEnabled && !isBiometricUnlocked;
 
-  if (!isAppReady) {
-    return (
-      <ErrorBoundary onError={handleGlobalError}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <SafeAreaProvider>
-            <StatusBar style="light" />
-          <BootSplash 
-            title="VEILPAY"
-            subtitle={
-              areFontsReady ? (
-                bootstrapRetryCount > 0 
-                  ? `Retrying connection (${bootstrapRetryCount}/3)...` 
-                  : 'Securing wallet session...'
-              ) : 'Loading typography...'
-            }
-          />
-          </SafeAreaProvider>
-        </GestureHandlerRootView>
-      </ErrorBoundary>
-    );
-  }
+  // Once the wallet store has hydrated we know whether a biometric lock is
+  // required, so the native OS prompt can fire immediately — in parallel with
+  // the (slower) session bootstrap — instead of waiting for the whole app to be
+  // ready. `shouldShowBiometricPrompt` requires `isConnected`, which only
+  // becomes true after hydration restores the persisted session, so the prompt
+  // never flashes before hydration. The AppNavigator still mounts only once the
+  // app is fully ready AND the lock is cleared, so this is a pure UX reordering
+  // that does not weaken the biometric gate — no wallet decryption is gated by
+  // biometrics today.
+  const renderContent = () => {
+    if (shouldShowBiometricPrompt) {
+      return (
+        <BiometricPrompt
+          onSuccess={() => setIsBiometricUnlocked(true)}
+          onCancel={() => {
+            // If biometrics are unavailable, continue without logging the user out.
+            setBiometricsEnabled(false);
+            setIsBiometricUnlocked(true);
+          }}
+        />
+      );
+    }
 
-  return (
-    <ErrorBoundary onError={handleGlobalError}>
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
-        <SafeAreaProvider style={{ backgroundColor: '#0A0A0A' }}>
-          <StatusBar style="light" />
+    if (!isAppReady) {
+      return (
+        <BootSplash
+          title="VEILPAY"
+          subtitle={
+            areFontsReady
+              ? bootstrapRetryCount > 0
+                ? `Retrying connection (${bootstrapRetryCount}/3)...`
+                : 'Securing wallet session...'
+              : 'Loading typography...'
+          }
+        />
+      );
+    }
+
+    return (
+      <>
         <NetworkStatusBanner />
         <CommitmentSaveBanner />
         <UpdatePromptModal
@@ -378,21 +391,20 @@ function MainApp() {
           onLater={() => setShowUpdatePrompt(false)}
           onUpdate={handleApplyUpdate}
         />
-        {shouldShowBiometricPrompt ? (
-          <BiometricPrompt
-            onSuccess={() => setIsBiometricUnlocked(true)}
-            onCancel={() => {
-              // If biometrics are unavailable, continue without logging the user out.
-              setBiometricsEnabled(false);
-              setIsBiometricUnlocked(true);
-            }}
-          />
-        ) : (
-          <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
-            <AppNavigator initialRouteName={initialRouteName} />
-          </View>
-        )}
-      </SafeAreaProvider>
+        <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
+          <AppNavigator initialRouteName={initialRouteName} />
+        </View>
+      </>
+    );
+  };
+
+  return (
+    <ErrorBoundary onError={handleGlobalError}>
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
+        <SafeAreaProvider style={{ backgroundColor: '#0A0A0A' }}>
+          <StatusBar style="light" />
+          {renderContent()}
+        </SafeAreaProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>
   );

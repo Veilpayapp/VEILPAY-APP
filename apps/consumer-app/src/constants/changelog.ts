@@ -35,6 +35,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-07-05',
     highlights: [
       'No more grey flash on startup — the branded splash now stays up until the app is ready.',
+      'Security: sending, withdrawing, and buying now always ask for biometrics or your device PIN — even if the app lock is turned off.',
     ],
   },
   {

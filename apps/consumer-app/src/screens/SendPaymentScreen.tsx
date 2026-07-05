@@ -68,9 +68,9 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
   const lastContinueAttemptRef = useRef(0);
 
   const { activeChain, balance } = useWalletStore();
-  const { nativeCurrency, biometricsEnabled } = useSettingsStore();
+  const { nativeCurrency } = useSettingsStore();
   const toast = useToast();
-  const { isAvailable, authenticate } = useBiometrics();
+  const { authenticate } = useBiometrics();
   
   const [isUsdInput, setIsUsdInput] = useState(false);
   const [selectedToken, setSelectedToken] = useState<PaymentToken>({
@@ -317,21 +317,21 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
     // Biometrics flow
     setIsAuthenticating(true);
 
-    if (biometricsEnabled) {
-      if (!isAvailable) {
-        toast.show('Biometric authentication is unavailable on this device', 'error');
-        setIsAuthenticating(false);
-        return;
-      }
-
-      const authenticated = await authenticate();
-      if (!authenticated) {
-        toast.show('Biometric authentication failed', 'error');
-        setIsAuthenticating(false);
-        return;
-      }
+    // ALWAYS require authentication to move funds, regardless of the app
+    // biometric-lock toggle. Passing `true` allows the device PIN/passcode as a
+    // fallback when no biometrics are enrolled, so the wallet is never spendable
+    // with no user auth at all. `authenticate()` returns a result object — check
+    // `.success` (an object is always truthy, so `if (!result)` never fired).
+    const authResult = await authenticate('send_payment', true);
+    if (!authResult.success) {
+      toast.show(
+        authResult.cancelled ? 'Authentication cancelled' : 'Authentication failed',
+        'error',
+      );
+      setIsAuthenticating(false);
+      return;
     }
-    
+
     setIsAuthenticating(false);
 
     trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_CONTINUE_PRESSED, {

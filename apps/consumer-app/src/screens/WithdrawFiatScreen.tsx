@@ -64,8 +64,7 @@ interface WithdrawFiatScreenProps {
       balance: state.balance,
     }))
   );
-  const { biometricsEnabled, nativeCurrency, setNativeCurrency } = useSettingsStore((state: any) => ({
-    biometricsEnabled: state.biometricsEnabled,
+  const { nativeCurrency, setNativeCurrency } = useSettingsStore((state: any) => ({
     nativeCurrency: state.nativeCurrency,
     setNativeCurrency: state.setNativeCurrency,
   }));
@@ -76,7 +75,7 @@ interface WithdrawFiatScreenProps {
   const [selectedPercent, setSelectedPercent] = useState<number | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
   const toast = useToast();
-  const { isAvailable, authenticate } = useBiometrics();
+  const { authenticate } = useBiometrics();
 
   const marketData = useMarketData(CRYPTO_TOKENS.map((token) => token.symbol));
   const selectedMarketQuote = marketData.getQuote(selectedCrypto.symbol);
@@ -218,17 +217,16 @@ interface WithdrawFiatScreenProps {
       return;
     }
 
-    if (biometricsEnabled) {
-      if (!isAvailable) {
-        toast.show("Biometrics not available on this device", "error");
-        return;
-      }
-
-      const authenticated = await authenticate();
-      if (!authenticated) {
-        toast.show("Biometric verification failed", "error");
-        return;
-      }
+    // ALWAYS require authentication, regardless of the app biometric-lock
+    // toggle. `true` allows the device PIN/passcode fallback when no biometrics
+    // are enrolled. Check `.success` — the result is an object, not a boolean.
+    const authResult = await authenticate('send_payment', true);
+    if (!authResult.success) {
+      toast.show(
+        authResult.cancelled ? "Authentication cancelled" : "Authentication failed",
+        "error",
+      );
+      return;
     }
 
     const url = buildTransakWithdrawUrl({
@@ -248,8 +246,6 @@ interface WithdrawFiatScreenProps {
   }, [
     address,
     authenticate,
-    biometricsEnabled,
-    isAvailable,
     navigation,
     parsedAmount,
     selectedCrypto,

@@ -59,7 +59,6 @@ interface DepositCryptoScreenProps {
   route: DepositCryptoRouteProp;}export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
-  const biometricsEnabled = useSettingsStore(state => state.biometricsEnabled);
   const { address, activeChain } = useWalletStore(
     useShallow((state) => ({
       address: state.address,
@@ -73,7 +72,7 @@ interface DepositCryptoScreenProps {
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoToken>(CRYPTO_TOKENS[0]);
   const [inputError, setInputError] = useState<string | null>(null);
   const toast = useToast();
-  const { isAvailable, authenticate } = useBiometrics();
+  const { authenticate } = useBiometrics();
 
   const marketData = useMarketData(CRYPTO_TOKENS.map((token) => token.symbol));
   const selectedMarketQuote = marketData.getQuote(selectedCrypto.symbol);
@@ -232,17 +231,16 @@ interface DepositCryptoScreenProps {
       return;
     }
 
-    if (biometricsEnabled) {
-      if (!isAvailable) {
-        toast.show("Biometrics not available on this device", "error");
-        return;
-      }
-
-      const authenticated = await authenticate();
-      if (!authenticated) {
-        toast.show("Biometric verification failed", "error");
-        return;
-      }
+    // ALWAYS require authentication, regardless of the app biometric-lock
+    // toggle. `true` allows the device PIN/passcode fallback when no biometrics
+    // are enrolled. Check `.success` — the result is an object, not a boolean.
+    const authResult = await authenticate('deposit', true);
+    if (!authResult.success) {
+      toast.show(
+        authResult.cancelled ? "Authentication cancelled" : "Authentication failed",
+        "error",
+      );
+      return;
     }
 
     const url = buildTransakDepositUrl({
@@ -260,8 +258,6 @@ interface DepositCryptoScreenProps {
     });
   }, [    address,
     authenticate,
-    biometricsEnabled,
-    isAvailable,
     navigation,
     parsedAmount,
     selectedCrypto,

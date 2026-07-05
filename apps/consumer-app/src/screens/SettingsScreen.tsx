@@ -186,9 +186,14 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
         return;
       }
 
-      const authenticated = await authenticate();
-      if (!authenticated) {
-        toast.show("Biometric verification failed", "error");
+      // Check `.success` — `authenticate()` resolves to a result object, which
+      // is always truthy, so `if (!authenticated)` never caught a failed scan.
+      const authResult = await authenticate('toggle_biometrics');
+      if (!authResult.success) {
+        toast.show(
+          authResult.cancelled ? "Authentication cancelled" : "Biometric verification failed",
+          "error",
+        );
         return;
       }
     }

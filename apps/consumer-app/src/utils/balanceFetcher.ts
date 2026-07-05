@@ -226,10 +226,20 @@ async function fetchAptosBalance(address: string, chainConfig: ChainConfig): Pro
 }
 
 // ── NEW: Stellar Fetcher ──
+// Stellar reads hit Horizon's REST API directly. They must NOT be routed through
+// the JSON-RPC backend proxy (getRpcUrl / chainConfig.rpcUrl): the proxy is aimed
+// at EVM/SVM chains and, when unreachable, the `/accounts` REST call fails and
+// silently yields a 0 balance. Every other Stellar read (publicIndexers,
+// stellarSigner, transactions) already talks to Horizon directly — match that.
+function getHorizonBaseUrl(chainKey: string): string {
+  return chainKey === 'stellar'
+    ? 'https://horizon.stellar.org'
+    : 'https://horizon-testnet.stellar.org';
+}
+
 async function fetchStellarBalance(address: string, chainConfig: ChainConfig): Promise<BalanceResult> {
   const nativeToken = chainConfig.nativeToken;
-  const rpcUrl = chainConfig.rpcUrl || getRpcUrl(chainConfig.key);
-  const baseUrl = rpcUrl.replace(/\/$/, '');
+  const baseUrl = getHorizonBaseUrl(chainConfig.key);
 
   try {
     const response = await withTimeout(fetch(`${baseUrl}/accounts/${address}`), REQUEST_TIMEOUT_MS);
@@ -269,8 +279,7 @@ async function fetchStellarBalance(address: string, chainConfig: ChainConfig): P
 }
 
 async function fetchStellarTokens(address: string, chainConfig: ChainConfig): Promise<TokenBalance[]> {
-  const rpcUrl = chainConfig.rpcUrl || getRpcUrl(chainConfig.key);
-  const baseUrl = rpcUrl.replace(/\/$/, '');
+  const baseUrl = getHorizonBaseUrl(chainConfig.key);
 
   try {
     const response = await withTimeout(fetch(`${baseUrl}/accounts/${address}`), REQUEST_TIMEOUT_MS);

@@ -410,9 +410,14 @@ function MainApp() {
       return;
     }
     nativeSplashHiddenRef.current = true;
-    SplashScreen.hideAsync().catch(() => {
-      // Already hidden / not available — non-fatal.
-    });
+    try {
+      SplashScreen.hideAsync().catch(() => {
+        // Already hidden / not available — non-fatal.
+      });
+    } catch {
+      // Native splash module unavailable (e.g. JS delivered over OTA to an
+      // older build) — non-fatal.
+    }
   };
 
   return (

@@ -31,6 +31,14 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: '1.0.1',
+    build: 6,
+    date: '2026-07-05',
+    highlights: [
+      'No more grey flash on startup — the branded splash now stays up until the app is ready.',
+    ],
+  },
+  {
+    version: '1.0.1',
     build: 5,
     date: '2026-07-05',
     highlights: [

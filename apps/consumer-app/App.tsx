@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Alert, AppState, BackHandler, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   Inter_400Regular,
@@ -398,9 +399,28 @@ function MainApp() {
     );
   };
 
+  // Hide the native splash only after React has committed and laid out its
+  // first frame (the near-black GestureHandlerRootView is already painted), so
+  // the native splash hands off directly to that frame / BootSplash with no
+  // grey window-background flash in between. `index.ts` called
+  // preventAutoHideAsync() to keep it up until this point.
+  const nativeSplashHiddenRef = useRef(false);
+  const handleRootLayout = () => {
+    if (nativeSplashHiddenRef.current) {
+      return;
+    }
+    nativeSplashHiddenRef.current = true;
+    SplashScreen.hideAsync().catch(() => {
+      // Already hidden / not available — non-fatal.
+    });
+  };
+
   return (
     <ErrorBoundary onError={handleGlobalError}>
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
+      <GestureHandlerRootView
+        style={{ flex: 1, backgroundColor: '#0A0A0A' }}
+        onLayout={handleRootLayout}
+      >
         <SafeAreaProvider style={{ backgroundColor: '#0A0A0A' }}>
           <StatusBar style="light" />
           {renderContent()}

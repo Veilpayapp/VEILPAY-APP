@@ -31,6 +31,15 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: '1.0.1',
+    build: 4,
+    date: '2026-07-05',
+    highlights: [
+      'Faster app launch — the unlock prompt now appears right away instead of after a delay.',
+      'New branded loading screen so startup no longer looks like a blank screen.',
+    ],
+  },
+  {
+    version: '1.0.1',
     build: 3,
     date: '2026-07-05',
     highlights: [

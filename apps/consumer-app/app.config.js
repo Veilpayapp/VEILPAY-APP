@@ -44,8 +44,20 @@ module.exports = () => {
     updates: {
       url: 'https://u.expo.dev/b083fea1-cac0-4e6c-a07d-81ec0417cf36',
       enabled: true,
-      checkAutomatically: 'ON_LOAD',
-      fallbackToCacheTimeout: 30000,
+      // JS-CONTROLLED UPDATES. We deliberately DISABLE the native auto-check.
+      //   - 'ON_LOAD' made expo-updates silently download the update and apply
+      //     it on the next launch, pre-empting our branded UpdatePromptModal so
+      //     the user never saw a prompt.
+      //   - fallbackToCacheTimeout: 30000 blocked cold launch for up to 30s
+      //     while it fetched an update, showing a blank/near-black screen.
+      // With 'NEVER' + timeout 0, the app launches instantly from cache and the
+      // `useOTAUpdates` hook (App.tsx) is the SOLE update path: it checks,
+      // shows the prompt, and only downloads + reloads when the user opts in.
+      // NOTE: these map to native AndroidManifest meta-data
+      // (EXPO_UPDATES_CHECK_ON_LAUNCH / EXPO_UPDATES_LAUNCH_WAIT_MS), so this
+      // change only takes effect in a NEW BUILD — it cannot ship over OTA.
+      checkAutomatically: 'NEVER',
+      fallbackToCacheTimeout: 0,
     },
     splash: {
       image: './assets/logo-icon.png',
@@ -103,8 +115,10 @@ module.exports = () => {
       ...(expoConfig.updates || {}),
       url: easUpdateUrl,
       enabled: true,
-      checkAutomatically: 'ON_LOAD',
-      fallbackToCacheTimeout: 30000,
+      // Keep the JS-controlled behavior even when the URL comes from Doppler.
+      // See the primary `updates` block above for the full rationale.
+      checkAutomatically: 'NEVER',
+      fallbackToCacheTimeout: 0,
     };
   }
 

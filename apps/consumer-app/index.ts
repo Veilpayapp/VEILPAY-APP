@@ -11,9 +11,17 @@ import App from './App';
 // hands off seamlessly to the animated BootSplash. Without this, the native
 // splash auto-hides the instant the RN root view attaches, exposing the bare
 // grey window background for a beat.
-SplashScreen.preventAutoHideAsync().catch(() => {
-  // Pre-empting auto-hide can reject if the splash already hid — non-fatal.
-});
+// Wrapped in try/catch (not just .catch) so that if this JS is ever delivered
+// over OTA to a build whose native expo-splash-screen module is absent, the
+// synchronous UnavailabilityError can't crash startup — the splash simply
+// behaves as before.
+try {
+  SplashScreen.preventAutoHideAsync().catch(() => {
+    // Pre-empting auto-hide can reject if the splash already hid — non-fatal.
+  });
+} catch {
+  // Native splash module unavailable — non-fatal.
+}
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in Expo Go or in a native build,

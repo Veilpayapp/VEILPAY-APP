@@ -59,11 +59,6 @@ module.exports = () => {
       checkAutomatically: 'NEVER',
       fallbackToCacheTimeout: 0,
     },
-    splash: {
-      image: './assets/logo-icon.png',
-      resizeMode: 'contain',
-      backgroundColor: '#0A0A0B',
-    },
     assetBundlePatterns: ['**/*'],
     ios: {
       supportsTablet: true,
@@ -92,6 +87,19 @@ module.exports = () => {
       ['expo-notifications', { icon: './assets/icon.png', color: '#6366F1' }],
       'expo-updates',
       '@react-native-community/datetimepicker',
+      // Branded native splash (SDK 55 config-plugin form; replaces the legacy
+      // top-level `splash` key). `index.ts` holds it up via
+      // preventAutoHideAsync() and App.tsx hides it on first paint so there is
+      // no grey window-background flash before the JS BootSplash appears.
+      [
+        'expo-splash-screen',
+        {
+          image: './assets/logo-icon.png',
+          resizeMode: 'contain',
+          backgroundColor: '#0A0A0B',
+          imageWidth: 200,
+        },
+      ],
     ],
     scheme: 'veilpay',
     extra: {

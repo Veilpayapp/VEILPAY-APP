@@ -30,6 +30,7 @@ import { ScreenBackButton } from "../components/ScreenBackButton";
 import { NetworkSelectorModal } from "../components/NetworkSelectorModal";
 import { SecurityWarningModal } from "../components/SecurityWarningModal";
 import { UpdatePromptModal } from "../components/UpdatePromptModal";
+import { UpdateDetailsModal } from "../components/UpdateDetailsModal";
 import { setClipboardString } from "../utils/clipboard";
 import { CurrencySelectorModal } from "../components/CurrencySelectorModal";
 import { openExternalUrl } from "../utils/externalLink";
@@ -122,6 +123,7 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
   const [showNetworkSelector, setShowNetworkSelector] = React.useState(false);
   const [showCurrencySelector, setShowCurrencySelector] = React.useState(false);
   const [showUpdatePrompt, setShowUpdatePrompt] = React.useState(false);
+  const [showUpdateDetails, setShowUpdateDetails] = React.useState(false);
   const [warningModalConfig, setWarningModalConfig] = React.useState<{
     visible: boolean;
     title: string;
@@ -475,10 +477,10 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
     {
       id: "version",
       label: "Version",
-      description: `${Constants.expoConfig?.version ?? '1.0.0'} (Build ${Constants.expoConfig?.android?.versionCode ?? 1})`,
+      description: `${Constants.expoConfig?.version ?? '1.0.0'} (Build ${Constants.expoConfig?.android?.versionCode ?? 1}) · What's New`,
       iconName: "info",
-      type: "action",
-      onPress: () => {},
+      type: "navigate",
+      onPress: () => setShowUpdateDetails(true),
     },
     {
       id: "check-updates",
@@ -622,6 +624,11 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
         error={updateError}
         onLater={() => setShowUpdatePrompt(false)}
         onUpdate={handleApplyUpdate}
+      />
+
+      <UpdateDetailsModal
+        visible={showUpdateDetails}
+        onClose={() => setShowUpdateDetails(false)}
       />
 
       <Toast

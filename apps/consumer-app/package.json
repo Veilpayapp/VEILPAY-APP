@@ -25,7 +25,10 @@
     "storybook:ios": "cross-env EXPO_PUBLIC_STORYBOOK_ENABLED=true expo run:ios",
     "storybook:android": "cross-env EXPO_PUBLIC_STORYBOOK_ENABLED=true set NODE_ENV=development&& expo run:android",
     "eas:inject-secrets": "node eas-hooks/inject-secrets.js",
-    "eas-build-pre-install": "node eas-hooks/inject-secrets.js"
+    "eas-build-pre-install": "node eas-hooks/inject-secrets.js",
+    "ota:prod": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas update --branch production --environment production",
+    "ota:preview": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas update --branch preview --environment preview",
+    "ota:dev": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas update --branch development --environment development"
   },
   "dependencies": {
     "@aptos-labs/ts-sdk": "^1.9.0",

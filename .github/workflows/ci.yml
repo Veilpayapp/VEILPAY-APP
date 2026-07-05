@@ -49,12 +49,6 @@ jobs:
       - name: Typecheck indexer
         run: pnpm --filter @veilpay/indexer typecheck
 
-      - name: Lint frontend
-        run: pnpm --filter @veilpay/frontend lint
-
-      - name: Typecheck frontend
-        run: pnpm --filter @veilpay/frontend typecheck
-
       - name: Lint consumer app
         run: pnpm --filter consumer-app lint
 

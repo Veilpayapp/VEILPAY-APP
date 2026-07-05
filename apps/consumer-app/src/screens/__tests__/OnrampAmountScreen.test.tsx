@@ -25,6 +25,10 @@ jest.mock('../../stores/settingsStore', () => ({
     nativeCurrency: 'USD',
     setNativeCurrency: jest.fn(),
   }),
+  // design-tokens' useTheme()/useStyles() read these from settingsStore; the
+  // full-module mock must provide them or they resolve to undefined.
+  useThemeState: () => 'dark',
+  usePrivacyLevel: () => 'standard',
 }));
 
 jest.mock('../../components/CurrencySelectorModal', () => ({
@@ -75,8 +79,9 @@ describe('OnrampAmountScreen', () => {
     };
     const { getByText } = render(<Component {...props} />);
 
-    // Enter an amount first — find a quick-amount button
-    const quickAmount = getByText('5,000');
+    // Enter an amount first — press one of the rendered quick-amount buttons
+    // ($50 / $100 / $250 / $500).
+    const quickAmount = getByText('$500');
     fireEvent.press(quickAmount);
 
     // The CONTINUE button should navigate with selectedToken and fiatCurrency

@@ -26,6 +26,15 @@ jest.mock('@react-navigation/native', () => {
 // Avoid zustand errors
 jest.mock('../../stores/walletStore', () => ({
   useWalletStore: { getState: () => ({}) },
+  // OnrampQuotesScreen (loaded via the fiat-gateway screens barrel) derives
+  // lookup maps from SUPPORTED_CHAINS at module scope, so the mock must expose
+  // a representative list or the barrel import throws on `.map` of undefined.
+  SUPPORTED_CHAINS: [
+    { id: 1, key: 'ethereum', name: 'Ethereum', type: 'evm', symbol: 'ETH', nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 } },
+    { id: 101, key: 'solana', name: 'Solana', type: 'svm', symbol: 'SOL', nativeToken: { name: 'Solana', symbol: 'SOL', decimals: 9 } },
+    { id: 637, key: 'aptos', name: 'Aptos', type: 'mvm', symbol: 'APT', nativeToken: { name: 'Aptos', symbol: 'APT', decimals: 8 } },
+    { id: 0, key: 'stellar', name: 'Stellar', type: 'xlm', symbol: 'XLM', nativeToken: { name: 'Stellar Lumens', symbol: 'XLM', decimals: 7 } },
+  ],
 }));
 
 jest.mock('../../stores/transactionStore', () => ({

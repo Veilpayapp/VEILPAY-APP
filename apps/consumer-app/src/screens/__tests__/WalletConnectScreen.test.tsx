@@ -74,6 +74,10 @@ jest.mock('ethers', () => ({
 jest.mock('../../utils/walletConnectSession', () => ({
   createWalletConnectSession: (...args: unknown[]) => mockCreateWalletConnectSession(...args),
   hasWalletConnectProjectId: () => mockHasWalletConnectProjectId(),
+  // handleExternalWallet calls buildOptionalNamespaces(chainType) when building
+  // the session; without it in the mock the call throws before
+  // createWalletConnectSession is ever reached.
+  buildOptionalNamespaces: () => ({}),
 }));
 
 const { WalletConnectScreen } = require('../WalletConnectScreen');

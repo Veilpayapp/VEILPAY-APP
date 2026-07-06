@@ -65,7 +65,7 @@ export function logProviderSelected(params: {
 }
 
 /** Logs a widget load event */
-export function logWidgetLoad(params: {
+function logWidgetLoad(params: {
   provider: string;
   success: boolean;
   durationMs?: number;
@@ -76,7 +76,7 @@ export function logWidgetLoad(params: {
 }
 
 /** Logs a widget timeout */
-export function logWidgetTimeout(params: {
+function logWidgetTimeout(params: {
   provider: string;
   url: string;
 }): void {

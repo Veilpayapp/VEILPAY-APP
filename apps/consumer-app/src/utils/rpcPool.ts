@@ -23,6 +23,20 @@ const HEALTH_CHECK_INTERVAL_MS = 60_000;
 const MAX_RETRIES = 3;
 const RETRY_BASE_DELAY_MS = 300;
 
+// Per-chain RPC URL overrides. Each env var is read via a static
+// `process.env.EXPO_PUBLIC_*` reference so Expo/Babel inlines it at build time
+// (a computed `process.env[key]` is NOT inlined and silently reads undefined).
+const RPC_URL_OVERRIDES: Record<string, string | undefined> = {
+  ethereum: process.env.EXPO_PUBLIC_RPC_ETHEREUM,
+  polygon: process.env.EXPO_PUBLIC_RPC_POLYGON,
+  arbitrum: process.env.EXPO_PUBLIC_RPC_ARBITRUM,
+  base: process.env.EXPO_PUBLIC_RPC_BASE,
+  sepolia: process.env.EXPO_PUBLIC_RPC_SEPOLIA,
+  solana: process.env.EXPO_PUBLIC_RPC_SOLANA,
+  'solana-devnet': process.env.EXPO_PUBLIC_RPC_SOLANA_DEVNET,
+  aptos: process.env.EXPO_PUBLIC_RPC_APTOS,
+};
+
 function buildEndpoints(chainKey: string): RpcEndpoint[] {
   const publicFallbacks: Record<string, string> = {
     ethereum: 'https://ethereum-rpc.publicnode.com',
@@ -35,8 +49,7 @@ function buildEndpoints(chainKey: string): RpcEndpoint[] {
     aptos: 'https://fullnode.mainnet.aptoslabs.com',
   };
 
-  const overrideEnvKey = `EXPO_PUBLIC_RPC_${chainKey.replace(/-/g, '_').toUpperCase()}`;
-  const overrideUrl = (process.env[overrideEnvKey] || '').trim();
+  const overrideUrl = (RPC_URL_OVERRIDES[chainKey] || '').trim();
 
   const endpoints: RpcEndpoint[] = [];
 
@@ -165,6 +178,9 @@ class RpcProviderPool {
 
       for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
+          // Sequential failover/retry: we must try one endpoint at a time and
+          // stop on the first success — parallelizing would hammer every RPC.
+          // eslint-disable-next-line react-doctor/async-await-in-loop
           const result = await this.withTimeout(fn(provider));
           recordSuccess(endpoint.name);
           return result;
@@ -198,18 +214,21 @@ class RpcProviderPool {
   }
 
   private async runHealthChecks(): Promise<void> {
-    for (const endpoint of this.endpoints) {
-      const state = getCircuit(endpoint.name);
-      if (state.status !== 'open' && Date.now() < state.openUntil) continue;
-      const provider = this.getOrCreateProvider(endpoint);
-      try {
-        await this.withTimeout(provider.getBlockNumber());
-        recordSuccess(endpoint.name);
-        console.log(`[rpcPool] Health check passed: ${endpoint.name}`);
-      } catch {
-        console.warn(`[rpcPool] Health check failed: ${endpoint.name}`);
-      }
-    }
+    // Health checks are independent per endpoint — run them concurrently.
+    await Promise.all(
+      this.endpoints.map(async (endpoint) => {
+        const state = getCircuit(endpoint.name);
+        if (state.status !== 'open' && Date.now() < state.openUntil) return;
+        const provider = this.getOrCreateProvider(endpoint);
+        try {
+          await this.withTimeout(provider.getBlockNumber());
+          recordSuccess(endpoint.name);
+          console.log(`[rpcPool] Health check passed: ${endpoint.name}`);
+        } catch {
+          console.warn(`[rpcPool] Health check failed: ${endpoint.name}`);
+        }
+      })
+    );
   }
 
   private getOrCreateProvider(endpoint: RpcEndpoint): PublicClient {

@@ -177,12 +177,9 @@ export function useTokenBalances(chainKey?: string): {
   const chainType = activeChain?.type;
 
   const refresh = useCallback(async () => {
-    if (!address || !targetChain) {
-      return;
-    }
-
-    // Only fetch ERC20 tokens for EVM chains
-    if (chainType !== 'evm') {
+    // Clear balances whenever inputs are missing or the chain isn't EVM
+    // (ERC20 balances only apply to EVM chains).
+    if (!address || !targetChain || chainType !== 'evm') {
       setTokens([]);
       return;
     }
@@ -202,12 +199,8 @@ export function useTokenBalances(chainKey?: string): {
     }
   }, [address, targetChain, chainType]);
   useEffect(() => {
-    if (address && targetChain && chainType === 'evm') {
-      refresh();
-    } else {
-      setTokens([]);
-    }
-  }, [address, targetChain, chainType, refresh]);
+    refresh();
+  }, [refresh]);
 
   return {
     tokens,

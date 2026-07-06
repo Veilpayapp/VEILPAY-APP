@@ -157,13 +157,15 @@ export function getSupportedTokens(
 ): string[] {
   const native = nativeSymbol.toUpperCase();
   const tokens = [native];
+  const seen = new Set([native]);
 
   const provider = PROVIDER_MATRIX.get(providerId);
   const extras = provider?.supportedTokensByChain.get(chainKey.toLowerCase());
   if (extras) {
     for (const token of extras) {
       const upper = token.toUpperCase();
-      if (!tokens.includes(upper)) {
+      if (!seen.has(upper)) {
+        seen.add(upper);
         tokens.push(upper);
       }
     }

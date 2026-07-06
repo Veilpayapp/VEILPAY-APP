@@ -5,15 +5,8 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,  StyleSheet,  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
@@ -33,9 +26,13 @@ type ImportWalletScreenNavigationProp = NativeStackNavigationProp<RootStackParam
 type WordCount = 12 | 24;
 
 interface ImportWalletScreenProps {
-  navigation: ImportWalletScreenNavigationProp;}export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {  const { colors } = useTheme();
+  navigation: ImportWalletScreenNavigationProp;
+}
+export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {
+  const { colors } = useTheme();
   const styles = useStyles(themeStyles);
-  const [wordCount, setWordCount] = useState<WordCount>(12);  const [words, setWords] = useState<string[]>(Array(12).fill(''));
+  const [wordCount, setWordCount] = useState<WordCount>(12);
+  const [words, setWords] = useState<string[]>(() => Array(12).fill(''));
   const [passphrase, setPassphrase] = useState('');
   const [isPhraseTouched, setIsPhraseTouched] = useState(false);
   const [mnemonicValidationState, setMnemonicValidationState] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
@@ -210,7 +207,7 @@ interface ImportWalletScreenProps {
           {/* Word Count Toggle - NeoPop */}
           <View style={styles.toggleRow}>
             {([12, 24] as WordCount[]).map((count) => (
-              <TouchableOpacity
+              <PressableOpacity
                 key={count}
                 onPress={() => handleWordCountChange(count)}
                 activeOpacity={0.9}
@@ -234,7 +231,7 @@ interface ImportWalletScreenProps {
                     {count} WORDS
                   </Text>
                 </SovereignCard>
-              </TouchableOpacity>
+              </PressableOpacity>
             ))}
           </View>
 

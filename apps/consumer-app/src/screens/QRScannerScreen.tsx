@@ -6,13 +6,8 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  View,
-  Text,  StyleSheet,  TouchableOpacity,
-  Dimensions,  Animated,
-  Linking,
-  Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Animated, Linking, Platform } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { CameraView, CameraType, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
@@ -46,7 +41,9 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
   const [scanned, setScanned] = useState(false);
   const [flashOn, setFlashOn] = useState(false);
   const toast = useToast();
-  const scanLineAnim = useRef(new Animated.Value(0)).current;
+  const scanLineAnimRef = useRef<Animated.Value | null>(null);
+  if (scanLineAnimRef.current === null) scanLineAnimRef.current = new Animated.Value(0);
+  const scanLineAnim = scanLineAnimRef.current;
 
   const mode = route?.params?.mode || 'send';
   const onScan = route?.params?.onScan;
@@ -163,7 +160,7 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
           <Text style={styles.permissionText}>
             Veilpay needs camera access to scan QR codes for wallet addresses and payment requests.
           </Text>
-          <TouchableOpacity
+          <PressableOpacity
             style={styles.permissionButton}
             onPress={() => {
               trackEvent(ANALYTICS_EVENTS.QR_SCANNER_PERMISSION_REQUESTED, {
@@ -176,8 +173,8 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
             accessibilityHint="Requests camera access for QR scanning"
           >
             <Text style={styles.permissionButtonText}>GRANT PERMISSION</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </PressableOpacity>
+          <PressableOpacity
             style={styles.settingsButton}
             onPress={handleOpenSettings}
             accessibilityRole="button"
@@ -185,7 +182,7 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
             accessibilityHint="Opens device settings to manage permissions"
           >
             <Text style={styles.settingsButtonText}>Open Settings</Text>
-          </TouchableOpacity>
+          </PressableOpacity>
         </View>
       </View>
     );
@@ -209,7 +206,7 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
       >
         {/* Header overlay */}
         <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-          <TouchableOpacity
+          <PressableOpacity
             style={styles.closeButton}
             onPress={() => {
               trackEvent(ANALYTICS_EVENTS.QR_SCANNER_CLOSE_PRESSED, {
@@ -222,9 +219,9 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
             accessibilityHint="Returns to the previous screen"
           >
             <Icon name="close" size={24} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </PressableOpacity>
           <Text style={styles.headerTitle}>SCAN QR CODE</Text>
-          <TouchableOpacity
+          <PressableOpacity
             style={styles.flashButton}
             onPress={() => {
               const nextFlashState = !flashOn;
@@ -239,7 +236,7 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
             accessibilityHint="Toggles camera flash while scanning"
           >
             <Icon name={flashOn ? 'flash' : 'flash-off'} size={24} color={colors.textPrimary} />
-          </TouchableOpacity>
+          </PressableOpacity>
         </View>
 
         {/* Scan area overlay */}
@@ -379,10 +376,8 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     left: 0,
     right: 0,
     height: 2,
-    backgroundColor: colors.accent,    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
+    backgroundColor: colors.accent,
+    boxShadow: `0px 0px 8px ${colors.accent}`,
   },
   instructions: {
     paddingHorizontal: 24,
@@ -462,4 +457,3 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   },
 });
 
-export default QRScannerScreen;

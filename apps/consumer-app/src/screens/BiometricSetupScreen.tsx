@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-  Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, StatusBar, Platform } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 import { SCREENS } from '../constants/screens';
@@ -155,13 +149,13 @@ export function BiometricSetupScreen({ navigation }: BiometricSetupScreenProps) 
             style={styles.primaryButton}
           />
           
-          <TouchableOpacity 
+          <PressableOpacity 
             style={styles.skipButton} 
             onPress={handleSkip}
             activeOpacity={0.7}
           >
             <Text style={styles.skipButtonText}>SKIP FOR NOW</Text>
-          </TouchableOpacity>
+          </PressableOpacity>
         </Animated.View>
 
       </View>
@@ -211,11 +205,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     right: 0,
     height: 2,
     backgroundColor: colors.accent,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-    elevation: 4,
+    boxShadow: `0px 0px 8px ${colors.accent}`,
     zIndex: 10,
   },
   scanLineGlow: {

@@ -1,11 +1,16 @@
 import React from 'react';
-import { Modal, TouchableOpacity, View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { Modal, View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { PressableOpacity } from './PressableOpacity';
 import { triggerLightImpactHaptic } from '../utils/haptics';
 import { SovereignCard } from './SovereignCard';
 import { Icon } from './Icon';
 import { getNetworkIcon } from './NetworkIcons';
 import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 import type { ChainConfig } from '../stores/walletStore';
+
+// Stable empty-array reference so the default `chains` prop doesn't create a new
+// array each render (which would defeat the memo below).
+const EMPTY_CHAINS: ChainConfig[] = [];
 
 interface NetworkSelectorModalProps {
   visible: boolean;
@@ -20,7 +25,7 @@ interface NetworkSelectorModalProps {
 export function NetworkSelectorModal({
   visible,
   activeChain,
-  chains = [],
+  chains = EMPTY_CHAINS,
   onSelect,
   onClose,
   onAddCustomNetwork,
@@ -45,10 +50,12 @@ export function NetworkSelectorModal({
     };
   }, [chains, searchQuery]);
   
-  // Reset search when modal opens
-  React.useEffect(() => {
+  // Reset search when the modal opens — adjust during render to avoid a stale frame.
+  const [prevVisible, setPrevVisible] = React.useState(visible);
+  if (visible !== prevVisible) {
+    setPrevVisible(visible);
     if (visible) setSearchQuery('');
-  }, [visible]);
+  }
   
   return (
     <Modal 
@@ -58,7 +65,7 @@ export function NetworkSelectorModal({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <TouchableOpacity 
+        <PressableOpacity 
           style={StyleSheet.absoluteFill} 
           activeOpacity={1} 
           onPress={onClose} 
@@ -67,12 +74,12 @@ export function NetworkSelectorModal({
           <View style={styles.handle} />
           <View style={styles.header}>
             <Text style={styles.title}>{title}</Text>
-            <TouchableOpacity
+            <PressableOpacity
               onPress={onClose}
               style={styles.closeButton}
             >
               <Icon name="close" size={20} color={colors.textMuted} />
-            </TouchableOpacity>
+            </PressableOpacity>
           </View>
 
           {/* Premium Search Bar */}
@@ -90,9 +97,9 @@ export function NetworkSelectorModal({
               returnKeyType="search"
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <PressableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <Icon name="close" size={16} color={colors.textTertiary} />
-              </TouchableOpacity>
+              </PressableOpacity>
             )}
           </View>
 
@@ -151,7 +158,7 @@ export function NetworkSelectorModal({
 
             {onAddCustomNetwork && (
               <View style={styles.addNetworkContainer}>
-                <TouchableOpacity
+                <PressableOpacity
                   style={styles.addNetworkButton}
                   onPress={() => {
                     import('../utils/haptics').then(h => h.triggerLightImpactHaptic());
@@ -161,7 +168,7 @@ export function NetworkSelectorModal({
                 >
                   <Icon name="plus" size={14} color={colors.textPrimary} />
                   <Text style={styles.addNetworkText}>ADD CUSTOM NETWORK</Text>
-                </TouchableOpacity>
+                </PressableOpacity>
               </View>
             )}
             <View style={{ height: 40 }} />
@@ -172,15 +179,15 @@ export function NetworkSelectorModal({
   );
 }
 
+const getDisplayType = (chain: any) => {
+  const env = chain.isTestnet ? 'TESTNET' : 'MAINNET';
+  return `[ ${chain.symbol.toUpperCase()} • ${env} ]`;
+};
+
 // Sub-component for individual chain items to keep the main modal clean
 function ChainItem({ chain, selected, onSelect, styles, colors }: any) {
-  const getDisplayType = (chain: any) => {
-    const env = chain.isTestnet ? 'TESTNET' : 'MAINNET';
-    return `[ ${chain.symbol.toUpperCase()} • ${env} ]`;
-  };
-
   return (
-    <TouchableOpacity
+    <PressableOpacity
       onPress={() => {
         triggerLightImpactHaptic();
         onSelect(chain);
@@ -229,7 +236,7 @@ function ChainItem({ chain, selected, onSelect, styles, colors }: any) {
           )}
         </View>
       </View>
-    </TouchableOpacity>
+    </PressableOpacity>
   );
 }
 

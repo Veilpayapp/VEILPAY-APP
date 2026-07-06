@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
+import { PressableOpacity } from '../PressableOpacity';
 import { useTheme, useStyles, typography } from "../../styles/design-tokens";
 import { Logo } from "../Logo";
 import { Icon } from "../Icon";
@@ -27,7 +28,7 @@ export function DashboardHeader({ onSettingsPress }: DashboardHeaderProps) {
     <View style={styles.header}>
       <Logo variant="manual" size="small" />
       <View style={styles.headerActions}>
-        <TouchableOpacity 
+        <PressableOpacity 
           style={styles.accountSelectorBtn}
           onPress={() => setAccountModalVisible(true)}
         >
@@ -36,9 +37,9 @@ export function DashboardHeader({ onSettingsPress }: DashboardHeaderProps) {
           </View>
           <Text style={styles.accountNameText}>{activeAccount.name}</Text>
           <Icon name="chevron-down" size={16} color={colors.textMuted} />
-        </TouchableOpacity>
+        </PressableOpacity>
       
-        <TouchableOpacity
+        <PressableOpacity
           style={styles.headerIconBtn}
           onPress={onSettingsPress}
           accessibilityRole="button"
@@ -46,7 +47,7 @@ export function DashboardHeader({ onSettingsPress }: DashboardHeaderProps) {
           accessibilityHint="Opens settings screen"
         >
           <Icon name="settings" size={22} color={colors.textPrimary} />
-        </TouchableOpacity>
+        </PressableOpacity>
       </View>
       
       <AccountSelectorModal 

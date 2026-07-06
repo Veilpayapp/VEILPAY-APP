@@ -22,16 +22,8 @@
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  ActivityIndicator,
-  Linking,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar, ActivityIndicator, Linking } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { parseEther } from 'viem';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
@@ -75,15 +67,16 @@ interface PaymentConfirmationScreenProps {
   route: PaymentConfirmationScreenRoute;
 }
 
+const formatAddress = (addr: string) => {
+  if (!addr) return 'Not available';
+  return `${addr.slice(0, 10)}...${addr.slice(-6)}`;
+};
+
 export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirmationScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
-  const [hasMnemonic, setHasMnemonic] = useState<boolean | null>(null);
-  const [tokenPrice, setTokenPrice] = useState<number | null>(null);
-  const [priceLoading, setPriceLoading] = useState(true);
+  const hasMnemonicRef = useRef<boolean | null>(null);
   const [priceError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
-  const [isStale, setIsStale] = useState(false);
   const [localGasEstimate, setLocalGasEstimate] = useState<GasEstimate | null>(null);
   const [localGasExpensive, setLocalGasExpensive] = useState(false);
   const [fiatRate, setFiatRate] = useState(1);
@@ -131,6 +124,15 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
   const memo = route?.params?.memo || '';
   const token = route?.params?.token || 'ETH';
   const privacyLevel = route?.params?.privacyLevel || 'standard';
+
+  // Live token price is derived from the market-data hook rather than mirrored
+  // into local state via an effect (which would flash a stale value).
+  const { getQuote, isLoading: isQuoteLoading } = useMarketData([token]);
+  const marketQuote = getQuote(token);
+  const tokenPrice = marketQuote ? marketQuote.price : null;
+  const priceLoading = isQuoteLoading;
+  const lastUpdated = marketQuote ? marketQuote.lastUpdated : null;
+  const isStale = marketQuote ? marketQuote.isStale : true;
 
   // -----------------------------------------------------------------
   // Privacy-aware payment dispatcher (task 11.1).
@@ -187,26 +189,6 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
     });
   }, [activeNetworkKey, memo, privacyLevel, token]);
 
-  const { getQuote, isLoading: isQuoteLoading } = useMarketData([token]);
-  const marketQuote = getQuote(token);
-  
-  useEffect(() => {
-    if (marketQuote) {
-      setTokenPrice(marketQuote.price);
-      setLastUpdated(marketQuote.lastUpdated);
-      setIsStale(marketQuote.isStale);
-      setPriceLoading(isQuoteLoading);
-    } else {
-      if (!isQuoteLoading) {
-        setTokenPrice(FALLBACK_PRICES[token] || 0);
-        setIsStale(true);
-        setPriceLoading(false);
-      } else {
-        setPriceLoading(true);
-      }
-    }
-  }, [marketQuote, isQuoteLoading, token]);
-
   useEffect(() => {
     getFiatExchangeRate(nativeCurrency || 'USD').then(setFiatRate);
   }, [nativeCurrency]);
@@ -221,7 +203,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
     async function checkMnemonic() {
       const addr = await deriveAddressFromStoredMnemonic();
       if (isMountedRef.current) {
-        setHasMnemonic(addr !== null);
+        hasMnemonicRef.current = addr !== null;
       }
     }
 
@@ -369,11 +351,6 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
     navigation,
   ]);
 
-  const formatAddress = (addr: string) => {
-    if (!addr) return 'Not available';
-    return `${addr.slice(0, 10)}...${addr.slice(-6)}`;
-  };
-
   const handleViewOnExplorer = () => {
     void triggerLightImpactHaptic();
     if (txResult?.hash) {
@@ -497,7 +474,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
                     ? ' Get faucet funds when supported.'
                     : ' Mainnet sends are enabled via EXPO_PUBLIC_ENABLE_MAINNET_TRANSACTIONS=true.'}
                 </Text>
-                <TouchableOpacity
+                <PressableOpacity
                   onPress={handleGetTestnetETH}
                   disabled={!faucetUrl}
                   style={styles.faucetButton}
@@ -517,7 +494,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
                       style={styles.faucetLinkIcon}
                     />
                   </View>
-                </TouchableOpacity>
+                </PressableOpacity>
               </View>
             </View>
           </SovereignCard>

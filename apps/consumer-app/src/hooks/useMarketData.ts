@@ -23,7 +23,10 @@ export function useMarketData(
 ): UseMarketDataResult {
   const { throttleMs = 1000 } = options;
   const normalizedSymbols = useMemo(
-    () => Array.from(new Set(symbols.map((symbol) => symbol.trim().toUpperCase()).filter(Boolean))).sort(),
+    () => Array.from(new Set(symbols.flatMap((symbol) => {
+      const s = symbol.trim().toUpperCase();
+      return s ? [s] : [];
+    }))).sort(),
     [symbols.join('|')]
   );
 
@@ -31,10 +34,16 @@ export function useMarketData(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
-  useEffect(() => {
+
+  // When the requested symbols change, reset to fallback quotes during render
+  // (createFallbackQuoteMap is pure) instead of syncing through an effect.
+  const symbolsKey = normalizedSymbols.join('|');
+  const [prevSymbolsKey, setPrevSymbolsKey] = useState(symbolsKey);
+  if (symbolsKey !== prevSymbolsKey) {
+    setPrevSymbolsKey(symbolsKey);
     setQuotes(createFallbackQuoteMap(normalizedSymbols));
     setLastUpdated(null);
-  }, [normalizedSymbols.join('|')]);
+  }
 
   const refresh = useCallback(async () => {
     if (normalizedSymbols.length === 0) {

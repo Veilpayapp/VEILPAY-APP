@@ -39,6 +39,7 @@ export function useTransakQuote(
   const requestVersionRef = useRef(0);
 
   const requestIsReady = useMemo(() => isRequestReady(request), [request]);
+  const isActive = enabled && !!request && requestIsReady;
 
   const runRequest = useCallback(
     async (currentRequest: TransakQuoteRequest) => {
@@ -58,13 +59,23 @@ export function useTransakQuote(
     },
     [preferCache]
   );
-  useEffect(() => {
-    if (!enabled || !request || !requestIsReady) {
+  // When the quote goes inactive (disabled / no request / not ready), clear the
+  // displayed quote during render and cancel any in-flight request — avoids the
+  // stale frame an effect-based reset would produce.
+  const [prevActive, setPrevActive] = useState(isActive);
+  if (isActive !== prevActive) {
+    setPrevActive(isActive);
+    if (!isActive) {
       requestVersionRef.current += 1;
       setQuote(null);
       setIsLoading(false);
       setError(null);
       setLastUpdated(null);
+    }
+  }
+
+  useEffect(() => {
+    if (!isActive || !request) {
       return;
     }
 
@@ -75,7 +86,7 @@ export function useTransakQuote(
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [enabled, debounceMs, request, requestIsReady, runRequest]);
+  }, [isActive, debounceMs, request, runRequest]);
 
   const refresh = useCallback(async () => {
     if (!enabled || !request || !requestIsReady) {

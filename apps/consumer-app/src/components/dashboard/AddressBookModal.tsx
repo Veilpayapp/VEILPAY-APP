@@ -1,14 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  Modal,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  TextInput,
-  ScrollView,
-} from 'react-native';
+import { View, Text, Modal, StyleSheet, FlatList, TextInput, ScrollView } from 'react-native';
+import { PressableOpacity } from '../PressableOpacity';
 import Animated, {
   FadeIn,
   SlideInDown,
@@ -104,7 +96,7 @@ function ChainChip({
   const NetworkIconSVG = getNetworkIcon(chain.key);
   const accentColor = getChainColor(chain);
   return (
-    <TouchableOpacity
+    <PressableOpacity
       onPress={onPress}
       activeOpacity={0.75}
       style={[
@@ -128,7 +120,57 @@ function ChainChip({
       {selected && (
         <View style={[chipStyles.dot, { backgroundColor: accentColor }]} />
       )}
-    </TouchableOpacity>
+    </PressableOpacity>
+  );
+}
+
+const DELETING_ROW_STYLE = { opacity: 0.4 } as const;
+const DELETE_BTN_HIT_SLOP = { top: 12, bottom: 12, left: 12, right: 12 } as const;
+
+interface LedgerRowProps {
+  item: { id: string; name: string; address: string; chain: string };
+  isDeleting: boolean;
+  colors: any;
+  styles: any;
+  onSelect: (address: string) => void;
+  onClose: () => void;
+  onDelete: (id: string) => void;
+}
+
+function LedgerRow({ item, isDeleting, colors, styles, onSelect, onClose, onDelete }: LedgerRowProps) {
+  const handlePress = useCallback(() => {
+    onSelect(item.address);
+    onClose();
+  }, [onSelect, onClose, item.address]);
+
+  const handleDeletePress = useCallback(() => {
+    onDelete(item.id);
+  }, [onDelete, item.id]);
+
+  return (
+    <Animated.View style={[styles.ledgerRow, isDeleting && DELETING_ROW_STYLE]}>
+      <PressableOpacity style={styles.ledgerContent} activeOpacity={0.7} onPress={handlePress}>
+        <View style={styles.ledgerHeader}>
+          <Text style={styles.ledgerName}>{item.name.toUpperCase()}</Text>
+          <ChainBlock chainKey={item.chain} colors={colors} />
+        </View>
+
+        <View style={styles.ledgerFooter}>
+          <Text style={styles.ledgerAddress} numberOfLines={1} ellipsizeMode="middle">
+            {item.address}
+          </Text>
+        </View>
+      </PressableOpacity>
+
+      <PressableOpacity
+        style={styles.ledgerDeleteBtn}
+        onPress={handleDeletePress}
+        disabled={isDeleting}
+        hitSlop={DELETE_BTN_HIT_SLOP}
+      >
+        <Text style={styles.ledgerDeleteText}>✕</Text>
+      </PressableOpacity>
+    </Animated.View>
   );
 }
 
@@ -223,6 +265,21 @@ export function AddressBookModal({
     [removeAddress]
   );
 
+  const renderLedgerRow = useCallback(
+    ({ item }: { item: (typeof filteredAddresses)[number] }) => (
+      <LedgerRow
+        item={item}
+        isDeleting={deletingId === item.id}
+        colors={colors}
+        styles={styles}
+        onSelect={onSelect}
+        onClose={onClose}
+        onDelete={handleDelete}
+      />
+    ),
+    [deletingId, colors, styles, onSelect, onClose, handleDelete]
+  );
+
   if (!visible) return null;
 
   const canSave = newName.trim().length > 0 && newAddress.trim().length > 0;
@@ -235,7 +292,7 @@ export function AddressBookModal({
         style={styles.backdrop}
       >
         {/* Dismiss tap area */}
-        <TouchableOpacity
+        <PressableOpacity
           style={StyleSheet.absoluteFill}
           activeOpacity={1}
           onPress={onClose}
@@ -258,12 +315,12 @@ export function AddressBookModal({
               <Text style={styles.title}>Address Book</Text>
             </View>
             {!isAdding && (
-              <TouchableOpacity onPress={handleOpenAdd} style={styles.addBtn} activeOpacity={0.7}>
+              <PressableOpacity onPress={handleOpenAdd} style={styles.addBtn} activeOpacity={0.7}>
                 <View style={styles.addBtnInner}>
                   <Icon name="plus" size={16} color={colors.bgPrimary} />
                   <Text style={styles.addBtnText}>ADD</Text>
                 </View>
-              </TouchableOpacity>
+              </PressableOpacity>
             )}
           </View>
 
@@ -337,10 +394,10 @@ export function AddressBookModal({
 
               {/* Action row */}
               <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.cancelBtn} onPress={handleCancelAdd} activeOpacity={0.7}>
+                <PressableOpacity style={styles.cancelBtn} onPress={handleCancelAdd} activeOpacity={0.7}>
                   <Text style={[styles.cancelText, { color: colors.textMuted }]}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
+                </PressableOpacity>
+                <PressableOpacity
                   style={[styles.saveBtn, { backgroundColor: canSave ? colors.accent : colors.bgContainerHigh }]}
                   onPress={handleSave}
                   disabled={!canSave}
@@ -350,7 +407,7 @@ export function AddressBookModal({
                   <Text style={[styles.saveText, { color: canSave ? colors.bgPrimary : colors.textFaint }]}>
                     Save Contact
                   </Text>
-                </TouchableOpacity>
+                </PressableOpacity>
               </View>
             </ScrollView>
           ) : (
@@ -369,9 +426,9 @@ export function AddressBookModal({
                     selectionColor={colors.accent}
                   />
                   {searchQuery.length > 0 && (
-                    <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <PressableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                       <Icon name="close" size={14} color={colors.textFaint} />
-                    </TouchableOpacity>
+                    </PressableOpacity>
                   )}
                 </View>
               )}
@@ -392,43 +449,8 @@ export function AddressBookModal({
                   keyExtractor={(item) => item.id}
                   contentContainerStyle={styles.listContent}
                   showsVerticalScrollIndicator={false}
-                  renderItem={({ item }) => {
-                    const isDeleting = deletingId === item.id;
-                    return (
-                      <Animated.View
-                        style={[styles.ledgerRow, isDeleting && { opacity: 0.4 }]}
-                      >
-                        <TouchableOpacity
-                          style={styles.ledgerContent}
-                          activeOpacity={0.7}
-                          onPress={() => {
-                            onSelect(item.address);
-                            onClose();
-                          }}
-                        >
-                          <View style={styles.ledgerHeader}>
-                            <Text style={styles.ledgerName}>{item.name.toUpperCase()}</Text>
-                            <ChainBlock chainKey={item.chain} colors={colors} />
-                          </View>
-                          
-                          <View style={styles.ledgerFooter}>
-                            <Text style={styles.ledgerAddress} numberOfLines={1} ellipsizeMode="middle">
-                              {item.address}
-                            </Text>
-                          </View>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          style={styles.ledgerDeleteBtn}
-                          onPress={() => handleDelete(item.id)}
-                          disabled={isDeleting}
-                          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                        >
-                          <Text style={styles.ledgerDeleteText}>✕</Text>
-                        </TouchableOpacity>
-                      </Animated.View>
-                    );
-                  }}
+                  extraData={deletingId}
+                  renderItem={renderLedgerRow}
                 />
               )}
             </>

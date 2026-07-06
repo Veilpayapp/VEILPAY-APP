@@ -57,6 +57,10 @@ export function useDepositPersistenceRecovery(): void {
         usePendingCommitmentQueue.getState().markAttempt(record.commitmentHash);
 
         try {
+          // Process the queue one record at a time: each iteration mutates the
+          // shared pending-commitment store (markAttempt/dequeue) and honours the
+          // `cancelled` flag, so parallelizing would race on that store.
+          // eslint-disable-next-line react-doctor/async-await-in-loop
           await saveCommitmentRecord(record);
           if (cancelled) {
             return;

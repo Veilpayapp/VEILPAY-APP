@@ -236,7 +236,10 @@ export async function getStoredMnemonic(): Promise<string[] | null> {
       'getStoredMnemonic'
     );
     if (!mnemonicPhrase) return null;
-    const words = mnemonicPhrase.split(' ').map((word) => word.trim()).filter(Boolean);
+    const words = mnemonicPhrase.split(' ').flatMap((word) => {
+      const w = word.trim();
+      return w ? [w] : [];
+    });
     if (words.length !== 12 && words.length !== 24) return null;
     return words;
   } catch (error: unknown) {

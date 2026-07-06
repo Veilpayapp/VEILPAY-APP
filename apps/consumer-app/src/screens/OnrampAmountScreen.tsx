@@ -1,11 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,  TextInput,  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-} from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, StatusBar } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
@@ -16,7 +11,8 @@ import { Icon } from '../components/Icon';
 
 import { useWalletStore } from '../stores/walletStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { CurrencySelectorModal, CURRENCIES } from '../components/CurrencySelectorModal';
+import { CurrencySelectorModal } from '../components/CurrencySelectorModal';
+import { CURRENCIES } from '../constants/currencies';
 import { SCREENS } from '../constants/screens';
 import { triggerLightImpactHaptic } from '../utils/haptics';
 import { getMinDepositAmount, type FiatCurrency } from '../utils/transak';
@@ -79,16 +75,16 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
     return tokens;
   }, [activeChain]);
 
-  const [selectedToken, setSelectedToken] = useState<string>(
+  // User's explicit token pick (may become invalid when the chain changes).
+  const [tokenSelection, setSelectedToken] = useState<string>(
     activeChain?.nativeToken.symbol ?? 'ETH',
   );
-
-  // Reset token selection when chain changes
-  useEffect(() => {
-    if (activeChain && !availableTokens.includes(selectedToken)) {
-      setSelectedToken(activeChain.nativeToken.symbol);
-    }
-  }, [activeChain, availableTokens, selectedToken]);
+  // Effective token derived during render: fall back to the chain's native token
+  // when the current pick isn't offered on the active chain (no effect / extra render needed).
+  const selectedToken =
+    activeChain && !availableTokens.includes(tokenSelection)
+      ? activeChain.nativeToken.symbol
+      : tokenSelection;
 
   const currencyObj = useMemo(() => {
     return CURRENCIES.find(c => c.id === nativeCurrency) || CURRENCIES[0];
@@ -125,10 +121,10 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
       <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.inputSection}>
-          <TouchableOpacity onPress={() => setShowCurrencySelector(true)} style={styles.currencyToggleBtn}>
+          <PressableOpacity onPress={() => setShowCurrencySelector(true)} style={styles.currencyToggleBtn}>
             <Text style={styles.label}>AMOUNT IN {currencyObj.id}</Text>
             <Icon name="chevron-down" size={14} color={colors.textSecondary} />
-          </TouchableOpacity>
+          </PressableOpacity>
           
           <View style={styles.amountInputRow}>
             <Text style={styles.currencyPrefix}>{currencyObj.symbol}</Text>
@@ -145,7 +141,7 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
           
           <View style={styles.quickAmountRow}>
             {quickAmounts.map((val) => (
-              <TouchableOpacity
+              <PressableOpacity
                 key={val}
                 style={[styles.quickAmountBtn, amount === val && styles.quickAmountBtnActive]}
                 onPress={() => handleQuickAmount(val)}
@@ -153,7 +149,7 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
                 <Text style={[styles.quickAmountText, amount === val && styles.quickAmountTextActive]}>
                   {currencyObj.symbol}{parseInt(val).toLocaleString('en-US')}
                 </Text>
-              </TouchableOpacity>
+              </PressableOpacity>
             ))}
           </View>
         </View>
@@ -163,7 +159,7 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
             <Text style={styles.label}>RECEIVE TOKEN</Text>
             <View style={styles.tokenRow}>
               {availableTokens.map((token) => (
-                <TouchableOpacity
+                <PressableOpacity
                   key={token}
                   style={[styles.tokenBtn, selectedToken === token && styles.tokenBtnActive]}
                   onPress={() => {
@@ -174,7 +170,7 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
                   <Text style={[styles.tokenText, selectedToken === token && styles.tokenTextActive]}>
                     {token}
                   </Text>
-                </TouchableOpacity>
+                </PressableOpacity>
               ))}
             </View>
           </View>

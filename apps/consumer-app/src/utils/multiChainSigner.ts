@@ -115,8 +115,11 @@ async function sendSolanaTransaction(
   ethPrice?: number
 ): Promise<ChainSignerResult> {
   const rpcUrl = getRpcUrl(chainKey);
-  const { PublicKey, Transaction, SystemProgram, Connection, Keypair } = await getSolanaWeb3();
-  const seed = await mnemonicToSeed(mnemonicWords.join(' '));
+  // These two are independent — load the web3 lib and derive the seed in parallel.
+  const [{ PublicKey, Transaction, SystemProgram, Connection, Keypair }, seed] = await Promise.all([
+    getSolanaWeb3(),
+    mnemonicToSeed(mnemonicWords.join(' ')),
+  ]);
   const derivedSeed = derivePath("m/44'/501'/0'/0'", Buffer.from(seed).toString('hex')).key;
   const solanaKeypair = Keypair.fromSeed(derivedSeed);
 

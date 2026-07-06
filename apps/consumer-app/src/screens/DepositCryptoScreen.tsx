@@ -1,11 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,  TextInput,  TouchableOpacity,
-  View,
-} from "react-native";
+import { ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -56,7 +51,9 @@ type DepositCryptoRouteProp = RouteProp<RootStackParamList, "DepositCrypto">;
 
 interface DepositCryptoScreenProps {
   navigation: DepositCryptoScreenNavigationProp;
-  route: DepositCryptoRouteProp;}export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
+  route: DepositCryptoRouteProp;
+}
+export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const { address, activeChain } = useWalletStore(
@@ -66,10 +63,20 @@ interface DepositCryptoScreenProps {
     }))
   );
   const [fiatAmount, setFiatAmount] = useState("100");
-  const [selectedCurrency, setSelectedCurrency] = useState<FiatCurrency>("USD");  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodId>(
+  const [selectedCurrency, setSelectedCurrency] = useState<FiatCurrency>("USD");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethodId>(
     "credit_debit_card"
-  );  const [selectedNetwork, setSelectedNetwork] = useState<string>(activeChain?.key || "ethereum");
+  );
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoToken>(CRYPTO_TOKENS[0]);
+  // Single-pass filter (avoids .filter().map() double iteration in render).
+  const activeGroupTokens = useMemo(() => {
+    const groupKey = selectedCrypto.group.toLowerCase();
+    const out: CryptoToken[] = [];
+    for (const token of CRYPTO_TOKENS) {
+      if (token.group.toLowerCase() === groupKey) out.push(token);
+    }
+    return out;
+  }, [selectedCrypto.group]);
   const [inputError, setInputError] = useState<string | null>(null);
   const toast = useToast();
   const { authenticate } = useBiometrics();
@@ -253,10 +260,12 @@ interface DepositCryptoScreenProps {
     });
 
     navigation.navigate(SCREENS.TRANSAK_WEBVIEW, {
-      url,      title: "BUY CRYPTO",
+      url,
+      title: "BUY CRYPTO",
       flow: "buy",
     });
-  }, [    address,
+  }, [
+    address,
     authenticate,
     navigation,
     parsedAmount,
@@ -302,7 +311,7 @@ interface DepositCryptoScreenProps {
 
           <View style={styles.quickRow}>
             {QUICK_AMOUNTS.map((amount) => (
-              <TouchableOpacity
+              <PressableOpacity
                 key={amount}
                 onPress={() => handleQuickAmount(amount)}
                 style={[
@@ -317,13 +326,13 @@ interface DepositCryptoScreenProps {
                 ]}>
                   {currencySymbol}{amount}
                 </Text>
-              </TouchableOpacity>
+              </PressableOpacity>
             ))}
           </View>
 
           <View style={styles.currencyRow}>
             {FIAT_CURRENCIES.map((currency) => (
-              <TouchableOpacity
+              <PressableOpacity
                 key={currency}
                 onPress={() => {
                   setSelectedCurrency(currency);
@@ -340,7 +349,7 @@ interface DepositCryptoScreenProps {
                 ]}>
                   {currency}
                 </Text>
-              </TouchableOpacity>
+              </PressableOpacity>
             ))}
           </View>
           <Text style={styles.helperText}>
@@ -372,15 +381,17 @@ interface DepositCryptoScreenProps {
           <Text style={styles.label}>CRYPTO TOKEN</Text>
           
           {/* Network Tab Bar */}
-          <View style={styles.networkTabsContainer}>            <ScrollView 
+          <View style={styles.networkTabsContainer}>
+            <ScrollView 
               horizontal 
               showsHorizontalScrollIndicator={false} 
               contentContainerStyle={styles.networkTabsScroll}
-            >              {getTokenGroups(CRYPTO_TOKENS).map((group) => (
-                <TouchableOpacity
+            >
+              {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- short static horizontal token-group tab bar; virtualization unwarranted */}
+              {getTokenGroups(CRYPTO_TOKENS).map((group) => (
+                <PressableOpacity
                   key={group}
                   onPress={() => {
-                    setSelectedNetwork(group.toLowerCase());
                     triggerLightImpactHaptic();
                     // Auto-select first token of this group if current selection is not in this group
                     if (selectedCrypto.group.toLowerCase() !== group.toLowerCase()) {
@@ -399,16 +410,18 @@ interface DepositCryptoScreenProps {
                   {selectedCrypto.group.toLowerCase() === group.toLowerCase() && (
                     <View style={styles.networkTabIndicator} />
                   )}
-                </TouchableOpacity>
+                </PressableOpacity>
               ))}
             </ScrollView>
-            <View style={styles.scrollIndicatorHint}>              <Icon name="chevron-right" size={14} color={colors.textMuted} />
+            <View style={styles.scrollIndicatorHint}>
+              <Icon name="chevron-right" size={14} color={colors.textMuted} />
             </View>
           </View>
 
           {/* Tokens Grid for active network */}
-          <View style={styles.tokenPillsContainer}>            {CRYPTO_TOKENS.filter((t) => t.group.toLowerCase() === selectedCrypto.group.toLowerCase()).map((token, idx) => (
-              <TouchableOpacity
+          <View style={styles.tokenPillsContainer}>
+            {activeGroupTokens.map((token, idx) => (
+              <PressableOpacity
                 key={`${token.symbol}-${token.network}-${idx}`}
                 onPress={() => {
                   setSelectedCrypto(token);
@@ -425,7 +438,7 @@ interface DepositCryptoScreenProps {
                 ]}>
                   {token.name}
                 </Text>
-              </TouchableOpacity>
+              </PressableOpacity>
             ))}
           </View>
         </SovereignCard>

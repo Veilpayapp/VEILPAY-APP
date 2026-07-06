@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { PressableOpacity } from './PressableOpacity';
 import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 
 // ─── SelectablePill ──────────────────────────────────────────────────────────
@@ -15,7 +16,7 @@ export function SelectablePill({ label, active, onPress, testID }: SelectablePil
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   return (
-    <TouchableOpacity
+    <PressableOpacity
       testID={testID}
       onPress={onPress}
       accessibilityRole="button"
@@ -23,7 +24,7 @@ export function SelectablePill({ label, active, onPress, testID }: SelectablePil
       style={[styles.pill, active && styles.pillActive]}
     >
       <Text style={[styles.pillText, active && styles.pillTextActive]}>{label}</Text>
-    </TouchableOpacity>
+    </PressableOpacity>
   );
 }
 
@@ -39,13 +40,13 @@ export function SelectableCard({ children, active, onPress }: SelectableCardProp
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   return (
-    <TouchableOpacity
+    <PressableOpacity
       onPress={onPress}
       activeOpacity={0.85}
       style={[styles.choiceCard, active && styles.choiceCardActive]}
     >
       {children}
-    </TouchableOpacity>
+    </PressableOpacity>
   );
 }
 

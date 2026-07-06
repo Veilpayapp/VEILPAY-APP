@@ -409,10 +409,13 @@ export async function fetchERC20Balances(address: string, chainKey: string): Pro
         const metaDataBatch = await metaResponse.json() as any[];
         
         const dynamicResults: TokenBalance[] = [];
-        
+
+        // Index metadata by its JSON-RPC id once for O(1) lookups in the loop.
+        const metaById = new Map<number, any>(metaDataBatch.map((m: any) => [m.id, m]));
+
         for (let i = 0; i < nonZeroTokens.length; i++) {
           const t = nonZeroTokens[i];
-          const metaItem = metaDataBatch.find((m: any) => m.id === i + 2);
+          const metaItem = metaById.get(i + 2);
           const meta = metaItem?.result;
           
           if (!meta || typeof meta.decimals !== 'number') continue;

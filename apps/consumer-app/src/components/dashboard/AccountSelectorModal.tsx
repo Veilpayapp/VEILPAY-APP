@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TouchableWithoutFeedback, TextInput } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, FlatList, Modal, TextInput } from 'react-native';
 import Animated, { FadeIn, FadeInDown, SlideInDown } from 'react-native-reanimated';
 import { useTheme, useStyles, typography, spacing } from '../../styles/design-tokens';
 import { Icon } from '../Icon';
@@ -58,6 +58,84 @@ export function AccountSelectorModal({ visible, onClose }: AccountSelectorModalP
     setAccountToDelete(accountId);
   };
 
+  const renderAccount = useCallback(
+    ({ item: account, index }: { item: { id: string; name: string; index?: number }; index: number }) => {
+      const isActive = account.id === (activeAccountId || '0');
+      return (
+        <Animated.View entering={FadeInDown.delay(index * 100).duration(400)}>
+          <Pressable
+            style={({ pressed }) => [styles.accountRow, isActive && styles.accountRowActive, pressed && { opacity: 0.6 }]}
+            onPress={() => handleSelectAccount(account.id)}
+            disabled={isConnecting}
+          >
+            <View style={[styles.accountIconContainer, isActive && styles.accountIconContainerActive]}>
+              <Icon name="user" size={20} color={isActive ? colors.textOnPrimary : colors.textPrimary} />
+            </View>
+
+            <View style={styles.accountInfo}>
+              {editingAccountId === account.id ? (
+                <TextInput
+                  style={styles.accountNameInput}
+                  value={editNameValue}
+                  onChangeText={setEditNameValue}
+                  onBlur={handleEditSave}
+                  onSubmitEditing={handleEditSave}
+                  autoFocus
+                  selectTextOnFocus
+                />
+              ) : (
+                <Text style={[styles.accountName, isActive && styles.accountNameActive]}>
+                  {account.name.toUpperCase()}
+                </Text>
+              )}
+              {isActive && (
+                <Text style={styles.activeTag}>Current</Text>
+              )}
+            </View>
+
+            {isActive ? (
+              <View style={styles.activeActions}>
+                <Pressable onPress={() => { setEditingAccountId(account.id); setEditNameValue(account.name); }} style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.6 }]}>
+                  <Icon name="edit" size={18} color={colors.textPrimary} />
+                </Pressable>
+                <View style={styles.checkmarkBadge}>
+                  <Icon name="success" size={14} color={colors.textOnPrimary} />
+                </View>
+              </View>
+            ) : accountToDelete === account.id ? (
+              <View style={styles.inlineConfirmActions}>
+                <Pressable onPress={() => setAccountToDelete(null)} style={({ pressed }) => [styles.inlineActionBtn, pressed && { opacity: 0.6 }]}>
+                  <Text style={styles.inlineCancelText}>CANCEL</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    deleteAccount(account.id);
+                    setAccountToDelete(null);
+                  }}
+                  style={({ pressed }) => [styles.inlineConfirmBtn, pressed && { opacity: 0.6 }]}
+                >
+                  <Text style={styles.inlineConfirmText}>DELETE</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <View style={styles.inactiveActions}>
+                <Pressable onPress={() => { setEditingAccountId(account.id); setEditNameValue(account.name); }} style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.6 }]}>
+                  <Icon name="edit" size={18} color={colors.textSecondary} />
+                </Pressable>
+                {accounts.length > 1 && (
+                  <Pressable onPress={() => handleDeleteRequest(account.id)} style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.6 }]}>
+                    <Icon name="trash" size={18} color={colors.textSecondary} />
+                  </Pressable>
+                )}
+              </View>
+            )}
+          </Pressable>
+        </Animated.View>
+      );
+    },
+    [activeAccountId, isConnecting, editingAccountId, editNameValue, accountToDelete, accounts.length, colors, styles]
+  );
+
   if (!visible) return null;
 
   return (
@@ -67,97 +145,28 @@ export function AccountSelectorModal({ visible, onClose }: AccountSelectorModalP
       animationType="none"
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <Pressable onPress={onClose}>
         <Animated.View entering={FadeIn.duration(200)} style={styles.overlay}>
-          <TouchableWithoutFeedback>
+          <Pressable>
             <Animated.View entering={SlideInDown.duration(300).springify()} style={styles.modalContainer}>
               <View style={styles.header}>
                 <View>
                   <Text style={styles.title}>[ LEDGER_ACCOUNTS ]</Text>
                   <Text style={styles.subtitle}>SWITCH_OR_CREATE</Text>
                 </View>
-                <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+                <Pressable onPress={onClose} style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}>
                   <Icon name="close" size={20} color={colors.textMuted} />
-                </TouchableOpacity>
+                </Pressable>
               </View>
 
-              <ScrollView style={styles.accountList} showsVerticalScrollIndicator={false}>
-                {accounts.map((account, index) => {
-                  const isActive = account.id === (activeAccountId || '0');
-                  return (
-                    <Animated.View key={account.id} entering={FadeInDown.delay(index * 100).duration(400)}>
-                      <TouchableOpacity
-                        style={[styles.accountRow, isActive && styles.accountRowActive]}
-                        onPress={() => handleSelectAccount(account.id)}
-                        disabled={isConnecting}
-                        activeOpacity={0.7}
-                      >
-                        <View style={[styles.accountIconContainer, isActive && styles.accountIconContainerActive]}>
-                          <Icon name="user" size={20} color={isActive ? colors.textOnPrimary : colors.textPrimary} />
-                        </View>
-                        
-                        <View style={styles.accountInfo}>
-                          {editingAccountId === account.id ? (
-                            <TextInput
-                              style={styles.accountNameInput}
-                              value={editNameValue}
-                              onChangeText={setEditNameValue}
-                              onBlur={handleEditSave}
-                              onSubmitEditing={handleEditSave}
-                              autoFocus
-                              selectTextOnFocus
-                            />
-                          ) : (
-                            <Text style={[styles.accountName, isActive && styles.accountNameActive]}>
-                              {account.name.toUpperCase()}
-                            </Text>
-                          )}
-                          {isActive && (
-                            <Text style={styles.activeTag}>Current</Text>
-                          )}
-                        </View>
-
-                        {isActive ? (
-                          <View style={styles.activeActions}>
-                            <TouchableOpacity onPress={() => { setEditingAccountId(account.id); setEditNameValue(account.name); }} style={styles.actionBtn}>
-                              <Icon name="edit" size={18} color={colors.textPrimary} />
-                            </TouchableOpacity>
-                            <View style={styles.checkmarkBadge}>
-                              <Icon name="success" size={14} color={colors.textOnPrimary} />
-                            </View>
-                          </View>
-                        ) : accountToDelete === account.id ? (
-                          <View style={styles.inlineConfirmActions}>
-                            <TouchableOpacity onPress={() => setAccountToDelete(null)} style={styles.inlineActionBtn}>
-                              <Text style={styles.inlineCancelText}>CANCEL</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity 
-                              onPress={() => {
-                                deleteAccount(account.id);
-                                setAccountToDelete(null);
-                              }} 
-                              style={styles.inlineConfirmBtn}
-                            >
-                              <Text style={styles.inlineConfirmText}>DELETE</Text>
-                            </TouchableOpacity>
-                          </View>
-                        ) : (
-                          <View style={styles.inactiveActions}>
-                            <TouchableOpacity onPress={() => { setEditingAccountId(account.id); setEditNameValue(account.name); }} style={styles.actionBtn}>
-                              <Icon name="edit" size={18} color={colors.textSecondary} />
-                            </TouchableOpacity>
-                            {accounts.length > 1 && (
-                              <TouchableOpacity onPress={() => handleDeleteRequest(account.id)} style={styles.actionBtn}>
-                                <Icon name="trash" size={18} color={colors.textSecondary} />
-                              </TouchableOpacity>
-                            )}
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    </Animated.View>
-                  );
-                })}
-              </ScrollView>
+              <FlatList
+                style={styles.accountList}
+                data={accounts}
+                keyExtractor={(item) => item.id}
+                renderItem={renderAccount}
+                showsVerticalScrollIndicator={false}
+                extraData={`${activeAccountId}|${editingAccountId}|${editNameValue}|${accountToDelete}|${isConnecting}`}
+              />
               
               <View style={styles.footer}>
                 <SovereignButton
@@ -168,9 +177,9 @@ export function AccountSelectorModal({ visible, onClose }: AccountSelectorModalP
                 />
               </View>
             </Animated.View>
-          </TouchableWithoutFeedback>
+          </Pressable>
         </Animated.View>
-      </TouchableWithoutFeedback>
+      </Pressable>
     </Modal>
   );
 }

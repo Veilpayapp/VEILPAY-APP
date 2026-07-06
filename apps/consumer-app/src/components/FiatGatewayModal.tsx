@@ -1,4 +1,5 @@
-import React from 'react';import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';import { Modal, StyleSheet, Text, View } from 'react-native';
+import { PressableOpacity } from './PressableOpacity';
 import { SovereignButton } from './SovereignButton';
 import { SovereignCard } from './SovereignCard';
 import { Icon } from './Icon';
@@ -20,7 +21,7 @@ export function FiatGatewayModal({ visible, onClose, onBuy, onSell, currentCurre
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <TouchableOpacity
+        <PressableOpacity
           style={StyleSheet.absoluteFill}
           onPress={onClose}
           accessibilityRole="button"
@@ -38,17 +39,17 @@ export function FiatGatewayModal({ visible, onClose, onBuy, onSell, currentCurre
 
             <View style={{ flexDirection: 'row', gap: 8 }}>
               {onOpenCurrencySelector && (
-                <TouchableOpacity onPress={onOpenCurrencySelector} style={styles.currencyButton}>
+                <PressableOpacity onPress={onOpenCurrencySelector} style={styles.currencyButton}>
                   <Text style={styles.currencyButtonText}>{currentCurrency}</Text>
                   <Icon name="chevron-down" size={16} color={colors.accent} />
-                </TouchableOpacity>
+                </PressableOpacity>
               )}
-              <TouchableOpacity
+              <PressableOpacity
                 onPress={onClose}
                 style={styles.closeButton}
               >
                 <Icon name="close" size={20} color={colors.textPrimary} />
-              </TouchableOpacity>
+              </PressableOpacity>
             </View>
           </View>
 

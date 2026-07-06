@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
   ActivityIndicator,
 } from 'react-native';
 import { useBiometrics, type BiometricContext } from '../hooks/useBiometrics';
@@ -58,7 +58,9 @@ export function BiometricPrompt({
   }, [authenticate, context, onSuccess, onCancel, onFail]);
   // Auto-trigger on mount once availability is confirmed
   useEffect(() => {
+    // eslint-disable-next-line react-doctor/no-event-handler -- reactively starts auth when the async isAvailable flips true (no user event exists to hang this off of).
     if (isAvailable && phase === 'waiting') {
+      // eslint-disable-next-line react-doctor/no-pass-data-to-parent -- this component's job is to run the auth flow and report its result to the parent via callbacks.
       triggerAuth();
     }
   }, [isAvailable, phase, triggerAuth]);
@@ -75,16 +77,15 @@ export function BiometricPrompt({
           </Text>
         </View>
         {onCancel && (
-          <TouchableOpacity
-            style={styles.primaryButton}
+          <Pressable
+            style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.6 }]}
             onPress={onCancel}
-            activeOpacity={0.85}
             accessibilityRole="button"
             accessibilityLabel="Continue without biometrics"
             accessibilityHint="Proceeds to the app without biometric verification"
           >
             <Text style={styles.primaryButtonText}>CONTINUE</Text>
-          </TouchableOpacity>
+          </Pressable>
         )}
       </View>
     );
@@ -128,25 +129,23 @@ export function BiometricPrompt({
             </Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.primaryButton}
+        <Pressable
+          style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.6 }]}
           onPress={triggerAuth}
-          activeOpacity={0.85}
           accessibilityRole="button"
           accessibilityLabel="Try again"
         >
           <Text style={styles.primaryButtonText}>TRY AGAIN</Text>
-        </TouchableOpacity>
+        </Pressable>
         {onCancel && (
-          <TouchableOpacity
-            style={styles.ghostButton}
+          <Pressable
+            style={({ pressed }) => [styles.ghostButton, pressed && { opacity: 0.6 }]}
             onPress={onCancel}
-            activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Cancel"
           >
             <Text style={styles.ghostButtonText}>CANCEL</Text>
-          </TouchableOpacity>
+          </Pressable>
         )}
       </View>
     );
@@ -162,25 +161,23 @@ export function BiometricPrompt({
           Tap below to try again.
         </Text>
       </View>
-      <TouchableOpacity
-        style={styles.primaryButton}
+      <Pressable
+        style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.6 }]}
         onPress={triggerAuth}
-        activeOpacity={0.85}
         accessibilityRole="button"
         accessibilityLabel="Authenticate again"
       >
         <Text style={styles.primaryButtonText}>AUTHENTICATE</Text>
-      </TouchableOpacity>
+      </Pressable>
       {onCancel && (
-        <TouchableOpacity
-          style={styles.ghostButton}
+        <Pressable
+          style={({ pressed }) => [styles.ghostButton, pressed && { opacity: 0.6 }]}
           onPress={onCancel}
-          activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="Cancel"
         >
           <Text style={styles.ghostButtonText}>CANCEL</Text>
-        </TouchableOpacity>
+        </Pressable>
       )}
     </View>
   );

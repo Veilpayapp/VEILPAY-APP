@@ -11,7 +11,7 @@
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 
 // Animation durations (matching design-tokens.ts)
-export const ANIMATION = {
+const ANIMATION = {
   fast: 150,
   normal: 250,
   slow: 350,
@@ -95,7 +95,7 @@ export const transitionPresets = {
 };
 
 // Screen-specific animation assignments
-export const screenTransitions: Record<string, NativeStackNavigationOptions> = {
+const screenTransitions: Record<string, NativeStackNavigationOptions> = {
   // Onboarding Flow - Sequential push
   Onboarding: {
     ...transitionPresets.fade,
@@ -212,7 +212,7 @@ export const screenTransitions: Record<string, NativeStackNavigationOptions> = {
 };
 
 // Animation timing functions
-export const timingFunctions = {
+const timingFunctions = {
   /**
    * Ease out cubic - decelerate at end
    * Best for: Elements entering the screen
@@ -239,7 +239,7 @@ export const timingFunctions = {
 };
 
 // Shared element transition configuration
-export const sharedElementConfig = {
+const sharedElementConfig = {
   /**
    * Transaction card → Details transition
    */
@@ -264,12 +264,3 @@ export const sharedElementConfig = {
 export function getScreenTransition(screenName: string): NativeStackNavigationOptions {
   return screenTransitions[screenName] || transitionPresets.push;
 }
-
-export default {
-  ANIMATION,
-  transitionPresets,
-  screenTransitions,
-  timingFunctions,
-  sharedElementConfig,
-  getScreenTransition,
-};

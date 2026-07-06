@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import { PressableOpacity } from './PressableOpacity';
 import { Swipeable } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { useTheme, useStyles, typography, type Colors } from '../styles/design-tokens';
@@ -48,17 +49,17 @@ function TransactionItemComponent({ item, onPress }: TransactionItemProps) {
 
   const renderRightActions = () => {
     return (
-      <TouchableOpacity 
+      <PressableOpacity 
         style={[styles.quickAction, { backgroundColor: colors.accent }]} 
         onPress={() => onPress(item)}
       >
         <Icon name="arrow-right" size={24} color={colors.bgPrimary} />
-      </TouchableOpacity>
+      </PressableOpacity>
     );
   };
 
   return (
-    <TouchableOpacity
+    <PressableOpacity
       style={styles.transactionItem}
       onPress={() => onPress(item)}
       activeOpacity={0.7}
@@ -110,7 +111,7 @@ function TransactionItemComponent({ item, onPress }: TransactionItemProps) {
           </View>
         </SovereignCard>
       </Swipeable>
-    </TouchableOpacity>
+    </PressableOpacity>
   );
 }
 

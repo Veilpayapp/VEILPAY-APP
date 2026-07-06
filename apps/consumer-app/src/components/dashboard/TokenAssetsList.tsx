@@ -1,5 +1,6 @@
 import React, { memo, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableOpacity } from '../PressableOpacity';
 import { useTheme, useStyles, typography } from '../../styles/design-tokens';
 import { SovereignCard } from '../SovereignCard';
 import { TokenSkeleton } from '../Skeleton';
@@ -40,19 +41,19 @@ const TokenAssetItemComponent = ({ asset, price, onSend, onPress, fiatRate, nati
 
   const renderRightActions = () => {
     return (
-      <TouchableOpacity 
+      <PressableOpacity 
         style={[styles.quickAction, { backgroundColor: colors.accent }]} 
         onPress={() => onSend(symbol)}
       >
         <Icon name="arrow-up" size={24} color={colors.bgPrimary} />
-      </TouchableOpacity>
+      </PressableOpacity>
     );
   };
 
   return (
     <View style={styles.itemWrapper}>
       <Swipeable renderRightActions={renderRightActions} containerStyle={styles.swipeableContainer}>
-        <TouchableOpacity activeOpacity={0.7} onPress={() => onPress(symbol)}>
+        <PressableOpacity activeOpacity={0.7} onPress={() => onPress(symbol)}>
           <SovereignCard backgroundColor={colors.bgPrimary} padding={0} style={{ borderRadius: 0, borderWidth: 1, borderColor: colors.textPrimary }}>
             <View style={styles.row}>
               <View style={styles.left}>
@@ -70,7 +71,7 @@ const TokenAssetItemComponent = ({ asset, price, onSend, onPress, fiatRate, nati
               </View>
             </View>
           </SovereignCard>
-        </TouchableOpacity>
+        </PressableOpacity>
       </Swipeable>
     </View>
   );
@@ -146,12 +147,13 @@ function TokenAssetsListComponent({ isLoading, nativeBalance, tokenBalances, onS
       </View>
 
       <View style={styles.list}>
-        {assets.map((asset, idx) => {
+        {assets.map((asset) => {
           const symbol = asset.symbol || 'UNK';
           const price = marketQuotes[symbol]?.price || 0;
+          const key = 'tokenAddress' in asset ? `token-${asset.tokenAddress}` : `native-${symbol}`;
           return (
             <TokenAssetItem
-              key={`asset-${symbol}-${idx}`}
+              key={key}
               asset={asset}
               price={price}
               onSend={onSend}

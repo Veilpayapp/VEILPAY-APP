@@ -79,4 +79,4 @@ export const RELEASE_NOTES: ReleaseNote[] = [
 ];
 
 /** The most recent release — what the "What's New" modal highlights by default. */
-export const LATEST_RELEASE: ReleaseNote = RELEASE_NOTES[0];
+const LATEST_RELEASE: ReleaseNote = RELEASE_NOTES[0];

@@ -4,6 +4,8 @@ import { typography, useTheme, useStyles, type Colors } from "../styles/design-t
 import { triggerLightImpactHaptic } from "../utils/haptics";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, runOnJS } from "react-native-reanimated";
 
+const springConfig = { mass: 1, stiffness: 400, damping: 25 };
+
 interface SovereignButtonProps {
   title?: string;
   onPress?: () => void;
@@ -55,8 +57,6 @@ export function SovereignButton({
     if (variant === "outline" || variant === "secondary") return colors.textPrimary;
     return colors.textPrimary;
   };
-
-  const springConfig = { mass: 1, stiffness: 400, damping: 25 };
 
   const animatedStyle = useAnimatedStyle(() => {
     const targetScale = isPressed.value ? 0.95 : 1;

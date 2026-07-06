@@ -5,15 +5,8 @@
  */
 
 import React, { useEffect, useMemo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  Linking,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, StatusBar, Linking } from "react-native";
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 import { useWalletStore, SUPPORTED_CHAINS } from "../stores/walletStore";
@@ -42,6 +35,12 @@ interface TransactionDetailsScreenProps {
   navigation: TransactionDetailsNavigationProp;
   route: TransactionDetailsRouteProp;
 }
+
+// Format address for display
+const formatAddress = (addr: string) => {
+  if (!addr) return "0x…";
+  return `${addr.slice(0, 8)}…${addr.slice(-6)}`;
+};
 
 export function TransactionDetailsScreen({ navigation, route }: TransactionDetailsScreenProps) {
   const { colors } = useTheme();
@@ -185,11 +184,6 @@ export function TransactionDetailsScreen({ navigation, route }: TransactionDetai
 
   const statusInfo = getStatusInfo();
 
-  // Format address for display
-  const formatAddress = (addr: string) => {
-    if (!addr) return "0x…";
-    return `${addr.slice(0, 8)}…${addr.slice(-6)}`;
-  };
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.surfaceScreen} />
@@ -235,9 +229,9 @@ export function TransactionDetailsScreen({ navigation, route }: TransactionDetai
             <Text style={styles.ledgerLabel}>FROM</Text>
             <View style={styles.ledgerValueGroup}>
               <Text style={styles.ledgerValue}>{formatAddress(transaction.from)}</Text>
-              <TouchableOpacity style={styles.ledgerCopyBtn} onPress={() => handleCopyAddress(transaction.from)}>
+              <PressableOpacity style={styles.ledgerCopyBtn} onPress={() => handleCopyAddress(transaction.from)}>
                 <Icon name="copy" size={14} color={colors.accent} />
-              </TouchableOpacity>
+              </PressableOpacity>
             </View>
           </Animated.View>
 
@@ -245,9 +239,9 @@ export function TransactionDetailsScreen({ navigation, route }: TransactionDetai
             <Text style={styles.ledgerLabel}>TO</Text>
             <View style={styles.ledgerValueGroup}>
               <Text style={styles.ledgerValue}>{formatAddress(transaction.to)}</Text>
-              <TouchableOpacity style={styles.ledgerCopyBtn} onPress={() => handleCopyAddress(transaction.to)}>
+              <PressableOpacity style={styles.ledgerCopyBtn} onPress={() => handleCopyAddress(transaction.to)}>
                 <Icon name="copy" size={14} color={colors.accent} />
-              </TouchableOpacity>
+              </PressableOpacity>
             </View>
           </Animated.View>
 
@@ -276,14 +270,14 @@ export function TransactionDetailsScreen({ navigation, route }: TransactionDetai
             <View style={styles.ledgerHashGroup}>
               <Text style={styles.ledgerHashValue} numberOfLines={1} ellipsizeMode="middle">{transaction.hash}</Text>
               <View style={styles.ledgerHashActions}>
-                <TouchableOpacity style={styles.ledgerToggleBtn} onPress={handleCopyHash}>
+                <PressableOpacity style={styles.ledgerToggleBtn} onPress={handleCopyHash}>
                   <Icon name="copy" size={12} color={colors.bgPrimary} />
                   <Text style={styles.ledgerToggleText}>COPY</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.ledgerToggleBtnOutline} onPress={handleViewOnExplorer}>
+                </PressableOpacity>
+                <PressableOpacity style={styles.ledgerToggleBtnOutline} onPress={handleViewOnExplorer}>
                   <Icon name="link" size={12} color={colors.accent} />
                   <Text style={styles.ledgerToggleTextOutline}>EXPLORER</Text>
-                </TouchableOpacity>
+                </PressableOpacity>
               </View>
             </View>
           </Animated.View>
@@ -397,11 +391,7 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     borderColor: colors.accent + '30',
     borderRadius: 0,
     backgroundColor: colors.surfaceCard,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
+    boxShadow: '0px 4px 8px rgba(0,0,0,0.03)',
   },
   ledgerRow: {
     flexDirection: "row",
@@ -551,4 +541,3 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   },
 });
 
-export default TransactionDetailsScreen;

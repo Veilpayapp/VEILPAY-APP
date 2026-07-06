@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableWithoutFeedback,
-} from 'react-native';
+import { Modal, View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useTheme, useStyles, typography, type Colors } from '../styles/design-tokens';
 import { SovereignButton } from './SovereignButton';
 import { Icon } from './Icon';
@@ -42,9 +35,9 @@ export function UpdateDetailsModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
+      <Pressable onPress={onClose}>
         <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
+          <Pressable>
             <View style={styles.modalContent}>
               <View style={styles.iconContainer}>
                 <Icon name="flash" size={28} color={colors.accent} />
@@ -60,6 +53,7 @@ export function UpdateDetailsModal({
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
+                {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- short static changelog list (a few releases); virtualization unwarranted */}
                 {releases.map((release, index) => (
                   <View
                     key={`${release.version}-${release.build}`}
@@ -73,8 +67,8 @@ export function UpdateDetailsModal({
                       <Text style={styles.releaseDate}>{release.date}</Text>
                     </View>
 
-                    {release.highlights.map((line, i) => (
-                      <View key={i} style={styles.bulletRow}>
+                    {release.highlights.map((line) => (
+                      <View key={line} style={styles.bulletRow}>
                         <Text style={styles.bulletDot}>•</Text>
                         <Text style={styles.bulletText}>{line}</Text>
                       </View>
@@ -91,9 +85,9 @@ export function UpdateDetailsModal({
                 accessibilityLabel="Close what's new"
               />
             </View>
-          </TouchableWithoutFeedback>
+          </Pressable>
         </View>
-      </TouchableWithoutFeedback>
+      </Pressable>
     </Modal>
   );
 }

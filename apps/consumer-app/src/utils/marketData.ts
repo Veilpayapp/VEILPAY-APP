@@ -55,8 +55,10 @@ const inFlightRequests = new Map<string, Promise<MarketQuoteMap>>();
 
 function normalizeSymbols(symbols: readonly string[]): string[] {
   return Array.from(    new Set(      symbols
-        .map((symbol) => symbol.trim().toUpperCase())
-        .filter((symbol) => symbol.length > 0)
+        .flatMap((symbol) => {
+          const s = symbol.trim().toUpperCase();
+          return s.length > 0 ? [s] : [];
+        })
     )
   ).sort();
 }

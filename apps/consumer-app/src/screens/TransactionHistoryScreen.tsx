@@ -6,15 +6,8 @@
  */
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  StatusBar,
-  RefreshControl,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, StatusBar, RefreshControl, ActivityIndicator } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
@@ -45,6 +38,47 @@ type TransactionHistoryScreenNavigationProp = NativeStackNavigationProp<RootStac
 
 interface TransactionHistoryScreenProps {
   navigation: TransactionHistoryScreenNavigationProp;
+}
+
+// Format timestamp to readable string
+const formatTime = (timestamp: number) => {
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const minutes = Math.floor(diff / (1000 * 60));
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
+};
+
+interface FilterButtonProps {
+  label: string;
+  value: FilterOption;
+  activeFilter: FilterOption;
+  styles: any;
+  onSelect: (value: FilterOption) => void;
+}
+
+function FilterButton({ label, value, activeFilter, styles, onSelect }: FilterButtonProps) {
+  const isActive = activeFilter === value;
+  return (
+    <PressableOpacity
+      style={[styles.filterButton, isActive && styles.filterButtonActive]}
+      onPress={() => onSelect(value)}
+      accessibilityRole="tab"
+      accessibilityLabel={`${label} transactions`}
+      accessibilityHint="Filters the transaction list"
+      accessibilityState={{ selected: isActive }}
+    >
+      <Text style={[styles.filterButtonText, isActive && styles.filterButtonTextActive]}>
+        {label}
+      </Text>
+    </PressableOpacity>
+  );
 }
 
 export function TransactionHistoryScreen({ navigation }: TransactionHistoryScreenProps) {
@@ -95,21 +129,6 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     if (filter === 'all') return transactions;
     return transactions.filter((tx: import('../types/transactions').TransactionRecord) => tx.type === filter);
   }, [filter, transactions]);
-
-  // Format timestamp to readable string
-  const formatTime = (timestamp: number) => {
-    const now = Date.now();
-    const diff = now - timestamp;
-
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-    return new Date(timestamp).toLocaleDateString();
-  };
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
@@ -168,31 +187,13 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     navigation.navigate(screen as never);
   };
 
-  // Render filter button
-  const renderFilterButton = (label: string, value: FilterOption) => {
-    const isActive = filter === value;
-    return (
-      <TouchableOpacity
-        key={value}
-        style={[styles.filterButton, isActive && styles.filterButtonActive]}
-        onPress={() => {
-          Haptics.selectionAsync().catch(() => {});
-          setFilter(value);
-          trackEvent(ANALYTICS_EVENTS.TRANSACTION_HISTORY_FILTER_CHANGED, {
-            filter: value,
-          });
-        }}
-        accessibilityRole="tab"
-        accessibilityLabel={`${label} transactions`}
-        accessibilityHint="Filters the transaction list"
-        accessibilityState={{ selected: isActive }}
-      >
-        <Text style={[styles.filterButtonText, isActive && styles.filterButtonTextActive]}>
-          {label}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
+  const handleFilterSelect = useCallback((value: FilterOption) => {
+    Haptics.selectionAsync().catch(() => {});
+    setFilter(value);
+    trackEvent(ANALYTICS_EVENTS.TRANSACTION_HISTORY_FILTER_CHANGED, {
+      filter: value,
+    });
+  }, []);
 
   // Render transaction item
   const renderTransaction = useCallback(({ item }: { item: any }) => {
@@ -201,7 +202,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     const amountPrefix = isSent ? '-' : '+';
 
     return (
-      <TouchableOpacity
+      <PressableOpacity
         style={styles.transactionItem}
         onPress={() => handleTransactionPress(item)}
         activeOpacity={0.7}
@@ -243,7 +244,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
             </View>
           </View>
         </SovereignCard>
-      </TouchableOpacity>
+      </PressableOpacity>
     );
   }, [colors, styles, handleTransactionPress]);
 
@@ -302,13 +303,22 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     );
   };
 
-  // Render header with filter
-  const renderHeader = () => (
+  // Header with filter tabs
+  const filterHeader = (
     <View style={styles.filterContainer}>
-      {renderFilterButton('All', 'all')}
-      {renderFilterButton('Sent', 'sent')}
-      {renderFilterButton('Received', 'received')}
+      <FilterButton label="All" value="all" activeFilter={filter} styles={styles} onSelect={handleFilterSelect} />
+      <FilterButton label="Sent" value="sent" activeFilter={filter} styles={styles} onSelect={handleFilterSelect} />
+      <FilterButton label="Received" value="received" activeFilter={filter} styles={styles} onSelect={handleFilterSelect} />
     </View>
+  );
+
+  const refreshControlEl = (
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={handleRefresh}
+      tintColor={colors.accent}
+      colors={[colors.accent]}
+    />
   );
 
   return (
@@ -331,7 +341,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
 
       <Animated.View entering={FadeInDown.duration(260)} style={styles.animatedContent}>
         {/* Filter Tabs */}
-        {renderHeader()}
+        {filterHeader}
 
         {/* Transaction List */}
         <FlashList
@@ -344,14 +354,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
           ListFooterComponent={renderFooter}
           onEndReached={handleEndReached}
           onEndReachedThreshold={0.4}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-          tintColor={colors.accent}
-          colors={[colors.accent]}
-            />
-          }
+          refreshControl={refreshControlEl}
         />
       </Animated.View>
 

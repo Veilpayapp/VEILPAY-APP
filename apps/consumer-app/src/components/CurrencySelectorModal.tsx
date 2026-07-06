@@ -1,18 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Modal, TouchableOpacity, View, Text, StyleSheet, ScrollView, TextInput } from 'react-native';
+import { Modal, View, Text, StyleSheet, ScrollView, TextInput } from 'react-native';
+import { PressableOpacity } from './PressableOpacity';
 import { triggerLightImpactHaptic } from '../utils/haptics';
 import { Icon } from './Icon';
 import { typography, useTheme, useStyles } from "../styles/design-tokens";
-
-export const CURRENCIES = [
-  { id: 'USD', name: 'US Dollar', symbol: '$' },
-  { id: 'EUR', name: 'Euro', symbol: '€' },
-  { id: 'GBP', name: 'British Pound', symbol: '£' },
-  { id: 'JPY', name: 'Japanese Yen', symbol: '¥' },
-  { id: 'AUD', name: 'Australian Dollar', symbol: 'A$' },
-  { id: 'CAD', name: 'Canadian Dollar', symbol: 'C$' },
-  { id: 'INR', name: 'Indian Rupee', symbol: '₹' },
-];
+import { CURRENCIES } from "../constants/currencies";
 
 interface CurrencySelectorModalProps {
   visible: boolean;
@@ -42,21 +34,24 @@ export function CurrencySelectorModal({
     );
   }, [searchQuery]);
 
-  React.useEffect(() => {
+  // Reset search when the modal opens — adjust during render to avoid a stale frame.
+  const [prevVisible, setPrevVisible] = useState(visible);
+  if (visible !== prevVisible) {
+    setPrevVisible(visible);
     if (visible) setSearchQuery('');
-  }, [visible]);
+  }
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
+        <PressableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
         <View style={styles.content}>
           <View style={styles.handle} />
           <View style={styles.header}>
             <Text style={styles.title}>SELECT NATIVE CURRENCY</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <PressableOpacity onPress={onClose} style={styles.closeButton}>
               <Icon name="close" size={20} color={colors.textMuted} />
-            </TouchableOpacity>
+            </PressableOpacity>
           </View>
 
           <View style={styles.searchContainer}>
@@ -73,9 +68,9 @@ export function CurrencySelectorModal({
               returnKeyType="search"
             />
             {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <PressableOpacity onPress={() => setSearchQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <Icon name="close" size={16} color={colors.textTertiary} />
-              </TouchableOpacity>
+              </PressableOpacity>
             )}
           </View>
 
@@ -84,7 +79,7 @@ export function CurrencySelectorModal({
               {filteredCurrencies.map((currency) => {
                 const selected = activeCurrency === currency.id;
                 return (
-                  <TouchableOpacity
+                  <PressableOpacity
                     key={currency.id}
                     onPress={() => {
                       triggerLightImpactHaptic();
@@ -113,7 +108,7 @@ export function CurrencySelectorModal({
                         )}
                       </View>
                     </View>
-                  </TouchableOpacity>
+                  </PressableOpacity>
                 );
               })}
             </View>

@@ -4,7 +4,7 @@
  * Uses the current structural design language with a prominent center QR button
  *
  * UPDATED: Now uses premium SVG icons instead of emojis
- */import React from "react";import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+ */import React from "react";import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 import { SCREENS } from "../constants/screens";
@@ -61,14 +61,13 @@ export function BottomNavBar({ currentScreen, onNavigate }: BottomNavBarProps) {
           if (isProminent) {
             // Prominent center button (QR Scanner)
             return (
-              <TouchableOpacity
+              <Pressable
                 key={item.id}
-                style={styles.prominentButton}
+                style={({ pressed }) => [styles.prominentButton, pressed && { opacity: 0.6 }]}
                 onPress={() => {
                   void triggerLightImpactHaptic();
                   onNavigate(item.screen);
                 }}
-                activeOpacity={0.8}
                 accessibilityRole="button"
                 accessibilityLabel={`${item.label} QR code`}
                 accessibilityHint={`Opens ${item.label} screen to scan QR codes`}
@@ -78,19 +77,18 @@ export function BottomNavBar({ currentScreen, onNavigate }: BottomNavBarProps) {
                   <Icon name={item.icon} size={28} color={colors.bgPrimary} />
                   <Text style={styles.prominentLabel}>[{item.label.toUpperCase()}]</Text>
                 </View>
-              </TouchableOpacity>
+              </Pressable>
             );
           }
 
           return (
-            <TouchableOpacity
+            <Pressable
               key={item.id}
-              style={styles.navItem}
+              style={({ pressed }) => [styles.navItem, pressed && { opacity: 0.6 }]}
               onPress={() => {
                 void triggerLightImpactHaptic();
                 onNavigate(item.screen);
               }}
-              activeOpacity={0.7}
               hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
               accessibilityRole="tab"
               accessibilityLabel={item.label}
@@ -101,7 +99,7 @@ export function BottomNavBar({ currentScreen, onNavigate }: BottomNavBarProps) {
                 <Icon name={item.icon} size={22} color={isActive ? colors.bgPrimary : colors.textTertiary} />
               </View>
               <Text style={[styles.navLabel, isActive && styles.navLabelActive]}>[{item.label.toUpperCase()}]</Text>
-            </TouchableOpacity>
+            </Pressable>
           );
         })}
       </View>

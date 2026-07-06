@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { Modal, View, Text, StyleSheet, ScrollView, TouchableWithoutFeedback } from 'react-native';
 import { useTheme, useStyles, typography, type Colors } from '../styles/design-tokens';
 import { SovereignButton } from './SovereignButton';
 import { Icon } from './Icon';
@@ -35,9 +35,9 @@ export function UpdateDetailsModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable onPress={onClose}>
+      <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
-          <Pressable>
+          <TouchableWithoutFeedback>
             <View style={styles.modalContent}>
               <View style={styles.iconContainer}>
                 <Icon name="flash" size={28} color={colors.accent} />
@@ -85,9 +85,9 @@ export function UpdateDetailsModal({
                 accessibilityLabel="Close what's new"
               />
             </View>
-          </Pressable>
+          </TouchableWithoutFeedback>
         </View>
-      </Pressable>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 }

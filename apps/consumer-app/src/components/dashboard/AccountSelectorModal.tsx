@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, FlatList, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Pressable, FlatList, Modal, TextInput, TouchableWithoutFeedback } from 'react-native';
 import Animated, { FadeIn, FadeInDown, SlideInDown } from 'react-native-reanimated';
 import { useTheme, useStyles, typography, spacing } from '../../styles/design-tokens';
 import { Icon } from '../Icon';
@@ -145,9 +145,9 @@ export function AccountSelectorModal({ visible, onClose }: AccountSelectorModalP
       animationType="none"
       onRequestClose={onClose}
     >
-      <Pressable onPress={onClose}>
+      <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View entering={FadeIn.duration(200)} style={styles.overlay}>
-          <Pressable>
+          <TouchableWithoutFeedback>
             <Animated.View entering={SlideInDown.duration(300).springify()} style={styles.modalContainer}>
               <View style={styles.header}>
                 <View>
@@ -177,9 +177,9 @@ export function AccountSelectorModal({ visible, onClose }: AccountSelectorModalP
                 />
               </View>
             </Animated.View>
-          </Pressable>
+          </TouchableWithoutFeedback>
         </Animated.View>
-      </Pressable>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 }
@@ -194,6 +194,11 @@ const themeStyles = (colors: any) => StyleSheet.create({
     backgroundColor: colors.bgPrimary,
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
+    // flex:1 gives the sheet a determinate height (capped at 85% of the
+    // full-screen overlay) so the FlatList below can bound itself and render
+    // rows. Without it the container is content-sized and the FlatList
+    // collapses to 0 rows. See rn-no-scrollview-mapped-list regression.
+    flex: 1,
     maxHeight: '85%',
     borderWidth: 1,
     borderColor: colors.outlineVariant,
@@ -228,6 +233,7 @@ const themeStyles = (colors: any) => StyleSheet.create({
     borderColor: colors.outlineVariant,
   },
   accountList: {
+    flex: 1,
     padding: 20,
   },
   accountRow: {

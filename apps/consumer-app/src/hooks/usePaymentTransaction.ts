@@ -430,12 +430,17 @@ export function usePaymentTransaction({
         });
 
         switch (error.code) {
-          case 'INSUFFICIENT_FUNDS':
+          case 'INSUFFICIENT_FUNDS': {
+            // Name the actual native asset for the selected network rather
+            // than hardcoding ETH — a Solana/Aptos/Stellar/BNB send should
+            // not tell the user to "add more ETH".
+            const fundsSymbol = selectedNetwork?.symbol || token || 'funds';
             toast.show(
-              'Insufficient funds. Please add more ETH to your wallet.',
+              `Insufficient funds. Please add more ${fundsSymbol} to your wallet.`,
               'error'
             );
             break;
+          }
           case 'INVALID_ADDRESS':
             toast.show(
               'Invalid recipient address. Please check and try again.',

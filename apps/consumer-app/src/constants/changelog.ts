@@ -31,6 +31,16 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: '1.0.1',
+    build: 7,
+    date: '2026-07-06',
+    highlights: [
+      'Payments now go through on the network you actually pick — choosing a mainnet no longer quietly reroutes your send to a test network.',
+      'New heads-up before you send: if your wallet is short on the native coin for the amount plus fees, you\'ll see an "Insufficient funds" notice instead of a failed transaction.',
+      'Clearer "insufficient funds" message that names the right coin for the network you\'re sending on.',
+    ],
+  },
+  {
+    version: '1.0.1',
     build: 6,
     date: '2026-07-05',
     highlights: [

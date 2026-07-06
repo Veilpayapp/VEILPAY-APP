@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -47,9 +48,16 @@ export function TokenDetailScreen({ route, navigation }: Props) {
     navigation.navigate(SCREENS.RECEIVE_QR);
   };
 
-  const handleTransactionPress = (transaction: TransactionRecord) => {
+  const handleTransactionPress = useCallback((transaction: TransactionRecord) => {
     navigation.navigate(SCREENS.TRANSACTION_DETAILS, { transaction });
-  };
+  }, [navigation]);
+
+  const renderTransaction = useCallback(
+    ({ item }: { item: TransactionRecord }) => (
+      <TransactionItem item={item} onPress={handleTransactionPress} />
+    ),
+    [handleTransactionPress]
+  );
 
   const chain = SUPPORTED_CHAINS.find(c => c.key === chainKey);
   const env = chain?.isTestnet ? 'TESTNET' : 'MAINNET';
@@ -78,9 +86,7 @@ export function TokenDetailScreen({ route, navigation }: Props) {
           data={tokenTransactions}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <TransactionItem item={item} onPress={handleTransactionPress} />
-          )}
+          renderItem={renderTransaction}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>NO TRANSACTIONS FOUND FOR {tokenSymbol}</Text>

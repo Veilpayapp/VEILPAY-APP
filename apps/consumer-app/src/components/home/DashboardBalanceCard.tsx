@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableOpacity } from '../PressableOpacity';
 import { SovereignCard } from '../SovereignCard';
 import { Icon } from '../Icon';
 import { BalanceSkeleton } from '../Skeleton';
@@ -68,7 +69,7 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
                   </Text>
                 </View>
                 <View style={styles.balanceRight}>
-                  <TouchableOpacity
+                  <PressableOpacity
                     style={styles.visibilityBtn}
                     onPress={onToggleVisibility}
                     accessibilityRole="button"
@@ -84,7 +85,7 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
                       size={20}
                       color={colors.textPrimary}
                     />
-                  </TouchableOpacity>
+                  </PressableOpacity>
                   <View style={styles.privacyBadge}>
                     <Icon name="private" size={14} color={colors.accent} />
                     <Text style={styles.privacyBadgeText}>PRIVATE</Text>

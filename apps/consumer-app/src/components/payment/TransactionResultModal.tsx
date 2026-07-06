@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Modal } from 'react-native';
+import { PressableOpacity } from '../PressableOpacity';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,

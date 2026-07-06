@@ -6,12 +6,8 @@
  */
 
 import React from 'react';
-import {
-  View,
-  Text,  StyleSheet,  TouchableOpacity,
-  StatusBar,
-  ScrollView
-} from 'react-native';
+import { View, Text, StyleSheet, StatusBar, ScrollView } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 import { SCREENS } from '../constants/screens';
@@ -87,7 +83,7 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
               onPress={handleGetStarted}
             />
 
-            <TouchableOpacity
+            <PressableOpacity
               style={styles.secondaryButton}
               onPress={handleRestoreVault}
               activeOpacity={0.6}
@@ -96,7 +92,7 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
               accessibilityHint="Opens wallet restore flow"
             >
               <Text style={styles.secondaryButtonText}>RESTORE EXISTING VAULT</Text>
-            </TouchableOpacity>
+            </PressableOpacity>
           </View>
         </ScrollView>
       </Animated.View>

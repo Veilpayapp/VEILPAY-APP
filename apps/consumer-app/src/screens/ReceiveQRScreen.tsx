@@ -8,16 +8,8 @@
  */
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import {
-  View,
-  Text,  StyleSheet,  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  Share,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar, Share, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import QRCode from 'react-native-qrcode-svg';
 import { captureRef } from 'react-native-view-shot';
@@ -45,7 +37,12 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 type ReceiveQRScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ReceiveQR'>;
 
 interface ReceiveQRScreenProps {
-  navigation: ReceiveQRScreenNavigationProp;}export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
+  navigation: ReceiveQRScreenNavigationProp;}const formatAddress = (addr: string) => {
+  if (!addr) return 'Not available';
+  return `${addr.slice(0, 10)}…${addr.slice(-6)}`;
+};
+
+export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const [requestedAmount, setRequestedAmount] = useState('');
@@ -181,11 +178,6 @@ interface ReceiveQRScreenProps {
     toast.show('Payment request link copied', 'success');
   };
 
-  const formatAddress = (addr: string) => {
-    if (!addr) return 'Not available';
-    return `${addr.slice(0, 10)}…${addr.slice(-6)}`;
-  };
-  
   const handleNavPress = (screen: keyof RootStackParamList) => {
     if (screen === SCREENS.RECEIVE_QR) {
       // Already on receive
@@ -254,7 +246,7 @@ interface ReceiveQRScreenProps {
               <View style={styles.addressContent}>
               <Text style={styles.addressText}>{address || 'Not connected'}</Text>
               <View style={styles.addressActions}>
-                <TouchableOpacity
+                <PressableOpacity
                   onPress={handleCopyAddress}
                   style={styles.addressActionBtn}
                   accessibilityRole="button"
@@ -263,8 +255,8 @@ interface ReceiveQRScreenProps {
                 >
                   <Icon name="copy" size={18} color={colors.accent} />
                   <Text style={styles.addressActionText}>COPY</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
+                </PressableOpacity>
+                <PressableOpacity
                   onPress={handleShareAddress}
                   style={styles.addressActionBtn}
                   accessibilityRole="button"
@@ -273,7 +265,7 @@ interface ReceiveQRScreenProps {
                 >
                   <Icon name="export" size={18} color={colors.accent} />
                   <Text style={styles.addressActionText}>SHARE</Text>
-                </TouchableOpacity>
+                </PressableOpacity>
               </View>
             </View>
           </SovereignCard>
@@ -635,4 +627,3 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   },
 });
 
-export default ReceiveQRScreen;

@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { PressableOpacity } from '../PressableOpacity';
 import { useTheme, useStyles, typography } from "../../styles/design-tokens";
 import { SovereignCard } from "../SovereignCard";
 import { Icon } from "../Icon";
@@ -32,7 +33,7 @@ export function FiatGatewayCard({
     <>
       {/* Fiat Gateway Card */}
       <View style={styles.transakCardWrapper}>
-        <TouchableOpacity
+        <PressableOpacity
           onPress={onOpenFiatGateway}
           activeOpacity={0.9}
           accessibilityRole="button"
@@ -49,7 +50,7 @@ export function FiatGatewayCard({
               <Icon name="chevron-right" size={20} color={colors.accent} />
             </View>
           </SovereignCard>
-        </TouchableOpacity>
+        </PressableOpacity>
       </View>
 
       {visibleTransakOrder && transakOrderMeta ? (
@@ -70,12 +71,12 @@ export function FiatGatewayCard({
                   {visibleTransakOrder.orderId ? ` • Order ${visibleTransakOrder.orderId}` : ''}
                 </Text>
               </View>
-              <TouchableOpacity
+              <PressableOpacity
                 onPress={clearLatestTransakOrder}
                 style={styles.transakOutcomeDismiss}
               >
                 <Icon name="close" size={18} color={colors.textMuted} />
-              </TouchableOpacity>
+              </PressableOpacity>
             </View>
           </SovereignCard>
         </View>
@@ -98,12 +99,12 @@ export function FiatGatewayCard({
                   {visibleOnrampOrder.fiatAmount} {visibleOnrampOrder.fiatCurrency} • {visibleOnrampOrder.cryptoToken}
                 </Text>
               </View>
-              <TouchableOpacity
+              <PressableOpacity
                 onPress={clearLatestOnrampOrder}
                 style={styles.transakOutcomeDismiss}
               >
                 <Icon name="close" size={18} color={colors.textMuted} />
-              </TouchableOpacity>
+              </PressableOpacity>
             </View>
           </SovereignCard>
         </View>

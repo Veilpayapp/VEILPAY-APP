@@ -6,18 +6,8 @@
  */
 
 import React, { useState, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  useWindowDimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar, TextInput, KeyboardAvoidingView, Platform, useWindowDimensions } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
@@ -57,8 +47,11 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = useStyles(themeStyles);
-  const [recipientAddress, setRecipientAddress] = useState('');
-  const [amount, setAmount] = useState('');
+  // Pre-filled data from QR scan (if any). Read once at mount; used to seed the form.
+  const scannedAddress = route?.params?.address || '';
+  const scannedAmount = route?.params?.amount || '';
+  const [recipientAddress, setRecipientAddress] = useState(scannedAddress);
+  const [amount, setAmount] = useState(scannedAmount);
   const [memo, setMemo] = useState('');
   const [isRecipientTouched, setIsRecipientTouched] = useState(false);
   const [isAmountTouched, setIsAmountTouched] = useState(false);
@@ -116,10 +109,6 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
 
   const canContinue = isRecipientValid && isAmountValid;
 
-  // Pre-filled data from QR scan (if any)
-  const scannedAddress = route?.params?.address || '';
-  const scannedAmount = route?.params?.amount || '';
-
   React.useEffect(() => {
     trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_VIEWED, {
       chain_key: activeChain?.key || 'unknown',
@@ -137,11 +126,6 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
   ]);
 
   React.useEffect(() => {
-    if (scannedAddress) setRecipientAddress(scannedAddress);
-    if (scannedAmount) setAmount(scannedAmount);
-  }, [scannedAddress, scannedAmount]);
-
-  React.useEffect(() => {
     if (!activeChain) {
       return;
     }
@@ -155,21 +139,6 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
       chainTypes: [activeChain.type],
     });
   }, [activeChain, balance]);
-
-  React.useEffect(() => {
-    if (!activeChain || !balance) {
-      return;
-    }
-
-    if (selectedToken.symbol !== activeChain.nativeToken.symbol) {
-      return;
-    }
-
-    setSelectedToken((current) => ({
-      ...current,
-      balance,
-    }));
-  }, [activeChain, balance, selectedToken.symbol]);
 
   const handleBack = () => {
     trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_BACK_PRESSED, {
@@ -452,30 +421,30 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                   numberOfLines={2}
                 />
                 <View style={styles.inputActions}>
-                  <TouchableOpacity
+                  <PressableOpacity
                     onPress={() => setIsAddressBookVisible(true)}
                     style={styles.inputActionBtn}
                     accessibilityRole="button"
                     accessibilityLabel="Open address book"
                   >
                     <Icon name="wallet" size={20} color={colors.accent} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </PressableOpacity>
+                  <PressableOpacity
                     onPress={handleScanQR}
                     style={styles.inputActionBtn}
                     accessibilityRole="button"
                     accessibilityLabel="Scan QR code"
                   >
                     <Icon name="camera" size={20} color={colors.accent} />
-                  </TouchableOpacity>
-                  <TouchableOpacity
+                  </PressableOpacity>
+                  <PressableOpacity
                     onPress={handlePaste}
                     style={styles.inputActionBtn}
                     accessibilityRole="button"
                     accessibilityLabel="Paste from clipboard"
                   >
                     <Icon name="copy" size={20} color={colors.accent} />
-                  </TouchableOpacity>
+                  </PressableOpacity>
                 </View>
               </View>
             </SovereignCard>
@@ -484,11 +453,11 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
             {/* Amount Input */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>AMOUNT</Text>
-              <TouchableOpacity onPress={toggleInputCurrency}>
-                <Text style={{ fontFamily: typography.fontFamily.mono, fontSize: 11, color: colors.accent, fontWeight: 'bold' }}>
+              <PressableOpacity onPress={toggleInputCurrency}>
+                <Text style={{ fontFamily: typography.fontFamily.mono, fontSize: 12, color: colors.accent, fontWeight: 'bold' }}>
                   SWAP TO {isUsdInput ? selectedToken.symbol : (nativeCurrency || 'USD')}
                 </Text>
-              </TouchableOpacity>
+              </PressableOpacity>
             </View>
             <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
               <View style={styles.amountRow}>
@@ -502,14 +471,14 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                   placeholderTextColor={colors.textFaint}
                   keyboardType="decimal-pad"
                 />
-                <TouchableOpacity
+                <PressableOpacity
                   onPress={handleSelectToken}
                   style={styles.tokenSelector}
                   accessibilityRole="button"
                 >
                   <Text style={styles.tokenSymbol}>{isUsdInput ? (nativeCurrency || 'USD') : selectedToken.symbol}</Text>
                   {!isUsdInput && <Icon name={'chevron-down'} size={14} color={colors.textMuted} />}
-                </TouchableOpacity>
+                </PressableOpacity>
               </View>
             </SovereignCard>
             {amountError ? <Text style={styles.validationError}>{amountError}</Text> : null}
@@ -528,7 +497,7 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
             {/* Quick Amount Buttons */}
             <View style={styles.quickAmountRow}>
               {['25%', '50%', '75%', 'MAX'].map((percent) => (
-                <TouchableOpacity
+                <PressableOpacity
                   key={percent}
                   onPress={() => handleQuickAmount(percent)}
                   style={[
@@ -545,7 +514,7 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                   >
                     {percent}
                   </Text>
-                </TouchableOpacity>
+                </PressableOpacity>
               ))}
             </View>
 
@@ -858,4 +827,3 @@ const themeStyles = (colors: any) => StyleSheet.create({
   },
 });
 
-export default SendPaymentScreen;

@@ -33,11 +33,9 @@ import { TokenSelectorScreen } from "../screens/TokenSelectorScreen";
 import { TokenDetailScreen } from "../screens/TokenDetailScreen";
 import { DepositCryptoScreen } from "../screens/DepositCryptoScreen";
 import { WithdrawFiatScreen } from "../screens/WithdrawFiatScreen";
-import {
-  TransakWebViewScreen,
-  OnrampWidgetScreen,
-  OnrampAmountScreen,
-} from "../features/fiat-gateway/screens";
+import { TransakWebViewScreen } from "../screens/TransakWebViewScreen";
+import { OnrampWidgetScreen } from "../screens/OnrampWidgetScreen";
+import { OnrampAmountScreen } from "../screens/OnrampAmountScreen";
 import { OnrampQuotesScreen } from "../screens/OnrampQuotesScreen";
 import { AddCustomNetworkScreen } from "../screens/AddCustomNetworkScreen";
 import type { TransactionRecord } from "../types/transactions";

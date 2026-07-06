@@ -12,6 +12,13 @@ import { useTheme, useStyles, typography, spacing, type Colors } from "../styles
 
 export type LogoVariant = 'full' | 'icon' | 'header' | 'manual';
 
+// Size configurations for different variants (static — hoisted to module scope).
+const LOGO_SIZE_CONFIG = {
+  small: { icon: 24, full: 100, header: 28, fontSize: 20 },
+  medium: { icon: 40, full: 140, header: 36, fontSize: 28 },
+  large: { icon: 64, full: 200, header: 56, fontSize: 36 },
+};
+
 interface LogoProps {
   variant?: LogoVariant;
   style?: ViewStyle;
@@ -33,29 +40,7 @@ export function Logo({
   const iconSource = theme === 'dark' ? require('../../assets/logo-icon-dark.png') : require('../../assets/logo-icon.png');
   const fullSource = theme === 'dark' ? require('../../assets/logo-full-dark.png') : require('../../assets/logo-full.png');
   
-  // Size configurations for different variants
-  const sizeConfig = {
-    small: {
-      icon: 24,
-      full: 100,
-      header: 28,
-      fontSize: 20,
-    },
-    medium: {
-      icon: 40,
-      full: 140,
-      header: 36,
-      fontSize: 28,
-    },
-    large: {
-      icon: 64,
-      full: 200,
-      header: 56,
-      fontSize: 36,
-    },
-  };
-
-  const currentSize = sizeConfig[size];
+  const currentSize = LOGO_SIZE_CONFIG[size];
 
   // Render manual variant: Logo icon + Manually written VEILPAY text
   if (variant === 'manual') {

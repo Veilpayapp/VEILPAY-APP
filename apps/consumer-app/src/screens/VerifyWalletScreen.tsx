@@ -237,4 +237,3 @@ const themeStyles = (colors: any) => StyleSheet.create({
   },
 });
 
-export default VerifyWalletScreen;

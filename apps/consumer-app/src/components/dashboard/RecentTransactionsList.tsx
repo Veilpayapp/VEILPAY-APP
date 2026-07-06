@@ -1,5 +1,6 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableOpacity } from '../PressableOpacity';
 import { MotiView } from 'moti';
 import { useTheme, useStyles, typography } from '../../styles/design-tokens';
 import { TransactionItem } from '../TransactionItem';
@@ -30,14 +31,14 @@ function RecentTransactionsListComponent({
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>[ ACTIVITY_LOG ]</Text>
-        <TouchableOpacity
+        <PressableOpacity
           onPress={onSeeAll}
           accessibilityRole="button"
           accessibilityLabel="See all transactions"
           accessibilityHint="Opens full transaction history"
         >
           <Text style={styles.seeAll}>[ ALL ]</Text>
-        </TouchableOpacity>
+        </PressableOpacity>
       </View>
 
       {isLoading && transactions.length === 0 ? (

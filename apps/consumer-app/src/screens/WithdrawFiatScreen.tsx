@@ -1,11 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,  TextInput,  TouchableOpacity,
-  View,
-} from "react-native";
+import { ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from "react-native";
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -54,7 +49,9 @@ type WithdrawFiatRouteProp = RouteProp<RootStackParamList, "WithdrawFiat">;
 
 interface WithdrawFiatScreenProps {
   navigation: WithdrawFiatScreenNavigationProp;
-  route: WithdrawFiatRouteProp;}export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
+  route: WithdrawFiatRouteProp;
+}
+export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const { address, activeChain, balance } = useWalletStore(
@@ -70,8 +67,17 @@ interface WithdrawFiatScreenProps {
   }));
   const [cryptoAmount, setCryptoAmount] = useState("0.5");
   const [selectedCurrency, setSelectedCurrency] = useState<FiatCurrency>((nativeCurrency as FiatCurrency) || "USD");
-  const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<PayoutMethodId>("neft_rtgs");  const [selectedNetwork, setSelectedNetwork] = useState<string>(activeChain?.key || "ethereum");
+  const [selectedPayoutMethod, setSelectedPayoutMethod] = useState<PayoutMethodId>("neft_rtgs");
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoToken>(CRYPTO_TOKENS[0]);
+  // Single-pass filter (avoids .filter().map() double iteration in render).
+  const activeGroupTokens = useMemo(() => {
+    const groupKey = selectedCrypto.group.toLowerCase();
+    const out: CryptoToken[] = [];
+    for (const token of CRYPTO_TOKENS) {
+      if (token.group.toLowerCase() === groupKey) out.push(token);
+    }
+    return out;
+  }, [selectedCrypto.group]);
   const [selectedPercent, setSelectedPercent] = useState<number | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
   const toast = useToast();
@@ -290,7 +296,7 @@ interface WithdrawFiatScreenProps {
 
           <View style={styles.quickRow}>
             {quickPercentAmounts.map(({ percent }) => (
-              <TouchableOpacity
+              <PressableOpacity
                 key={percent}
                 onPress={() => handlePercentPress(percent)}
                 style={[
@@ -305,13 +311,13 @@ interface WithdrawFiatScreenProps {
                 ]}>
                   {percent === 100 ? "MAX" : `${percent}%`}
                 </Text>
-              </TouchableOpacity>
+              </PressableOpacity>
             ))}
           </View>
 
           <View style={styles.currencyRow}>
             {FIAT_CURRENCIES.map((currency) => (
-              <TouchableOpacity
+              <PressableOpacity
                 key={currency}
                 onPress={() => {
                   setSelectedCurrency(currency as FiatCurrency);
@@ -329,7 +335,7 @@ interface WithdrawFiatScreenProps {
                 ]}>
                   {currency}
                 </Text>
-              </TouchableOpacity>
+              </PressableOpacity>
             ))}
           </View>
           <Text style={styles.helperText}>
@@ -362,14 +368,16 @@ interface WithdrawFiatScreenProps {
           
           {/* Network Tab Bar */}
           <View style={styles.networkTabsContainer}>
-            <ScrollView               horizontal 
+            <ScrollView 
+              horizontal 
               showsHorizontalScrollIndicator={false} 
               contentContainerStyle={styles.networkTabsScroll}
-            >              {getTokenGroups(CRYPTO_TOKENS).map((group) => (
-                <TouchableOpacity
+            >
+              {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- short static horizontal token-group tab bar; virtualization unwarranted */}
+              {getTokenGroups(CRYPTO_TOKENS).map((group) => (
+                <PressableOpacity
                   key={group}
                   onPress={() => {
-                    setSelectedNetwork(group.toLowerCase());
                     triggerLightImpactHaptic();
                     // Auto-select first token of this group if current selection is not in this group
                     if (selectedCrypto.group.toLowerCase() !== group.toLowerCase()) {
@@ -388,16 +396,18 @@ interface WithdrawFiatScreenProps {
                   {selectedCrypto.group.toLowerCase() === group.toLowerCase() && (
                     <View style={styles.networkTabIndicator} />
                   )}
-                </TouchableOpacity>
+                </PressableOpacity>
               ))}
             </ScrollView>
             <View style={styles.scrollIndicatorHint}>
-              <Icon name="chevron-right" size={14} color={colors.textMuted} />            </View>
+              <Icon name="chevron-right" size={14} color={colors.textMuted} />
+            </View>
           </View>
 
           {/* Tokens Grid for active network */}
-          <View style={styles.tokenPillsContainer}>            {CRYPTO_TOKENS.filter((t) => t.group.toLowerCase() === selectedCrypto.group.toLowerCase()).map((token, idx) => (
-              <TouchableOpacity
+          <View style={styles.tokenPillsContainer}>
+            {activeGroupTokens.map((token, idx) => (
+              <PressableOpacity
                 key={`${token.symbol}-${token.network}-${idx}`}
                 onPress={() => {
                   setSelectedCrypto(token);
@@ -414,7 +424,7 @@ interface WithdrawFiatScreenProps {
                 ]}>
                   {token.name}
                 </Text>
-              </TouchableOpacity>
+              </PressableOpacity>
             ))}
           </View>
         </SovereignCard>

@@ -6,14 +6,9 @@
  */
 
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
 import { SovereignCard } from "../components/SovereignCard";
@@ -196,7 +191,7 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
       : '24h unavailable';
 
     return (
-      <TouchableOpacity
+      <PressableOpacity
         activeOpacity={0.8}
         onPress={() => handleSelect(item)}
         style={styles.tokenTouchable}
@@ -238,7 +233,7 @@ backgroundColor={isSelected ? colors.bgTertiary : colors.bgSecondary}
             </View>
           </View>
         </SovereignCard>
-      </TouchableOpacity>
+      </PressableOpacity>
     );
   }, [marketQuotes, selectedSymbol, handleSelect]);
 
@@ -265,9 +260,9 @@ backgroundColor={isSelected ? colors.bgTertiary : colors.bgSecondary}
             accessibilityHint="Filters the token list by name or symbol"
           />
           {query.length > 0 && (
-            <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <PressableOpacity onPress={() => setQuery('')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Icon name="close" size={16} color={colors.textTertiary} />
-            </TouchableOpacity>
+            </PressableOpacity>
           )}
         </View>
 
@@ -462,4 +457,3 @@ const themeStyles = (colors: any) => StyleSheet.create({
   },
 });
 
-export default TokenSelectorScreen;

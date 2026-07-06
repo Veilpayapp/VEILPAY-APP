@@ -4,6 +4,7 @@ import { poolCall, getPoolProvider } from './rpcPool';
 import { getStoredMnemonic, TransactionError, NETWORKS } from './transactions';
 import { estimateTransactionGas, GasEstimate } from './gasEstimator';
 import { captureError, addBreadcrumb } from './sentry';
+import * as Crypto from 'expo-crypto';
 
 export interface SignerParams {
   to: string;
@@ -33,7 +34,7 @@ interface BiometricTokenEntry {
 const _tokenStore = new Map<string, BiometricTokenEntry>();
 
 export function generateBiometricToken(): string {
-  const nonce = `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+  const nonce = `${Date.now()}-${Crypto.randomUUID()}-${Crypto.randomUUID()}`;
   _tokenStore.set(nonce, { token: nonce, issuedAt: Date.now(), consumed: false });
   return nonce;
 }

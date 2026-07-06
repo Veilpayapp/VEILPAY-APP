@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Text, View, Linking, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, View, Linking, StyleSheet } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { WebView } from 'react-native-webview';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 import { Icon } from '../components/Icon';
-import { useOnramp, FiatGatewayWebViewShell, isAllowedOnrampUrl, isPaymentIntentUrl } from '../features/fiat-gateway';
+import { useOnramp } from '../hooks/useOnramp';
+import { FiatGatewayWebViewShell } from '../components/FiatGatewayWebViewShell';
+import { isAllowedOnrampUrl, isPaymentIntentUrl } from '../utils/fiatGateway';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -19,6 +22,27 @@ interface OnrampWidgetScreenProps {
 
 /** Maximum time to wait for the widget WebView to finish loading. */
 const WIDGET_LOAD_TIMEOUT_MS = 30_000;
+
+/** Header title block — extracted to a stable component so it isn't a fresh JSX element each render. */
+function OnrampWidgetHeaderCenter({
+  title,
+  styles,
+  successColor,
+}: {
+  title: string;
+  styles: ReturnType<typeof themeStyles>;
+  successColor: string;
+}) {
+  return (
+    <View style={styles.headerTitleContainer}>
+      <Text style={styles.headerTitle}>{title.toUpperCase()}</Text>
+      <View style={styles.secureBadge}>
+        <Icon name="private-lock" size={10} color={successColor} />
+        <Text style={styles.secureText}>SECURE GATEWAY</Text>
+      </View>
+    </View>
+  );
+}
 
 export function OnrampWidgetScreen({ navigation, route }: OnrampWidgetScreenProps) {
   const { url, title = 'PAYMENT GATEWAY', orderId } = route.params;
@@ -129,13 +153,7 @@ export function OnrampWidgetScreen({ navigation, route }: OnrampWidgetScreenProp
       loading={loading}
       loadingMessage="Establishing Secure Connection..."
       headerCenter={
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>{title.toUpperCase()}</Text>
-          <View style={styles.secureBadge}>
-            <Icon name="private-lock" size={10} color={colors.success} />
-            <Text style={styles.secureText}>SECURE GATEWAY</Text>
-          </View>
-        </View>
+        <OnrampWidgetHeaderCenter title={title} styles={styles} successColor={colors.success} />
       }
       errorState={loadTimedOut ? (
         <View style={styles.timeoutContainer}>
@@ -146,12 +164,12 @@ export function OnrampWidgetScreen({ navigation, route }: OnrampWidgetScreenProp
             Check your network connection and try again.
           </Text>
           <View style={styles.timeoutActions}>
-            <TouchableOpacity onPress={handleRetry} style={styles.retryButton}>
+            <PressableOpacity onPress={handleRetry} style={styles.retryButton}>
               <Text style={styles.retryButtonText}>RETRY</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
+            </PressableOpacity>
+            <PressableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>CLOSE</Text>
-            </TouchableOpacity>
+            </PressableOpacity>
           </View>
         </View>
       ) : null}

@@ -4,15 +4,8 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  BackHandler,
-  StatusBar,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, BackHandler, StatusBar } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   FadeInDown,

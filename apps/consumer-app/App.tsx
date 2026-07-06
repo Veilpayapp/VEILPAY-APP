@@ -309,7 +309,10 @@ function MainApp() {
 
   // ── P0: Refresh balances and transactions on app foreground ──
   const appStateRef = useRef(AppState.currentState);
-  const lastForegroundTimeRef = useRef(Date.now());
+  const lastForegroundTimeRef = useRef<number | null>(null);
+  if (lastForegroundTimeRef.current === null) {
+    lastForegroundTimeRef.current = Date.now();
+  }
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
@@ -319,7 +322,7 @@ function MainApp() {
       appStateRef.current = nextAppState;
 
       if (wasBackground && isNowActive && isConnected && address) {
-        const elapsed = Date.now() - lastForegroundTimeRef.current;
+        const elapsed = Date.now() - (lastForegroundTimeRef.current ?? Date.now());
         lastForegroundTimeRef.current = Date.now();
 
         if (elapsed > 10_000) {
@@ -352,36 +355,33 @@ function MainApp() {
   // app is fully ready AND the lock is cleared, so this is a pure UX reordering
   // that does not weaken the biometric gate — no wallet decryption is gated by
   // biometrics today.
-  const renderContent = () => {
-    if (shouldShowBiometricPrompt) {
-      return (
-        <BiometricPrompt
-          onSuccess={() => setIsBiometricUnlocked(true)}
-          onCancel={() => {
-            // If biometrics are unavailable, continue without logging the user out.
-            setBiometricsEnabled(false);
-            setIsBiometricUnlocked(true);
-          }}
-        />
-      );
-    }
-
-    if (!isAppReady) {
-      return (
-        <BootSplash
-          title="VEILPAY"
-          subtitle={
-            areFontsReady
-              ? bootstrapRetryCount > 0
-                ? `Retrying connection (${bootstrapRetryCount}/3)...`
-                : 'Securing wallet session...'
-              : 'Loading typography...'
-          }
-        />
-      );
-    }
-
-    return (
+  let content: React.ReactElement;
+  if (shouldShowBiometricPrompt) {
+    content = (
+      <BiometricPrompt
+        onSuccess={() => setIsBiometricUnlocked(true)}
+        onCancel={() => {
+          // If biometrics are unavailable, continue without logging the user out.
+          setBiometricsEnabled(false);
+          setIsBiometricUnlocked(true);
+        }}
+      />
+    );
+  } else if (!isAppReady) {
+    content = (
+      <BootSplash
+        title="VEILPAY"
+        subtitle={
+          areFontsReady
+            ? bootstrapRetryCount > 0
+              ? `Retrying connection (${bootstrapRetryCount}/3)...`
+              : 'Securing wallet session...'
+            : 'Loading typography...'
+        }
+      />
+    );
+  } else {
+    content = (
       <>
         <NetworkStatusBanner />
         <CommitmentSaveBanner />
@@ -397,7 +397,7 @@ function MainApp() {
         </View>
       </>
     );
-  };
+  }
 
   // Hide the native splash only after React has committed and laid out its
   // first frame (the near-black GestureHandlerRootView is already painted), so
@@ -428,7 +428,7 @@ function MainApp() {
       >
         <SafeAreaProvider style={{ backgroundColor: '#0A0A0A' }}>
           <StatusBar style="light" />
-          {renderContent()}
+          {content}
         </SafeAreaProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>

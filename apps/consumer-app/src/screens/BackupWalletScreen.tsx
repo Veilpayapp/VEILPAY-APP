@@ -4,13 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,  StyleSheet,  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar, Alert } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography, spacing } from '../styles/design-tokens';
@@ -31,8 +26,13 @@ export function BackupWalletScreen({ navigation }: any) {
   const styles = useStyles(themeStyles);
   const toast = useToast();
   const { isAvailable, authenticate } = useBiometrics();
-  const { biometricsEnabled } = useSettingsStore();  const [mnemonic, setMnemonic] = useState<string[]>([]);
-  const [isRevealed, setIsRevealed] = useState(false);  const [isLoading, setIsLoading] = useState(true);  useEffect(() => {    loadMnemonic();  }, []);
+  const { biometricsEnabled } = useSettingsStore();
+  const [mnemonic, setMnemonic] = useState<string[]>([]);
+  const [isRevealed, setIsRevealed] = useState(false);
+  useEffect(() => {
+    loadMnemonic();
+    // eslint-disable-next-line react-doctor/exhaustive-deps -- mount-only load; loadMnemonic is defined in-component and stable for this purpose.
+  }, []);
 
   const loadMnemonic = async () => {
     try {
@@ -42,8 +42,6 @@ export function BackupWalletScreen({ navigation }: any) {
       }
     } catch (error) {
       toast.show('Failed to load recovery phrase', 'error');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -74,11 +72,13 @@ export function BackupWalletScreen({ navigation }: any) {
   };
 
   const handleCopyCancel = () => {
-    setShowWarning(false);  };
+    setShowWarning(false);
+  };
 
   const handleBack = () => navigation.goBack();
 
-  return (    <SafeAreaView style={styles.container}>
+  return (
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.surfaceScreen} />
 
       <View style={styles.header}>
@@ -109,12 +109,14 @@ export function BackupWalletScreen({ navigation }: any) {
             {!isRevealed ? (
               <View style={styles.hiddenOverlay}>
                 <View style={styles.blurEffect} />
-                <Icon name="private" size={48} color={colors.textFaint} style={{ marginBottom: 16 }} />                <Text style={styles.hiddenText}>Tap below to reveal your phrase</Text>
+                <Icon name="private" size={48} color={colors.textFaint} style={{ marginBottom: 16 }} />
+                <Text style={styles.hiddenText}>Tap below to reveal your phrase</Text>
                 <Text style={styles.hiddenSubtext}>Make sure no one is watching your screen</Text>
               </View>
             ) : (
               <Animated.View entering={FadeIn} style={styles.wordsGrid}>
-                {mnemonic.map((word, index) => (                  <View key={index} style={styles.wordContainer}>
+                {mnemonic.map((word, index) => (
+                  <View key={`${index}-${word}`} style={styles.wordContainer}>
                     <Text style={styles.wordNumber}>{index + 1}.</Text>
                     <Text style={styles.wordText}>{word}</Text>
                   </View>

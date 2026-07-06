@@ -233,12 +233,28 @@ export function estimateFiatPayout(cryptoAmount: number, cryptoPriceUsd: number,
 
 // ---------------------------------------------------------------------------
 // Formatters
-// ---------------------------------------------------------------------------export function formatFiat(amount: number, currency: FiatCurrency = 'USD'): string {  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+// ---------------------------------------------------------------------------/** Cache of currency formatters, keyed by fiat currency, to avoid rebuilding on every call. */
+const FIAT_FORMATTERS: Partial<Record<FiatCurrency, Intl.NumberFormat>> = {};
+
+function getFiatFormatter(currency: FiatCurrency): Intl.NumberFormat {
+  let formatter = FIAT_FORMATTERS[currency];
+  if (!formatter) {
+    // Formatter varies by currency and is memoized in FIAT_FORMATTERS above,
+    // so it is not reconstructed per call — hoisting to module scope isn't possible.
+    // eslint-disable-next-line react-doctor/js-hoist-intl
+    formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    FIAT_FORMATTERS[currency] = formatter;
+  }
+  return formatter;
+}
+
+export function formatFiat(amount: number, currency: FiatCurrency = 'USD'): string {
+  return getFiatFormatter(currency).format(amount);
 }
 
 export function formatCrypto(amount: number, symbol: string): string {

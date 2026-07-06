@@ -1,27 +1,20 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar, ActivityIndicator } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme, useStyles, typography, type Colors } from "../styles/design-tokens";
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { SovereignCard } from '../components/SovereignCard';
 import { Icon } from '../components/Icon';
-import { CURRENCIES } from '../components/CurrencySelectorModal';
+import { CURRENCIES } from '../constants/currencies';
 import { useWalletStore, SUPPORTED_CHAINS, type ChainType } from '../stores/walletStore';
 import { SCREENS } from '../constants/screens';
 import { triggerLightImpactHaptic } from '../utils/haptics';
 import { buildTransakDepositUrl, FIAT_CURRENCIES, type FiatCurrency } from '../utils/transak';
 import { filterSupportedQuotes, getSupportedTokens, isTokenSupported } from '../utils/onrampProviderMatrix';
 import { logQuotesFetched, logQuotesFetchError, logProviderSelected, logUnsupportedChain } from '../utils/onrampLogger';
-import { useOnramp } from '../features/fiat-gateway';
+import { useOnramp } from '../hooks/useOnramp';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -60,6 +53,25 @@ const UNSUPPORTED_ONRAMP_CHAINS = new Set([
   'solana-devnet',
   'stellar-testnet',
 ]);
+
+const getProviderName = (providerId: string) => {
+  switch(providerId) {
+    case 'onramp_money': return 'Onramp.money';
+    case 'moonpay': return 'MoonPay';
+    case 'transak': return 'Transak';
+    default: return providerId;
+  }
+};
+
+const getProviderIcon = (providerId: string) => {
+  switch(providerId) {
+    case 'onramp_money': return 'flash';
+    case 'moonpay': return 'card';
+    case 'stripe': return 'card';
+    case 'transak': return 'globe';
+    default: return 'card';
+  }
+};
 
 export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProps) {
   const { flow, fiatAmount, fiatCurrency, cryptoToken, chainKey } = route.params;
@@ -137,6 +149,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
   }, [fiatAmount, fiatCurrency, cryptoToken, flow, chainKey]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-doctor/no-pass-data-to-parent -- fetches quotes into this screen's own local state; no parent callback involved.
     fetchQuotes();
   }, [fetchQuotes]);
 
@@ -211,25 +224,6 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
     }
   };
 
-  const getProviderName = (providerId: string) => {
-    switch(providerId) {
-      case 'onramp_money': return 'Onramp.money';
-      case 'moonpay': return 'MoonPay';
-      case 'transak': return 'Transak';
-      default: return providerId;
-    }
-  };
-
-  const getProviderIcon = (providerId: string) => {
-    switch(providerId) {
-      case 'onramp_money': return 'flash';
-      case 'moonpay': return 'card';
-      case 'stripe': return 'card';
-      case 'transak': return 'globe';
-      default: return 'card';
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor={colors.surfaceScreen} />
@@ -256,9 +250,9 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
         ) : error ? (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity onPress={fetchQuotes} style={styles.retryButton}>
+            <PressableOpacity onPress={fetchQuotes} style={styles.retryButton}>
               <Text style={styles.retryText}>RETRY</Text>
-            </TouchableOpacity>
+            </PressableOpacity>
           </View>
         ) : (
           <View style={styles.quotesContainer}>
@@ -266,7 +260,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
               const supportedTokens = getSupportedTokens(quote.provider, chainKey, nativeSymbol);
               const tokenOk = supportedTokens.includes(cryptoToken.toUpperCase());
               return (
-              <TouchableOpacity
+              <PressableOpacity
                 key={quote.provider}
                 onPress={() => handleProviderSelect(quote.provider)}
                 activeOpacity={0.9}
@@ -302,7 +296,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
                     </View>
                   </View>
                 </SovereignCard>
-              </TouchableOpacity>
+              </PressableOpacity>
               );
             })}
           </View>

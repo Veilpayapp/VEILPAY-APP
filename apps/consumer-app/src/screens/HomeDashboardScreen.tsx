@@ -8,15 +8,8 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  RefreshControl,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, StatusBar, RefreshControl } from "react-native";
+import { PressableOpacity } from '../components/PressableOpacity';
 import * as Haptics from 'expo-haptics';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useWalletStore, SUPPORTED_CHAINS } from "../stores/walletStore";
@@ -41,11 +34,12 @@ import { DashboardQuickActions } from '../components/home/DashboardQuickActions'
 import { EmptyState } from "../components/EmptyState";
 import { NetworkSelectorModal } from "../components/NetworkSelectorModal";
 import { CurrencySelectorModal } from "../components/CurrencySelectorModal";
-import { FiatGatewayModal } from "../features/fiat-gateway";
+import { FiatGatewayModal } from "../components/FiatGatewayModal";
 import { openExternalUrl } from "../utils/externalLink";
 import { useBalance } from "../hooks/useBalance";
 import { useMarketData } from "../hooks/useMarketData";
-import { useOnramp, isFiatGatewayOrderForAddress } from "../features/fiat-gateway";
+import { useOnramp } from "../hooks/useOnramp";
+import { isFiatGatewayOrderForAddress } from "../utils/fiatGateway";
 import Animated, { FadeInDown, useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, interpolate, Extrapolation } from "react-native-reanimated";
 import { MotiView } from "moti";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -63,6 +57,59 @@ interface HomeDashboardScreenProps {
   navigation: HomeDashboardScreenNavigationProp;
   route: HomeDashboardRouteProp;
 }
+interface DashboardRefreshControlProps {
+  refreshing: boolean;
+  onRefresh: () => void;
+  accentColor: string;
+}
+
+function DashboardRefreshControl({ refreshing, onRefresh, accentColor }: DashboardRefreshControlProps) {
+  return (
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      tintColor={accentColor}
+      colors={[accentColor]}
+    />
+  );
+}
+
+const formatTransakAmount = (value?: string, currency?: string) => {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number.parseFloat(value);
+  const formatted = Number.isFinite(parsed)
+    ? parsed.toLocaleString('en-US', { maximumFractionDigits: 6 })
+    : value;
+
+  return currency ? `${formatted} ${currency}` : formatted;
+};
+
+const formatTransactionTime = (timestamp: number) => {
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const minutes = Math.floor(diff / (1000 * 60));
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+
+  return new Date(timestamp).toLocaleDateString();
+};
+
+const formatAddress = (value: string) => {
+  if (!value) {
+    return "0x...";
+  }
+
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
+};
+
 export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
@@ -409,44 +456,6 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
       })()
     : null;
 
-  const formatTransakAmount = (value?: string, currency?: string) => {
-    if (!value) {
-      return null;
-    }
-
-    const parsed = Number.parseFloat(value);
-    const formatted = Number.isFinite(parsed)
-      ? parsed.toLocaleString('en-US', { maximumFractionDigits: 6 })
-      : value;
-
-    return currency ? `${formatted} ${currency}` : formatted;
-  };
-
-  const formatTransactionTime = (timestamp: number) => {
-    const now = Date.now();
-    const diff = now - timestamp;
-
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
-
-    return new Date(timestamp).toLocaleDateString();
-  };
-
-  const formatAddress = (value: string) => {
-    if (!value) {
-      return "0x...";
-    }
-
-    return `${value.slice(0, 6)}...${value.slice(-4)}`;
-  };
-
-
-
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar barStyle="light-content" backgroundColor={colors.bgPrimary} />
@@ -459,11 +468,10 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
           onScroll={scrollHandler}
           scrollEventThrottle={16}
           refreshControl={
-            <RefreshControl
+            <DashboardRefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={colors.accent}
-              colors={[colors.accent]}
+              accentColor={colors.accent}
             />
           }
         >
@@ -473,7 +481,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: "spring", stiffness: 250, damping: 20, delay: getDelay(100) }}
           >
-            <TouchableOpacity
+            <PressableOpacity
               onPress={() => setShowChainSelector(true)}
             activeOpacity={0.9}
             style={styles.chainSelectorWrapper}
@@ -496,7 +504,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
                 </View>
               </View>
             </SovereignCard>
-            </TouchableOpacity>
+            </PressableOpacity>
           </MotiView>
 
           {/* Balance Card */}

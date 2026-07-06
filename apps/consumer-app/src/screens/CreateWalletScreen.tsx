@@ -9,7 +9,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
-  Text,  StyleSheet,  TouchableOpacity,
+  Text,  StyleSheet,  Pressable,
   ScrollView,
   StatusBar,
   InteractionManager,
@@ -197,7 +197,7 @@ interface CreateWalletScreenProps {
                   </View>                  <Text style={styles.loadingText}>Generating secure seed phrase...</Text>
                 </View>
               ) : (
-                seedWords.map((word: string, index: number) => (                  <View key={index} style={styles.seedCell}>
+                seedWords.map((word: string, index: number) => (                  <View key={`${index}-${word}`} style={styles.seedCell}>
                     <Text style={styles.seedNumber}>{index + 1}</Text>
                     <Text style={styles.seedWord}>{word}</Text>
                   </View>
@@ -215,10 +215,9 @@ interface CreateWalletScreenProps {
           />
 
           {/* Confirmation Checkbox */}
-          <TouchableOpacity
-            style={styles.checkboxRow}
+          <Pressable
+            style={({ pressed }) => [styles.checkboxRow, pressed && { opacity: 0.6 }]}
             onPress={() => setSavedConfirmed(!savedConfirmed)}
-            activeOpacity={0.7}
             accessibilityRole="checkbox"
             accessibilityLabel="I have saved my seed phrase securely"
             accessibilityHint="Required before continuing"
@@ -230,7 +229,7 @@ interface CreateWalletScreenProps {
             <Text style={styles.checkboxLabel}>
               I've written down my seed phrase and stored it securely
             </Text>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* Derived Address Display */}
           {!isLoading && (            <SovereignCard backgroundColor={colors.surfaceCard} padding={16} style={{ marginBottom: 24 }}>

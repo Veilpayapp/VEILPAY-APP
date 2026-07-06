@@ -12,7 +12,8 @@
  * - Reports all errors to Sentry
  */
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import { PressableOpacity } from './PressableOpacity';
 import * as Updates from 'expo-updates';
 import { typography, lightColors, darkColors, type Colors } from '../styles/design-tokens';
 import { useWalletStore } from '../stores/walletStore';
@@ -122,7 +123,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 We're sorry for the inconvenience. The app has encountered a repeated error
                 and cannot recover automatically. Please restart the app to continue.
               </Text>
-              <TouchableOpacity
+              <PressableOpacity
                 style={[currentStyles.button, currentStyles.buttonPrimary]}
                 onPress={this.handleRestartApp}
                 accessibilityRole="button"
@@ -130,7 +131,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 accessibilityHint="Reloads the app to recover from repeated errors"
               >
                 <Text style={currentStyles.buttonTextPrimary}>Restart App</Text>
-              </TouchableOpacity>
+              </PressableOpacity>
             </View>
           </View>
         );
@@ -146,7 +147,7 @@ export class ErrorBoundary extends Component<Props, State> {
               {this.state.error?.message || 'An unexpected error occurred'}
             </Text>
             <View style={currentStyles.buttonRow}>
-              <TouchableOpacity
+              <PressableOpacity
                 style={[currentStyles.button, currentStyles.buttonSecondary]}
                 onPress={this.handleReset}
                 accessibilityRole="button"
@@ -154,8 +155,8 @@ export class ErrorBoundary extends Component<Props, State> {
                 accessibilityHint="Attempts to recover from the error screen"
               >
                 <Text style={currentStyles.buttonTextSecondary}>Try Again</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+              </PressableOpacity>
+              <PressableOpacity
                 style={[currentStyles.button, currentStyles.buttonPrimary]}
                 onPress={this.handleRestartApp}
                 accessibilityRole="button"
@@ -163,7 +164,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 accessibilityHint="Reloads the app to recover from the error"
               >
                 <Text style={currentStyles.buttonTextPrimary}>Restart App</Text>
-              </TouchableOpacity>
+              </PressableOpacity>
             </View>
           </View>
         </View>
@@ -253,4 +254,3 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
   },
 });
 
-export default ErrorBoundary;

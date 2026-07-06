@@ -65,20 +65,20 @@ function makeBrandedIcon(svgInput: any) {
   return Icon;
 }
 
-export const EthereumIcon = makeBrandedIcon(branded_ethereum);
-export const BaseIcon = makeBrandedIcon(CORRECTED_BASE_SVG);
-export const ArbitrumIcon = makeBrandedIcon(branded_arbitrum);
-export const OptimismIcon = makeBrandedIcon(branded_optimism);
-export const PolygonIcon = makeBrandedIcon(branded_polygon);
-export const BnbIcon = makeBrandedIcon(branded_bnb);
-export const SolanaIcon = makeBrandedIcon(branded_solana);
-export const BitcoinIcon = makeBrandedIcon(branded_bitcoin);
-export const TronIcon = makeBrandedIcon(branded_tron);
-export const AvalancheIcon = makeBrandedIcon(branded_avalanche);
-export const LineaIcon = makeBrandedIcon(branded_linea);
-export const AptosIcon = makeBrandedIcon(branded_aptos);
-export const StellarIcon = makeBrandedIcon(CORRECTED_STELLAR_SVG);
-export const HyperEVMIcon = makeBrandedIcon(branded_hyperevm);
+const EthereumIcon = makeBrandedIcon(branded_ethereum);
+const BaseIcon = makeBrandedIcon(CORRECTED_BASE_SVG);
+const ArbitrumIcon = makeBrandedIcon(branded_arbitrum);
+const OptimismIcon = makeBrandedIcon(branded_optimism);
+const PolygonIcon = makeBrandedIcon(branded_polygon);
+const BnbIcon = makeBrandedIcon(branded_bnb);
+const SolanaIcon = makeBrandedIcon(branded_solana);
+const BitcoinIcon = makeBrandedIcon(branded_bitcoin);
+const TronIcon = makeBrandedIcon(branded_tron);
+const AvalancheIcon = makeBrandedIcon(branded_avalanche);
+const LineaIcon = makeBrandedIcon(branded_linea);
+const AptosIcon = makeBrandedIcon(branded_aptos);
+const StellarIcon = makeBrandedIcon(CORRECTED_STELLAR_SVG);
+const HyperEVMIcon = makeBrandedIcon(branded_hyperevm);
 
 /**
  * Neutral compass fallback for unknown chains. Stays inline so we never crash
@@ -92,7 +92,7 @@ const DEFAULT_NETWORK_SVG = `
     stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
 </svg>
 `;
-export const DefaultNetworkIcon = makeBrandedIcon(DEFAULT_NETWORK_SVG);
+const DefaultNetworkIcon = makeBrandedIcon(DEFAULT_NETWORK_SVG);
 
 export const getNetworkIcon = (chainKey: string) => {
   const normalized = chainKey.toLowerCase();

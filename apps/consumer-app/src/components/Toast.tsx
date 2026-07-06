@@ -5,11 +5,9 @@
  * UPDATED: Now uses premium SVG icons
  */
 
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,  StyleSheet,  Animated,  TouchableOpacity,
-} from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
+import { PressableOpacity } from './PressableOpacity';
 import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 import { Icon, IconName } from './Icon';
 
@@ -59,9 +57,39 @@ export function Toast({
 }: ToastProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
-  const translateY = useRef(new Animated.Value(100)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const translateYRef = useRef<Animated.Value | null>(null);
+  if (translateYRef.current === null) translateYRef.current = new Animated.Value(100);
+  const translateY = translateYRef.current;
+  const opacityRef = useRef<Animated.Value | null>(null);
+  if (opacityRef.current === null) opacityRef.current = new Animated.Value(0);
+  const opacity = opacityRef.current;
   const config = getToastConfig(colors)[type];
+
+  // Keep the latest onDismiss without destabilizing handleDismiss (which the effect depends on).
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
+  const handleDismiss = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: 100,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onDismissRef.current();
+    });
+  }, [translateY, opacity]);
+
+  // Latest handleDismiss, read inside the auto-dismiss timer so the effect
+  // doesn't re-subscribe (and restart the timer) when the callback identity changes.
+  const handleDismissRef = useRef(handleDismiss);
+  handleDismissRef.current = handleDismiss;
 
   useEffect(() => {
     if (visible) {
@@ -80,30 +108,15 @@ export function Toast({
       ]).start();
 
       const timer = setTimeout(() => {
-        handleDismiss();
+        handleDismissRef.current();
       }, duration);
 
       return () => clearTimeout(timer);
-    } else {      translateY.setValue(100);
+    } else {
+      translateY.setValue(100);
       opacity.setValue(0);
-    }  }, [visible, duration]);
-
-  const handleDismiss = () => {
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: 100,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onDismiss();
-    });
-  };
+    }
+  }, [visible, duration, translateY, opacity]);
 
   if (!visible) return null;
 
@@ -118,7 +131,7 @@ export function Toast({
       ]}
       accessibilityLiveRegion="polite"
     >
-      <TouchableOpacity
+      <PressableOpacity
         activeOpacity={0.9}
         onPress={handleDismiss}
         style={styles.touchable}
@@ -128,7 +141,7 @@ export function Toast({
       >
         {/* Shadow layer */}
         <View style={[styles.shadow, { backgroundColor: config.shadowColor }]} />
-        
+
         {/* Surface layer */}
         <View style={[styles.surface, { backgroundColor: config.bgColor }]}>
           <View style={styles.iconBox}>
@@ -138,16 +151,18 @@ export function Toast({
             {message}
           </Text>
         </View>
-      </TouchableOpacity>
+      </PressableOpacity>
     </Animated.View>
   );
 }
 
 const themeStyles = (colors: Colors) => StyleSheet.create({
-  container: {    position: 'absolute',
+  container: {
+    position: 'absolute',
     bottom: 24,
     left: 24,
-    right: 24,    zIndex: 1000,
+    right: 24,
+    zIndex: 1000,
   },
   touchable: {
     width: '100%',

@@ -119,7 +119,7 @@ function getNativeSecurityModule(): any {
  * Checks if the device is rooted (Android) or jailbroken (iOS).
  * Uses multiple heuristics and (if available) native SafetyNet/DeviceCheck APIs.
  */
-export async function checkDeviceSecurity(): Promise<DeviceSecurityInfo> {
+async function checkDeviceSecurity(): Promise<DeviceSecurityInfo> {
   if (cachedSecurityInfo) {
     return cachedSecurityInfo;
   }
@@ -633,7 +633,7 @@ export async function signWithHardwareWallet(
  * Placeholder for hardware wallet address derivation.
  * Would use the device to derive the public key at a given BIP-44 path.
  */
-export async function deriveHardwareWalletAddress(
+async function deriveHardwareWalletAddress(
   _type: HardwareWalletType,
   _path: string
 ): Promise<string> {
@@ -647,7 +647,7 @@ export async function deriveHardwareWalletAddress(
 /**
  * Checks if a hardware wallet is currently active (in the middle of a signing session).
  */
-export function isHardwareWalletActive(type: HardwareWalletType): boolean {
+function isHardwareWalletActive(type: HardwareWalletType): boolean {
   return HARDWARE_WALLET_LIFECYCLE[type] ?? false;
 }
 

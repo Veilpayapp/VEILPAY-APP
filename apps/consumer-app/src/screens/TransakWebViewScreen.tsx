@@ -13,13 +13,8 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
-    Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -29,7 +24,7 @@ import { useTheme, useStyles, typography } from '../styles/design-tokens';
 import { Icon } from '../components/Icon';
 import { useWalletStore } from '../stores/walletStore';
 import { useTransactionStore, type TransakOrderStatus } from '../stores/transactionStore';
-import { FiatGatewayWebViewShell } from '../features/fiat-gateway';
+import { FiatGatewayWebViewShell } from '../components/FiatGatewayWebViewShell';
 import { getTransakReferrerDomain } from '../utils/transak';
 
 // ---------------------------------------------------------------------------
@@ -113,6 +108,55 @@ const INJECTED_JS = `
   true;
 })();
 `;
+
+// ---------------------------------------------------------------------------
+// Header sub-components — extracted to stable references so they aren't
+// freshly-created JSX elements passed as props on every render.
+// ---------------------------------------------------------------------------
+
+function TransakHeaderCenter({
+  styles,
+  title,
+  flowLabel,
+  statusSummary,
+  kycStatus,
+  kycStatusLabel,
+  kycBadgeColor,
+}: {
+  styles: ReturnType<typeof themeStyles>;
+  title: string;
+  flowLabel: string;
+  statusSummary: string;
+  kycStatus: KycStatus;
+  kycStatusLabel: string;
+  kycBadgeColor: Record<KycStatus, string>;
+}) {
+  return (
+    <View style={styles.headerCenter}>
+      <Text style={styles.headerTitle}>{title}</Text>
+      <Text style={styles.headerSubtitle}>{flowLabel} • {statusSummary}</Text>
+      <View style={[styles.kycBadge, { backgroundColor: kycBadgeColor[kycStatus] + '22', borderColor: kycBadgeColor[kycStatus] }]}>
+        <Text style={[styles.kycBadgeText, { color: kycBadgeColor[kycStatus] }]}>
+          {kycStatusLabel}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function TransakHeaderRight({
+  styles,
+  orderPillLabel,
+}: {
+  styles: ReturnType<typeof themeStyles>;
+  orderPillLabel: string;
+}) {
+  return (
+    <View style={styles.orderPill}>
+      <Text style={styles.orderPillText}>{orderPillLabel}</Text>
+    </View>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -355,21 +399,19 @@ export function TransakWebViewScreen({ navigation, route }: Props) {
             loading={loading}
             loadingMessage="Loading Transak..."
             headerCenter={
-                <View style={styles.headerCenter}>
-                    <Text style={styles.headerTitle}>{title}</Text>
-                    <Text style={styles.headerSubtitle}>{flowLabel} • {statusSummary}</Text>
-                    <View style={[styles.kycBadge, { backgroundColor: kycBadgeColor[kycStatus] + '22', borderColor: kycBadgeColor[kycStatus] }]}>
-                        <Text style={[styles.kycBadgeText, { color: kycBadgeColor[kycStatus] }]}>
-                            {kycStatusLabel}
-                        </Text>
-                    </View>
-                </View>
+                <TransakHeaderCenter
+                    styles={styles}
+                    title={title}
+                    flowLabel={flowLabel}
+                    statusSummary={statusSummary}
+                    kycStatus={kycStatus}
+                    kycStatusLabel={kycStatusLabel}
+                    kycBadgeColor={kycBadgeColor}
+                />
             }
             headerRight={
                 orderStatus.status && orderStatus.status !== 'failed' ? (
-                    <View style={styles.orderPill}>
-                        <Text style={styles.orderPillText}>{orderPillLabel}</Text>
-                    </View>
+                    <TransakHeaderRight styles={styles} orderPillLabel={orderPillLabel} />
                 ) : undefined
             }
             banner={overlayMessage ? (
@@ -383,22 +425,22 @@ export function TransakWebViewScreen({ navigation, route }: Props) {
                     <Text style={styles.errorTitle}>Transak failed to load</Text>
                     <Text style={styles.errorText}>{loadError}</Text>
                     <View style={styles.errorActions}>
-                        <TouchableOpacity
+                        <PressableOpacity
                             onPress={handleRetry}
                             style={styles.retryButton}
                             accessibilityRole="button"
                             accessibilityLabel="Retry loading Transak"
                         >
                             <Text style={styles.retryButtonText}>RETRY</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
+                        </PressableOpacity>
+                        <PressableOpacity
                             onPress={handleClose}
                             style={styles.closeErrorButton}
                             accessibilityRole="button"
                             accessibilityLabel="Close Transak"
                         >
                             <Text style={styles.closeErrorButtonText}>CLOSE</Text>
-                        </TouchableOpacity>
+                        </PressableOpacity>
                     </View>
                 </View>
             ) : null}
@@ -601,4 +643,3 @@ const themeStyles = (colors: any) => StyleSheet.create({
   },
 });
 
-export default TransakWebViewScreen;

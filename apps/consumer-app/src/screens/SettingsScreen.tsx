@@ -5,16 +5,8 @@
  */
 
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  Switch,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, StatusBar, Switch, Alert } from "react-native";
+import { PressableOpacity } from '../components/PressableOpacity';
 import Constants from "expo-constants";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme, useStyles, typography } from "../styles/design-tokens";
@@ -313,67 +305,6 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
     });
   };
 
-  // Render settings section
-  const renderSection = (title: string, items: SettingsItem[], index: number = 0) => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {items.map((item) => (
-        <SovereignCard
-          key={item.id}
-          backgroundColor={colors.surfaceCard}
-          style={styles.settingsCard}
-        >
-          <TouchableOpacity
-            onPress={item.onPress}
-            style={styles.settingsItem}
-            disabled={item.type === "toggle"}
-            accessible={item.type !== "toggle"}
-            accessibilityRole={item.type !== "toggle" ? "button" : undefined}
-            accessibilityLabel={
-              item.type !== "toggle"
-                ? `${item.label}${item.description ? `. ${item.description}` : ""}`
-                : undefined
-            }
-            accessibilityHint={
-              item.type === "navigate"
-                ? "Opens this setting"
-                : item.type === "action"
-                  ? "Activates this action"
-                  : undefined
-            }
-            accessibilityState={item.type !== "toggle" ? { disabled: false } : undefined}
-          >
-            <View style={styles.settingsLeft}>
-              <View style={[styles.iconBox, item.danger && styles.iconBoxDanger]}>
-                <Icon name={item.iconName} size={20}           color={item.danger ? colors.error : colors.accent} />
-              </View>
-              <View style={styles.settingsText}>
-                <Text style={[styles.settingsLabel, item.danger && styles.settingsLabelDanger]}>
-                  {item.label}
-                </Text>
-                {item.description && (
-                  <Text style={styles.settingsDescription}>{item.description}</Text>
-                )}
-              </View>
-            </View>
-            {item.type === "toggle" ? (
-              <Switch
-                value={item.value}
-                onValueChange={item.onPress}
-        trackColor={{ false: colors.bgContainerHigh, true: colors.accent }}
-        thumbColor={item.value ? colors.textPrimary : colors.textFaint}
-                accessibilityLabel={`${item.label}${item.description ? `. ${item.description}` : ""}`}
-                accessibilityHint="Double tap to toggle"
-              />
-            ) : item.type === "navigate" ? (
-              <Icon name="chevron-right" size={20} color={colors.textTertiary} />
-            ) : null}
-          </TouchableOpacity>
-        </SovereignCard>
-      ))}
-    </View>
-  );
-
   // Settings sections data
   const walletSection: SettingsItem[] = [
     {
@@ -581,12 +512,12 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
           </View>
 
           {/* Settings Sections */}
-          {renderSection("WALLET", walletSection, 0)}
-          {renderSection("SECURITY", securitySection, 1)}
-          {renderSection("PRIVACY", privacySection, 2)}
-          {renderSection("PREFERENCES", preferencesSection, 3)}
-          {renderSection("ABOUT", aboutSection, 4)}
-          {renderSection("DANGER ZONE", dangerSection, 5)}
+          <SettingsSection title="WALLET" items={walletSection} styles={styles} colors={colors} />
+          <SettingsSection title="SECURITY" items={securitySection} styles={styles} colors={colors} />
+          <SettingsSection title="PRIVACY" items={privacySection} styles={styles} colors={colors} />
+          <SettingsSection title="PREFERENCES" items={preferencesSection} styles={styles} colors={colors} />
+          <SettingsSection title="ABOUT" items={aboutSection} styles={styles} colors={colors} />
+          <SettingsSection title="DANGER ZONE" items={dangerSection} styles={styles} colors={colors} />
 
           <View style={{ height: 120 }} />
         </ScrollView>
@@ -643,6 +574,75 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
         onDismiss={toast.hide}
       />
     </SafeAreaView>
+  );
+}
+
+interface SettingsSectionProps {
+  title: string;
+  items: SettingsItem[];
+  styles: ReturnType<typeof themeStyles>;
+  colors: any;
+}
+
+function SettingsSection({ title, items, styles, colors }: SettingsSectionProps) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {items.map((item) => (
+        <SovereignCard
+          key={item.id}
+          backgroundColor={colors.surfaceCard}
+          style={styles.settingsCard}
+        >
+          <PressableOpacity
+            onPress={item.onPress}
+            style={styles.settingsItem}
+            disabled={item.type === "toggle"}
+            accessible={item.type !== "toggle"}
+            accessibilityRole={item.type !== "toggle" ? "button" : undefined}
+            accessibilityLabel={
+              item.type !== "toggle"
+                ? `${item.label}${item.description ? `. ${item.description}` : ""}`
+                : undefined
+            }
+            accessibilityHint={
+              item.type === "navigate"
+                ? "Opens this setting"
+                : item.type === "action"
+                  ? "Activates this action"
+                  : undefined
+            }
+            accessibilityState={item.type !== "toggle" ? { disabled: false } : undefined}
+          >
+            <View style={styles.settingsLeft}>
+              <View style={[styles.iconBox, item.danger && styles.iconBoxDanger]}>
+                <Icon name={item.iconName} size={20}           color={item.danger ? colors.error : colors.accent} />
+              </View>
+              <View style={styles.settingsText}>
+                <Text style={[styles.settingsLabel, item.danger && styles.settingsLabelDanger]}>
+                  {item.label}
+                </Text>
+                {item.description && (
+                  <Text style={styles.settingsDescription}>{item.description}</Text>
+                )}
+              </View>
+            </View>
+            {item.type === "toggle" ? (
+              <Switch
+                value={item.value}
+                onValueChange={item.onPress}
+        trackColor={{ false: colors.bgContainerHigh, true: colors.accent }}
+        thumbColor={item.value ? colors.textPrimary : colors.textFaint}
+                accessibilityLabel={`${item.label}${item.description ? `. ${item.description}` : ""}`}
+                accessibilityHint="Double tap to toggle"
+              />
+            ) : item.type === "navigate" ? (
+              <Icon name="chevron-right" size={20} color={colors.textTertiary} />
+            ) : null}
+          </PressableOpacity>
+        </SovereignCard>
+      ))}
+    </View>
   );
 }
 

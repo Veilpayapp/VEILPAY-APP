@@ -1,4 +1,5 @@
-import React from 'react';import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import React from 'react';import { View, Text, StyleSheet } from 'react-native';
+import { PressableOpacity } from './PressableOpacity';
 import { Icon } from './Icon';
 import { typography, useTheme, useStyles, type Colors } from "../styles/design-tokens";
 
@@ -17,7 +18,7 @@ export function ScreenBackButton({
   const styles = useStyles(themeStyles);
   
   return (
-    <TouchableOpacity
+    <PressableOpacity
       onPress={onPress}
       style={styles.button}
       accessibilityRole="button"
@@ -28,7 +29,7 @@ export function ScreenBackButton({
         <Icon name="back" size={16} color={colors.textMuted} />
         <Text style={styles.label}>BACK</Text>
       </View>
-    </TouchableOpacity>
+    </PressableOpacity>
   );
 }
 

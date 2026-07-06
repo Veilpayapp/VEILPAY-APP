@@ -22,11 +22,17 @@ const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_RETRIES = 3;
 const RETRY_BASE_DELAY_MS = 300;
 
+// Static per-chain overrides so Expo/Babel inlines each EXPO_PUBLIC_* value at
+// build time (a computed `process.env[key]` is not inlined and reads undefined).
+const SOLANA_RPC_URL_OVERRIDES: Record<string, string | undefined> = {
+  solana: process.env.EXPO_PUBLIC_RPC_SOLANA,
+  'solana-devnet': process.env.EXPO_PUBLIC_RPC_SOLANA_DEVNET,
+};
+
 function buildSolanaEndpoints(chainKey: string): RpcEndpoint[] {
   const endpoints: RpcEndpoint[] = [];
 
-  const overrideEnvKey = `EXPO_PUBLIC_RPC_${chainKey.replace(/-/g, '_').toUpperCase()}`;
-  const overrideUrl = (process.env[overrideEnvKey] || '').trim();
+  const overrideUrl = (SOLANA_RPC_URL_OVERRIDES[chainKey] || '').trim();
 
   if (overrideUrl) {
     endpoints.push({ name: `override-${chainKey}`, url: overrideUrl, weight: 10 });
@@ -140,6 +146,8 @@ class SolanaRpcPool {
 
       for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
+          // Sequential failover/retry across endpoints — must not parallelize.
+          // eslint-disable-next-line react-doctor/async-await-in-loop
           const result = await this.withTimeout(fn(connection));
           recordSuccess(endpoint.name);
           return result;

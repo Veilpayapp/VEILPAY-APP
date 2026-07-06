@@ -1,9 +1,45 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { PressableOpacity } from '../PressableOpacity';
 import { SovereignCard } from '../SovereignCard';
 import { Icon } from '../Icon';
 import { useTheme, useStyles, typography, type Colors } from '../../styles/design-tokens';
 import type { ChainConfig } from '../../stores/walletStore';
+
+function getQuickActionAccessibility(label: string) {
+  switch (label) {
+    case 'SCAN':
+      return {
+        label: 'Scan QR code',
+        hint: 'Opens QR scanner to scan a payment QR code',
+      };
+    case 'SEND':
+      return {
+        label: 'Send payment',
+        hint: 'Opens send payment screen',
+      };
+    case 'SWAP':
+      return {
+        label: 'Swap crypto',
+        hint: 'Opens a swap experience in your browser',
+      };
+    case 'FAUCET':
+      return {
+        label: 'Fund Testnet',
+        hint: 'Opens a faucet to get testnet tokens',
+      };
+    case 'RECEIVE':
+      return {
+        label: 'Receive payment',
+        hint: 'Opens receive QR screen',
+      };
+    default:
+      return {
+        label,
+        hint: `Opens ${label.toLowerCase()} action`,
+      };
+  }
+}
 
 interface DashboardQuickActionsProps {
   activeChain: ChainConfig | null;
@@ -25,41 +61,6 @@ export function DashboardQuickActions({
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
 
-  const getQuickActionAccessibility = (label: string) => {
-    switch (label) {
-      case 'SCAN':
-        return {
-          label: 'Scan QR code',
-          hint: 'Opens QR scanner to scan a payment QR code',
-        };
-      case 'SEND':
-        return {
-          label: 'Send payment',
-          hint: 'Opens send payment screen',
-        };
-      case 'SWAP':
-        return {
-          label: 'Swap crypto',
-          hint: 'Opens a swap experience in your browser',
-        };
-      case 'FAUCET':
-        return {
-          label: 'Fund Testnet',
-          hint: 'Opens a faucet to get testnet tokens',
-        };
-      case 'RECEIVE':
-        return {
-          label: 'Receive payment',
-          hint: 'Opens receive QR screen',
-        };
-      default:
-        return {
-          label,
-          hint: `Opens ${label.toLowerCase()} action`,
-        };
-    }
-  };
-
   return (
     <View style={styles.actionRow} accessibilityRole="toolbar" accessibilityLabel="Quick actions">
       {[
@@ -73,7 +74,7 @@ export function DashboardQuickActions({
           : []),
         { label: 'RECEIVE' as const, iconName: 'receive' as const, handler: onReceive },
       ].map(({ label, iconName, handler, prominent }) => (
-        <TouchableOpacity
+        <PressableOpacity
           key={label}
           onPress={handler}
           activeOpacity={0.9}
@@ -98,7 +99,7 @@ export function DashboardQuickActions({
           <Text style={[styles.actionLabel, prominent && styles.actionLabelProminent]}>
             {label}
           </Text>
-        </TouchableOpacity>
+        </PressableOpacity>
       ))}
     </View>
   );

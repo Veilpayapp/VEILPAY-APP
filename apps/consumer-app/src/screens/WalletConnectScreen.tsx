@@ -1,12 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,  StyleSheet,  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  ActivityIndicator,
-  Linking,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar, ActivityIndicator, Linking } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
 import { SCREENS } from '../constants/screens';
@@ -80,8 +74,15 @@ function resolveChainTypeFromWalletConnect(
     return 'mvm';
   }
 
-  return 'evm';}export function WalletConnectScreen({ navigation, route }: WalletConnectScreenProps) {  const { colors } = useTheme();  const styles = useStyles(themeStyles);
-  const [connecting, setConnecting] = useState<string | null>(null);  const [attemptTimestamps, setAttemptTimestamps] = useState<number[]>([]);  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  return 'evm';
+}
+export function WalletConnectScreen({ navigation, route }: WalletConnectScreenProps) {
+  const { colors } = useTheme();
+  const styles = useStyles(themeStyles);
+  const [connecting, setConnecting] = useState<string | null>(null);
+  // Rate-limit bookkeeping: mutated only inside handlers, never rendered — refs avoid needless re-renders.
+  const attemptTimestampsRef = useRef<number[]>([]);
+  const cooldownUntilRef = useRef<number | null>(null);
   const [inlineError, setInlineError] = useState<string | null>(null);
   const { connect } = useWalletStore();
   const handledCallbackRef = useRef<string | null>(null);
@@ -107,10 +108,13 @@ function resolveChainTypeFromWalletConnect(
     const callbackError = route?.params?.error;
     if (!callbackError) {
       return;
-    }    trackEvent(ANALYTICS_EVENTS.WALLET_CONNECT_CALLBACK_ERROR, {
+    }
+    trackEvent(ANALYTICS_EVENTS.WALLET_CONNECT_CALLBACK_ERROR, {
       error: callbackError,
       source: route?.params?.source || 'unknown',
-    });    setInlineError(callbackError);
+    });
+    // eslint-disable-next-line react-doctor/no-derived-state -- inlineError is genuine multi-source state (also set/cleared by connect handlers), not purely derivable from route params.
+    setInlineError(callbackError);
     toast.show(callbackError, 'error');
   }, [route?.params?.error, route?.params?.source, toast]);
 
@@ -206,8 +210,8 @@ function resolveChainTypeFromWalletConnect(
   const handleExternalWallet = async (walletId: ExternalWalletId, chainType: ChainType) => {
     const now = Date.now();
 
-    if (cooldownUntil && now < cooldownUntil) {
-      const remainingSeconds = Math.ceil((cooldownUntil - now) / 1000);
+    if (cooldownUntilRef.current && now < cooldownUntilRef.current) {
+      const remainingSeconds = Math.ceil((cooldownUntilRef.current - now) / 1000);
       trackEvent(ANALYTICS_EVENTS.WALLET_CONNECT_EXTERNAL_BLOCKED_COOLDOWN, {
         walletId,
         remainingSeconds,
@@ -218,14 +222,14 @@ function resolveChainTypeFromWalletConnect(
       return;
     }
 
-    const recentAttempts = attemptTimestamps.filter(
+    const recentAttempts = attemptTimestampsRef.current.filter(
       (timestamp) => now - timestamp < ATTEMPT_WINDOW_MS
     );
 
     if (recentAttempts.length >= MAX_EXTERNAL_CONNECT_ATTEMPTS) {
       const nextCooldown = now + EXTERNAL_CONNECT_COOLDOWN_MS;
-      setCooldownUntil(nextCooldown);
-      setAttemptTimestamps(recentAttempts);
+      cooldownUntilRef.current = nextCooldown;
+      attemptTimestampsRef.current = recentAttempts;
 
       trackEvent(ANALYTICS_EVENTS.WALLET_CONNECT_EXTERNAL_THROTTLED, {
         walletId,
@@ -237,7 +241,7 @@ function resolveChainTypeFromWalletConnect(
       return;
     }
 
-    setAttemptTimestamps([...recentAttempts, now]);
+    attemptTimestampsRef.current = [...recentAttempts, now];
     setInlineError(null);
     setConnecting(walletId);
     trackEvent(ANALYTICS_EVENTS.WALLET_CONNECT_EXTERNAL_ATTEMPT_STARTED, {
@@ -354,7 +358,7 @@ function resolveChainTypeFromWalletConnect(
           <Text style={styles.headline}>CHOOSE CONNECTION METHOD</Text>
 
         <View style={styles.section}>
-          <TouchableOpacity
+          <PressableOpacity
             activeOpacity={0.9}
             onPress={() => handleInternalWallet('create')}
             style={{ marginBottom: 20 }}
@@ -373,9 +377,9 @@ function resolveChainTypeFromWalletConnect(
                  </View>
               </View>
             </SovereignCard>
-          </TouchableOpacity>
+          </PressableOpacity>
           
-          <TouchableOpacity
+          <PressableOpacity
             activeOpacity={0.9}
             onPress={() => handleInternalWallet('import')}
             style={{ marginBottom: 32 }}
@@ -394,7 +398,7 @@ function resolveChainTypeFromWalletConnect(
                  </View>
               </View>
             </SovereignCard>
-          </TouchableOpacity>
+          </PressableOpacity>
         </View>
 
         <View style={styles.dividerWrapper}>
@@ -415,7 +419,7 @@ function resolveChainTypeFromWalletConnect(
         ) : null}
 
       <View style={styles.section}>
-        <TouchableOpacity 
+        <PressableOpacity 
           activeOpacity={0.9} 
           onPress={() => handleExternalWallet('MetaMask', 'evm')} 
           style={{ marginBottom: 16 }}
@@ -440,9 +444,9 @@ function resolveChainTypeFromWalletConnect(
               </View>
             </View>
           </SovereignCard>
-        </TouchableOpacity>
+        </PressableOpacity>
 
-        <TouchableOpacity 
+        <PressableOpacity 
           activeOpacity={0.9} 
           onPress={() => handleExternalWallet('Trust Wallet', 'evm')} 
           style={{ marginBottom: 16 }}
@@ -467,9 +471,9 @@ function resolveChainTypeFromWalletConnect(
               </View>
             </View>
           </SovereignCard>
-        </TouchableOpacity>
+        </PressableOpacity>
 
-        <TouchableOpacity 
+        <PressableOpacity 
           activeOpacity={0.9} 
           onPress={() => handleExternalWallet('Phantom', 'svm')} 
           style={{ marginBottom: 16 }}
@@ -494,9 +498,9 @@ function resolveChainTypeFromWalletConnect(
               </View>
             </View>
           </SovereignCard>
-        </TouchableOpacity>
+        </PressableOpacity>
 
-        <TouchableOpacity 
+        <PressableOpacity 
           activeOpacity={0.9} 
           onPress={() => handleExternalWallet('Petra', 'mvm')} 
           style={{ marginBottom: 16 }}
@@ -521,9 +525,9 @@ function resolveChainTypeFromWalletConnect(
               </View>
             </View>
           </SovereignCard>
-        </TouchableOpacity>
+        </PressableOpacity>
 
-        <TouchableOpacity 
+        <PressableOpacity 
           activeOpacity={0.9} 
           onPress={() => handleExternalWallet('Lobstr', 'xlm')} 
           style={{ marginBottom: 16 }}
@@ -548,9 +552,9 @@ function resolveChainTypeFromWalletConnect(
               </View>
             </View>
           </SovereignCard>
-        </TouchableOpacity>
+        </PressableOpacity>
 
-        <TouchableOpacity 
+        <PressableOpacity 
           activeOpacity={0.9} 
           onPress={() => handleExternalWallet('Ledger', 'evm')} 
           style={{ marginBottom: 16 }}
@@ -575,9 +579,9 @@ function resolveChainTypeFromWalletConnect(
               </View>
             </View>
           </SovereignCard>
-        </TouchableOpacity>
+        </PressableOpacity>
 
-        <TouchableOpacity 
+        <PressableOpacity 
           activeOpacity={0.9} 
           onPress={() => handleExternalWallet('WalletConnect', 'evm')} 
           style={{ marginBottom: 16 }}
@@ -602,7 +606,7 @@ function resolveChainTypeFromWalletConnect(
               </View>
             </View>
           </SovereignCard>
-        </TouchableOpacity>
+        </PressableOpacity>
           </View>
         </ScrollView>
       </Animated.View>

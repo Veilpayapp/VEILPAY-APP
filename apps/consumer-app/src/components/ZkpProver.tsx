@@ -126,6 +126,7 @@ const REQUIRED_INPUT_KEYS: ReadonlyArray<keyof ProveInputs> = [
   'recipient',
   'amount',
 ];
+const REQUIRED_INPUT_KEY_SET = new Set<string>(REQUIRED_INPUT_KEYS as ReadonlyArray<string>);
 
 /**
  * Headless WebView component that offloads SnarkJS WASM proof generation
@@ -223,7 +224,7 @@ export const ZkpProver = forwardRef<ZkpProverRef, ZkpProverProps>(
           }
           for (const k of inputKeys) {
             if (
-              !(REQUIRED_INPUT_KEYS as ReadonlyArray<string>).includes(k)
+              !REQUIRED_INPUT_KEY_SET.has(k)
             ) {
               return Promise.reject(
                 new Error(

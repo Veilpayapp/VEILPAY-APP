@@ -4,13 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,  StyleSheet,  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar, Alert } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography, spacing } from '../styles/design-tokens';
@@ -34,8 +29,13 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
   const toast = useToast();
   const { isAvailable, authenticate } = useBiometrics();
   const { address, activeChain } = useWalletStore();
-  const biometricsEnabled = useSettingsStore((state: any) => state.biometricsEnabled);  const [privateKey, setPrivateKey] = useState<string>('');
-  const [isRevealed, setIsRevealed] = useState(false);  const [isLoading, setIsLoading] = useState(true);  useEffect(() => {    loadPrivateKey();  }, []);
+  const biometricsEnabled = useSettingsStore((state: any) => state.biometricsEnabled);
+  const [privateKey, setPrivateKey] = useState<string>('');
+  const [isRevealed, setIsRevealed] = useState(false);
+  useEffect(() => {
+    loadPrivateKey();
+    // eslint-disable-next-line react-doctor/exhaustive-deps -- mount-only load; loadPrivateKey is defined in-component and stable for this purpose.
+  }, []);
 
   const loadPrivateKey = async () => {
     try {
@@ -50,8 +50,6 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
       }
     } catch (error) {
       toast.show('Failed to load private key', 'error');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -82,11 +80,13 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
   };
 
   const handleCopyCancel = () => {
-    setShowWarning(false);  };
+    setShowWarning(false);
+  };
 
   const handleBack = () => navigation.goBack();
 
-  return (    <SafeAreaView style={styles.container}>
+  return (
+    <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.surfaceScreen} />
 
       <View style={styles.header}>

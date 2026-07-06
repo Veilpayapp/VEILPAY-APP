@@ -5,14 +5,8 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  StatusBar,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, StatusBar } from 'react-native';
+import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
 import { useWalletStore } from '../stores/walletStore';
@@ -110,15 +104,11 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
     return defaultPrivacyLevel;
   }, [defaultPrivacyLevel, networkSupport.supported]);
 
-  const [selectedLevel, setSelectedLevel] = useState<PrivacyLevel>(initialLevel);
-
-  // If support changes mid-mount (e.g. user switches chains in another tab),
-  // reconcile the local selection with the new clamp.
-  useEffect(() => {
-    if (!networkSupport.supported && selectedLevel !== 'standard') {
-      setSelectedLevel('standard');
-    }
-  }, [networkSupport.supported, selectedLevel]);
+  // User's raw pick. The effective level is derived below so an unsupported
+  // choice is clamped during render (no reconciling effect / extra render).
+  const [levelSelection, setSelectedLevel] = useState<PrivacyLevel>(initialLevel);
+  const selectedLevel: PrivacyLevel =
+    !networkSupport.supported && levelSelection !== 'standard' ? 'standard' : levelSelection;
 
   // Payment data from previous screen
   const recipient = route?.params?.recipient || '';
@@ -146,7 +136,7 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
 
   const handleSelect = (level: PrivacyLevel) => {
     if (isOptionDisabled(level)) {
-      // Defensive: TouchableOpacity is wrapped with `disabled` below, but
+      // Defensive: PressableOpacity is wrapped with `disabled` below, but
       // accessibility tools may still bubble a press. Surface the reason
       // rather than mutating selection silently.
       if (networkSupport.reason) {
@@ -208,11 +198,12 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
           </SovereignCard>
 
           {/* Privacy Options */}
+          {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- fixed 3-item privacy-level constant; virtualization unwarranted */}
           {PRIVACY_OPTIONS.map((option) => {
             const disabled = isOptionDisabled(option.id);
             const selected = selectedLevel === option.id;
             return (
-              <TouchableOpacity
+              <PressableOpacity
                 key={option.id}
                 onPress={() => handleSelect(option.id)}
                 activeOpacity={disabled ? 1 : 0.9}
@@ -286,8 +277,8 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
                     )}
 
                     <View style={styles.featuresList}>
-                      {option.features.map((feature, index) => (
-                        <View key={index} style={styles.featureRow}>
+                      {option.features.map((feature) => (
+                        <View key={feature} style={styles.featureRow}>
                           <Text style={[
                             styles.featureBullet,
                             selected && styles.featureBulletActive
@@ -316,7 +307,7 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
                     )}
                   </View>
                 </SovereignCard>
-              </TouchableOpacity>
+              </PressableOpacity>
             );
           })}
 

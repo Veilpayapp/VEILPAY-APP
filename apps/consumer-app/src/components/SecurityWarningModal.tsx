@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { Modal, View, Text, StyleSheet, Pressable } from 'react-native';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
 import { SovereignButton } from './SovereignButton';
 import { Icon } from './Icon';
@@ -31,9 +31,9 @@ export function SecurityWarningModal({
       animationType="fade"
       onRequestClose={onCancel}
     >
-      <TouchableWithoutFeedback onPress={onCancel}>
+      <Pressable onPress={onCancel}>
         <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
+          <Pressable>
             <View style={styles.modalContent}>
               <View style={styles.iconContainer}>
                 <Icon name="info" size={32} color={colors.warning} />
@@ -57,9 +57,9 @@ export function SecurityWarningModal({
                 />
               </View>
             </View>
-          </TouchableWithoutFeedback>
+          </Pressable>
         </View>
-      </TouchableWithoutFeedback>
+      </Pressable>
     </Modal>
   );
 }

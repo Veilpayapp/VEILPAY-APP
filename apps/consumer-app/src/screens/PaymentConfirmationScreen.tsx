@@ -45,6 +45,7 @@ import {
   NETWORKS,
 } from '../utils/transactions';
 import { estimateTransactionGas, isGasExpensive, type GasEstimate } from '../utils/gasEstimator';
+import { fetchNativeBalance } from '../utils/balanceFetcher';
 import { TransactionResultModal } from '../components/payment/TransactionResultModal';
 import { FALLBACK_PRICES, getFiatExchangeRate, formatFiatValue, formatLastUpdated } from '../utils/priceFeed';
 import { triggerLightImpactHaptic } from '../utils/haptics';
@@ -80,6 +81,14 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
   const [localGasEstimate, setLocalGasEstimate] = useState<GasEstimate | null>(null);
   const [localGasExpensive, setLocalGasExpensive] = useState(false);
   const [fiatRate, setFiatRate] = useState(1);
+  // Native balance for the *actual* selected network, used for the
+  // pre-send insufficient-funds gate. `null` = not yet loaded / unknown.
+  // We only ever block the send when the read is reliable (see
+  // `balanceReliable` below) so a flaky RPC never falsely blocks a payment.
+  const [nativeBalance, setNativeBalance] = useState<{
+    amount: number;
+    reliable: boolean;
+  } | null>(null);
   const isMountedRef = useRef(true);
   const zkpProverRef = useRef<ZkpProverRef | null>(null);
 
@@ -88,32 +97,38 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
   const toast = useToast();
   const { isConnected } = useNetworkStatus();
 
-  const mainnetTransactionsEnabled = process.env.EXPO_PUBLIC_ENABLE_MAINNET_TRANSACTIONS === 'true';
   const isSendSupported = true; // Support UI progression for all chains
 
+  // Honor the user's selected chain. Previously this screen silently
+  // remapped any mainnet selection to a testnet equivalent when
+  // EXPO_PUBLIC_ENABLE_MAINNET_TRANSACTIONS was off — which meant a user
+  // who picked Ethereum Mainnet actually transacted on Sepolia, with the
+  // banner flipping to "TESTNET MODE" on the confirm page. That silent
+  // switch is gone: the confirm screen now sends on exactly the network
+  // the user chose. Insufficient funds (the common case on an unfunded
+  // mainnet) is surfaced explicitly via the pre-send balance check below.
   const activeNetworkKey = useMemo(() => {
     const chainKey = activeChain?.key;
     const chainType = activeChain?.type || 'evm';
 
-    const getTestnetFallback = (type: string) => {
+    // Only fall back when the selected chain genuinely has no network
+    // config (e.g. a malformed custom chain). We pick a same-VM testnet so
+    // gas/explorer/faucet lookups still resolve rather than crashing.
+    const getSafeFallback = (type: string) => {
       switch (type) {
         case 'svm': return 'solana-devnet';
         case 'xlm': return 'stellar-testnet';
-        case 'mvm': return 'aptos'; // Aptos testnet uses same key currently or has no split in NETWORKS
+        case 'mvm': return 'aptos';
         default: return 'sepolia';
       }
     };
 
     if (!chainKey || !NETWORKS[chainKey]) {
-      return getTestnetFallback(chainType);
+      return getSafeFallback(chainType);
     }
 
-    if (NETWORKS[chainKey].isTestnet || mainnetTransactionsEnabled) {
-      return chainKey;
-    }
-
-    return getTestnetFallback(chainType);
-  }, [activeChain?.key, activeChain?.type, mainnetTransactionsEnabled]);
+    return chainKey;
+  }, [activeChain?.key, activeChain?.type]);
 
   const selectedNetwork = NETWORKS[activeNetworkKey];
   const faucetUrl = getFaucetUrl(activeNetworkKey);
@@ -192,6 +207,52 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
   useEffect(() => {
     getFiatExchangeRate(nativeCurrency || 'USD').then(setFiatRate);
   }, [nativeCurrency]);
+
+  // Pre-send balance fetch for the selected network. Runs while the
+  // screen is idle so the insufficient-funds state is known before the
+  // user taps CONFIRM & SEND (rather than only after the signer's own
+  // balance check throws). We refresh alongside the gas watcher's cadence.
+  useEffect(() => {
+    if (txStatus !== 'idle' || !address || !activeNetworkKey) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const loadBalance = async () => {
+      try {
+        const result = await fetchNativeBalance(address, activeNetworkKey);
+        if (isCancelled || !isMountedRef.current) {
+          return;
+        }
+        const parsed = Number.parseFloat(result.balanceFormatted);
+        // `source: 'fallback'` or a present `error` means the RPC read did
+        // not succeed — treat the balance as unknown so we never block a
+        // send on a bad read. A genuine zero balance from a real RPC read
+        // is reliable and *will* gate the send.
+        const reliable = result.source !== 'fallback' && !result.error;
+        setNativeBalance({
+          amount: Number.isFinite(parsed) ? parsed : 0,
+          reliable,
+        });
+      } catch {
+        if (isCancelled || !isMountedRef.current) {
+          return;
+        }
+        // Unknown balance — do not block the send; the signer's own
+        // balance guard remains the backstop.
+        setNativeBalance({ amount: 0, reliable: false });
+      }
+    };
+
+    loadBalance();
+    const intervalId = setInterval(loadBalance, 15000);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [address, activeNetworkKey, txStatus]);
 
   // Check if mnemonic is available on mount — using address derivation
   // (mnemonic itself is never exposed to this component). The hook also
@@ -407,6 +468,32 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
     ? `Estimated gas is ${gasEstimate.estimatedCostUsd ? `$${Number.parseFloat(gasEstimate.estimatedCostUsd).toFixed(2)}` : `${gasEstimate.estimatedCostEth} ETH`} right now.`
     : null;
 
+  // -----------------------------------------------------------------
+  // Pre-send insufficient-funds gate.
+  // -----------------------------------------------------------------
+  // We only enforce this for *native-currency* sends (token === the
+  // network's native symbol) because that is exactly what the signer's
+  // own `value + gas` guard covers. For non-native token sends we can't
+  // compare the token amount against a native-balance read, so we leave
+  // that path to the signer/RPC as before (no regression — it was never
+  // pre-checked). The gate also requires a *reliable* balance read: a
+  // fallback/errored read leaves `nativeBalance.reliable === false`, so a
+  // flaky RPC never falsely blocks a legitimate payment.
+  const nativeSymbol = selectedNetwork?.symbol;
+  const isNativeSend = Boolean(nativeSymbol) && token === nativeSymbol;
+  const requiredNative = parseFloat(amount || '0') + parseFloat(totalFee);
+  const insufficientFunds = Boolean(
+    isNativeSend &&
+    nativeBalance?.reliable &&
+    Number.isFinite(requiredNative) &&
+    requiredNative > 0 &&
+    nativeBalance.amount < requiredNative
+  );
+  const availableBalanceLabel =
+    nativeBalance?.reliable && isNativeSend
+      ? `${nativeBalance.amount} ${nativeSymbol}`
+      : null;
+
   // Get status display info — covers the full UiTxStatus union from
   // {@link usePaymentTransaction} so the stealth- and max-privacy
   // intermediate states render meaningful copy instead of falling
@@ -472,7 +559,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
                   This transaction will be sent on {selectedNetwork?.name || 'the selected network'}.
                   {selectedNetwork?.isTestnet
                     ? ' Get faucet funds when supported.'
-                    : ' Mainnet sends are enabled via EXPO_PUBLIC_ENABLE_MAINNET_TRANSACTIONS=true.'}
+                    : ' Real funds will be transferred on this network.'}
                 </Text>
                 <PressableOpacity
                   onPress={handleGetTestnetETH}
@@ -664,16 +751,46 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
             </View>
           </SovereignCard>
 
+          {/* Insufficient-funds notice — shown only when we have a
+              reliable balance read for a native-currency send that is
+              short of amount + fees. Distinct from the on-chain failure
+              path so the user learns before signing. */}
+          {insufficientFunds && txStatus === 'idle' && (
+            <SovereignCard backgroundColor="transparent" padding={0} style={{ marginBottom: 24, borderRadius: 0, borderWidth: 1, borderColor: colors.error }}>
+              <View style={styles.gasWarningContent}>
+                <View style={styles.gasWarningIconWrap}>
+                  <Icon name="warning" size={20} color={colors.error} />
+                </View>
+                <View style={styles.gasWarningTextWrap}>
+                  <Text style={[styles.gasWarningTitle, { color: colors.error }]}>INSUFFICIENT FUNDS</Text>
+                  <Text style={styles.gasWarningDesc}>
+                    You need about {requiredNative.toFixed(6)} {nativeSymbol} (amount + fees) on {selectedNetwork?.name || 'this network'}
+                    {availableBalanceLabel ? `, but your balance is ${availableBalanceLabel}` : ''}.
+                    {selectedNetwork?.isTestnet
+                      ? ' Use the faucet above to get test funds.'
+                      : ` Add ${nativeSymbol} to this wallet to continue.`}
+                  </Text>
+                </View>
+              </View>
+            </SovereignCard>
+          )}
+
           <View style={{ marginTop: 'auto', marginBottom: 24 }}>
             {txStatus === 'idle' && (
               <SovereignButton
-                title={isWalletVerificationPending ? 'VERIFYING WALLET...' : 'CONFIRM & SEND'}
-                variant={isSendDisabled ? 'outline' : 'primary'}
+                title={
+                  isWalletVerificationPending
+                    ? 'VERIFYING WALLET...'
+                    : insufficientFunds
+                      ? 'INSUFFICIENT FUNDS'
+                      : 'CONFIRM & SEND'
+                }
+                variant={isSendDisabled || insufficientFunds ? 'outline' : 'primary'}
                 onPress={() => {
                   void triggerLightImpactHaptic();
                   handleConfirmSend();
                 }}
-                disabled={isSendDisabled}
+                disabled={isSendDisabled || insufficientFunds}
               />
             )}
 

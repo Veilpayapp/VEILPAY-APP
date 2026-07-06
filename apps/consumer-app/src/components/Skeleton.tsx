@@ -29,7 +29,10 @@ export function Skeleton({ width, height, borderRadius = 8, style, ...accessibil
         withTiming(0.8, { duration: 800, easing: Easing.bezier(0.4, 0, 0.2, 1) })
       ),
       -1,
-      true    );  }, []);
+      true
+    );
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- mount-only animation setup; `opacity` is a stable Reanimated shared value ref.
+  }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,

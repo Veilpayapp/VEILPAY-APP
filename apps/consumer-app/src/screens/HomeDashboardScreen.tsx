@@ -215,7 +215,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
     // Clear stale transactions from the previous chain before fetching new ones
     useTransactionStore.getState().clearTransactions();
     refreshTransactions();
-  }, [address, activeChain?.key, refreshTransactions]);
+  }, [address, activeChain, refreshTransactions]);
 
   // Pull to refresh
   const onRefresh = useCallback(async () => {

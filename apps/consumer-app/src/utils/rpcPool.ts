@@ -180,7 +180,7 @@ class RpcProviderPool {
         try {
           // Sequential failover/retry: we must try one endpoint at a time and
           // stop on the first success — parallelizing would hammer every RPC.
-          // eslint-disable-next-line react-doctor/async-await-in-loop
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop
           const result = await this.withTimeout(fn(provider));
           recordSuccess(endpoint.name);
           return result;

@@ -235,7 +235,7 @@ backgroundColor={isSelected ? colors.bgTertiary : colors.bgSecondary}
         </SovereignCard>
       </PressableOpacity>
     );
-  }, [marketQuotes, selectedSymbol, handleSelect]);
+  }, [marketQuotes, selectedSymbol, handleSelect, styles, colors, fiatRate, nativeCurrency]);
 
   return (
     <SafeAreaView style={styles.container}>

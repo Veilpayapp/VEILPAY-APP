@@ -373,7 +373,7 @@ export function WithdrawFiatScreen({ navigation }: WithdrawFiatScreenProps) {
               showsHorizontalScrollIndicator={false} 
               contentContainerStyle={styles.networkTabsScroll}
             >
-              {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- short static horizontal token-group tab bar; virtualization unwarranted */}
+              {/* react-doctor-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- short static horizontal token-group tab bar; virtualization unwarranted */}
               {getTokenGroups(CRYPTO_TOKENS).map((group) => (
                 <PressableOpacity
                   key={group}

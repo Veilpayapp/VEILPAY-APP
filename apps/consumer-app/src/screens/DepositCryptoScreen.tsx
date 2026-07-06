@@ -265,14 +265,13 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
       flow: "buy",
     });
   }, [
-    address,
     authenticate,
     navigation,
     parsedAmount,
     selectedCrypto,
     selectedCurrency,
     selectedPaymentMethod,
-    toast,
+    toast.show,
     validation.error,
     validation.valid,
   ]);
@@ -387,7 +386,7 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
               showsHorizontalScrollIndicator={false} 
               contentContainerStyle={styles.networkTabsScroll}
             >
-              {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- short static horizontal token-group tab bar; virtualization unwarranted */}
+              {/* react-doctor-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- short static horizontal token-group tab bar; virtualization unwarranted */}
               {getTokenGroups(CRYPTO_TOKENS).map((group) => (
                 <PressableOpacity
                   key={group}

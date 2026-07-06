@@ -113,7 +113,7 @@ export function WalletConnectScreen({ navigation, route }: WalletConnectScreenPr
       error: callbackError,
       source: route?.params?.source || 'unknown',
     });
-    // eslint-disable-next-line react-doctor/no-derived-state -- inlineError is genuine multi-source state (also set/cleared by connect handlers), not purely derivable from route params.
+    // react-doctor-disable-next-line react-doctor/no-derived-state -- inlineError is genuine multi-source state (also set/cleared by connect handlers), not purely derivable from route params.
     setInlineError(callbackError);
     toast.show(callbackError, 'error');
   }, [route?.params?.error, route?.params?.source, toast]);

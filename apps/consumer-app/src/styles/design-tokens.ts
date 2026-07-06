@@ -133,6 +133,7 @@ export function useStyles<T extends StyleSheet.NamedStyles<T> | StyleSheet.Named
   styleBuilder: (themeColors: typeof darkColors) => T
 ): T {
   const { colors: themeColors } = useTheme();
+  // react-doctor-disable-next-line react-doctor/exhaustive-deps -- styleBuilder is always a stable module-level function (themeStyles); re-memoizing only on themeColors is intended.
   return useMemo(() => styleBuilder(themeColors), [themeColors]);
 }
 

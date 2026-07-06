@@ -58,9 +58,9 @@ export function BiometricPrompt({
   }, [authenticate, context, onSuccess, onCancel, onFail]);
   // Auto-trigger on mount once availability is confirmed
   useEffect(() => {
-    // eslint-disable-next-line react-doctor/no-event-handler -- reactively starts auth when the async isAvailable flips true (no user event exists to hang this off of).
+    // react-doctor-disable-next-line react-doctor/no-event-handler -- reactively starts auth when the async isAvailable flips true (no user event exists to hang this off of).
     if (isAvailable && phase === 'waiting') {
-      // eslint-disable-next-line react-doctor/no-pass-data-to-parent -- this component's job is to run the auth flow and report its result to the parent via callbacks.
+      // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent -- this component's job is to run the auth flow and report its result to the parent via callbacks.
       triggerAuth();
     }
   }, [isAvailable, phase, triggerAuth]);

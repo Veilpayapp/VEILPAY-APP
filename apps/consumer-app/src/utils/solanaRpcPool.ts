@@ -147,7 +147,7 @@ class SolanaRpcPool {
       for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
         try {
           // Sequential failover/retry across endpoints — must not parallelize.
-          // eslint-disable-next-line react-doctor/async-await-in-loop
+          // react-doctor-disable-next-line react-doctor/async-await-in-loop
           const result = await this.withTimeout(fn(connection));
           recordSuccess(endpoint.name);
           return result;

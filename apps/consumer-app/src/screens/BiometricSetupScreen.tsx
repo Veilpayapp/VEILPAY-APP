@@ -66,6 +66,7 @@ export function BiometricSetupScreen({ navigation }: BiometricSetupScreenProps) 
       }
     };
     checkBiometrics();
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- mount-only: scanLineY is a stable Reanimated shared value and biometric hardware is checked once on mount.
   }, []);
 
   const handleLinkBiometrics = async () => {

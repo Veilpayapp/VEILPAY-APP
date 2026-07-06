@@ -73,7 +73,7 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
       const scheme = schemeMap[activeChain?.type || 'evm'] || 'ethereum';
       return `${scheme}:${address}?amount=${requestedAmount}`;
     }    // Otherwise just encode the address
-    return address;  }, [address, requestedAmount]);
+    return address;  }, [address, requestedAmount, activeChain?.type]);
 
   const handleBack = () => {
     trackEvent(ANALYTICS_EVENTS.RECEIVE_QR_BACK_PRESSED, {

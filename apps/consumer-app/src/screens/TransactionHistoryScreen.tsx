@@ -114,7 +114,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     }
 
     refreshTransactions();
-  }, [address, activeChain?.key, refreshTransactions]);
+  }, [address, activeChain, refreshTransactions]);
 
   useEffect(() => {
     if (!transactionsError) {
@@ -122,7 +122,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     }
 
     toast.show(transactionsError, 'error');
-  }, [transactionsError]);
+  }, [transactionsError, toast.show]);
 
   // Filter transactions based on selected filter
   const filteredTransactions = useMemo(() => {

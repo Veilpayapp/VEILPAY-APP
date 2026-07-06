@@ -32,31 +32,31 @@ export function AccountSelectorModal({ visible, onClose }: AccountSelectorModalP
     ? rawAccounts 
     : [{ id: '0', name: 'Account 1', index: 0 }];
 
-  const handleSelectAccount = async (accountId: string) => {
+  const handleSelectAccount = useCallback(async (accountId: string) => {
     if (accountId === activeAccountId) {
       onClose();
       return;
     }
-    
+
     await switchAccount(accountId);
     onClose();
-  };
-  
+  }, [activeAccountId, switchAccount, onClose]);
+
   const handleAddAccount = async () => {
     await addAccount();
     onClose();
   };
 
-  const handleEditSave = () => {
+  const handleEditSave = useCallback(() => {
     if (editingAccountId && editNameValue.trim()) {
       updateAccountName(editingAccountId, editNameValue.trim());
     }
     setEditingAccountId(null);
-  };
+  }, [editingAccountId, editNameValue, updateAccountName]);
 
-  const handleDeleteRequest = (accountId: string) => {
+  const handleDeleteRequest = useCallback((accountId: string) => {
     setAccountToDelete(accountId);
-  };
+  }, []);
 
   const renderAccount = useCallback(
     ({ item: account, index }: { item: { id: string; name: string; index?: number }; index: number }) => {
@@ -133,7 +133,7 @@ export function AccountSelectorModal({ visible, onClose }: AccountSelectorModalP
         </Animated.View>
       );
     },
-    [activeAccountId, isConnecting, editingAccountId, editNameValue, accountToDelete, accounts.length, colors, styles]
+    [activeAccountId, isConnecting, editingAccountId, editNameValue, accountToDelete, accounts.length, colors, styles, handleSelectAccount, handleEditSave, handleDeleteRequest, deleteAccount]
   );
 
   if (!visible) return null;

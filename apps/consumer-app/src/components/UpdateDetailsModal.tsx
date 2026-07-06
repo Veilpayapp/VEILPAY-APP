@@ -53,7 +53,7 @@ export function UpdateDetailsModal({
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
               >
-                {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- short static changelog list (a few releases); virtualization unwarranted */}
+                {/* react-doctor-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- short static changelog list (a few releases); virtualization unwarranted */}
                 {releases.map((release, index) => (
                   <View
                     key={`${release.version}-${release.build}`}

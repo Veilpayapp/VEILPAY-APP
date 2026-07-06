@@ -174,7 +174,7 @@ interface AddCustomNetworkScreenProps {
     Alert.alert(
       'Network Added',
       `${name.trim()} has been added to your networks.`,      [{ text: 'OK', onPress: () => navigation.goBack() }]
-    );  }, [name, chainId, rpcUrl, explorerUrl, symbol, validateRpc, addCustomChain, navigation]);
+    );  }, [name, chainId, rpcUrl, explorerUrl, symbol, isTestnet, validateRpc, addCustomChain, navigation]);
 
   return (
     <SafeAreaView style={styles.container}>

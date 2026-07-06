@@ -125,7 +125,7 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
       setTokenBalances([]);
       setBalance('0.000', '0.00');
     }
-  }, [address, activeChain?.key, refresh, setBalance]);
+  }, [address, activeChain, refresh, setBalance]);
 
   // Auto-refresh interval
   useEffect(() => {

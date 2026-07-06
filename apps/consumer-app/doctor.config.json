@@ -8,7 +8,8 @@
     "react-doctor/rendering-svg-precision": "The flagged path is a brand logo (WalletConnect); reducing coordinate precision would visibly distort the mark.",
     "react-doctor/rn-prefer-reanimated": "The two flagged animations use the stable, supported React Native Animated API; migrating them to Reanimated is a preference, not a correctness fix.",
     "react-doctor/no-react19-deprecated-apis": "forwardRef remains fully supported in React 19 (backward compatible); the flagged files include the ZKP-prover and fiat WebView shell (ref forwarding + useImperativeHandle) plus test mocks, where a rewrite carries more risk than the forward-looking nudge warrants.",
-    "react-doctor/rn-prefer-expo-image": "expo-image is not a dependency of this app; adding a native module requires a native rebuild, which is out of scope for a lint cleanup."
+    "react-doctor/rn-prefer-expo-image": "expo-image is not a dependency of this app; adding a native module requires a native rebuild, which is out of scope for a lint cleanup.",
+    "react-doctor/js-hoist-intl": "The single flagged `new Intl.NumberFormat` (src/utils/transak.ts getFiatFormatter) is already memoized per-currency in the module-level FIAT_FORMATTERS cache, so it is NOT reconstructed per call — the rule's premise does not hold, and hoisting to module scope is impossible because the formatter varies by currency."
   },
   "rules": {
     "react-doctor/no-giant-component": "off",
@@ -18,6 +19,7 @@
     "react-doctor/rendering-svg-precision": "off",
     "react-doctor/rn-prefer-reanimated": "off",
     "react-doctor/no-react19-deprecated-apis": "off",
-    "react-doctor/rn-prefer-expo-image": "off"
+    "react-doctor/rn-prefer-expo-image": "off",
+    "react-doctor/js-hoist-intl": "off"
   }
 }

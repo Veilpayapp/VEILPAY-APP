@@ -73,6 +73,7 @@ export function BootSplash({ title = 'Veilpay', subtitle }: BootSplashProps) {
       -1,
       false
     );
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- mount-only animation setup; Reanimated shared values (opacity/scale/glow/progress) are stable refs.
   }, []);
 
   const logoStyle = useAnimatedStyle(() => ({

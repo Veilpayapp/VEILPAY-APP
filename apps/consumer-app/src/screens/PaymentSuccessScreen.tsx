@@ -53,6 +53,7 @@ function SuccessCheckmark({ color }: { color: string }) {
     // Animate circle first, then checkmark
     circleProgress.value = withTiming(1, { duration: 600 });
     progress.value = withDelay(400, withTiming(1, { duration: 400 }));
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- mount-only animation setup; Reanimated shared values are stable refs.
   }, []);
 
   const animatedCheckProps = useAnimatedProps(() => ({
@@ -106,6 +107,7 @@ export function PaymentSuccessScreen({ navigation, route }: PaymentSuccessScreen
     });
 
     return () => backHandler.remove();
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- mount-only setup; handleDone only calls navigation.reset to HOME and needs no reactive re-binding.
   }, []);
 
   const handleDone = () => {

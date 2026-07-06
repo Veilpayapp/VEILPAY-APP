@@ -32,7 +32,7 @@ export function useNetworkStatus(): NetworkStatus {
     } catch (error) {
       // Some preview runtimes can miss native NetInfo; fail open instead of crashing app boot.
       console.warn('[useNetworkStatus] NetInfo unavailable, skipping network listener.', error);
-      // eslint-disable-next-line react-doctor/no-initialize-state -- fail-open fallback only when native NetInfo is missing; availability is unknown until the effect runs, so this can't be a useState initializer.
+      // react-doctor-disable-next-line react-doctor/no-initialize-state -- fail-open fallback only when native NetInfo is missing; availability is unknown until the effect runs, so this can't be a useState initializer.
       setStatus({
         isConnected: true,
         isInternetReachable: null,

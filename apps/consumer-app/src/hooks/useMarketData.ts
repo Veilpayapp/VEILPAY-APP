@@ -22,12 +22,14 @@ export function useMarketData(
   options: { throttleMs?: number } = {}
 ): UseMarketDataResult {
   const { throttleMs = 1000 } = options;
+  const symbolsKey = symbols.join('|');
   const normalizedSymbols = useMemo(
     () => Array.from(new Set(symbols.flatMap((symbol) => {
       const s = symbol.trim().toUpperCase();
       return s ? [s] : [];
     }))).sort(),
-    [symbols.join('|')]
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- `symbols` is a fresh array each render; symbolsKey captures its contents, which is the real dependency.
+    [symbolsKey]
   );
 
   const [quotes, setQuotes] = useState<MarketQuoteMap>(() => createFallbackQuoteMap(normalizedSymbols));
@@ -37,10 +39,10 @@ export function useMarketData(
 
   // When the requested symbols change, reset to fallback quotes during render
   // (createFallbackQuoteMap is pure) instead of syncing through an effect.
-  const symbolsKey = normalizedSymbols.join('|');
-  const [prevSymbolsKey, setPrevSymbolsKey] = useState(symbolsKey);
-  if (symbolsKey !== prevSymbolsKey) {
-    setPrevSymbolsKey(symbolsKey);
+  const normalizedKey = normalizedSymbols.join('|');
+  const [prevSymbolsKey, setPrevSymbolsKey] = useState(normalizedKey);
+  if (normalizedKey !== prevSymbolsKey) {
+    setPrevSymbolsKey(normalizedKey);
     setQuotes(createFallbackQuoteMap(normalizedSymbols));
     setLastUpdated(null);
   }

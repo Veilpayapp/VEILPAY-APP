@@ -198,7 +198,7 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
           </SovereignCard>
 
           {/* Privacy Options */}
-          {/* eslint-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- fixed 3-item privacy-level constant; virtualization unwarranted */}
+          {/* react-doctor-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- fixed 3-item privacy-level constant; virtualization unwarranted */}
           {PRIVACY_OPTIONS.map((option) => {
             const disabled = isOptionDisabled(option.id);
             const selected = selectedLevel === option.id;

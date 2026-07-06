@@ -70,7 +70,9 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
         }),      ])
     );
     animation.start();
-    return () => animation.stop();  }, []);
+    return () => animation.stop();
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- mount-only animation; scanLineAnim is a stable Animated.Value ref.
+  }, []);
 
   const handleBarCodeScanned = (result: BarcodeScanningResult) => {
     if (scanned) return;

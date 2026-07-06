@@ -149,7 +149,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
   }, [fiatAmount, fiatCurrency, cryptoToken, flow, chainKey]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-doctor/no-pass-data-to-parent -- fetches quotes into this screen's own local state; no parent callback involved.
+    // react-doctor-disable-next-line react-doctor/no-pass-data-to-parent -- fetches quotes into this screen's own local state; no parent callback involved.
     fetchQuotes();
   }, [fetchQuotes]);
 

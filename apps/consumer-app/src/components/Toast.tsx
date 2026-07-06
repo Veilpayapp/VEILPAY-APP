@@ -220,15 +220,15 @@ export function useToast(): UseToastReturn {
   const [message, setMessage] = useState('');
   const [type, setType] = useState<ToastType>('info');
 
-  const show = (msg: string, toastType: ToastType = 'info') => {
+  const show = useCallback((msg: string, toastType: ToastType = 'info') => {
     setMessage(msg);
     setType(toastType);
     setVisible(true);
-  };
+  }, []);
 
-  const hide = () => {
+  const hide = useCallback(() => {
     setVisible(false);
-  };
+  }, []);
 
   return { visible, message, type, show, hide };
 }

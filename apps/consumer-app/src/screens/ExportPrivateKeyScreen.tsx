@@ -34,7 +34,7 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
   const [isRevealed, setIsRevealed] = useState(false);
   useEffect(() => {
     loadPrivateKey();
-    // eslint-disable-next-line react-doctor/exhaustive-deps -- mount-only load; loadPrivateKey is defined in-component and stable for this purpose.
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- mount-only load; loadPrivateKey is defined in-component and stable for this purpose.
   }, []);
 
   const loadPrivateKey = async () => {

@@ -28,6 +28,7 @@ export function useOTAUpdates() {
       // Check for updates on app start
       checkForUpdate();
     }
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- mount-only check; isProduction is a build-time constant and checkForUpdate is stable for this one-shot call.
   }, [isProduction]);
 
   const checkForUpdate = async () => {

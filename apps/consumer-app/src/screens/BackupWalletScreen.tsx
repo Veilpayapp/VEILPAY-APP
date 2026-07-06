@@ -31,7 +31,7 @@ export function BackupWalletScreen({ navigation }: any) {
   const [isRevealed, setIsRevealed] = useState(false);
   useEffect(() => {
     loadMnemonic();
-    // eslint-disable-next-line react-doctor/exhaustive-deps -- mount-only load; loadMnemonic is defined in-component and stable for this purpose.
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- mount-only load; loadMnemonic is defined in-component and stable for this purpose.
   }, []);
 
   const loadMnemonic = async () => {

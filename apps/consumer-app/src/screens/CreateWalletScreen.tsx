@@ -100,7 +100,7 @@ interface CreateWalletScreenProps {
       isMounted = false;
       interaction.cancel();      if (timer1) clearTimeout(timer1);
       if (timer2) clearTimeout(timer2);
-    };  }, []);
+    };  }, [toast.show]);
 
   const handleCopy = useCallback(async () => {
     if (seedWords.length === 0) return;

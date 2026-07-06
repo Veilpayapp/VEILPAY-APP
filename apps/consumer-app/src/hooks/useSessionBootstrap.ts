@@ -61,7 +61,7 @@ export function useSessionBootstrap() {
                   const accounts = namespaces[key]?.accounts || [];
                   // Substring match (accounts are "chain:ref:0xADDR"), not an exact
                   // membership test, so a Set/Map lookup does not apply here.
-                  // eslint-disable-next-line react-doctor/js-set-map-lookups
+                  // react-doctor-disable-next-line react-doctor/js-set-map-lookups
                   if (accounts.some((acc: string) => acc.includes(state.address as string))) {
                     return true;
                   }

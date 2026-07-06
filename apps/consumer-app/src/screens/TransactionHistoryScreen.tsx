@@ -312,13 +312,16 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     </View>
   );
 
-  const refreshControlEl = (
-    <RefreshControl
-      refreshing={refreshing}
-      onRefresh={handleRefresh}
-      tintColor={colors.accent}
-      colors={[colors.accent]}
-    />
+  const refreshControlEl = useMemo(
+    () => (
+      <RefreshControl
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        tintColor={colors.accent}
+        colors={[colors.accent]}
+      />
+    ),
+    [refreshing, handleRefresh, colors.accent]
   );
 
   return (

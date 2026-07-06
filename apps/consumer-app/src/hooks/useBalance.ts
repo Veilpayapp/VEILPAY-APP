@@ -22,7 +22,7 @@ export interface UseBalanceResult {
   tokenBalances: TokenBalance[];
   isLoading: boolean;
   error: string | null;
-  refresh: () => Promise<void>;
+  refresh: (options?: { silent?: boolean }) => Promise<void>;
   lastUpdated: number | null;
   fiatRate: number;
 }
@@ -54,7 +54,11 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
   const lastChainRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const refresh = useCallback(async () => {
+  // `silent` refreshes update data without flipping the loading skeleton.
+  // Background interval + pull-to-refresh use silent mode; only the initial
+  // load and a wallet/chain switch (isNewContext) should show the skeleton,
+  // otherwise the card flashes to skeleton every 30s auto-refresh cycle.
+  const refresh = useCallback(async (options?: { silent?: boolean }) => {
     if (!address || !activeChain) {
       return;
     }
@@ -73,8 +77,12 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
     }
     abortControllerRef.current = new AbortController();
 
-    setIsLoading(true);
-    setLoadingBalance(true);
+    // Only surface the loading skeleton for the first load / context switch.
+    const showLoading = isNewContext || !options?.silent;
+    if (showLoading) {
+      setIsLoading(true);
+      setLoadingBalance(true);
+    }
     setError(null);
 
     try {
@@ -112,8 +120,10 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
       setError(errorMessage);
       setBalance('0.000', '0.00');
     } finally {
-      setIsLoading(false);
-      setLoadingBalance(false);
+      if (showLoading) {
+        setIsLoading(false);
+        setLoadingBalance(false);
+      }
     }
   }, [address, activeChain, setBalance, setLoadingBalance, nativeCurrency]);
   // Initial fetch on mount and when wallet/chain changes
@@ -125,7 +135,8 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
       setTokenBalances([]);
       setBalance('0.000', '0.00');
     }
-  }, [address, activeChain, refresh, setBalance]);
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- key on activeChain.key (stable primitive), NOT the activeChain object. The object identity is unstable across store rehydration, so depending on it re-fires this fetch every render → balance card reload loop. The chain key is the real dependency; refresh reads the latest activeChain from its own closure.
+  }, [address, activeChain?.key, setBalance]);
 
   // Auto-refresh interval
   useEffect(() => {
@@ -134,7 +145,8 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
     }
 
     const intervalId = setInterval(() => {
-      refresh();
+      // Silent: refresh data in the background without flashing the skeleton.
+      refresh({ silent: true });
     }, REFRESH_INTERVAL_MS);
 
     return () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
 import { useTheme, useStyles, typography, type Colors } from '../styles/design-tokens';
 import { SovereignButton } from './SovereignButton';
 import { Icon } from './Icon';
@@ -47,9 +47,9 @@ export function UpdatePromptModal({
       animationType="fade"
       onRequestClose={handleRequestClose}
     >
-      <Pressable onPress={handleRequestClose}>
+      <TouchableWithoutFeedback onPress={handleRequestClose}>
         <View style={styles.overlay}>
-          <Pressable>
+          <TouchableWithoutFeedback>
             <View style={styles.modalContent}>
               <View style={styles.iconContainer}>
                 <Icon name="arrow-down" size={32} color={colors.accent} />
@@ -88,9 +88,9 @@ export function UpdatePromptModal({
                 </SovereignButton>
               </View>
             </View>
-          </Pressable>
+          </TouchableWithoutFeedback>
         </View>
-      </Pressable>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 }

@@ -11,9 +11,14 @@ jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(),
   deleteItemAsync: jest.fn(),
 }));
-jest.mock('react-native-safe-area-context', () => ({
-  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
-}));
+jest.mock('react-native-safe-area-context', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+    SafeAreaView: ({ children, ...props }: any) => <View {...props}>{children}</View>,
+  };
+});
 jest.mock('../../utils/secureStateStorage', () => ({
   getSecureItem: jest.fn(),
   setSecureItem: jest.fn(),
@@ -21,14 +26,18 @@ jest.mock('../../utils/secureStateStorage', () => ({
 
 import { fireEvent } from '@testing-library/react-native';
 
-jest.mock('../../features/fiat-gateway', () => {
-  const actual = jest.requireActual('../../features/fiat-gateway');
+// The screen imports these from their direct module paths, not the
+// feature barrel — mock those same paths so the stubs actually
+// intercept (mocking the barrel alone leaves the real WebView shell to
+// render, which crashes on the mocked safe-area module).
+jest.mock('../../hooks/useOnramp', () => ({
+  useOnramp: () => ({ checkOrderStatus: jest.fn() }),
+}));
+jest.mock('../../components/FiatGatewayWebViewShell', () => {
   const React = require('react');
   const { View } = require('react-native');
   return {
-    ...actual,
-    useOnramp: () => ({ checkOrderStatus: jest.fn() }),
-    FiatGatewayWebViewShell: React.forwardRef((props: any, ref: any) => <View testID="fiat-gateway-shell" {...props} />),
+    FiatGatewayWebViewShell: React.forwardRef((props: any, _ref: any) => <View testID="fiat-gateway-shell" {...props} />),
   };
 });
 

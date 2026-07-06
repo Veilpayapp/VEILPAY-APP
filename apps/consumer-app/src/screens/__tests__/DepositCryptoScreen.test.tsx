@@ -181,7 +181,10 @@ describe("DepositCryptoScreen", () => {
     mockNavigate.mockReset();
     mockGoBack.mockReset();
     settingsState.biometricsEnabled = false;
-    mockAuthenticate.mockResolvedValue(true);
+    // authenticate() resolves an object; the screen checks `.success`
+    // (device PIN/biometric). A bare `true` here leaves `.success`
+    // undefined and the handler early-returns before navigating.
+    mockAuthenticate.mockResolvedValue({ success: true });
   });
 
   function renderScreen() {

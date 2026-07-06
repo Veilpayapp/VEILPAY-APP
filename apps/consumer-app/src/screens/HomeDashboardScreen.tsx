@@ -7,7 +7,7 @@
  * UPDATED: Now includes BottomNavBar, dynamic data, and price feed integration
  */
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { View, Text, StyleSheet, ScrollView, StatusBar, RefreshControl } from "react-native";
 import { PressableOpacity } from '../components/PressableOpacity';
 import * as Haptics from 'expo-haptics';
@@ -228,6 +228,17 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
     }
     setRefreshing(false);
   }, [refreshBalance, refreshTransactions, refreshMarketData]);
+
+  const refreshControlEl = useMemo(
+    () => (
+      <DashboardRefreshControl
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        accentColor={colors.accent}
+      />
+    ),
+    [refreshing, onRefresh, colors.accent]
+  );
 
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected";
 
@@ -467,13 +478,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
           showsVerticalScrollIndicator={false}
           onScroll={scrollHandler}
           scrollEventThrottle={16}
-          refreshControl={
-            <DashboardRefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              accentColor={colors.accent}
-            />
-          }
+          refreshControl={refreshControlEl}
         >
           {/* Chain Selector Dropdown */}
           <MotiView

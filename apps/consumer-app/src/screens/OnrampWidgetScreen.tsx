@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Text, View, Linking, StyleSheet } from 'react-native';
 import { PressableOpacity } from '../components/PressableOpacity';
 import { WebView } from 'react-native-webview';
@@ -145,6 +145,11 @@ export function OnrampWidgetScreen({ navigation, route }: OnrampWidgetScreenProp
     }
   };
 
+  const headerCenter = useMemo(
+    () => <OnrampWidgetHeaderCenter title={title} styles={styles} successColor={colors.success} />,
+    [title, styles, colors.success]
+  );
+
   return (
     <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>
     <FiatGatewayWebViewShell
@@ -152,9 +157,7 @@ export function OnrampWidgetScreen({ navigation, route }: OnrampWidgetScreenProp
       onClose={() => navigation.goBack()}
       loading={loading}
       loadingMessage="Establishing Secure Connection..."
-      headerCenter={
-        <OnrampWidgetHeaderCenter title={title} styles={styles} successColor={colors.success} />
-      }
+      headerCenter={headerCenter}
       errorState={loadTimedOut ? (
         <View style={styles.timeoutContainer}>
           <Icon name="close" size={28} color={colors.error} />

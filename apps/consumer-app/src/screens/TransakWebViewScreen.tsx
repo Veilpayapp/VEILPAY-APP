@@ -384,12 +384,38 @@ export function TransakWebViewScreen({ navigation, route }: Props) {
         webviewRef.current?.reload();
     }, []);
 
-  const kycBadgeColor: Record<KycStatus, string> = {
-    unknown: colors.textTertiary,
-    pending: colors.accent,
-    verified: colors.success,
-    rejected: colors.error,
-  };
+  const kycBadgeColor: Record<KycStatus, string> = useMemo(
+    () => ({
+      unknown: colors.textTertiary,
+      pending: colors.accent,
+      verified: colors.success,
+      rejected: colors.error,
+    }),
+    [colors.textTertiary, colors.accent, colors.success, colors.error]
+  );
+
+    const headerCenter = useMemo(
+        () => (
+            <TransakHeaderCenter
+                styles={styles}
+                title={title}
+                flowLabel={flowLabel}
+                statusSummary={statusSummary}
+                kycStatus={kycStatus}
+                kycStatusLabel={kycStatusLabel}
+                kycBadgeColor={kycBadgeColor}
+            />
+        ),
+        [styles, title, flowLabel, statusSummary, kycStatus, kycStatusLabel, kycBadgeColor]
+    );
+
+    const headerRight = useMemo(
+        () =>
+            orderStatus.status && orderStatus.status !== 'failed' ? (
+                <TransakHeaderRight styles={styles} orderPillLabel={orderPillLabel} />
+            ) : undefined,
+        [orderStatus.status, styles, orderPillLabel]
+    );
 
     return (
         <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={{ flex: 1 }}>
@@ -398,22 +424,8 @@ export function TransakWebViewScreen({ navigation, route }: Props) {
             onClose={handleClose}
             loading={loading}
             loadingMessage="Loading Transak..."
-            headerCenter={
-                <TransakHeaderCenter
-                    styles={styles}
-                    title={title}
-                    flowLabel={flowLabel}
-                    statusSummary={statusSummary}
-                    kycStatus={kycStatus}
-                    kycStatusLabel={kycStatusLabel}
-                    kycBadgeColor={kycBadgeColor}
-                />
-            }
-            headerRight={
-                orderStatus.status && orderStatus.status !== 'failed' ? (
-                    <TransakHeaderRight styles={styles} orderPillLabel={orderPillLabel} />
-                ) : undefined
-            }
+            headerCenter={headerCenter}
+            headerRight={headerRight}
             banner={overlayMessage ? (
                 <View style={styles.banner}>
                     <Text style={styles.bannerText}>{overlayMessage}</Text>

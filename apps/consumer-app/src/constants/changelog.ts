@@ -31,6 +31,16 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: '1.0.1',
+    build: 8,
+    date: '2026-07-06',
+    highlights: [
+      'Fixed a blank home screen — your balance, actions, and recent activity now load reliably every time.',
+      'The balance card no longer flickers while it quietly refreshes in the background; it only shows a loading state on first open or when you switch networks.',
+      'Smoother pull-to-refresh and network switching on the home screen.',
+    ],
+  },
+  {
+    version: '1.0.1',
     build: 7,
     date: '2026-07-06',
     highlights: [

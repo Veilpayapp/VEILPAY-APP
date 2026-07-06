@@ -57,22 +57,6 @@ interface HomeDashboardScreenProps {
   navigation: HomeDashboardScreenNavigationProp;
   route: HomeDashboardRouteProp;
 }
-interface DashboardRefreshControlProps {
-  refreshing: boolean;
-  onRefresh: () => void;
-  accentColor: string;
-}
-
-function DashboardRefreshControl({ refreshing, onRefresh, accentColor }: DashboardRefreshControlProps) {
-  return (
-    <RefreshControl
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      tintColor={accentColor}
-      colors={[accentColor]}
-    />
-  );
-}
 
 const formatTransakAmount = (value?: string, currency?: string) => {
   if (!value) {
@@ -215,26 +199,36 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
     // Clear stale transactions from the previous chain before fetching new ones
     useTransactionStore.getState().clearTransactions();
     refreshTransactions();
-  }, [address, activeChain, refreshTransactions]);
+    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- key on activeChain.key (stable primitive), NOT the activeChain object. The object identity is unstable across store rehydration, so depending on it clears + refetches transactions every render → visible reload loop. The chain key is the real dependency.
+  }, [address, activeChain?.key, refreshTransactions]);
 
   // Pull to refresh
   const onRefresh = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setRefreshing(true);
     try {
-      await Promise.all([refreshMarketData(), refreshBalance(), refreshTransactions()]);
+      // Silent balance refresh: the RefreshControl spinner already signals
+      // activity, so don't also flash the balance-card skeleton.
+      await Promise.all([refreshMarketData(), refreshBalance({ silent: true }), refreshTransactions()]);
     } catch (error) {
       console.warn("Failed to refresh:", error);
     }
     setRefreshing(false);
   }, [refreshBalance, refreshTransactions, refreshMarketData]);
 
+  // NOTE: This must be a real <RefreshControl> element, NOT a custom wrapper
+  // component. On Android, ScrollView.render() does
+  // `cloneElement(refreshControl, { style }, <NativeScrollView>{content}</…>)`,
+  // passing all scroll content as the element's children + injecting a style
+  // prop. A wrapper component that ignores children/style silently drops the
+  // entire dashboard (blank screen). See RN ScrollView.js (Platform.OS ==='android').
   const refreshControlEl = useMemo(
     () => (
-      <DashboardRefreshControl
+      <RefreshControl
         refreshing={refreshing}
         onRefresh={onRefresh}
-        accentColor={colors.accent}
+        tintColor={colors.accent}
+        colors={[colors.accent]}
       />
     ),
     [refreshing, onRefresh, colors.accent]

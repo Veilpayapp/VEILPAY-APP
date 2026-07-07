@@ -55,10 +55,7 @@ export function FiatGatewayCard({
 
       {visibleTransakOrder && transakOrderMeta ? (
         <View style={styles.transakOutcomeWrapper}>
-          <SovereignCard
-            backgroundColor={colors.surfaceCard}
-            borderRadius={24}
-          >
+          <SovereignCard backgroundColor={colors.surfaceCard}>
             <View style={styles.transakOutcomeContent}>
               <View style={[styles.transakOutcomeIcon, { backgroundColor: transakOrderMeta.tint }]}>
                 <Icon name={transakOrderMeta.icon} size={20} color={transakOrderMeta.accent} />
@@ -84,10 +81,7 @@ export function FiatGatewayCard({
 
       {visibleOnrampOrder && onrampOrderMeta ? (
         <View style={styles.transakOutcomeWrapper}>
-          <SovereignCard
-            backgroundColor={colors.surfaceCard}
-            borderRadius={24}
-          >
+          <SovereignCard backgroundColor={colors.surfaceCard}>
             <View style={styles.transakOutcomeContent}>
               <View style={[styles.transakOutcomeIcon, { backgroundColor: onrampOrderMeta.tint }]}>
                 <Icon name={onrampOrderMeta.icon} size={20} color={onrampOrderMeta.accent} />

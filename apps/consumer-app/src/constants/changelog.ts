@@ -31,6 +31,16 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: '1.0.1',
+    build: 10,
+    date: '2026-07-07',
+    highlights: [
+      'A heads-up before you send: VeilPay now checks your balance up front and stops you from submitting a payment you can\'t cover, instead of letting it fail on-chain.',
+      'The confirm button on the send screen is more reliable — no more taps that quietly do nothing.',
+      'Small visual polish on the pending Buy/Sell card so it matches the rest of the app.',
+    ],
+  },
+  {
+    version: '1.0.1',
     build: 9,
     date: '2026-07-07',
     highlights: [

@@ -31,6 +31,15 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: '1.0.1',
+    build: 11,
+    date: '2026-07-07',
+    highlights: [
+      'Fresh new look — VeilPay has a redesigned gold shield logo across the app, home screen icon, and splash screen.',
+      'The logo now looks crisp on both the dark and light themes.',
+    ],
+  },
+  {
+    version: '1.0.1',
     build: 10,
     date: '2026-07-07',
     highlights: [

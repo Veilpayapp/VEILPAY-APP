@@ -31,6 +31,15 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: '1.0.1',
+    build: 9,
+    date: '2026-07-07',
+    highlights: [
+      'Get notified the moment a payment lands — VeilPay now shows an on-device notification with the amount when you receive funds while the app is open.',
+      'Turn it on anytime under Settings → Notifications; nothing about your payments leaves your phone.',
+    ],
+  },
+  {
+    version: '1.0.1',
     build: 8,
     date: '2026-07-06',
     highlights: [

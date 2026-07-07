@@ -43,6 +43,7 @@ import { SCREENS } from './src/constants/screens';
 import { captureError, captureMessage, initSentry, setUserContext, addBreadcrumb } from './src/utils/sentry';
 import { useOTAUpdates } from './src/hooks/useOTAUpdates';
 import { usePushNotifications } from './src/hooks/usePushNotifications';
+import { useIncomingPaymentNotifications } from './src/hooks/useIncomingPaymentNotifications';
 import { registerPushDeviceToken } from './src/utils/pushNotifications';
 import { identifyUser, initAnalytics, resetAnalyticsUser, setAnalyticsConsent } from './src/utils/analytics';
 import { validateEnvironment, getEnvValidationSummary } from './src/utils/envValidation';
@@ -137,8 +138,22 @@ function MainApp() {
     token,
     isRegistered,
     error: pushError,
+    sendLocalNotification,
   } = usePushNotifications({
     autoRegister: notificationsEnabled && !__DEV__,
+  });
+
+  // Tier 1: fire an on-device local notification when a standard (non-private)
+  // incoming transfer is detected. Reuses the single usePushNotifications
+  // instance above so the tap/deep-link listeners aren't double-registered.
+  // Gated internally on notificationsEnabled + a connected wallet, and no-ops
+  // in Expo Go (sendLocalNotification is a no-op there). Stealth-receive
+  // notifications are a documented follow-up — see the hook's header.
+  useIncomingPaymentNotifications({
+    address,
+    isConnected,
+    notificationsEnabled,
+    notify: sendLocalNotification,
   });
 
   const { isSessionReady, bootstrapRetryCount } = useSessionBootstrap();

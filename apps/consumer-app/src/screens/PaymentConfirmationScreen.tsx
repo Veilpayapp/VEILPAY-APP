@@ -231,17 +231,26 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
         // send on a bad read. A genuine zero balance from a real RPC read
         // is reliable and *will* gate the send.
         const reliable = result.source !== 'fallback' && !result.error;
-        setNativeBalance({
+        const next = {
           amount: Number.isFinite(parsed) ? parsed : 0,
           reliable,
-        });
+        };
+        // Sticky-reliable: the balance poll re-runs every 15s, and a single
+        // flaky read used to flip `reliable` back to false — which made the
+        // insufficient-funds banner and disabled button blink out until the
+        // next good read. Once we have a reliable reading, don't let a later
+        // unreliable one erase it; only another *reliable* read updates it.
+        setNativeBalance((prev) =>
+          !next.reliable && prev?.reliable ? prev : next,
+        );
       } catch {
         if (isCancelled || !isMountedRef.current) {
           return;
         }
         // Unknown balance — do not block the send; the signer's own
-        // balance guard remains the backstop.
-        setNativeBalance({ amount: 0, reliable: false });
+        // balance guard remains the backstop. Preserve any prior reliable
+        // read so a transient throw doesn't wipe the insufficient-funds gate.
+        setNativeBalance((prev) => (prev?.reliable ? prev : { amount: 0, reliable: false }));
       }
     };
 

@@ -91,6 +91,22 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
   const hasAmount = amount.trim().length > 0;
   const isAmountValid = hasAmount && Number.isFinite(parsedAmount) && parsedAmount > 0;
 
+  // Pre-send balance gate. Compare the *crypto* amount against the available
+  // native-token balance so the user learns up front (rather than only on the
+  // confirm screen) that they can't cover the send. When the user is entering
+  // a fiat amount we convert to crypto with the same rate used on continue.
+  // Fees aren't known here (no gas estimate yet), so this checks amount-only;
+  // the precise amount+fees gate lives on PaymentConfirmationScreen.
+  const availableBalanceNum = Number.parseFloat(selectedToken.balance || '0');
+  const cryptoAmount = isUsdInput && currentFiatPrice > 0
+    ? parsedAmount / currentFiatPrice
+    : parsedAmount;
+  const exceedsBalance =
+    isAmountValid &&
+    Number.isFinite(availableBalanceNum) &&
+    Number.isFinite(cryptoAmount) &&
+    cryptoAmount > availableBalanceNum;
+
   const recipientError = !isRecipientTouched
     ? ''
     : !hasRecipient
@@ -105,9 +121,11 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
       ? 'Amount is required.'
       : !isAmountValid
         ? 'Enter a valid amount greater than 0.'
-        : '';
+        : exceedsBalance
+          ? `Amount exceeds your available balance of ${selectedToken.balance} ${selectedToken.symbol}.`
+          : '';
 
-  const canContinue = isRecipientValid && isAmountValid;
+  const canContinue = isRecipientValid && isAmountValid && !exceedsBalance;
 
   React.useEffect(() => {
     trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_VIEWED, {
@@ -267,6 +285,14 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
         reason: 'invalid_amount',
       });
       toast.show('Please enter a valid amount', 'error');
+      return false;
+    }
+
+    if (exceedsBalance) {
+      trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_VALIDATION_FAILED, {
+        reason: 'insufficient_balance',
+      });
+      toast.show('Amount exceeds your available balance', 'error');
       return false;
     }
 

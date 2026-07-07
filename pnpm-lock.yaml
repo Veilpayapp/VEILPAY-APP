@@ -231,9 +231,6 @@ importers:
       babel-loader:
         specifier: ^8.4.1
         version: 8.4.1(@babel/core@7.29.0)(webpack@5.107.1(esbuild@0.27.7))
-      bs58:
-        specifier: ^6.0.0
-        version: 6.0.0
       buffer:
         specifier: ^6.0.3
         version: 6.0.3

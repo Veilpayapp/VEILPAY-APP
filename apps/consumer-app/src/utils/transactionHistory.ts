@@ -5,6 +5,7 @@ import { formatEther } from 'viem';
 import { captureError } from './sentry';
 import { poolCall } from './rpcPool';
 import { fetchEvmHistory, fetchSolanaHistory, fetchStellarHistory } from './publicIndexers';
+import { getChainTypeFromKey } from './validation';
 
 interface RawResponse {
   data?: {
@@ -201,21 +202,11 @@ function getCursor(payload: RawResponse | unknown): { nextCursor: string | null;
   return { nextCursor, hasMore };
 }
 
-const getChainTypeFromKey = (key: string | undefined): ChainType | null => {
-  if (!key) return null;
-  const chainTypeMap: Record<string, ChainType> = {
-    ethereum:        'evm',
-    polygon:         'evm',
-    arbitrum:        'evm',
-    sepolia:         'evm',
-    solana:          'svm',
-    'solana-devnet': 'svm',
-    aptos:           'mvm',
-    stellar:         'xlm',
-    'stellar-testnet':'xlm',
-  };
-  return chainTypeMap[key] || null;
-};
+// Chain-type resolution is delegated to the canonical map in `utils/validation.ts`
+// (single source of truth, kept in lockstep with `chains.ts` by a drift-guard
+// test). The previous local copy here silently omitted `bsc` and `base`, which
+// routed those EVM chains to the "unsupported" fallback and returned empty
+// history for them.
 
 async function fetchBlockchainTransactions(
   address: string,

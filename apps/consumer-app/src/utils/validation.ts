@@ -12,6 +12,7 @@ const CHAIN_TYPES_BY_KEY: Record<string, SupportedChainType> = {
   bsc: 'evm',
   polygon: 'evm',
   arbitrum: 'evm',
+  base: 'evm',
   sepolia: 'evm',
   solana: 'svm',
   'solana-devnet': 'svm',
@@ -20,7 +21,8 @@ const CHAIN_TYPES_BY_KEY: Record<string, SupportedChainType> = {
   'stellar-testnet': 'xlm',
 };
 
-export function getChainTypeFromKey(key: string): SupportedChainType | null {
+export function getChainTypeFromKey(key: string | undefined | null): SupportedChainType | null {
+  if (!key) return null;
   return CHAIN_TYPES_BY_KEY[key] ?? null;
 }
 

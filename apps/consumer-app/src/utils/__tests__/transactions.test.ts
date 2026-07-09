@@ -126,11 +126,17 @@ describe('transactions utility', () => {
       expect(result.error).toBe('Transaction not found');
     });
 
-    it('returns failed status on exception', async () => {
+    it('re-throws transient/infrastructure errors instead of marking the tx failed', async () => {
+      // Contract: only genuine on-chain terminal states are returned; any thrown
+      // error (network blip, RPC down, 5xx) must propagate so the poller retries
+      // within its timeout window rather than falsely marking a live tx failed.
       poolCall.mockRejectedValue(new Error('Network error'));
-      const result = await waitForTransaction('0xtxhash');
-      expect(result.status).toBe('failed');
-      expect(result.error).toBe('Network error');
+      await expect(waitForTransaction('0xtxhash')).rejects.toThrow('Network error');
+    });
+
+    it('re-throws not-found / still-pending sentinels for the poller to retry', async () => {
+      poolCall.mockRejectedValue(new Error('Transaction not found'));
+      await expect(waitForTransaction('0xtxhash')).rejects.toThrow('Transaction not found');
     });
   });
 

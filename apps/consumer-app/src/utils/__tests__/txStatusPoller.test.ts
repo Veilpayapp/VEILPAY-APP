@@ -122,12 +122,72 @@ describe('txStatusPoller utility tests', () => {
       'warning'
     );
 
+    // A transient throw must NOT write a failed record to the store — only the
+    // initial pending record should have been added at this point.
+    expect(mockAddTransaction).not.toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'failed' })
+    );
+
     // Backoff multiplier is 1.5x, so next delay is 3000ms
     await jest.advanceTimersByTimeAsync(3000);
 
     const result = await pollPromise;
     expect(result.status).toBe('completed');
     expect(waitForTransaction).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps retrying through repeated transient throws until a real result lands', async () => {
+    // Regression guard for the transient-error contract: waitForTransaction now
+    // re-throws every non-terminal/infrastructure error (5xx, network blip, parse
+    // fault). The poller must treat each throw as retryable, never as a failure.
+    (waitForTransaction as jest.Mock)
+      .mockRejectedValueOnce(new Error('HTTP error 500')) // Horizon/Aptos 5xx
+      .mockRejectedValueOnce(new Error('Network request failed')) // Solana blip
+      .mockResolvedValueOnce({ status: 'confirmed', gasUsed: '0.002' });
+
+    const pollPromise = pollTransactionStatus(defaultOpts);
+
+    await jest.advanceTimersByTimeAsync(2000); // attempt 1 → throw
+    await jest.advanceTimersByTimeAsync(3000); // attempt 2 → throw
+    await jest.advanceTimersByTimeAsync(4500); // attempt 3 → confirmed
+
+    const result = await pollPromise;
+    expect(result.status).toBe('completed');
+    expect(waitForTransaction).toHaveBeenCalledTimes(3);
+    // No failed record was ever written despite two transient throws.
+    expect(mockAddTransaction).not.toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'failed' })
+    );
+  });
+
+  it('does not write to the store when aborted while waitForTransaction is in flight', async () => {
+    const controller = createPollAbortController();
+    let resolveWait: (v: unknown) => void = () => {};
+    (waitForTransaction as jest.Mock).mockImplementationOnce(
+      () => new Promise((resolve) => { resolveWait = resolve; })
+    );
+
+    const pollPromise = pollTransactionStatus({
+      ...defaultOpts,
+      signal: controller.signal,
+    });
+
+    // Let the first interval elapse so waitForTransaction is invoked and pending.
+    await jest.advanceTimersByTimeAsync(2000);
+    expect(waitForTransaction).toHaveBeenCalledTimes(1);
+
+    // Abort while the lookup is still in flight, then let it resolve confirmed.
+    controller.abort();
+    resolveWait({ status: 'confirmed', gasUsed: '0.001' });
+
+    const result = await pollPromise;
+
+    // Must bail out as pending — no confirmed/failed record written post-abort.
+    expect(result.status).toBe('pending');
+    expect(result.timedOut).toBe(true);
+    expect(mockAddTransaction).not.toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'completed' })
+    );
   });
 
   it('respects AbortSignal cancellation during sleep or wait loops', async () => {
@@ -170,6 +230,10 @@ describe('txStatusPoller utility tests', () => {
     expect(captureMessage).toHaveBeenLastCalledWith(
       expect.stringContaining('[tx-poller] Timeout polling'),
       'warning'
+    );
+    // A timed-out tx may still confirm later — it must never be marked failed.
+    expect(mockAddTransaction).not.toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'failed' })
     );
   });
 });

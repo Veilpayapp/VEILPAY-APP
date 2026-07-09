@@ -1,60 +1,27 @@
 import { getRpcUrl } from './rpc';
+import {
+  validateAddress as validateAddressImpl,
+  normalizeAddress as normalizeAddressImpl,
+  type SupportedChainType,
+} from './validation';
 
-// Supported chain types
-export type ChainType = 'evm' | 'svm' | 'mvm' | 'xlm';
-
-/**
- * Validates wallet address format based on chain type
- * @param address - The wallet address to validate
- * @param chainType - The blockchain type
- * @returns true if address format is valid
- */
-export const validateAddress = (address: string, chainType: ChainType): boolean => {
-  if (!address || typeof address !== 'string') {
-    return false;
-  }
-
-  switch (chainType) {
-    case 'evm':
-      // EVM addresses: 0x prefix + 40 hex characters
-      return /^0x[a-fA-F0-9]{40}$/.test(address);
-    
-    case 'svm':
-      // Solana addresses: Base58 encoded, 32-44 characters
-      return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
-    
-    case 'mvm':
-      // Aptos addresses: 0x prefix + 64 hex characters (with or without leading zeros)
-      return /^0x[a-fA-F0-9]{1,64}$/.test(address) && address.length <= 66;
-    
-    case 'xlm':
-      // Stellar addresses: 56 characters starting with G
-      return /^G[A-Z2-7]{55}$/.test(address);
-    
-    default:
-      return false;
-  }
-};
+// Supported chain types — alias the canonical validation type so chains.ts
+// stays in lockstep with utils/validation.ts (same pattern as walletStore).
+export type ChainType = SupportedChainType;
 
 /**
- * Validates and normalizes address format
- * @param address - The wallet address to validate
- * @param chainType - The blockchain type
- * @returns normalized address or null if invalid
+ * Validates wallet address format based on chain type.
+ * Delegates to `utils/validation.ts` — single source of truth.
  */
-export const normalizeAddress = (address: string, chainType: ChainType): string | null => {
-  if (!validateAddress(address, chainType)) {
-    return null;
-  }
+export const validateAddress = (address: string, chainType: ChainType): boolean =>
+  validateAddressImpl(address, chainType);
 
-  // Normalize to lowercase for EVM and Aptos
-  if (chainType === 'evm' || chainType === 'mvm') {
-    return address.toLowerCase();
-  }
-
-  // Solana and Stellar addresses are case-sensitive (Stellar is technically uppercase base32)
-  return address;
-};
+/**
+ * Validates and normalizes address format.
+ * Delegates to `utils/validation.ts` — single source of truth.
+ */
+export const normalizeAddress = (address: string, chainType: ChainType): string | null =>
+  normalizeAddressImpl(address, chainType);
 
 // Supported chains configuration
 export interface ChainConfig {

@@ -108,6 +108,21 @@ describe('stellarSigner', () => {
       .rejects.toThrow('Amount must be greater than zero');
   });
 
+  it('rejects invalid Stellar address with INVALID_ADDRESS', async () => {
+    await expect(
+      signAndSendStellarTransaction({ to: '0xnotstellar', value: '1' } as any, 'stellar')
+    ).rejects.toMatchObject({ code: 'INVALID_ADDRESS' });
+  });
+
+  it('rejects non-numeric or non-positive amount', async () => {
+    await expect(
+      signAndSendStellarTransaction({ to: VALID_STELLAR_ADDRESS, value: 'abc' } as any, 'stellar')
+    ).rejects.toThrow(/Amount must be greater than zero/);
+    await expect(
+      signAndSendStellarTransaction({ to: VALID_STELLAR_ADDRESS, value: '-1' } as any, 'stellar')
+    ).rejects.toThrow(/Amount must be greater than zero/);
+  });
+
   it('throws error if no mnemonic', async () => {
     (getStoredMnemonic as jest.Mock).mockResolvedValue(null);
     await expect(signAndSendStellarTransaction({ to: VALID_STELLAR_ADDRESS, value: '1' } as any, 'stellar'))

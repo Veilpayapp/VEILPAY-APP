@@ -47,14 +47,14 @@ const TOKEN_METADATA: Omit<PaymentToken, 'balance' | 'usdPrice'>[] = [
     id: 'usdt',
     name: 'Tether USD',
     symbol: 'USDT',
-    chainTypes: ['evm', 'svm', 'mvm'],
+    chainTypes: ['evm', 'svm'],
     icon: '◉',
   },
   {
     id: 'usdc',
     name: 'USD Coin',
     symbol: 'USDC',
-    chainTypes: ['evm', 'svm', 'mvm'],
+    chainTypes: ['evm', 'svm'],
     icon: '●',
   },
   {
@@ -70,13 +70,6 @@ const TOKEN_METADATA: Omit<PaymentToken, 'balance' | 'usdPrice'>[] = [
     symbol: 'SOL',
     chainTypes: ['svm'],
     icon: '◍',
-  },
-  {
-    id: 'apt',
-    name: 'Aptos',
-    symbol: 'APT',
-    chainTypes: ['mvm'],
-    icon: '◈',
   },
 ];
 

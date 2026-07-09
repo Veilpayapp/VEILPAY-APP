@@ -47,7 +47,6 @@ const CHAIN_KEY_TO_NATIVE_SYMBOL: Record<string, string> = Object.fromEntries(
 
 /** Chains that no on-ramp provider currently supports */
 const UNSUPPORTED_ONRAMP_CHAINS = new Set([
-  'aptos',
   'stellar',
   'sepolia',
   'solana-devnet',
@@ -179,11 +178,6 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
         : 'USD';
 
     if (provider === 'transak') {
-      if (chainKey === 'aptos') {
-        alert('Transak does not natively support Aptos. Please select Onramp.money or another provider.');
-        return;
-      }
-
       const url = buildTransakDepositUrl({
         walletAddress,
         fiatAmount: parseFloat(fiatAmount),

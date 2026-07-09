@@ -114,7 +114,6 @@ Variables:
 - EXPO_PUBLIC_RPC_POLYGON
 - EXPO_PUBLIC_RPC_ARBITRUM
 - EXPO_PUBLIC_RPC_SOLANA
-- EXPO_PUBLIC_RPC_APTOS
 
 Purpose:
 - Override public fallback RPC endpoints to improve reliability and avoid rate limits.

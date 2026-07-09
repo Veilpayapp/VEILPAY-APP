@@ -7,7 +7,7 @@ import { SCREENS } from '../constants/screens';
 import { Logo } from '../components/Logo';
 import { useWalletStore, ChainType } from '../stores/walletStore';
 import { SovereignCard } from "../components/SovereignCard";
-import { MetaMaskIcon, TrustWalletIcon, WalletConnectIcon, PhantomIcon, PetraIcon, LobstrIcon, LedgerIcon } from '../components/WalletIcons';
+import { MetaMaskIcon, TrustWalletIcon, WalletConnectIcon, PhantomIcon, LobstrIcon, LedgerIcon } from '../components/WalletIcons';
 import Toast, { useToast } from '../components/Toast';
 import { Icon } from '../components/Icon';
 import { ScreenBackButton } from '../components/ScreenBackButton';
@@ -33,7 +33,7 @@ const ATTEMPT_WINDOW_MS = 60_000;
 const EXTERNAL_CONNECT_COOLDOWN_MS = 30_000;
 const IS_DEMO_MODE = process.env.EXPO_PUBLIC_DEMO_WALLET_CONNECT === 'true';
 
-type ExternalWalletId = 'MetaMask' | 'Trust Wallet' | 'WalletConnect' | 'Phantom' | 'Petra' | 'Lobstr' | 'Ledger';
+type ExternalWalletId = 'MetaMask' | 'Trust Wallet' | 'WalletConnect' | 'Phantom' | 'Lobstr' | 'Ledger';
 
 function buildExternalWalletLaunchUrl(walletId: ExternalWalletId, uri: string): string {
   const encodedUri = encodeURIComponent(uri);
@@ -45,8 +45,6 @@ function buildExternalWalletLaunchUrl(walletId: ExternalWalletId, uri: string): 
       return `https://link.trustwallet.com/wc?uri=${encodedUri}`;
     case 'Phantom':
       return `https://phantom.app/ul/wc?uri=${encodedUri}`;
-    case 'Petra':
-      return `petra://wc?uri=${encodedUri}`;
     case 'Lobstr':
       return `lobstr://wc?uri=${encodedUri}`;
     case 'Ledger':
@@ -70,8 +68,8 @@ function resolveChainTypeFromWalletConnect(
     return 'svm';
   }
 
-  if (chainId.startsWith('aptos:')) {
-    return 'mvm';
+  if (chainId.startsWith('stellar:')) {
+    return 'xlm';
   }
 
   return 'evm';
@@ -495,33 +493,6 @@ export function WalletConnectScreen({ navigation, route }: WalletConnectScreenPr
               <View style={styles.methodTextContainer}>
               <Text style={[styles.methodTitle, { color: "#AB9FF2" }]}>PHANTOM</Text>
               <Text style={[styles.methodDescription, { color: colors.textMuted }]}>Connect your Solana Phantom wallet.</Text>
-              </View>
-            </View>
-          </SovereignCard>
-        </PressableOpacity>
-
-        <PressableOpacity 
-          activeOpacity={0.9} 
-          onPress={() => handleExternalWallet('Petra', 'mvm')} 
-          style={{ marginBottom: 16 }}
-          disabled={connecting !== null}
-          accessibilityRole="button"
-          accessibilityLabel="Connect Petra"
-          accessibilityHint="Opens Petra to approve connection"
-          accessibilityState={{ disabled: connecting !== null }}
-        >
-        <SovereignCard backgroundColor={colors.surfaceCard}>
-          <View style={styles.methodRow}>
-            <View style={[styles.methodIconBox, { backgroundColor: colors.surfaceCard, borderColor: colors.bgPrimary }]}>
-              {connecting === 'Petra' ? (
-                <ActivityIndicator size="small" color="#E86C6A" />
-                ) : (
-                  <PetraIcon width={24} height={24} />
-                )}
-              </View>
-              <View style={styles.methodTextContainer}>
-              <Text style={[styles.methodTitle, { color: "#E86C6A" }]}>PETRA</Text>
-              <Text style={[styles.methodDescription, { color: colors.textMuted }]}>Connect your Aptos Petra wallet.</Text>
               </View>
             </View>
           </SovereignCard>

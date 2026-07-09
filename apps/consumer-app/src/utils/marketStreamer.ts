@@ -6,7 +6,6 @@ const BINANCE_SYMBOLS: Record<string, string> = {
   ETH: 'ETHUSDT',
   MATIC: 'MATICUSDT',
   SOL: 'SOLUSDT',
-  APT: 'APTUSDT',
   USDC: 'USDCUSDT',
   DAI: 'DAIUSDT',
   BNB: 'BNBUSDT',

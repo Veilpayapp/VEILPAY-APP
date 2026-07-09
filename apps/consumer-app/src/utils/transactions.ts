@@ -142,14 +142,6 @@ export const NETWORKS: Record<string, NetworkConfig> = {
     symbol: 'SOL',
     isTestnet: false,
   },
-  aptos: {
-    name: 'Aptos',
-    chainId: 1, // Arbitrary for non-EVM
-    rpcUrl: getRpcUrl('aptos'),
-    explorerUrl: 'https://explorer.aptoslabs.com',
-    symbol: 'APT',
-    isTestnet: false,
-  },
 };
 
 
@@ -336,31 +328,6 @@ export async function waitForTransaction(
         return { hash: txHash, status: 'confirmed', blockNumber: status.slot };
       }
       throw new Error('Still pending');
-    }
-
-    if (networkKey === 'aptos') {
-      const aptosRpc = 'https://fullnode.mainnet.aptoslabs.com/v1';
-      const res = await fetch(`${aptosRpc}/transactions/by_hash/${txHash}`);
-      if (res.status === 404) {
-        throw new Error('Transaction not found');
-      }
-      if (!res.ok) {
-        throw new Error(`HTTP error ${res.status}`);
-      }
-      const data = await res.json();
-      if (data.type === 'pending_transaction') {
-        throw new Error('Still pending');
-      }
-      if (data.success) {
-        return {
-          hash: txHash,
-          status: 'confirmed',
-          blockNumber: Number(data.version),
-          gasUsed: data.gas_used,
-        };
-      } else {
-        return { hash: txHash, status: 'failed', error: data.vm_status || 'Aptos transaction failed' };
-      }
     }
 
     const receipt = await poolCall(networkKey, (p) => p.waitForTransactionReceipt({ hash: txHash as `0x${string}`, confirmations }));

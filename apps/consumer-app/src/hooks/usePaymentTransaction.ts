@@ -69,7 +69,6 @@ import {
   deriveAddressFromStoredMnemonic,
 } from '../utils/secureSigner';
 import { signAndSendSolanaTransaction } from '../utils/solanaSigner';
-import { signAndSendAptosTransaction } from '../utils/aptosSigner';
 import { signAndSendStellarTransaction } from '../utils/stellarSigner';
 import { validateAddress } from '../utils/validation';
 import {
@@ -228,20 +227,6 @@ export function usePaymentTransaction({
             isStale: false,
             fetchedAt: Date.now(),
           } as GasEstimate;
-        } else if (activeChain?.type === 'mvm') {
-          const estimatedCostWei = 200000n;
-          const estimatedCostEth = '0.0002';
-          estimate = {
-            gasLimit: 2000n,
-            maxFeePerGas: 100n,
-            maxPriorityFeePerGas: 0n,
-            gasPrice: 100n,
-            estimatedCostWei,
-            estimatedCostEth,
-            estimatedCostUsd: null,
-            isStale: false,
-            fetchedAt: Date.now(),
-          } as GasEstimate;
         } else if (activeChain?.type === 'xlm') {
           // Stellar base fee: 100 stroops = 0.00001 XLM
           const estimatedCostWei = 100n;
@@ -328,7 +313,7 @@ export function usePaymentTransaction({
     // Re-validate recipient against the *active* chain on confirm — not just
     // the chain that was active when SendPaymentScreen accepted the address.
     // A network switch between send and confirm would otherwise let an
-    // EVM-shaped address through on Solana/Aptos/Stellar (and vice versa).
+    // EVM-shaped address through on Solana/Stellar (and vice versa).
     const activeChainType = activeChain?.type;
     if (
       !activeChainType ||
@@ -551,12 +536,6 @@ export function usePaymentTransaction({
             tokenAddress,
             tokenDecimals,
           },
-          activeNetworkKey,
-          undefined
-        );
-      } else if (activeChain?.type === 'mvm') {
-        result = await signAndSendAptosTransaction(
-          { to: recipient, value: parsedAmount.toString() },
           activeNetworkKey,
           undefined
         );

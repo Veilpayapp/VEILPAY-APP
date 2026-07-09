@@ -20,12 +20,6 @@ describe('onrampProviderMatrix', () => {
       expect(isProviderSupported('transak', 'solana', 'EUR')).toBe(true);
     });
 
-    it('returns false for any provider + aptos', () => {
-      for (const [id] of PROVIDER_MATRIX) {
-        expect(isProviderSupported(id, 'aptos', 'USD')).toBe(false);
-      }
-    });
-
     it('returns false for any provider + stellar', () => {
       for (const [id] of PROVIDER_MATRIX) {
         expect(isProviderSupported(id, 'stellar', 'USD')).toBe(false);
@@ -78,8 +72,8 @@ describe('onrampProviderMatrix', () => {
       ]);
     });
 
-    it('filters all providers for unsupported chain (aptos)', () => {
-      const result = filterSupportedQuotes(quotes, 'aptos', 'USD');
+    it('filters all providers for unsupported chain (stellar)', () => {
+      const result = filterSupportedQuotes(quotes, 'stellar', 'USD');
       expect(result).toEqual([]);
     });
 

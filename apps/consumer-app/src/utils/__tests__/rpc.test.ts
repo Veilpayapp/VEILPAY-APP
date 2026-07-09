@@ -23,7 +23,8 @@ describe('rpc utility tests', () => {
     const keys = getSupportedChainKeys();
     expect(keys).toContain('ethereum');
     expect(keys).toContain('solana');
-    expect(keys).toContain('aptos');
+    expect(keys).toContain('stellar');
+    expect(keys).not.toContain('aptos');
   });
 
   describe('getRpcUrl priority levels', () => {

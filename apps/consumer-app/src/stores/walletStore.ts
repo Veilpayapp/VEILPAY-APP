@@ -26,7 +26,7 @@ import {
 // We keep the `ChainType` alias here because many call sites import it from the
 // store, but the address-validation *logic* now has a single source of truth in
 // `utils/validation.ts` — see `validateAddress`/`normalizeAddress` below.
-export type ChainType = 'evm' | 'svm' | 'mvm' | 'xlm';
+export type ChainType = 'evm' | 'svm' | 'xlm';
 
 // Compile-time assertion that the two unions stay in lock-step. If either side
 // gains/loses a member, this line stops type-checking.
@@ -154,16 +154,6 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
     get rpcUrl() { return getRpcUrl('solana-devnet'); },
     explorerUrl: 'https://explorer.solana.com/?cluster=devnet',
     nativeToken: { name: 'Solana', symbol: 'SOL', decimals: 9 },
-  },
-  {
-    id: 'aptos-mainnet',
-    key: 'aptos',
-    name: 'Aptos',
-    type: 'mvm',
-    symbol: 'APT',
-    get rpcUrl() { return getRpcUrl('aptos'); },
-    explorerUrl: 'https://explorer.aptoslabs.com',
-    nativeToken: { name: 'Aptos', symbol: 'APT', decimals: 8 },
   },
   {
     id: 'stellar-mainnet',
@@ -484,7 +474,7 @@ export const useWalletStore = create<WalletState>()(
     }),
     {
       name: 'veilpay-wallet-storage',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => secureStateStorage),
       onRehydrateStorage: () => (state, error) => {
         if (error) {
@@ -492,17 +482,39 @@ export const useWalletStore = create<WalletState>()(
             scope: 'wallet-store',
           });
         }
-        state?.setHasHydrated(true);
+        // Drop Aptos if a pre-removal build left it as the active chain.
+        if (state) {
+          const activeType = state.activeChain?.type as string | undefined;
+          if (activeType === 'mvm' || state.activeChain?.key === 'aptos') {
+            state.setActiveChain(SUPPORTED_CHAINS[0]);
+          }
+          state.setHasHydrated(true);
+        }
       },
       migrate: (persistedState: unknown, version: number): Partial<WalletState> => {
+        const state = { ...(persistedState as Record<string, unknown>) };
         if (version < 2) {
-          const state = persistedState as Record<string, unknown>;
-          const cleaned = { ...state };
-          delete cleaned.pushToken;
-          delete cleaned.latestTransakOrder;
-          return cleaned as Partial<WalletState>;
+          delete state.pushToken;
+          delete state.latestTransakOrder;
         }
-        return persistedState as Partial<WalletState>;
+        if (version < 3) {
+          // Aptos (mvm) removed from the app — migrate any stored selection away.
+          const active = state.activeChain as { type?: string; key?: string } | null | undefined;
+          if (active?.type === 'mvm' || active?.key === 'aptos') {
+            state.activeChain = SUPPORTED_CHAINS[0];
+            state.chainType = SUPPORTED_CHAINS[0].type;
+            const addresses = (state.addresses || {}) as Record<string, string | null>;
+            state.address = addresses.evm ?? state.address ?? null;
+          }
+          if (state.chainType === 'mvm') {
+            state.chainType = 'evm';
+          }
+          const custom = state.customChains as Array<{ type?: string; key?: string }> | undefined;
+          if (Array.isArray(custom)) {
+            state.customChains = custom.filter((c) => c?.type !== 'mvm' && c?.key !== 'aptos');
+          }
+        }
+        return state as Partial<WalletState>;
       },
       partialize: (state) => ({
         isConnected: state.isConnected,

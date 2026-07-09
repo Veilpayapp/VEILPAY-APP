@@ -36,16 +36,13 @@ describe('walletStore', () => {
     expect(validateAddress('11111111111111111111111111111111', 'svm')).toBe(true);
     expect(validateAddress('0x11111111111111111111111111111111', 'svm')).toBe(false);
 
-    expect(validateAddress('0xabcdef', 'mvm')).toBe(true);
-    expect(validateAddress('abcdef', 'mvm')).toBe(false);
+    expect(validateAddress('G' + 'A'.repeat(55), 'xlm')).toBe(true);
+    expect(validateAddress('0xabcdef', 'xlm')).toBe(false);
   });
 
-  it('normalizes EVM and MVM addresses to lowercase', () => {
+  it('normalizes EVM addresses to lowercase', () => {
     const evmAddress = '0xABCDEFABCDEFABCDEFABCDEFABCDEFABCDEFABCD';
-    const mvmAddress = '0xABCDEF';
-
     expect(normalizeAddress(evmAddress, 'evm')).toBe('0xabcdefabcdefabcdefabcdefabcdefabcdefabcd');
-    expect(normalizeAddress(mvmAddress, 'mvm')).toBe('0xabcdef');
   });
 
   it('connects and disconnects wallet state correctly', async () => {

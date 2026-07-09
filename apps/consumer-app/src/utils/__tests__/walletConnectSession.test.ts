@@ -76,20 +76,15 @@ describe('walletConnectSession utility tests', () => {
     it('scopes to a single namespace for a known chain type', () => {
       expect(Object.keys(buildOptionalNamespaces('evm'))).toEqual(['eip155']);
       expect(Object.keys(buildOptionalNamespaces('svm'))).toEqual(['solana']);
-      expect(Object.keys(buildOptionalNamespaces('mvm'))).toEqual(['aptos']);
       expect(Object.keys(buildOptionalNamespaces('xlm'))).toEqual(['stellar']);
-    });
-
-    it('keeps the aptos:1 CAIP-2 chain id for the aptos namespace', () => {
-      expect(buildOptionalNamespaces('mvm').aptos.chains).toEqual(['aptos:1']);
     });
 
     it('falls back to the full namespace set for unknown/empty chain types', () => {
       expect(Object.keys(buildOptionalNamespaces()).sort()).toEqual(
-        ['aptos', 'eip155', 'solana', 'stellar'],
+        ['eip155', 'solana', 'stellar'],
       );
       expect(Object.keys(buildOptionalNamespaces('unknown')).sort()).toEqual(
-        ['aptos', 'eip155', 'solana', 'stellar'],
+        ['eip155', 'solana', 'stellar'],
       );
     });
   });
@@ -207,7 +202,7 @@ describe('walletConnectSession utility tests', () => {
       jest.useRealTimers();
     });
 
-    it('extracts primary account with solana/aptos namespace fallbacks', async () => {
+    it('extracts primary account with solana namespace fallbacks', async () => {
       const mockApproval = jest.fn().mockResolvedValue({
         topic: 'solana-topic',
         namespaces: {

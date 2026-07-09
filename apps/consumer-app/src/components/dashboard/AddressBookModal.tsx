@@ -27,7 +27,6 @@ interface AddressBookModalProps {
 const CHAIN_TYPE_COLORS: Record<string, string> = {
   evm: '#627EEA',
   svm: '#9945FF',
-  mvm: '#00D4B0',
   xlm: '#00B4D8',
 };
 
@@ -40,7 +39,6 @@ function getChainColor(chain: ChainConfig): string {
     base: '#0052FF',
     solana: '#9945FF',
     'solana-devnet': '#9945FF',
-    aptos: '#00D4B0',
     stellar: '#00B4D8',
     'stellar-testnet': '#00B4D8',
     sepolia: '#627EEA',

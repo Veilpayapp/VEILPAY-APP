@@ -228,7 +228,7 @@ async function fetchBlockchainTransactions(
     return fetchStellarHistory(address, chainKey, cursor, limit);
   }
 
-  // Fallback for unsupported chains (e.g. mvm/aptos) - return empty for now since indexer is required
+  // Fallback for unsupported chains — return empty for now since indexer is required
   console.warn(`Public indexer not yet implemented for chain type: ${chainType}`);
   return { transactions: [], nextCursor: null, hasMore: false };
 }

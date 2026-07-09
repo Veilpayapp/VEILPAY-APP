@@ -20,7 +20,6 @@ export const FALLBACK_PRICES: Record<string, number> = {
   SOL: 145,
   BNB: 580,
   MATIC: 0.72,
-  APT: 9.50,
 };
 
 // Fallback fiat exchange rates (USD -> FIAT)
@@ -42,7 +41,6 @@ const SYMBOL_TO_COINCAP_ID: Record<string, string> = {
   SOL: 'solana',
   BNB: 'binance-coin',
   MATIC: 'polygon',
-  APT: 'aptos',
 };
 
 export interface PriceData {

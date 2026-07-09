@@ -26,7 +26,6 @@ const PUBLIC_FALLBACKS: Record<string, string> = {
   sepolia:        'https://rpc.sepolia.org',
   solana:         'https://api.mainnet-beta.solana.com',
   'solana-devnet': 'https://api.devnet.solana.com',
-  aptos:          'https://fullnode.mainnet.aptoslabs.com',
   stellar:        'https://horizon.stellar.org',
   'stellar-testnet': 'https://horizon-testnet.stellar.org',
 };
@@ -42,7 +41,6 @@ const RPC_ENV_VARS: Record<string, string | undefined> = {
   sepolia:        process.env.EXPO_PUBLIC_RPC_SEPOLIA,
   solana:         process.env.EXPO_PUBLIC_RPC_SOLANA,
   'solana-devnet': process.env.EXPO_PUBLIC_RPC_SOLANA_DEVNET,
-  aptos:          process.env.EXPO_PUBLIC_RPC_APTOS,
 };
 
 // ─── Public API ───────────────────────────────────────────────────────────────

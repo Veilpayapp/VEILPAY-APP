@@ -14,7 +14,6 @@ jest.mock('../rpc', () => ({
     const urls: Record<string, string> = {
       solana: 'https://api.mainnet-beta.solana.com',
       'solana-devnet': 'https://api.devnet.solana.com',
-      aptos: 'https://fullnode.mainnet.aptoslabs.com',
       stellar: 'https://horizon.stellar.org',
     };
     return urls[key] || 'https://rpc.example';
@@ -121,45 +120,6 @@ describe('balanceFetcher — multi-chain support', () => {
       );
 
       expect(result.source).toBe('fallback');
-      global.fetch = originalFetch;
-    });
-  });
-
-  describe('fetchNativeBalance — Aptos chains', () => {
-    it('fetches Aptos balance via REST API', async () => {
-      const originalFetch = global.fetch;
-      global.fetch = jest.fn().mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          data: {
-            coin: { value: '500000000' },
-          },
-        }),
-      });
-
-      const result = await fetchNativeBalance(
-        '0x1234567890abcdef',
-        'aptos'
-      );
-
-      expect(result.symbol).toBe('APT');
-      expect(result.balance).toBe('500000000');
-      global.fetch = originalFetch;
-    });
-
-    it('returns zero balance for 404', async () => {
-      const originalFetch = global.fetch;
-      global.fetch = jest.fn().mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-      });
-
-      const result = await fetchNativeBalance(
-        '0x1234567890abcdef',
-        'aptos'
-      );
-
-      expect(result.balance).toBe('0');
       global.fetch = originalFetch;
     });
   });

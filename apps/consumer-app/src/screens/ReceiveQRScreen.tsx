@@ -68,7 +68,6 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
         evm: 'ethereum',
         svm: 'solana',
         xlm: 'stellar',
-        mvm: 'aptos',
       };
       const scheme = schemeMap[activeChain?.type || 'evm'] || 'ethereum';
       return `${scheme}:${address}?amount=${requestedAmount}`;

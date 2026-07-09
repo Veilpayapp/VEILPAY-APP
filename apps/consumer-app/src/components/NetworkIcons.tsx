@@ -39,7 +39,6 @@ import branded_bitcoin from '@web3icons/core/svgs/networks/branded/bitcoin.svg.j
 import branded_tron from '@web3icons/core/svgs/networks/branded/tron.svg.js';
 import branded_avalanche from '@web3icons/core/svgs/networks/branded/avalanche.svg.js';
 import branded_linea from '@web3icons/core/svgs/networks/branded/linea.svg.js';
-import branded_aptos from '@web3icons/core/svgs/networks/branded/aptos.svg.js';
 // Override Stellar logo because the web3icons version hardcodes fill="#000" which is invisible on dark backgrounds.
 const CORRECTED_STELLAR_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24">
@@ -76,7 +75,7 @@ const BitcoinIcon = makeBrandedIcon(branded_bitcoin);
 const TronIcon = makeBrandedIcon(branded_tron);
 const AvalancheIcon = makeBrandedIcon(branded_avalanche);
 const LineaIcon = makeBrandedIcon(branded_linea);
-const AptosIcon = makeBrandedIcon(branded_aptos);
+
 const StellarIcon = makeBrandedIcon(CORRECTED_STELLAR_SVG);
 const HyperEVMIcon = makeBrandedIcon(branded_hyperevm);
 
@@ -134,9 +133,6 @@ export const getNetworkIcon = (chainKey: string) => {
     case 'avalanche':
     case 'avax':
       return AvalancheIcon;
-    case 'aptos':
-    case 'aptos-mainnet':
-      return AptosIcon;
     case 'stellar':
     case 'stellar-mainnet':
     case 'stellar-testnet':

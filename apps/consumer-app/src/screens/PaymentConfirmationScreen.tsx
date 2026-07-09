@@ -118,7 +118,6 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
       switch (type) {
         case 'svm': return 'solana-devnet';
         case 'xlm': return 'stellar-testnet';
-        case 'mvm': return 'aptos';
         default: return 'sepolia';
       }
     };

@@ -5,6 +5,11 @@
  */
 
 import { getChainTypeFromKey, validateAddress, normalizeAddress } from '../validation';
+import {
+  validateAddress as storeValidateAddress,
+  normalizeAddress as storeNormalizeAddress,
+  type ChainType,
+} from '../../stores/walletStore';
 
 describe('validation utility tests', () => {
   describe('getChainTypeFromKey', () => {
@@ -96,6 +101,58 @@ describe('validation utility tests', () => {
       // Since chainType is omitted, the function falls back to returning the original string
       expect(normalizeAddress(mixedEvm)).toBe(mixedEvm);
       expect(normalizeAddress(validSvm)).toBe(validSvm);
+    });
+  });
+
+  // Regression guard for the "two divergent validateAddress implementations"
+  // finding: `stores/walletStore.ts` used to carry its own copy of the
+  // address-format logic (with a redundant `length <= 66` mvm clause). It now
+  // delegates to `utils/validation.ts`. These tests assert the store's exported
+  // delegates agree with the canonical implementation for every chain type and
+  // for the edge cases that first exposed the drift.
+  describe('walletStore delegates match canonical validation', () => {
+    const chainTypes: ChainType[] = ['evm', 'svm', 'mvm', 'xlm'];
+
+    const samples: string[] = [
+      // valid-ish per chain
+      '0x9858effd232b4033e47d90003d41ec34ecaeda94',
+      '5tzGtK1xNn86nKBgvwB3gG3nZz6f81sF6zM99m4rZgLg',
+      '0x9858effd232b4033e47d90003d41ec34ecaeda94a8f8d8b8c8b8b8b8b8b8b8b8',
+      'GB2S5N7HMX5W6NUXP2D7BZXMX6S7BZXMX6S7BZXMX6S7BZXMX6S7BZX3',
+      // edge cases
+      '',
+      '0x',
+      // Aptos boundary: exactly 66 chars (0x + 64 hex) — must be valid mvm on both
+      '0x' + 'a'.repeat(64),
+      // 67-char over-length hex — must be rejected as mvm on both
+      '0x' + 'a'.repeat(65),
+      'not-an-address',
+    ];
+
+    it('agrees on validateAddress across all chain types and samples', () => {
+      for (const chainType of chainTypes) {
+        for (const sample of samples) {
+          expect(storeValidateAddress(sample, chainType)).toBe(
+            validateAddress(sample, chainType)
+          );
+        }
+      }
+    });
+
+    it('agrees on normalizeAddress across all chain types and samples', () => {
+      for (const chainType of chainTypes) {
+        for (const sample of samples) {
+          expect(storeNormalizeAddress(sample, chainType)).toBe(
+            normalizeAddress(sample, chainType)
+          );
+        }
+      }
+    });
+
+    it('rejects over-length Aptos (mvm) addresses on both entry points', () => {
+      const overLong = '0x' + 'a'.repeat(65); // 67 chars total
+      expect(validateAddress(overLong, 'mvm')).toBe(false);
+      expect(storeValidateAddress(overLong, 'mvm')).toBe(false);
     });
   });
 });

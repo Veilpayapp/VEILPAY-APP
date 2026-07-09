@@ -45,7 +45,14 @@ export interface PollOptions {
   tokenSymbol: string;
   /** Network name for the record, e.g. 'Ethereum' */
   networkName?: string;
-  /** Privacy level if applicable */
+  /**
+   * Privacy level recorded against the on-chain transaction. Intentionally
+   * only `'standard' | 'max'` — never `'stealth'`. The stealth flow's on-chain
+   * artifact is a plain transfer (its stealth nature lives in a separate
+   * announcer event that the recipient scanner correlates), so the stealth
+   * path passes `'standard'` here. Keep this in lock-step with
+   * `TransactionRecord.privacyLevel`.
+   */
   privacyLevel?: 'standard' | 'max';
   /** Gas fee in ETH if known */
   feeEth?: string;

@@ -25,6 +25,28 @@ const STELLAR_FEE_STROOPS = 100; // 0.00001 XLM (1 stroop = 0.0000001 XLM)
 const XLM_STROOPS = 10_000_000; // 1 XLM = 10,000,000 stroops
 const HORIZON_TIMEOUT_MS = 30_000;
 
+// Stellar minimum-balance protocol constants. An account's reserved (un-spendable)
+// balance is `(2 + numSubentries) × BASE_RESERVE`, where a subentry is each
+// trustline, offer, signer beyond the master key, or data entry on the account.
+// A flat 1 XLM reserve is only correct for a bare account (0 subentries); an
+// account with trustlines/offers reserves more, so a naive check would let a
+// send through that Horizon then rejects with `tx_insufficient_balance`.
+// See: https://developers.stellar.org/docs/learn/fundamentals/lumens#minimum-balance
+const STELLAR_BASE_RESERVE_XLM = 0.5;
+
+/**
+ * Computes the minimum XLM balance that must remain in the account, given the
+ * number of subentries reported by Horizon. Falls back to the bare-account
+ * reserve (2 base reserves) when the count is missing or malformed.
+ */
+export function computeStellarMinReserveXlm(subentryCount: unknown): number {
+  const n =
+    typeof subentryCount === 'number' && Number.isFinite(subentryCount)
+      ? Math.max(0, Math.floor(subentryCount))
+      : 0;
+  return (2 + n) * STELLAR_BASE_RESERVE_XLM;
+}
+
 // BIP-44 derivation path for Stellar (SLIP-0010 ed25519)
 const STELLAR_DERIVATION_PATH = "m/44'/148'/0'";
 
@@ -98,8 +120,10 @@ export async function signAndSendStellarTransaction(
     const nativeBalance = accountData.balances?.find((b: any) => b.asset_type === 'native');
     const balanceXlm = parseFloat(nativeBalance?.balance || '0');
     const feeXlm = STELLAR_FEE_STROOPS / XLM_STROOPS;
-    // Stellar requires minimum balance of 1 XLM (base reserve × 2) — keep 1 XLM as reserve
-    const reserveXlm = 1;
+    // Reserve scales with the account's subentries (trustlines, offers, extra
+    // signers, data entries), not a flat 1 XLM. Under-counting here lets a send
+    // pass our gate only to be rejected by Horizon as `tx_insufficient_balance`.
+    const reserveXlm = computeStellarMinReserveXlm(accountData.subentry_count);
     const requiredXlm = parsedAmount + feeXlm + reserveXlm;
 
     if (balanceXlm < requiredXlm) {

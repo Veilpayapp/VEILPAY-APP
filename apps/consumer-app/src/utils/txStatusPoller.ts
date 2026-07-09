@@ -158,6 +158,13 @@ export async function pollTransactionStatus(opts: PollOptions): Promise<PollResu
     try {
       const result = await waitForTransaction(opts.txHash, opts.chainKey, REQUIRED_CONFIRMATIONS);
 
+      // The lookup can take seconds; if the caller aborted (e.g. component
+      // unmounted) while it was in flight, do not mutate the store or fire
+      // onStatusChange with a post-unmount write. Bail out as pending instead.
+      if (signal?.aborted) {
+        return { status: 'pending', record: pendingRecord, timedOut: true };
+      }
+
       if (result.status === 'confirmed' || result.status === 'failed') {
         const finalStatus: TransactionStatus = result.status === 'confirmed' ? 'completed' : 'failed';
         const finalRecord: TransactionRecord = {

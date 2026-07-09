@@ -376,19 +376,15 @@ export async function waitForTransaction(
       gasUsed: receipt.gasUsed.toString(),
     };
   } catch (error: any) {
-    if (
-      error.message === 'Transaction not found' ||
-      error.message === 'Still pending' ||
-      error.name === 'TransactionReceiptNotFoundError' ||
-      error.name === 'TimeoutError'
-    ) {
-      throw error;
-    }
-    return {
-      hash: txHash,
-      status: 'failed',
-      error: error.message || 'Unknown error waiting for transaction',
-    };
+    // Contract: every *genuine on-chain terminal state* (confirmed, or reverted/
+    // failed) is `return`ed from inside the try above. Therefore anything that
+    // reaches this catch is by definition NON-terminal — the tx is not yet found,
+    // still pending, or the lookup hit a transient infrastructure fault (5xx,
+    // network blip, JSON parse error, RPC down). All of these must be re-thrown so
+    // the poller retries within its timeout window. Swallowing them as
+    // `{ status: 'failed' }` would mark a live, likely-succeeding transaction as
+    // permanently failed on a one-off network hiccup.
+    throw error;
   }
 }
 

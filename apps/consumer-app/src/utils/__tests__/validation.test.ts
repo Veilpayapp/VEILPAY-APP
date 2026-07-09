@@ -5,6 +5,7 @@
  */
 
 import { getChainTypeFromKey, validateAddress, normalizeAddress } from '../validation';
+import { SUPPORTED_CHAINS } from '../chains';
 import {
   validateAddress as storeValidateAddress,
   normalizeAddress as storeNormalizeAddress,
@@ -18,15 +19,26 @@ describe('validation utility tests', () => {
       expect(getChainTypeFromKey('bsc')).toBe('evm');
       expect(getChainTypeFromKey('polygon')).toBe('evm');
       expect(getChainTypeFromKey('arbitrum')).toBe('evm');
+      expect(getChainTypeFromKey('base')).toBe('evm');
       expect(getChainTypeFromKey('sepolia')).toBe('evm');
-      
+
       expect(getChainTypeFromKey('solana')).toBe('svm');
       expect(getChainTypeFromKey('solana-devnet')).toBe('svm');
-      
+
       expect(getChainTypeFromKey('aptos')).toBe('mvm');
-      
+
       expect(getChainTypeFromKey('stellar')).toBe('xlm');
       expect(getChainTypeFromKey('stellar-testnet')).toBe('xlm');
+    });
+
+    it('resolves every SUPPORTED_CHAINS key to a non-null chain type (drift guard)', () => {
+      // The map must stay in lockstep with the chain registry — a supported chain
+      // that resolves to null silently breaks address validation and routing for
+      // that chain. This catches any future chain added to chains.ts without a
+      // corresponding CHAIN_TYPES_BY_KEY entry (as happened with `base`).
+      for (const chain of SUPPORTED_CHAINS) {
+        expect(getChainTypeFromKey(chain.key)).not.toBeNull();
+      }
     });
 
     it('returns null for unknown keys', () => {

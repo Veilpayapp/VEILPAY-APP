@@ -238,7 +238,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
 
   const handleSend = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    if (activeChain?.type !== 'evm' && activeChain?.type !== 'svm' && activeChain?.type !== 'mvm' && activeChain?.type !== 'xlm') {
+    if (activeChain?.type !== 'evm' && activeChain?.type !== 'svm' && activeChain?.type !== 'xlm') {
       toast.show(`Send is not yet available for ${activeChain?.name || 'this chain'}. Coming soon!`, 'info');
       return;
     }
@@ -320,8 +320,6 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
         let faucetUrl = '';
         if (activeChain.key === 'sepolia') {
           faucetUrl = 'https://sepoliafaucet.com/';
-        } else if (activeChain.key === 'aptos-testnet') {
-          faucetUrl = 'https://aptoslabs.com/testnet-faucet';
         } else {
           toast.show('No faucet available for this testnet', 'info');
           return;

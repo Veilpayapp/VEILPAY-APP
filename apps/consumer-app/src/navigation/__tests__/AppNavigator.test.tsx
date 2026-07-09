@@ -32,7 +32,7 @@ jest.mock('../../stores/walletStore', () => ({
   SUPPORTED_CHAINS: [
     { id: 1, key: 'ethereum', name: 'Ethereum', type: 'evm', symbol: 'ETH', nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 } },
     { id: 101, key: 'solana', name: 'Solana', type: 'svm', symbol: 'SOL', nativeToken: { name: 'Solana', symbol: 'SOL', decimals: 9 } },
-    { id: 637, key: 'aptos', name: 'Aptos', type: 'mvm', symbol: 'APT', nativeToken: { name: 'Aptos', symbol: 'APT', decimals: 8 } },
+
     { id: 0, key: 'stellar', name: 'Stellar', type: 'xlm', symbol: 'XLM', nativeToken: { name: 'Stellar Lumens', symbol: 'XLM', decimals: 7 } },
   ],
 }));

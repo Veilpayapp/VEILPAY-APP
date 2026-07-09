@@ -53,17 +53,6 @@ export const PhantomIcon = ({ width = 24, height = 24 }: { width?: number, heigh
   </Svg>
 );
 
-// Petra — black squircle with the white "P" monogram.
-export const PetraIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
-  <Svg width={width} height={height} viewBox="0 0 128 128" fill="none">
-    <Rect width="128" height="128" rx="30" fill="#000000" />
-    <Path
-      fill="#fff"
-      d="M46 36h30c14 0 24 10 24 24s-10 24-24 24H60v24H46V36Zm14 34h14c6 0 10-4 10-10s-4-10-10-10H60v20Z"
-    />
-  </Svg>
-);
-
 // LOBSTR — brand-blue squircle with a stylized white lobster (body + two claws).
 export const LobstrIcon = ({ width = 24, height = 24 }: { width?: number, height?: number }) => (
   <Svg width={width} height={height} viewBox="0 0 128 128" fill="none">

@@ -12,7 +12,6 @@
  *
  * Supported chains:
  * - SVM  (Solana): Ed25519 + @solana/web3.js
- * - MVM  (Aptos):  Ed25519 + REST API transactions
  * - XLM  (Stellar): Ed25519 + Horizon API transactions (needs stellar-sdk)
  */
 
@@ -70,7 +69,6 @@ export interface ChainSignerResult {
 const NATIVE_DECIMALS: Record<string, number> = {
   solana: 9,
   'solana-devnet': 9,
-  aptos: 8,
   stellar: 7,
   'stellar-testnet': 7,
 };
@@ -79,15 +77,14 @@ function getNativeDecimals(chainKey: string): number {
   return NATIVE_DECIMALS[chainKey] ?? 9;
 }
 
-function getChainType(chainKey: string): 'svm' | 'mvm' | 'xlm' {
+function getChainType(chainKey: string): 'svm' | 'xlm' {
   if (chainKey.startsWith('solana')) return 'svm';
-  if (chainKey === 'aptos') return 'mvm';
   if (chainKey.startsWith('stellar')) return 'xlm';
   throw new TransactionError(`Unsupported non-EVM chain: ${chainKey}`, 'UNKNOWN');
 }
 
 function isSupportedNonEvmChain(chainKey: string): boolean {
-  return ['solana', 'solana-devnet', 'aptos', 'stellar', 'stellar-testnet'].includes(chainKey);
+  return ['solana', 'solana-devnet', 'stellar', 'stellar-testnet'].includes(chainKey);
 }
 
 // Key derivation is now handled securely inside each chain's specific function
@@ -174,73 +171,6 @@ async function sendSolanaTransaction(
   };
 
   return { hash: signature, chainId: chainKey, gasEstimate };
-}
-
-// ─── Aptos (MVM) ────────────────────────────────────────────────────────────
-
-async function sendAptosTransaction(
-  params: ChainSignerParams,
-  chainKey: string,
-  mnemonicWords: string[],
-  ethPrice?: number
-): Promise<ChainSignerResult> {
-  const rpcUrl = getRpcUrl(chainKey);
-  const toAddress = params.to.toLowerCase();
-  
-  // We use ts-sdk dynamically to avoid bloating initial bundle if not used
-  const { Ed25519Account } = await import('@aptos-labs/ts-sdk');
-  const aptosAccount = Ed25519Account.fromDerivationPath({ 
-    path: "m/44'/637'/0'/0'/0'", 
-    mnemonic: mnemonicWords.join(' ') 
-  });
-  
-  const fromAddress = aptosAccount.accountAddress.toString();
-
-  const amountOctas = toAtomicUnits(params.value, getNativeDecimals(chainKey));
-  if (amountOctas <= 0n) {
-    throw new TransactionError(`Invalid APT amount: ${params.value}`, 'UNKNOWN');
-  }
-
-  const { Aptos, AptosConfig } = await import('@aptos-labs/ts-sdk');
-  const aptosConfig = new AptosConfig({ fullnode: rpcUrl });
-  const aptosClient = new Aptos(aptosConfig);
-  
-  const transaction = await aptosClient.transaction.build.simple({
-    sender: fromAddress,
-    data: {
-      function: '0x1::aptos_account::transfer',
-      functionArguments: [toAddress, amountOctas]
-    }
-  });
-
-  const senderAuthenticator = aptosClient.transaction.sign({
-    signer: aptosAccount,
-    transaction,
-  });
-
-  const submitRes = await aptosClient.transaction.submit.simple({
-    transaction,
-    senderAuthenticator,
-  });
-
-  const txHash = submitRes.hash;
-  if (!txHash) {
-    throw new TransactionError('Aptos transaction missing hash in response', 'UNKNOWN');
-  }
-
-  const gasEstimate: GasEstimate = {
-    gasLimit: 2000n,
-    maxFeePerGas: 100n,
-    maxPriorityFeePerGas: 0n,
-    gasPrice: 100n,
-    estimatedCostWei: 200000n,
-    estimatedCostEth: '0.0002',
-    estimatedCostUsd: ethPrice ? (0.0002 * ethPrice).toFixed(4) : null,
-    isStale: false,
-    fetchedAt: Date.now(),
-  };
-
-  return { hash: txHash, chainId: chainKey, gasEstimate };
 }
 
 // ─── Stellar (XLM) ────────────────────────────────────────────────────────
@@ -370,7 +300,7 @@ export function isNonEvmChain(chainKey: string): boolean {
  * Signs and broadcasts a transaction on a non-EVM chain.
  *
  * @param params    - Transaction parameters (to, value, memo)
- * @param chainKey  - Chain to send on (e.g. 'solana', 'aptos', 'stellar')
+ * @param chainKey  - Chain to send on (e.g. 'solana', 'stellar')
  * @param ethPrice  - Current ETH price for USD gas estimate (optional)
  * @throws TransactionError on validation, signing, or broadcast failure
  */
@@ -384,7 +314,7 @@ export async function signAndSendNonEvmTransaction(
   const chainType = getChainType(chainKey);
 
   if (!sharedValidateAddress(params.to, chainType)) {
-    const chainLabel = chainType === 'svm' ? 'Solana' : chainType === 'mvm' ? 'Aptos' : 'Stellar';
+    const chainLabel = chainType === 'svm' ? 'Solana' : 'Stellar';
     throw new TransactionError(`Invalid ${chainLabel} address: ${params.to}`, 'INVALID_ADDRESS');
   }
 
@@ -397,8 +327,6 @@ export async function signAndSendNonEvmTransaction(
     switch (chainType) {
       case 'svm':
         return await sendSolanaTransaction(params, chainKey, mnemonicWords, ethPrice);
-      case 'mvm':
-        return await sendAptosTransaction(params, chainKey, mnemonicWords, ethPrice);
       case 'xlm':
         return await sendStellarTransaction(params, chainKey, mnemonicWords, ethPrice);
     }

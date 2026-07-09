@@ -1,6 +1,6 @@
 import { Linking } from 'react-native';
 
-export type WalletChainType = 'evm' | 'svm' | 'mvm';
+export type WalletChainType = 'evm' | 'svm';
 
 export type DeepLinkParams = {
   action: 'send' | 'receive' | 'approve' | 'reject' | 'walletconnect' | 'transactions';
@@ -23,12 +23,11 @@ const ACTIONS: DeepLinkParams['action'][] = [
 ];
 
 // M2 fix: validate incoming address parameters to prevent injection of attacker addresses.
-// EVM: 0x + 40 hex chars. Solana: base58 32-44 chars. Aptos: 0x + 64 hex chars.
+// EVM: 0x + 40 hex chars. Solana: base58 32-44 chars.
 const ADDRESS_PATTERNS: Record<WalletChainType | 'unknown', RegExp> = {
   evm: /^0x[0-9a-fA-F]{40}$/,
-  mvm: /^0x[0-9a-fA-F]{64}$/,
   svm: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
-  unknown: /^(0x[0-9a-fA-F]{40}|0x[0-9a-fA-F]{64}|[1-9A-HJ-NP-Za-km-z]{32,44})$/,
+  unknown: /^(0x[0-9a-fA-F]{40}|[1-9A-HJ-NP-Za-km-z]{32,44})$/,
 };
 
 function validateAddress(address: string, chainType?: WalletChainType): boolean {
@@ -98,7 +97,7 @@ export function parseDeepLink(url: string): DeepLinkParams | null {
     const transactionHash = queryParams.transactionHash || queryParams.hash;
     const transactionId = queryParams.transactionId || queryParams.txId;
 
-    if (chainType === 'evm' || chainType === 'svm' || chainType === 'mvm') {
+    if (chainType === 'evm' || chainType === 'svm') {
       params.chainType = chainType;
     }
 

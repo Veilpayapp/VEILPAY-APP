@@ -244,7 +244,7 @@ describe('priceFeed utility tests', () => {
         }),
       });
 
-      const result = await convertTokenToUsd('2.5', 'APT');
+      const result = await convertTokenToUsd('2.5', 'SOL');
 
       expect(result.usdValue).toBe(25.00);
       expect(result.price).toBe(10.00);

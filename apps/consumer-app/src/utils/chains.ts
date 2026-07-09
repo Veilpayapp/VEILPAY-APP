@@ -125,16 +125,6 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
     nativeToken: { name: 'Solana', symbol: 'SOL', decimals: 9 },
   },
   {
-    id: 'aptos-mainnet',
-    key: 'aptos',
-    name: 'Aptos',
-    type: 'mvm',
-    symbol: 'APT',
-    get rpcUrl() { return getRpcUrl('aptos'); },
-    explorerUrl: 'https://explorer.aptoslabs.com',
-    nativeToken: { name: 'Aptos', symbol: 'APT', decimals: 8 },
-  },
-  {
     id: 'stellar-mainnet',
     key: 'stellar',
     name: 'Stellar',

@@ -40,7 +40,7 @@ const DEFAULT_REQUIRED_NAMESPACES: WalletConnectRequiredNamespaces = {};
 // One WalletConnect namespace per chain family. Keeping these separate lets us
 // offer only the namespace(s) relevant to the chain the user is connecting for
 // (see buildOptionalNamespaces) instead of always requesting eip155 + solana +
-// aptos + stellar — wallets reject or clutter the approval sheet when asked for
+// stellar — wallets reject or clutter the approval sheet when asked for
 // scopes they can't serve.
 const NAMESPACE_EIP155: WalletConnectRequiredNamespace = {
   methods: [
@@ -60,13 +60,6 @@ const NAMESPACE_SOLANA: WalletConnectRequiredNamespace = {
   events: ['accountsChanged'],
 };
 
-const NAMESPACE_APTOS: WalletConnectRequiredNamespace = {
-  methods: ['aptos_signTransaction', 'aptos_signMessage'],
-  // CAIP-2: `aptos:1` is Aptos mainnet (reference "1").
-  chains: ['aptos:1'],
-  events: ['accountsChanged'],
-};
-
 const NAMESPACE_STELLAR: WalletConnectRequiredNamespace = {
   methods: ['stellar_signXDR', 'stellar_signMessage'],
   chains: ['stellar:pubnet'],
@@ -77,14 +70,12 @@ const NAMESPACE_STELLAR: WalletConnectRequiredNamespace = {
 const CHAIN_TYPE_TO_NAMESPACE: Record<string, { key: string; namespace: WalletConnectRequiredNamespace }> = {
   evm: { key: 'eip155', namespace: NAMESPACE_EIP155 },
   svm: { key: 'solana', namespace: NAMESPACE_SOLANA },
-  mvm: { key: 'aptos', namespace: NAMESPACE_APTOS },
   xlm: { key: 'stellar', namespace: NAMESPACE_STELLAR },
 };
 
 const DEFAULT_OPTIONAL_NAMESPACES: WalletConnectRequiredNamespaces = {
   eip155: NAMESPACE_EIP155,
   solana: NAMESPACE_SOLANA,
-  aptos: NAMESPACE_APTOS,
   stellar: NAMESPACE_STELLAR,
 };
 
@@ -156,7 +147,7 @@ function parseWalletConnectAccount(account: string | null): {
 
 function extractApprovalResult(session: any): WalletConnectApprovalResult {
   const namespaces = session?.namespaces || {};
-  const namespacePriority = ['eip155', 'solana', 'aptos'];
+  const namespacePriority = ['eip155', 'solana', 'stellar'];
 
   let primaryAccount: string | null = null;
 

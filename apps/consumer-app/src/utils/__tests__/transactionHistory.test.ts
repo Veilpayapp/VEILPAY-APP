@@ -10,8 +10,8 @@ jest.mock('../../stores/walletStore', () => ({
       return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
     }
 
-    if (chainType === 'mvm') {
-      return /^0x[a-fA-F0-9]{1,64}$/.test(address) && address.length <= 66;
+    if (chainType === 'xlm') {
+      return /^G[A-Z2-7]{55}$/.test(address);
     }
 
     return false;

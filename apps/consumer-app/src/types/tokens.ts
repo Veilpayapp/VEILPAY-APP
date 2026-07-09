@@ -1,4 +1,4 @@
-export type ChainTypeKey = 'evm' | 'svm' | 'mvm' | 'xlm';
+export type ChainTypeKey = 'evm' | 'svm' | 'xlm';
 
 export interface PaymentToken {
   id: string;

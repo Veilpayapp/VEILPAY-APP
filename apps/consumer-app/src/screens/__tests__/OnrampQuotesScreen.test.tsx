@@ -9,14 +9,14 @@ jest.mock('@react-navigation/native', () => ({
 
 const mockWalletState = {
   address: '0xWALLET123',
-  addresses: { evm: '0xWALLET123', svm: null, mvm: null, xlm: null },
+  addresses: { evm: '0xWALLET123', svm: null, xlm: null },
   activeChain: { id: 1, key: 'ethereum', name: 'Ethereum', type: 'evm', symbol: 'ETH', nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 } },
 };
 
 jest.mock('../../stores/walletStore', () => {
   const state = {
     address: '0xWALLET123',
-    addresses: { evm: '0xWALLET123', svm: null, mvm: null, xlm: null },
+    addresses: { evm: '0xWALLET123', svm: null, xlm: null },
     activeChain: { id: 1, key: 'ethereum', name: 'Ethereum', type: 'evm', symbol: 'ETH', nativeToken: { name: 'Ether', symbol: 'ETH', decimals: 18 } },
   };
   // Honor selectors so `useWalletStore(s => s.addresses)` returns the slice,

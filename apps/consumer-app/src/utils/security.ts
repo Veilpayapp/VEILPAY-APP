@@ -459,7 +459,7 @@ export function isTrustedDeepLink(url: string): boolean {
   if (url.startsWith('veilpay://')) return true;
   if (url.startsWith('ethereum:')) return true;
   if (url.match(/^solana:/)) return true;
-  if (url.match(/^aptos:/)) return true;
+
   if (url.match(/^stellar:/)) return true;
   return false;
 }

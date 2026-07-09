@@ -10,7 +10,7 @@ const ALLOWED_HOSTS: string[] = [
   "arbiscan.io",
   "optimistic.etherscan.io",
   "basescan.org",
-  "explorer.aptoslabs.com",
+
   "sepolia.etherscan.io",
 ];
 

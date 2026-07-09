@@ -34,7 +34,6 @@ const RPC_URL_OVERRIDES: Record<string, string | undefined> = {
   sepolia: process.env.EXPO_PUBLIC_RPC_SEPOLIA,
   solana: process.env.EXPO_PUBLIC_RPC_SOLANA,
   'solana-devnet': process.env.EXPO_PUBLIC_RPC_SOLANA_DEVNET,
-  aptos: process.env.EXPO_PUBLIC_RPC_APTOS,
 };
 
 function buildEndpoints(chainKey: string): RpcEndpoint[] {
@@ -46,7 +45,6 @@ function buildEndpoints(chainKey: string): RpcEndpoint[] {
     sepolia: 'https://rpc.sepolia.org',
     solana: 'https://api.mainnet-beta.solana.com',
     'solana-devnet': 'https://api.devnet.solana.com',
-    aptos: 'https://fullnode.mainnet.aptoslabs.com',
   };
 
   const overrideUrl = (RPC_URL_OVERRIDES[chainKey] || '').trim();

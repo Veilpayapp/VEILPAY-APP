@@ -14,7 +14,7 @@ import { formatFiatValue } from '../../utils/priceFeed';
 // Helper to get standard token icon based on symbol
 const getTokenIcon = (symbol: string) => {
   const map: Record<string, string> = {
-    ETH: '◆', USDT: '◉', USDC: '●', MATIC: '⬢', SOL: '◍', APT: '◈'
+    ETH: '◆', USDT: '◉', USDC: '●', MATIC: '⬢', SOL: '◍'
   };
   return map[symbol?.toUpperCase()] || '●';
 };

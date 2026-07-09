@@ -215,7 +215,6 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
       arbitrum: 'evm',
       base: 'evm',
       solana: 'svm',
-      aptos: 'mvm',
       stellar: 'xlm',
     };
     
@@ -229,12 +228,6 @@ export function DepositCryptoScreen({ navigation }: DepositCryptoScreenProps) {
 
     if (!isTransakConfigured()) {
       toast.show("Buy / sell is not configured in this build yet.", "error");
-      return;
-    }
-
-    // Transak does not support Aptos — block before building the URL
-    if (selectedCrypto.network.toLowerCase() === 'aptos') {
-      toast.show("Transak does not support Aptos. Use the On-Ramp Aggregator instead.", "error");
       return;
     }
 

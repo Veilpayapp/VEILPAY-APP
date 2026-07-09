@@ -132,16 +132,12 @@ jest.mock('../../utils/secureSigner', () => ({
     mockDeriveAddressFromStoredMnemonic(...args),
 }));
 
-// solanaSigner / aptosSigner / stellarSigner: not exercised on the EVM path
-// the dispatcher takes here, but mocked anyway so their real modules' heavy
-// deps (e.g. `@solana/web3.js`) do not load in the jest sandbox.
+// solanaSigner / stellarSigner: not exercised on the EVM path the dispatcher
+// takes here, but mocked anyway so their real modules' heavy deps do not load
+// in the jest sandbox.
 jest.mock('../../utils/solanaSigner', () => ({
   __esModule: true,
   signAndSendSolanaTransaction: jest.fn(),
-}));
-jest.mock('../../utils/aptosSigner', () => ({
-  __esModule: true,
-  signAndSendAptosTransaction: jest.fn(),
 }));
 jest.mock('../../utils/stellarSigner', () => ({
   __esModule: true,

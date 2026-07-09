@@ -186,46 +186,7 @@ async function fetchSolanaTokens(address: string, chainConfig: ChainConfig): Pro
   }
 }
 
-async function fetchAptosBalance(address: string, chainConfig: ChainConfig): Promise<BalanceResult> {
-  const nativeToken = chainConfig.nativeToken;
-  const rpcUrl = chainConfig.rpcUrl || getRpcUrl(chainConfig.key);
-  const baseUrl = rpcUrl.replace(/\/$/, '');
-
-  try {
-    const resourceUrl = `${baseUrl}/v1/accounts/${address}/resource/0x1::coin::CoinStore%3C0x1::aptos_coin::AptosCoin%3E`;
-    const response = await withTimeout(fetch(resourceUrl, { method: 'GET', headers: { Accept: 'application/json' } }), REQUEST_TIMEOUT_MS);
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return { balance: '0', balanceFormatted: '0.000', symbol: nativeToken.symbol, decimals: nativeToken.decimals, lastUpdated: Date.now(), source: 'rpc' };
-      }
-      throw new Error(`Aptos API error: ${response.status}`);
-    }
-
-    const data = await response.json() as { data?: { coin?: { value?: string } } };
-    const octas = BigInt(data.data?.coin?.value || '0');
-    const aptBalance = Number(octas) / 1e8;
-
-    return {
-      balance: octas.toString(),
-      balanceFormatted: aptBalance.toFixed(8).replace(/\.?0+$/, '') || '0',
-      symbol: nativeToken.symbol,
-      decimals: nativeToken.decimals,
-      lastUpdated: Date.now(),
-      source: 'rpc',
-    };
-  } catch (error) {
-    captureError(error instanceof Error ? error : new Error('Failed to fetch Aptos balance'), {
-      scope: 'balance-fetcher', chain: chainConfig.key, address: address.substring(0, 10) + '...',
-    });
-    return {
-      balance: '0', balanceFormatted: '0.000', symbol: nativeToken.symbol, decimals: nativeToken.decimals,
-      lastUpdated: Date.now(), source: 'fallback', error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
-
-// ── NEW: Stellar Fetcher ──
+// ── Stellar Fetcher ──
 // Stellar reads hit Horizon's REST API directly. They must NOT be routed through
 // the JSON-RPC backend proxy (getRpcUrl / chainConfig.rpcUrl): the proxy is aimed
 // at EVM/SVM chains and, when unreachable, the `/accounts` REST call fails and
@@ -328,7 +289,6 @@ export async function fetchNativeBalance(address: string, chainKey: string): Pro
   const chainType = chainConfig.type;
 
   if (chainType === 'svm') return fetchSolanaBalance(address, chainConfig);
-  if (chainType === 'mvm') return fetchAptosBalance(address, chainConfig);
   if (chainType === 'xlm') return fetchStellarBalance(address, chainConfig);
 
   // Fallback for EVM and all others natively supported by Viem JSON-RPC

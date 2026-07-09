@@ -43,7 +43,7 @@ jest.mock('../../components/WalletIcons', () => {
     TrustWalletIcon: () => <View testID="mock-trust-icon" />,
     WalletConnectIcon: () => <View testID="mock-walletconnect-icon" />,
     PhantomIcon: () => <View testID="mock-phantom-icon" />,
-    PetraIcon: () => <View testID="mock-petra-icon" />,
+
     LobstrIcon: () => <View testID="mock-lobstr-icon" />,
     LedgerIcon: () => <View testID="mock-ledger-icon" />,
   };

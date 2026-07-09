@@ -81,7 +81,7 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
     const { data } = result;
 
     // Try to validate as different chain types
-    const chainTypes: ChainType[] = ['evm', 'svm', 'mvm', 'xlm'];
+    const chainTypes: ChainType[] = ['evm', 'svm', 'xlm'];
     let validatedAddress: string | null = null;
     let detectedChainType: ChainType | null = null;
 
@@ -266,7 +266,7 @@ export function QRScannerScreen({ navigation, route }: QRScannerScreenProps) {
             Point your camera at a wallet address QR code
           </Text>
           <Text style={styles.instructionSubtext}>
-            Supports Ethereum, Solana, Aptos, and Stellar addresses
+            Supports Ethereum, Solana, and Stellar addresses
           </Text>
         </View>
       </CameraView>

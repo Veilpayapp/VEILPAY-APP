@@ -243,5 +243,22 @@ describe('multiChainSigner', () => {
         )
       ).rejects.toMatchObject({ code: 'INSUFFICIENT_FUNDS' });
     });
+
+    it('rejects a send that passes a flat-1-XLM check but violates subentry reserve', async () => {
+      // 3 XLM balance, 4 subentries → reserve = (2+4)*0.5 = 3 XLM.
+      // Sending 1.5 XLM leaves 1.5 < 3 reserve → must fail.
+      const { Horizon } = require('stellar-sdk');
+      jest.spyOn(Horizon.Server.prototype, 'loadAccount').mockResolvedValueOnce({
+        balances: [{ asset_type: 'native', balance: '3.0' }],
+        subentry_count: 4,
+      });
+
+      await expect(
+        signAndSendNonEvmTransaction(
+          { to: 'G' + 'A'.repeat(55), value: '1.5' },
+          'stellar'
+        )
+      ).rejects.toMatchObject({ code: 'INSUFFICIENT_FUNDS' });
+    });
   });
 });

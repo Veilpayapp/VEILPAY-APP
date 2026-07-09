@@ -217,4 +217,98 @@ describe('useIncomingPaymentNotifications', () => {
 
     expect(notify).not.toHaveBeenCalled();
   });
+
+  it('dedupes by lowercase hash and falls back to id when hash is missing', async () => {
+    const notify = jest.fn();
+
+    renderHook(() =>
+      useIncomingPaymentNotifications({
+        address: ADDRESS,
+        isConnected: true,
+        notificationsEnabled: true,
+        notify,
+      })
+    );
+
+    await flush();
+
+    await act(async () => {
+      setTransactions([RECEIVED('0xAbC')]);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    // Same hash, different casing — must not re-notify.
+    await act(async () => {
+      setTransactions([RECEIVED('0xabc')]);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(notify).toHaveBeenCalledTimes(1);
+
+    // Hash-less record: identity is `id`.
+    await act(async () => {
+      setTransactions([
+        RECEIVED('0xabc'),
+        {
+          id: 'local-id-1',
+          type: 'received',
+          status: 'completed',
+          amount: '2',
+          token: 'ETH',
+          tokenSymbol: 'ETH',
+          from: '0xsender',
+          to: '0xme',
+          timestamp: Date.now(),
+          hash: '',
+        },
+      ]);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(notify).toHaveBeenCalledTimes(2);
+  });
+
+  it('keys the seen-set by address (different wallet gets a fresh baseline)', async () => {
+    const SecureStore = require('expo-secure-store');
+    const notifyA = jest.fn();
+    const notifyB = jest.fn();
+    const addressB = '0x00000000000000000000000000000000000000BB';
+
+    // Wallet A sees a receive and marks it seen.
+    const { unmount } = renderHook(() =>
+      useIncomingPaymentNotifications({
+        address: ADDRESS,
+        isConnected: true,
+        notificationsEnabled: true,
+        notify: notifyA,
+      })
+    );
+    await flush();
+    await act(async () => {
+      setTransactions([RECEIVED('0xshared')]);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(notifyA).toHaveBeenCalledTimes(1);
+    unmount();
+
+    // Wallet B mounts with the same store snapshot — must baseline (not notify)
+    // from its own empty seen-set + current history, not wallet A's set.
+    mockStore.transactions = [RECEIVED('0xshared')];
+    renderHook(() =>
+      useIncomingPaymentNotifications({
+        address: addressB,
+        isConnected: true,
+        notificationsEnabled: true,
+        notify: notifyB,
+      })
+    );
+    await flush();
+    expect(notifyB).not.toHaveBeenCalled();
+
+    // And the two wallets wrote to distinct SecureStore keys.
+    const keys = (SecureStore.setItemAsync as jest.Mock).mock.calls.map((c: string[]) => c[0]);
+    expect(keys.some((k: string) => k.toLowerCase().includes(ADDRESS.toLowerCase().slice(-4)))).toBe(true);
+    expect(keys.some((k: string) => k.toLowerCase().includes(addressB.toLowerCase().slice(-4)))).toBe(true);
+  });
 });

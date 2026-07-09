@@ -1,9 +1,48 @@
+/**
+ * Aptos (MVM) Transaction Signer
+ * Signs and submits APT transfers using the stored mnemonic.
+ *
+ * Derivation MUST stay in lockstep with `multiChainDerivation.ts`
+ * (`m/44'/637'/0'/0'/0'`) — that is the address shown to the user for
+ * receive. A wrong coin type (e.g. the old `634`) would sign from a
+ * different key than the displayed balance address, so funds received
+ * on-screen would be unspendable via this path.
+ */
+
 import { Aptos, AptosConfig, Network, Account } from '@aptos-labs/ts-sdk';
 import { getStoredMnemonic, TransactionError, NETWORKS } from './transactions';
 import { captureError, addBreadcrumb } from './sentry';
 import type { SignerParams, SignerResult } from './secureSigner';
 import type { GasEstimate } from './gasEstimator';
 import { getRpcUrl } from './rpc';
+import { validateAddress } from './validation';
+
+/** BIP-44 coin type 637 = Aptos (SLIP-0044). Keep in sync with multiChainDerivation. */
+export const APTOS_DERIVATION_PATH = "m/44'/637'/0'/0'/0'";
+
+/** Conservative gas ceiling in octas used for the pre-submit funds check. */
+const APTOS_ESTIMATED_GAS_OCTAS = 200_000n;
+const APTOS_DECIMALS = 8;
+const APTOS_MULTIPLIER = 10 ** APTOS_DECIMALS;
+
+/**
+ * Convert a human-readable APT amount string to octas.
+ * Rejects scientific notation, commas, negatives, and non-numeric junk that
+ * `parseFloat` would silently accept or truncate.
+ */
+export function parseAptosAmountToOctas(value: string): bigint {
+  const trimmed = value.trim();
+  if (!/^\d+(?:\.\d+)?$/.test(trimmed)) {
+    throw new TransactionError(`Invalid APT amount: ${value}`, 'UNKNOWN');
+  }
+  const [whole, frac = ''] = trimmed.split('.');
+  const padded = frac.padEnd(APTOS_DECIMALS, '0').slice(0, APTOS_DECIMALS);
+  const octas = BigInt(whole + padded);
+  if (octas <= 0n) {
+    throw new TransactionError('Transaction value must be greater than zero', 'UNKNOWN');
+  }
+  return octas;
+}
 
 export async function signAndSendAptosTransaction(
   params: SignerParams,
@@ -17,11 +56,12 @@ export async function signAndSendAptosTransaction(
     throw new TransactionError(`Unsupported Aptos network: ${chainKey}.`, 'UNKNOWN');
   }
 
-  // Parse value to Octas (Aptos decimals = 8)
-  const amountOctas = BigInt(Math.floor(parseFloat(params.value) * 1e8));
-  if (amountOctas <= 0n) {
-    throw new TransactionError('Transaction value must be greater than zero', 'UNKNOWN');
+  const toAddress = params.to.trim();
+  if (!validateAddress(toAddress, 'mvm')) {
+    throw new TransactionError(`Invalid Aptos address: ${toAddress}`, 'INVALID_ADDRESS');
   }
+
+  const amountOctas = parseAptosAmountToOctas(params.value);
 
   const mnemonicWords = await getStoredMnemonic();
   if (!mnemonicWords || mnemonicWords.length === 0) {
@@ -31,10 +71,12 @@ export async function signAndSendAptosTransaction(
   let txResult: SignerResult;
   try {
     const mnemonicPhrase = mnemonicWords.join(' ');
-    const account = Account.fromDerivationPath({ path: "m/44'/634'/0'/0'/0'", mnemonic: mnemonicPhrase });
+    const account = Account.fromDerivationPath({
+      path: APTOS_DERIVATION_PATH,
+      mnemonic: mnemonicPhrase,
+    });
 
     const rpcUrl = getRpcUrl(chainKey);
-    // Determine the AptosNetwork enum
     let aptosNetwork = Network.MAINNET;
     if (chainKey.includes('testnet')) aptosNetwork = Network.TESTNET;
     else if (chainKey.includes('devnet')) aptosNetwork = Network.DEVNET;
@@ -42,44 +84,61 @@ export async function signAndSendAptosTransaction(
     const aptosConfig = new AptosConfig({ network: aptosNetwork, fullnode: rpcUrl });
     const aptos = new Aptos(aptosConfig);
 
-    // Build the simple transfer transaction
+    // Pre-submit funds gate so we fail with INSUFFICIENT_FUNDS instead of a
+    // generic RPC simulation error. Gas is an estimate; the node remains the
+    // final authority.
+    let balanceOctas = 0n;
+    try {
+      balanceOctas = BigInt(
+        await aptos.getAccountAPTAmount({ accountAddress: account.accountAddress })
+      );
+    } catch {
+      // Unfunded / missing account → treat as zero so the gate still fires.
+      balanceOctas = 0n;
+    }
+    const requiredOctas = amountOctas + APTOS_ESTIMATED_GAS_OCTAS;
+    if (balanceOctas < requiredOctas) {
+      const balanceApt = Number(balanceOctas) / APTOS_MULTIPLIER;
+      const requiredApt = Number(requiredOctas) / APTOS_MULTIPLIER;
+      throw new TransactionError(
+        `Insufficient APT. Balance: ${balanceApt} APT, required: ~${requiredApt} APT (incl. gas)`,
+        'INSUFFICIENT_FUNDS'
+      );
+    }
+
     const transaction = await aptos.transaction.build.simple({
       sender: account.accountAddress,
       data: {
         function: '0x1::aptos_account::transfer',
-        functionArguments: [params.to, amountOctas],
+        functionArguments: [toAddress, amountOctas],
       },
     });
 
-    // Sign the transaction
     const senderAuthenticator = aptos.transaction.sign({
       signer: account,
       transaction,
     });
 
-    // Submit the transaction
     const pendingTransaction = await aptos.transaction.submit.simple({
       transaction,
       senderAuthenticator,
     });
 
-    // Wait for the transaction to be processed (optional but good for getting gas used)
-    const executedTransaction = await aptos.waitForTransaction({ transactionHash: pendingTransaction.hash });
-    
-    // We can also just use the submitted hash immediately
-    const signature = pendingTransaction.hash;
+    await aptos.waitForTransaction({ transactionHash: pendingTransaction.hash });
 
-    const estimatedCostWei = 200000n; // mock fallback
-    const estimatedCostEth = '0.0002'; // mock fallback
+    const signature = pendingTransaction.hash;
+    const estimatedCostEth = (Number(APTOS_ESTIMATED_GAS_OCTAS) / APTOS_MULTIPLIER).toString();
 
     const gasEstimate: GasEstimate = {
       gasLimit: 2000n,
       maxFeePerGas: 100n,
       maxPriorityFeePerGas: 0n,
       gasPrice: 100n,
-      estimatedCostWei,
+      estimatedCostWei: APTOS_ESTIMATED_GAS_OCTAS,
       estimatedCostEth,
-      estimatedCostUsd: ethPrice ? (0.0002 * ethPrice).toFixed(4) : null,
+      estimatedCostUsd: ethPrice
+        ? ((Number(APTOS_ESTIMATED_GAS_OCTAS) / APTOS_MULTIPLIER) * ethPrice).toFixed(4)
+        : null,
       isStale: false,
       fetchedAt: Date.now(),
     };

@@ -284,14 +284,25 @@ async function sendStellarTransaction(
     );
   }
 
-  // Check balance
+  // Check balance — reserve scales with subentries (trustlines/offers/etc).
+  // Formula matches stellarSigner.computeStellarMinReserveXlm; inlined here so
+  // this module does not eagerly import stellar-sdk via stellarSigner.
+  // A flat 1 XLM reserve under-counts multi-subentry accounts and lets Horizon
+  // reject the tx with tx_insufficient_balance.
   const nativeBal = accountData.balances.find((b: any) => b.asset_type === 'native');
   const currentBalance = parseFloat((nativeBal as any)?.balance || '0');
   const sendAmount = parseFloat(params.value);
-  // Reserve 1 XLM for minimum balance + fee
-  if (currentBalance < sendAmount + 1) {
+  const subentryRaw = (accountData as { subentry_count?: unknown }).subentry_count;
+  const subentryCount =
+    typeof subentryRaw === 'number' && Number.isFinite(subentryRaw)
+      ? Math.max(0, Math.floor(subentryRaw))
+      : 0;
+  const reserveXlm = (2 + subentryCount) * 0.5;
+  const feeXlm = 0.01; // matches fee: '100000' stroops below
+  const requiredXlm = sendAmount + reserveXlm + feeXlm;
+  if (currentBalance < requiredXlm) {
     throw new TransactionError(
-      `Insufficient funds. Need ${sendAmount + 1} XLM (including reserve), have ${currentBalance} XLM.`,
+      `Insufficient funds. Need ${requiredXlm} XLM (including reserve), have ${currentBalance} XLM.`,
       'INSUFFICIENT_FUNDS'
     );
   }

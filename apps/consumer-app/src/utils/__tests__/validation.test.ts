@@ -5,7 +5,11 @@
  */
 
 import { getChainTypeFromKey, validateAddress, normalizeAddress } from '../validation';
-import { SUPPORTED_CHAINS } from '../chains';
+import {
+  SUPPORTED_CHAINS,
+  validateAddress as chainsValidateAddress,
+  normalizeAddress as chainsNormalizeAddress,
+} from '../chains';
 import {
   validateAddress as storeValidateAddress,
   normalizeAddress as storeNormalizeAddress,
@@ -165,6 +169,41 @@ describe('validation utility tests', () => {
       const overLong = '0x' + 'a'.repeat(65); // 67 chars total
       expect(validateAddress(overLong, 'mvm')).toBe(false);
       expect(storeValidateAddress(overLong, 'mvm')).toBe(false);
+    });
+  });
+
+  // A2: chains.ts used to carry a third copy of the address-format logic.
+  // It now delegates to validation.ts the same way walletStore does.
+  describe('chains.ts delegates match canonical validation', () => {
+    const chainTypes: ChainType[] = ['evm', 'svm', 'mvm', 'xlm'];
+    const samples: string[] = [
+      '0x9858effd232b4033e47d90003d41ec34ecaeda94',
+      '5tzGtK1xNn86nKBgvwB3gG3nZz6f81sF6zM99m4rZgLg',
+      '0x' + 'a'.repeat(64),
+      '0x' + 'a'.repeat(65),
+      'GB2S5N7HMX5W6NUXP2D7BZXMX6S7BZXMX6S7BZXMX6S7BZXMX6S7BZX3',
+      '',
+      'not-an-address',
+    ];
+
+    it('agrees on validateAddress across all chain types and samples', () => {
+      for (const chainType of chainTypes) {
+        for (const sample of samples) {
+          expect(chainsValidateAddress(sample, chainType)).toBe(
+            validateAddress(sample, chainType)
+          );
+        }
+      }
+    });
+
+    it('agrees on normalizeAddress across all chain types and samples', () => {
+      for (const chainType of chainTypes) {
+        for (const sample of samples) {
+          expect(chainsNormalizeAddress(sample, chainType)).toBe(
+            normalizeAddress(sample, chainType)
+          );
+        }
+      }
     });
   });
 });

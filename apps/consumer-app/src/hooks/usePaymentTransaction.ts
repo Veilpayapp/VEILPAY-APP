@@ -71,6 +71,7 @@ import {
 import { signAndSendSolanaTransaction } from '../utils/solanaSigner';
 import { signAndSendAptosTransaction } from '../utils/aptosSigner';
 import { signAndSendStellarTransaction } from '../utils/stellarSigner';
+import { validateAddress } from '../utils/validation';
 import {
   TransactionError,
   TransactionResult,
@@ -321,6 +322,23 @@ export function usePaymentTransaction({
         reason: 'invalid_amount',
       });
       toast.show('Invalid payment amount', 'error');
+      return;
+    }
+
+    // Re-validate recipient against the *active* chain on confirm — not just
+    // the chain that was active when SendPaymentScreen accepted the address.
+    // A network switch between send and confirm would otherwise let an
+    // EVM-shaped address through on Solana/Aptos/Stellar (and vice versa).
+    const activeChainType = activeChain?.type;
+    if (
+      !activeChainType ||
+      !validateAddress(recipient.trim(), activeChainType)
+    ) {
+      trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_VALIDATION_FAILED, {
+        reason: 'invalid_address_for_chain',
+        chain_type: activeChainType ?? 'unknown',
+      });
+      toast.show('Recipient address is not valid for the selected network.', 'error');
       return;
     }
 

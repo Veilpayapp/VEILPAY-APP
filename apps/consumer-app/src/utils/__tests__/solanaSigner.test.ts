@@ -70,6 +70,18 @@ describe('solanaSigner', () => {
       .rejects.toThrow('Transaction value must be greater than zero');
   });
 
+  it('throws INSUFFICIENT_FUNDS when SOL balance cannot cover amount + fee', async () => {
+    (getStoredMnemonic as jest.Mock).mockResolvedValue(['test', 'seed']);
+    (poolCallSolana as jest.Mock).mockImplementation(async (_chain, fn) => {
+      if (fn.toString().includes('getBalance')) return 1000n; // far below 1 SOL
+      return null;
+    });
+
+    await expect(
+      signAndSendSolanaTransaction({ to: 'valid', value: '1' } as any, 'solana')
+    ).rejects.toMatchObject({ code: 'INSUFFICIENT_FUNDS' });
+  });
+
   it('throws error if no mnemonic', async () => {
     (getStoredMnemonic as jest.Mock).mockResolvedValue(null);
     await expect(signAndSendSolanaTransaction({ to: 'valid', value: '1' } as any, 'solana'))

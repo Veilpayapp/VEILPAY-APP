@@ -15,13 +15,17 @@
 - Use production channel for this workstream
 
 ## Build APK (local until EAS free Android ~Aug 1)
-Needs local JDK 17 + Android SDK + NDK. Prefer non-C: disk for SDK/Gradle.
+Needs local JDK 17 + Android SDK + NDK on **D:** (C: full).
 
-```bash
+```powershell
 cd apps/consumer-app
+# One-time toolchain on D: (~several GB)
+npm run android:toolchain:setup
+# Each shell before build:
+. .\scripts\env-android-d.ps1
+
 # Same Doppler + preview profile as cloud; --local = no EAS cloud quota
-doppler run --project veilpay --config prd -- npx eas build --platform android --profile preview --local
-# equivalent idea: npm run eas:preview:android -- --local  (if npm forwards args)
+npm run eas:preview:android:local
 ```
 
 Cloud when quota returns:
@@ -55,8 +59,8 @@ Local APK and cloud APK both receive OTAs if projectId + runtimeVersion + channe
 - `c8efa2e` — drop desktop demo; device preview + OTA only
 
 ## Next when continuing
-1. Install Android SDK/NDK/JDK if missing; point env at D: or X: if C: full
-2. Local preview APK (`eas build --local --profile preview` + Doppler)
-3. Install on device → verify hub `backend: native`, `aspLeaf`
+1. Finish `android:toolchain:setup` if incomplete; `. .\scripts\env-android-d.ps1`
+2. `npm run eas:preview:android:local` → install APK
+3. Device hub: `backend: native`, `aspLeaf` (poolOps stays not ready on 1.0.1 default)
 4. `npm run ota:preview` for JS-only iteration
-5. Later: `SPP_NATIVE_POOL_OPS=1` + bump to 1.1.0 + circuits on device + E2E shield/transfer/unshield
+5. Later: `SPP_NATIVE_POOL_OPS=1` + bump to 1.1.0 + circuits on device + E2E prove

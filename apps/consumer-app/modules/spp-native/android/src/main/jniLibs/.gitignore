@@ -1,0 +1,3 @@
+# Built by cargo-ndk / EAS post-install — do not commit binaries
+**/*.so
+**/*.a

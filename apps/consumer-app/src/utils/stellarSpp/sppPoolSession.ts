@@ -60,15 +60,35 @@ async function deriveStellarKeypair(mnemonicPhrase: string): Promise<Keypair> {
   return Keypair.fromRawEd25519Seed(key as Buffer);
 }
 
+/** Optional document/cache root (expo-file-system when linked). */
+function getAppDataRoot(): string {
+  const envDir =
+    typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_SPP_DATA_DIR
+      ? String(process.env.EXPO_PUBLIC_SPP_DATA_DIR).trim()
+      : '';
+  if (envDir) return envDir.replace(/\/?$/, '/');
+  try {
+    // Optional peer — present in Expo prebuild / release; missing in some Jest setups.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const FS = require('expo-file-system') as {
+      documentDirectory?: string | null;
+      cacheDirectory?: string | null;
+    };
+    const root = FS.documentDirectory || FS.cacheDirectory;
+    if (root) return root.endsWith('/') ? root : `${root}/`;
+  } catch {
+    // JS stub / tests
+  }
+  return '';
+}
+
 /**
  * Directory expected to contain:
  * - policy_tx_2_2_proving_key.bin
  * - policy_tx_2_2.wasm
  * - policy_tx_2_2.r1cs
  *
- * Override with EXPO_PUBLIC_SPP_CIRCUITS_DIR (desktop dogfood / staged assets).
- * On device, RN FileSystem paths are injected via options.circuitsDir from the
- * screen layer once asset unpack is wired.
+ * Override with EXPO_PUBLIC_SPP_CIRCUITS_DIR. On device, defaults under documentDirectory.
  */
 export function getSppCircuitsDir(): string {
   const envDir =
@@ -76,18 +96,14 @@ export function getSppCircuitsDir(): string {
       ? String(process.env.EXPO_PUBLIC_SPP_CIRCUITS_DIR).trim()
       : '';
   if (envDir) return envDir;
-  // Fallback relative name — native open will fail with SPP_CIRCUITS_MISSING
-  // until the app passes an absolute circuitsDir (options or env).
-  return 'spp/circuits';
+  const root = getAppDataRoot();
+  return root ? `${root}spp/circuits` : 'spp/circuits';
 }
 
 export function getSppWalletDbPath(ownerAddress: string): string {
-  const envDir =
-    typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_SPP_DATA_DIR
-      ? String(process.env.EXPO_PUBLIC_SPP_DATA_DIR).trim()
-      : '';
   const safe = ownerAddress.replace(/[^A-Z0-9]/gi, '').slice(0, 12);
-  const base = envDir || 'spp';
+  const root = getAppDataRoot();
+  const base = root ? `${root}spp` : 'spp';
   return `${base}/wallet-${safe || 'default'}.sqlite`;
 }
 
@@ -119,7 +135,7 @@ export async function ensurePoolSession(
       code: 'SPP_OPS_NOT_READY',
       op: 'pool_open',
       message:
-        'Native poolOps not linked. Rebuild libspp_native with --features pool-ops + circuit assets (needs native APK; EAS free quota until ~Aug 1).',
+        'Native poolOps not linked in this APK (derive/ASP only — OTA-safe). Ship preview with SPP_NATIVE_POOL_OPS=1 + appVersion bump for prove/submit.',
     };
   }
 

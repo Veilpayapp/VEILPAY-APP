@@ -325,10 +325,16 @@ export function StellarSppScreen({ navigation }: Props) {
                     />
                   </View>
                 ) : null}
-                {prep.aspInserted ? (
+                {prep.aspInserted && !prep.poolOps ? (
                   <Text style={styles.caption}>
-                    Membership leaf is on-chain. Next: native poolOps (prove/submit)
-                    for Shield / Transfer / Unshield.
+                    ASP is on-chain. This build is OTA-safe (poolOps off). Next native
+                    preview APK with CAP_POOL_OPS enables Shield / Transfer / Unshield
+                    prove+submit. Until then ops fail closed — never public fallback.
+                  </Text>
+                ) : null}
+                {prep.aspInserted && prep.poolOps ? (
+                  <Text style={styles.caption}>
+                    ASP + poolOps ready. Shield / Transfer / Unshield use native prove.
                   </Text>
                 ) : null}
                 {prep.asp.cliHint && !prep.aspInserted ? (

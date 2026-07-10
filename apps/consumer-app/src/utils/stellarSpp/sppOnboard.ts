@@ -377,7 +377,8 @@ function prepareSorobanInvoke(
     })
   );
 
-  return builder.build();
+  // Required: manual rebuild skips cloneFrom which copies timebounds from `built`.
+  return builder.setTimeout(180).build();
 }
 
 /**

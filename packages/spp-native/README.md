@@ -116,49 +116,42 @@ Open Settings → Private XLM (or hub). Expect:
 | `android-jni` | off | JNI exports for Kotlin `SppNativeRust` |
 | `pool-ops` | off | Link `stellar-private-payments-sdk` + real prove/submit (`CAP_POOL_OPS`) |
 
-### Build with `pool-ops` (desktop)
+### Device APK (preview only — Doppler + EAS)
 
-Requires `packages/vendor/spp` submodule + MSVC (Windows). Prefer **X:** for cargo
-cache/target when C: is full (`desktop-pool-demo.ps1` sets this).
+Product path is **Android preview APK**, not desktop demo binaries.
 
-```bat
-call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-set RUSTFLAGS=-C link-arg=/STACK:0x20000000
-cd packages\spp-native
-rustup run 1.92.0-x86_64-pc-windows-msvc cargo test --features pool-ops
+From `apps/consumer-app` (same pattern as existing user scripts):
+
+```bash
+# Native APK (channel: preview). Secrets via Doppler.
+npm run eas:preview:android
+
+# JS OTA after the APK is installed (same runtimeVersion = appVersion).
+npm run ota:preview
 ```
 
-**Demo day dogfood (native prove/submit, no EAS):**
+`runtimeVersion` uses `appVersion` policy (`version.json` → currently **1.0.1**).
+Keep that pin for OTA: do **not** bump `version` for JS-only OTAs; bump only when
+shipping a new native binary that changes the native surface.
 
-```powershell
-cd packages\spp-native
-.\scripts\desktop-pool-demo.ps1 ping
-.\scripts\desktop-pool-demo.ps1 open
-$env:SPP_DEMO_SKIP_BUILD=1
-.\scripts\desktop-pool-demo.ps1 deposit 0.1
-```
+Default EAS NDK post-install builds **derive-only** (`android-jni`, `CAP_ASP_LEAF`).
+Ops stay fail-closed (`SPP_OPS_NOT_READY`) so OTAs remain safe on this runtime.
 
-Uses stellar CLI identity `alice` (or `SPP_IDENTITY=bob`), stages circuits under
-`X:\veilpay\spp-demo\`, enables reqwest rustls (same as CLI). Seeds SQLite from
-`.local/spp-phase0/<id>/spp.db` when present (needs onboarded privacy keys).
+Opt-in CAP_POOL_OPS on a **future** native APK (requires version bump + full SPP in
+EAS archive + wasmer NDK): set `SPP_NATIVE_POOL_OPS=1` on the EAS job, then ship
+as a new `appVersion` (e.g. 1.1.0) so OTA streams stay split correctly.
 
-zkhash path is always `../vendor/spp/poseidon2` (shared with sdk/pool). EAS materializes
-that path from `vendor/poseidon2` when the submodule is missing.
+### Session API (when `pool-ops` linked in the APK)
 
-### Session API (when `pool-ops` linked)
-
-1. Stage circuits: `.\scripts\stage-circuit-assets.ps1`
-2. `spp_native_pool_open(json)` — binds `PrivatePool` (secret + RPC + circuitsDir)
-3. `spp_native_deposit` / `transfer` / `withdraw` — prove + submit
-4. `spp_native_pool_close()` — drop session
+1. Stage circuits into app assets / documents (`scripts/stage-circuit-assets.*`)
+2. `spp_native_pool_open(json)` — binds `PrivatePool`
+3. `deposit` / `transfer` / `withdraw` — prove + submit
+4. `spp_native_pool_close()`
 
 App TS: `ensurePoolSession` in `apps/consumer-app/src/utils/stellarSpp/sppPoolSession.ts`.
 
-Ops validate amounts/recipients even when `pool-ops` is off (`SPP_OPS_NOT_READY` + `amountStroops`).
-`spp_native_pool_readiness()` JSON lists remaining link steps.
-
-Default EAS NDK build stays **derive-only** (`android-jni`). Opt-in full pool:
-`SPP_NATIVE_POOL_OPS=1` (needs full SPP + wasmer NDK; native APK 1.1.0+).
+zkhash path is always `../vendor/spp/poseidon2` (shared with sdk/pool). EAS materializes
+that path from `vendor/poseidon2` when the submodule is missing.
 
 ## ASP leaf
 
@@ -174,8 +167,10 @@ App path: derive_keys → insert_leaf from TS onboard when leaf returned; CAP_AS
 ## Phase 1 remaining
 
 1. ~~Expo module + autolink~~
-2. ~~EAS NDK package~~ (post-install) — confirm device hub after commit + preview APK
-3. Enable feature `pool-ops` + link `stellar-private-payments-sdk` + circuit assets
-4. On-device shield → transfer → unshield (Jest lifecycle green with mock pool)
+2. ~~EAS NDK package~~ (post-install) — derive/ASP on device when preview APK ships
+3. ~~sdk/pool linked in-tree~~ (`pool-ops` feature; off by default for OTA-safe APK)
+4. CAP_POOL_OPS in preview APK (`SPP_NATIVE_POOL_OPS=1` + appVersion bump) when EAS allows
+5. On-device shield → transfer → unshield (Jest lifecycle green with mock pool)
+
 5. ~~Privacy mode switch animation~~ (Home Moti/Reanimated keys)
 6. Android prove bench; mainnet fail-closed until audit/ceremony

@@ -361,7 +361,17 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
       if (asset.protocol === 'spp' && address) {
         void import('../utils/stellarSpp')
           .then(({ ensureSppAccountReady }) =>
-            ensureSppAccountReady(asset.chainKey, address)
+            ensureSppAccountReady(asset.chainKey, address).then((result) => {
+              if (result.aspReady) {
+                toast.show('Private XLM ready', 'success');
+              } else if (result.hasLeaf) {
+                toast.show(
+                  result.message || 'Privacy keys ready — register ASP if needed',
+                  'info'
+                );
+              }
+              return result;
+            })
           )
           .catch(() => {
             /* non-blocking; shield path retries */

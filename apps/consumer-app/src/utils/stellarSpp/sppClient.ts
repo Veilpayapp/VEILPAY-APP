@@ -136,6 +136,12 @@ export async function prepareSppOp(
 
   if (!keysSigned) {
     blockers.push('Select pXLM under Privacy (Token Selector / Home) to finish privacy setup');
+  } else if (!hasAspLeaf) {
+    blockers.push('ASP leaf not derived yet — re-select pXLM or open Private status → Register ASP');
+  } else if (!aspInserted) {
+    blockers.push(
+      'ASP membership not on-chain yet — open Private status → Register ASP (testnet, permissionless)'
+    );
   }
 
   const asp = await ensureAspMembership(chainKey, ownerAddress).catch(
@@ -144,8 +150,11 @@ export async function prepareSppOp(
       message: 'ASP status unavailable',
     })
   );
-  if (asp.status !== 'ready' && poolOps) {
-    blockers.push(asp.message);
+  if (asp.status !== 'ready' && (poolOps || hasAspLeaf)) {
+    // Surface ASP status even before poolOps so the hub checklist is honest.
+    if (!blockers.some((b) => /ASP/i.test(b)) && asp.message) {
+      blockers.push(asp.message);
+    }
   }
 
   // RPC probe (informational; does not block until poolOps is live).
@@ -165,7 +174,11 @@ export async function prepareSppOp(
     aspInserted,
     asp,
     readyForProve:
-      chainEnabled && poolOps && keysSigned && (aspInserted || asp.status === 'ready'),
+      chainEnabled &&
+      poolOps &&
+      keysSigned &&
+      hasAspLeaf &&
+      (aspInserted || asp.status === 'ready'),
     blockers,
   };
 }
@@ -374,27 +387,38 @@ export async function ensureAspMembership(
   ownerAddress: string
 ): Promise<AspMembershipStatus> {
   const ctx = requireContext(chainKey, ownerAddress);
-  const caps = sppNativeCapabilities();
+  const account = await getSppAccount(chainKey, ownerAddress).catch(() => null);
 
-  if (caps.aspLeaf) {
-    const result = await sppNativeEnsureAsp();
-    if (result.ok) {
-      return { status: 'ready', message: 'ASP membership leaf present' };
-    }
+  if (account?.aspInserted) {
+    return {
+      status: 'ready',
+      message: account.aspInsertTxHash
+        ? `ASP membership on-chain (${account.aspInsertTxHash.slice(0, 8)}…)`
+        : 'ASP membership on-chain',
+    };
+  }
+
+  if (account?.aspLeafDecimal) {
     return {
       status: 'needs_leaf',
-      message: result.message || 'ASP membership leaf missing',
+      message: 'ASP leaf derived on-device — register membership on-chain (one-time)',
       cliHint: aspCliHint(ctx.config),
     };
   }
 
-  // No native ASP helper yet — informational status for UI checklist.
-  const nativeResult = await sppNativeEnsureAsp();
+  const caps = sppNativeCapabilities();
+  if (caps.aspLeaf) {
+    return {
+      status: 'needs_leaf',
+      message: 'Select pXLM to derive ASP leaf, then register membership',
+      cliHint: aspCliHint(ctx.config),
+    };
+  }
+
   return {
     status: 'not_ready',
     message:
-      nativeResult.message ||
-      'ASP leaf helper not linked. Required once before first prove on this account.',
+      'ASP leaf needs native libspp_native.so. Install the preview/dev-client build with NDK.',
     cliHint: aspCliHint(ctx.config),
   };
 }

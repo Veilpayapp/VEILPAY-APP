@@ -37,10 +37,13 @@ import {
   prepareSppOp,
   transfer,
   withdraw,
+  ensureSppAccountReady,
+  insertAspMembershipLeaf,
   SppClientError,
   type SppPrepChecklist,
 } from '../utils/stellarSpp';
 import type { SppNoteRecord } from '../stores/sppNoteStore';
+import { getSppAccount } from '../stores/sppAccountStore';
 
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'StellarSpp'>;
@@ -73,12 +76,15 @@ export function StellarSppScreen({ navigation }: Props) {
   const [busy, setBusy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [prep, setPrep] = useState<SppPrepChecklist | null>(null);
+  const [aspBusy, setAspBusy] = useState(false);
+  const [aspDetail, setAspDetail] = useState<string | null>(null);
 
   const refreshNotes = useCallback(async () => {
     if (!chainKey || !address) {
       setPrivateBalance('0');
       setNotes([]);
       setPrep(null);
+      setAspDetail(null);
       return;
     }
     setRefreshing(true);
@@ -91,6 +97,16 @@ export function StellarSppScreen({ navigation }: Props) {
       } catch {
         setPrep(null);
       }
+      const acc = await getSppAccount(chainKey, address).catch(() => null);
+      if (acc?.aspLeafDecimal) {
+        setAspDetail(
+          acc.aspInserted
+            ? `Leaf registered${acc.aspInsertTxHash ? ` · ${acc.aspInsertTxHash.slice(0, 12)}…` : ''}`
+            : `Leaf ready · ${acc.aspLeafDecimal.slice(0, 18)}…`
+        );
+      } else {
+        setAspDetail(null);
+      }
     } finally {
       setRefreshing(false);
     }
@@ -100,6 +116,42 @@ export function StellarSppScreen({ navigation }: Props) {
     void refreshNotes();
   }, [refreshNotes]);
 
+  const runAspRegister = async () => {
+    if (!chainKey || !address) {
+      toast.show('Connect a wallet first', 'error');
+      return;
+    }
+    setAspBusy(true);
+    try {
+      // Full ensure: re-derive if needed, then insert_leaf.
+      const ready = await ensureSppAccountReady(chainKey, address);
+      if (ready.aspReady) {
+        toast.show(ready.message || 'ASP membership ready', 'success');
+        await refreshNotes();
+        return;
+      }
+      if (ready.hasLeaf && ready.account.aspLeafDecimal) {
+        const inserted = await insertAspMembershipLeaf(
+          chainKey,
+          address,
+          ready.account.aspLeafDecimal
+        );
+        toast.show(
+          `ASP registered · ${inserted.txHash.slice(0, 10)}…`,
+          'success'
+        );
+        await refreshNotes();
+        return;
+      }
+      toast.show(ready.message || 'Could not complete ASP setup', 'info');
+      await refreshNotes();
+    } catch (e) {
+      const err = e as Error;
+      toast.show(err.message || 'ASP register failed', 'error');
+    } finally {
+      setAspBusy(false);
+    }
+  };
 
   const runOp = async (op: 'deposit' | 'transfer' | 'withdraw') => {
     if (!chainKey || !address) {
@@ -220,13 +272,34 @@ export function StellarSppScreen({ navigation }: Props) {
                   {'\n'}
                   prove-ready: {prep.readyForProve ? 'yes' : 'no'}
                 </Text>
+                {aspDetail ? (
+                  <Text style={styles.mono} selectable numberOfLines={2}>
+                    {aspDetail}
+                  </Text>
+                ) : null}
                 {prep.blockers.length > 0 ? (
                   <Text style={styles.caption}>
                     Blockers:{'\n'}
                     {prep.blockers.map((b) => `· ${b}`).join('\n')}
                   </Text>
                 ) : null}
-                {prep.asp.cliHint ? (
+                {!prep.aspInserted && prep.keysSigned ? (
+                  <View style={styles.actions}>
+                    <SovereignButton
+                      title={aspBusy ? 'Registering ASP…' : 'Register ASP membership'}
+                      onPress={() => void runAspRegister()}
+                      disabled={aspBusy || busy}
+                      accessibilityLabel="Register ASP membership on chain"
+                    />
+                  </View>
+                ) : null}
+                {prep.aspInserted ? (
+                  <Text style={styles.caption}>
+                    Membership leaf is on-chain. Next: native poolOps (prove/submit)
+                    for Shield / Transfer / Unshield.
+                  </Text>
+                ) : null}
+                {prep.asp.cliHint && !prep.aspInserted ? (
                   <Text style={styles.mono} selectable>
                     {prep.asp.cliHint}
                   </Text>

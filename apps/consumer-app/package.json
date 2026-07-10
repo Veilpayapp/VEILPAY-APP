@@ -28,7 +28,10 @@
     "eas-build-pre-install": "node eas-hooks/inject-secrets.js",
     "eas-build-post-install": "node eas-hooks/build-spp-native-android.js",
     "eas:preview:android": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas build --platform android --profile preview",
+    "eas:preview:android:local": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas build --platform android --profile preview --local",
     "eas:preview:android:ci": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas build --platform android --profile preview --non-interactive",
+    "android:toolchain:setup": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/setup-android-toolchain-d.ps1",
+    "android:env:d": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/env-android-d.ps1",
     "ota:prod": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas update --branch production --environment production",
     "ota:preview": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas update --branch preview --environment preview",
     "ota:dev": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas update --branch development --environment development"

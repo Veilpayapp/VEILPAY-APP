@@ -7,7 +7,7 @@
  * Locked: app-only, native prove (no product WebView), testnet-first.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -78,6 +78,8 @@ export function StellarSppScreen({ navigation }: Props) {
   const [prep, setPrep] = useState<SppPrepChecklist | null>(null);
   const [aspBusy, setAspBusy] = useState(false);
   const [aspDetail, setAspDetail] = useState<string | null>(null);
+  /** One auto insert attempt per mount when leaf is ready (avoid effect loops). */
+  const aspAutoAttempted = useRef(false);
 
   const refreshNotes = useCallback(async () => {
     if (!chainKey || !address) {
@@ -115,6 +117,34 @@ export function StellarSppScreen({ navigation }: Props) {
   useEffect(() => {
     void refreshNotes();
   }, [refreshNotes]);
+
+  // Auto-complete ASP insert once when leaf is ready but not on-chain (OTA path).
+  useEffect(() => {
+    if (!enabled || !chainKey || !address || !prep) return;
+    if (!prep.hasAspLeaf || prep.aspInserted) return;
+    if (aspAutoAttempted.current || aspBusy) return;
+    aspAutoAttempted.current = true;
+    let cancelled = false;
+    void (async () => {
+      setAspBusy(true);
+      try {
+        const ready = await ensureSppAccountReady(chainKey, address);
+        if (cancelled) return;
+        if (ready.aspReady) {
+          toast.show('ASP membership registered', 'success');
+          await refreshNotes();
+        }
+      } catch {
+        /* user can tap Register manually */
+      } finally {
+        if (!cancelled) setAspBusy(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot when leaf appears
+  }, [enabled, chainKey, address, prep?.hasAspLeaf, prep?.aspInserted]);
 
   const runAspRegister = async () => {
     if (!chainKey || !address) {
@@ -181,9 +211,11 @@ export function StellarSppScreen({ navigation }: Props) {
       const code = 'code' in err ? (err as SppClientError).code : undefined;
       if (code === 'SPP_OPS_NOT_READY') {
         toast.show(
-          'Private prove path not linked yet. Select pXLM under Privacy, then try Shield from Home.',
+          'Shield prove is not linked in this build yet (poolOps). ASP setup still works — use Register ASP above.',
           'info'
         );
+      } else if (code === 'SPP_ASP_SIM_FAILED' || code === 'SPP_ASP_SUBMIT_FAILED') {
+        toast.show(err.message || 'ASP register failed — check testnet funds and try again', 'error');
       } else {
         toast.show(err.message || `${op} failed`, 'error');
       }

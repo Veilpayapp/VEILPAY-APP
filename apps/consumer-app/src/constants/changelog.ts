@@ -31,6 +31,16 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: '1.0.1',
+    build: 12,
+    date: '2026-07-10',
+    highlights: [
+      'Private XLM setup now finishes properly: ASP membership can register on-chain after you select pXLM (no more stuck “not inserted”).',
+      'New “Register ASP membership” control on Private status if setup needs a retry.',
+      'Clearer privacy checklist so you always know what’s left before Shield works.',
+    ],
+  },
+  {
+    version: '1.0.1',
     build: 11,
     date: '2026-07-07',
     highlights: [

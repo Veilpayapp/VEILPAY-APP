@@ -253,8 +253,12 @@ prove time + RSS (handoff item; not done this session).
 6. Local alt (optional): Android SDK + `packages/spp-native/scripts/build-android-ndk.ps1`.
 
 ## Net assessment
-**Phase 0 CLI gate met.** Phase 1 **product shell + send path + Expo native module +
-JNI + EAS NDK packaging** in place. Next gate: **preview APK on device** shows Rust
-version + `aspLeaf`. Ops still fail closed with structured `SPP_OPS_NOT_READY` until
-`sdk/pool` is linked (`CAP_POOL_OPS`).
+**Phase 0 CLI gate met.** Phase 1 product shell + Expo module + JNI + EAS NDK +
+in-tree `pool-ops` (off by default) in place. Desktop dogfood **removed** (2026-07-10).
+
+**Until EAS free Android (~Aug 1):** build **local** preview APK + keep **OTA**:
+see **`plans/spp-device-apk-ota-handoff.md`** (Doppler, `--local`, stay on **1.0.1**).
+
+Next gate: local/cloud **preview APK** on device → hub Rust version + `aspLeaf`;
+CAP_POOL_OPS in APK only with `SPP_NATIVE_POOL_OPS=1` + version bump.
 

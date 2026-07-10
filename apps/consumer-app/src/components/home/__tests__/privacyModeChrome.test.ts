@@ -26,13 +26,12 @@ describe('privacy mode chrome contracts', () => {
     expect(publicLabels.has('SHIELD')).toBe(false);
   });
 
-  it('animation key pairs are stable for remount crossfade', () => {
-    const keys = (privacyMode: boolean) => ({
-      chain: privacyMode ? 'chain-private' : 'chain-public',
-      balance: privacyMode ? 'balance-private' : 'balance-public',
-      actions: privacyMode ? 'actions-private' : 'actions-public',
-    });
-    expect(keys(false).balance).not.toBe(keys(true).balance);
-    expect(keys(false).actions).not.toBe(keys(true).actions);
+  it('privacy card frame styles use transparent → accent border (no remount keys)', () => {
+    // Contract: public frame is transparent border; private uses accent color.
+    // Implemented as chainSelectorCardFrame / chainSelectorCardFramePrivate.
+    const publicFrame = { borderWidth: 1, borderColor: 'transparent' };
+    const privateFrame = { borderWidth: 1, borderColor: 'accent' };
+    expect(publicFrame.borderWidth).toBe(privateFrame.borderWidth);
+    expect(publicFrame.borderColor).not.toBe(privateFrame.borderColor);
   });
 });

@@ -131,9 +131,9 @@ export function DashboardQuickActions({
       {actions.map(({ label, iconName, handler, prominent }, index) => (
         <Animated.View
           key={`${privacyMode ? 'p' : 'g'}-${label}`}
-          entering={FadeIn.delay(index * 40).duration(200)}
-          exiting={FadeOut.duration(120)}
-          layout={LinearTransition.duration(220)}
+          entering={FadeIn.delay(index * 28).duration(160)}
+          exiting={FadeOut.duration(100)}
+          layout={LinearTransition.duration(180)}
         >
           <PressableOpacity
             onPress={handler}

@@ -34,6 +34,14 @@ export const themeStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 24,
     marginBottom: 16,
   },
+  /** Frame hugs the card so privacy gold border sits on the card edge, not the screen padding box. */
+  chainSelectorCardFrame: {
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  chainSelectorCardFramePrivate: {
+    borderColor: colors.accent,
+  },
   chainSelectorContent: {
     flexDirection: "row",
     justifyContent: "space-between",

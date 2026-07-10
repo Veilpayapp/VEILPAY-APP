@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { PressableOpacity } from '../PressableOpacity';
 import { SovereignCard } from '../SovereignCard';
 import { Icon } from '../Icon';
@@ -108,7 +108,7 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
                   </PressableOpacity>
                   <Animated.View
                     key={privacyMode ? 'badge-shielded' : 'badge-private'}
-                    entering={privacyMode ? ZoomIn.springify().damping(14) : FadeIn.duration(180)}
+                    entering={FadeIn.duration(200)}
                     style={[styles.privacyBadge, privacyMode && styles.privacyBadgeActive]}
                   >
                     <Icon name="private" size={14} color={colors.accent} />

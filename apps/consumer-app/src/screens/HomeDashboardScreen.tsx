@@ -41,10 +41,6 @@ import { useMarketData } from "../hooks/useMarketData";
 import { useOnramp } from "../hooks/useOnramp";
 import { isFiatGatewayOrderForAddress } from "../utils/fiatGateway";
 import Animated, {
-  FadeIn,
-  FadeOut,
-  LinearTransition,
-  FadeInDown,
   useSharedValue,
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -632,65 +628,58 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
           scrollEventThrottle={16}
           refreshControl={refreshControlEl}
         >
-          {/* Chain Selector Dropdown — keyed crossfade public ↔ private */}
+          {/* Chain selector — stable mount; gold 1px on card edge only in privacy mode */}
           <MotiView
-            key={privacyMode ? 'chain-private' : 'chain-public'}
-            from={{ opacity: 0, translateY: 12 }}
+            from={{ opacity: 0, translateY: 10 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "spring", stiffness: 280, damping: 22, delay: getDelay(100) }}
+            transition={{ type: 'timing', duration: 280, delay: getDelay(100) }}
           >
-            <Animated.View
-              entering={FadeIn.duration(220)}
-              exiting={FadeOut.duration(160)}
-              layout={LinearTransition.springify().damping(20)}
-            >
-            <PressableOpacity
-              onPress={() => setShowChainSelector(true)}
-            activeOpacity={0.9}
-            style={[
-              styles.chainSelectorWrapper,
-              privacyMode && { borderColor: colors.accent, borderWidth: 1 },
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={`Network: ${activeChain?.name || "Ethereum"}${privacyMode ? ', private mode' : ''}`}
-            accessibilityHint="Opens network selector to change blockchain network"
-          >
-            <SovereignCard backgroundColor={colors.bgSecondary} padding={0}>
-              <View style={styles.chainSelectorContent}>
-                <View style={styles.chainSelectorLeft}>
-                  <Text style={styles.chainLabel}>
-                    [ {privacyMode ? privacyAsset?.symbol || 'pXLM' : activeChain?.symbol || "ETH"} •{" "}
-                    {activeChain?.isTestnet ? "TESTNET" : "MAINNET"}
-                    {privacyMode ? " • PRIVATE" : ""} ]
-                  </Text>
-                  <Text style={styles.chainName}>
-                    {privacyMode
-                      ? (privacyAsset?.name || "PRIVATE XLM").toUpperCase()
-                      : activeChain?.name?.toUpperCase() || "ETHEREUM"}
-                  </Text>
+            <View style={styles.chainSelectorWrapper}>
+              <PressableOpacity
+                onPress={() => setShowChainSelector(true)}
+                activeOpacity={0.9}
+                accessibilityRole="button"
+                accessibilityLabel={`Network: ${activeChain?.name || 'Ethereum'}${privacyMode ? ', private mode' : ''}`}
+                accessibilityHint="Opens network selector to change blockchain network"
+              >
+                <View
+                  style={[
+                    styles.chainSelectorCardFrame,
+                    privacyMode && styles.chainSelectorCardFramePrivate,
+                  ]}
+                >
+                  <SovereignCard backgroundColor={colors.bgSecondary} padding={0}>
+                    <View style={styles.chainSelectorContent}>
+                      <View style={styles.chainSelectorLeft}>
+                        <Text style={styles.chainLabel}>
+                          [ {privacyMode ? privacyAsset?.symbol || 'pXLM' : activeChain?.symbol || 'ETH'} •{' '}
+                          {activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'}
+                          {privacyMode ? ' • PRIVATE' : ''} ]
+                        </Text>
+                        <Text style={styles.chainName}>
+                          {privacyMode
+                            ? (privacyAsset?.name || 'PRIVATE XLM').toUpperCase()
+                            : activeChain?.name?.toUpperCase() || 'ETHEREUM'}
+                        </Text>
+                      </View>
+                      <View style={styles.chainSelectorRight}>
+                        <Icon name="chevron-down" size={16} color={colors.accent} />
+                      </View>
+                    </View>
+                  </SovereignCard>
                 </View>
-                <View style={styles.chainSelectorRight}>
-                  <Icon name="chevron-down" size={16} color={colors.accent} />
-                </View>
-              </View>
-            </SovereignCard>
-            </PressableOpacity>
-            </Animated.View>
+              </PressableOpacity>
+            </View>
           </MotiView>
 
-          {/* Balance Card — privacy mode morph (~450–600ms plan) */}
+          {/* Balance — soft fade only (no scale/bounce on mode switch) */}
           <MotiView
-            key={privacyMode ? 'balance-private' : 'balance-public'}
-            from={{ opacity: 0, translateY: 16, scale: 0.98 }}
-            animate={{ opacity: 1, translateY: 0, scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 22, delay: getDelay(150) }}
-            style={{ zIndex: -1 }} // Parallax pushed to background
+            from={{ opacity: 0, translateY: 10 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 280, delay: getDelay(140) }}
+            style={{ zIndex: -1 }}
           >
-            <Animated.View
-              style={balanceAnimatedStyle}
-              entering={FadeIn.duration(280)}
-              layout={LinearTransition.duration(320)}
-            >
+            <Animated.View style={balanceAnimatedStyle}>
               <DashboardBalanceCard
                 isLoadingBalance={privacyMode ? privateBalanceLoading : isLoadingBalance}
                 balanceVisible={balanceVisible}
@@ -706,17 +695,12 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
             </Animated.View>
           </MotiView>
 
-          {/* Action Row — SEND/RECEIVE ↔ SHIELD/TRANSFER/UNSHIELD */}
+          {/* Actions — short fade, no spring bounce */}
           <MotiView
-            key={privacyMode ? 'actions-private' : 'actions-public'}
-            from={{ opacity: 0, translateY: 14 }}
+            from={{ opacity: 0, translateY: 8 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "spring", stiffness: 270, damping: 22, delay: getDelay(200) }}
+            transition={{ type: 'timing', duration: 240, delay: getDelay(180) }}
           >
-            <Animated.View
-              entering={FadeIn.duration(240)}
-              layout={LinearTransition.springify().damping(18)}
-            >
             <DashboardQuickActions
               activeChain={activeChain}
               onSend={handleSend}
@@ -730,7 +714,6 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
               onUnshield={() => navigatePrivateSend('unshield')}
               onExitPrivacy={handleExitPrivacyMode}
             />
-            </Animated.View>
           </MotiView>
 
           {/* Fiat Gateway Card */}

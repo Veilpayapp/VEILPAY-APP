@@ -8,7 +8,7 @@
 - In-tree CAP_POOL_OPS: `pool_open` seeds **SDK SQLite privacy keys** from SEP-53 sig (same as `spp onboard` key step) + disclaimer, then LocalProver deposit/transfer/withdraw
 - TS: `ensurePoolSession` signs derivation message and passes `derivationSigHex`
 - Default APK NDK: **`android-jni` only** — OTA-safe **1.0.1**
-- Full prove APK: `SPP_NATIVE_POOL_OPS=1` + **bump to 1.1.0** + stage circuits on device + NDK build with **MSVC host** on Windows
+- **Android CAP_POOL_OPS .so proven locally** (~16.4MB arm64) with `SPP_NATIVE_POOL_OPS=1`, MSVC host, `.cargo/config.toml` host stack (do not pass `/STACK` into Android clang via env RUSTFLAGS). Ship with **appVersion 1.1.0** + circuit assets on device.
 
 ## Do not
 - Re-add `spp_pool_demo` / `desktop-pool-demo.ps1` / `X:\veilpay` cargo dogfood

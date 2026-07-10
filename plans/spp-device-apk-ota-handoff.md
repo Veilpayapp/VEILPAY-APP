@@ -8,12 +8,14 @@
 - In-tree CAP_POOL_OPS: `pool_open` seeds **SDK SQLite privacy keys** from SEP-53 sig (same as `spp onboard` key step) + disclaimer, then LocalProver deposit/transfer/withdraw
 - TS: `ensurePoolSession` signs derivation message and passes `derivationSigHex`
 - Default APK NDK: **`android-jni` only** — OTA-safe **1.0.1**
-- **Android CAP_POOL_OPS .so proven locally** (~16.4MB arm64) with `SPP_NATIVE_POOL_OPS=1`, MSVC host, `.cargo/config.toml` host stack (do not pass `/STACK` into Android clang via env RUSTFLAGS). Ship with **appVersion 1.1.0** + circuit assets on device.
+- **Android CAP_POOL_OPS .so proven locally** (~16.4MB arm64) with `SPP_NATIVE_POOL_OPS=1`, MSVC host, `.cargo/config.toml` host stack (do not pass `/STACK` into Android clang via env RUSTFLAGS).
+- **Version stays 1.0.1** (locked): same `runtimeVersion` / OTA stream as current preview installs. JS feature-detects `poolOps` so old ASP-only APKs stay fail-closed; new native APK with CAP_POOL_OPS also receives `ota:preview`. **Do not bump** unless we intentionally split OTA.
 
 ## Do not
 - Re-add `spp_pool_demo` / `desktop-pool-demo.ps1` / `X:\veilpay` cargo dogfood
-- Bump `version.json` for JS-only OTA
+- **Bump `version.json` off 1.0.1** (breaks unified preview OTA with existing installs)
 - Use production channel for this workstream
+- Put cargo/rustup caches back on C:
 
 ## Build APK (local until EAS free Android ~Aug 1)
 Needs local JDK 17 + Android SDK + NDK on **D:** (C: full).
@@ -60,8 +62,8 @@ Local APK and cloud APK both receive OTAs if projectId + runtimeVersion + channe
 - `c8efa2e` — drop desktop demo; device preview + OTA only
 
 ## Next when continuing
-1. Finish `android:toolchain:setup` if incomplete; `. .\scripts\env-android-d.ps1`
-2. `npm run eas:preview:android:local` → install APK
-3. Device hub: `backend: native`, `aspLeaf` (poolOps stays not ready on 1.0.1 default)
-4. `npm run ota:preview` for JS-only iteration
-5. Later: `SPP_NATIVE_POOL_OPS=1` + bump to 1.1.0 + circuits on device + E2E prove
+1. `. .\scripts\env-android-d.ps1` (all toolchains on D:)
+2. Rebuild ABIs with `SPP_NATIVE_POOL_OPS=1` if needed (keep **version 1.0.1**)
+3. Stage circuits on device + `npm run eas:preview:android:local`
+4. Install → hub `poolOps: ready` → shield → transfer → unshield
+5. JS iteration: `npm run ota:preview` (same 1.0.1 runtime — works for both ASP-only and pool-ops APKs)

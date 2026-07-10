@@ -10,11 +10,6 @@ license = "Apache-2.0"
 name = "spp_native"
 crate-type = ["cdylib", "staticlib", "rlib"]
 
-[[bin]]
-name = "spp_pool_demo"
-path = "src/bin/spp_pool_demo.rs"
-required-features = ["pool-ops"]
-
 [features]
 default = ["derive-keys"]
 # Enable when building libspp_native.so for Android (cargo-ndk). Pulls in jni.
@@ -22,9 +17,9 @@ android-jni = ["dep:jni"]
 # Poseidon2 key derive + ASP leaf (matches SPP CLI / sdk/prover).
 derive-keys = []
 # Link stellar-private-payments-sdk (sdk/pool) for real prove/submit.
-# Desktop: cargo test --features pool-ops
-# Requires packages/vendor/spp checked out (or EAS hook materializing poseidon2 + sdk).
-# Android NDK: enable with android-jni once wasmer/ark-circom cross-compile is green.
+# Default EAS preview builds do NOT enable this (OTA-safe derive/ASP-only .so).
+# Device APK with CAP_POOL_OPS: set SPP_NATIVE_POOL_OPS=1 on the EAS build.
+# Requires packages/vendor/spp in the archive + wasmer/ark-circom NDK green.
 # rustls: same as CLI — sdk/stellar uses reqwest without TLS; binary must enable it.
 pool-ops = ["dep:stellar-private-payments-sdk", "dep:parking_lot", "dep:reqwest"]
 

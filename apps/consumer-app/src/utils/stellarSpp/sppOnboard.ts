@@ -13,9 +13,11 @@ import * as Crypto from 'expo-crypto';
 import {
   Keypair,
   Networks,
+  Transaction,
   TransactionBuilder,
   BASE_FEE,
   Contract,
+  Operation,
   nativeToScVal,
   Account,
 } from 'stellar-sdk';
@@ -229,13 +231,13 @@ async function submitInsertLeaf(
     .setTimeout(180)
     .build();
 
-  let prepared;
+  let prepared: Transaction;
   try {
     const sim = await server.simulateTransaction(built);
     if (Api.isSimulationError(sim)) {
       const errText = String(sim.error || '');
       // Duplicate / already-present leaf: treat as success path for idempotency.
-      if (/already|exist|duplicate|leaf/i.test(errText) && /exist|duplicate|present/i.test(errText)) {
+      if (/already|exist|duplicate/i.test(errText)) {
         return `sim-idempotent-${leafDecimal.slice(0, 16)}`;
       }
       throw new SppClientError(
@@ -249,7 +251,12 @@ async function submitInsertLeaf(
         'SPP_ASP_SIM_FAILED'
       );
     }
-    prepared = assembleTransaction(built, sim).build();
+    // RN/Metro can load two stellar-base copies so `instanceof Transaction`
+    // fails inside assembleTransaction.cloneFrom with:
+    //   expected a 'Transaction', got: [object Object]
+    // Rehydrate via XDR so the envelope is re-parsed by the same Transaction
+    // class the app imports (matches cloneFrom's type check in practice).
+    prepared = prepareSorobanInvoke(built, sim, networkPassphrase);
   } catch (e) {
     if (e instanceof SppClientError) throw e;
     throw new SppClientError(
@@ -298,6 +305,79 @@ async function submitInsertLeaf(
 
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+/**
+ * Apply simulation footprint/auth to a Soroban invoke tx.
+ *
+ * Primary path: SDK `assembleTransaction` (works when a single stellar-base
+ * copy is loaded). Fallback rebuilds the tx without `TransactionBuilder.cloneFrom`,
+ * which throws `expected a 'Transaction', got: [object Object]` under RN/Metro
+ * dual-package resolution.
+ */
+function prepareSorobanInvoke(
+  built: Transaction,
+  sim: Api.SimulateTransactionResponse,
+  networkPassphrase: string
+): Transaction {
+  try {
+    const viaXdr = new Transaction(built.toXDR(), networkPassphrase);
+    return assembleTransaction(viaXdr, sim).build();
+  } catch {
+    // Manual assemble — no instanceof cloneFrom
+  }
+
+  if (!Api.isSimulationSuccess(sim)) {
+    throw new SppClientError(
+      'ASP simulation did not succeed',
+      'SPP_ASP_SIM_FAILED'
+    );
+  }
+
+  const classicFee = Number.parseInt(built.fee, 10) || 0;
+  const resourceFee = Number.parseInt(sim.minResourceFee, 10) || 0;
+  // cloneFrom decrements sequence then builder re-increments — match that.
+  const sequenceNum = (BigInt(built.sequence) - 1n).toString();
+  const source = new Account(built.source, sequenceNum);
+
+  const invokeOp = built.operations[0] as {
+    type: string;
+    source?: string;
+    func?: unknown;
+    auth?: unknown[];
+  };
+  if (!invokeOp || invokeOp.type !== 'invokeHostFunction' || !invokeOp.func) {
+    throw new SppClientError(
+      'ASP prepare expected a single invokeHostFunction op',
+      'SPP_ASP_SIM_FAILED'
+    );
+  }
+
+  const existingAuth = Array.isArray(invokeOp.auth) ? invokeOp.auth : [];
+  const simAuth =
+    sim.result && Array.isArray((sim.result as { auth?: unknown[] }).auth)
+      ? (sim.result as { auth: unknown[] }).auth
+      : [];
+
+  const builder = new TransactionBuilder(source, {
+    fee: String(classicFee + resourceFee),
+    networkPassphrase,
+    // simulation success always carries SorobanDataBuilder
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    sorobanData: (sim as any).transactionData.build(),
+  });
+
+  builder.addOperation(
+    Operation.invokeHostFunction({
+      source: invokeOp.source,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      func: invokeOp.func as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      auth: (existingAuth.length > 0 ? existingAuth : simAuth) as any,
+    })
+  );
+
+  return builder.build();
 }
 
 /**

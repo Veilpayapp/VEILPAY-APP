@@ -18,6 +18,32 @@ mod pool_ops;
 #[cfg(feature = "pool-ops")]
 mod session;
 
+// Thin re-exports for `spp_pool_demo` binary (feature pool-ops only).
+#[cfg(feature = "pool-ops")]
+pub fn session_open_for_demo(config_json: &str) -> Result<(), String> {
+    session::open_session(config_json)
+}
+
+#[cfg(feature = "pool-ops")]
+pub fn session_close_for_demo() {
+    session::close_session();
+}
+
+#[cfg(feature = "pool-ops")]
+pub fn session_deposit_for_demo(amount: &str) -> Result<String, String> {
+    session::deposit(amount)
+}
+
+#[cfg(feature = "pool-ops")]
+pub fn session_transfer_for_demo(amount: &str, recipient: &str) -> Result<String, String> {
+    session::transfer(amount, recipient)
+}
+
+#[cfg(feature = "pool-ops")]
+pub fn session_withdraw_for_demo(amount: &str, to: &str) -> Result<String, String> {
+    session::withdraw(amount, to)
+}
+
 /// Package version string (semver from Cargo).
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 

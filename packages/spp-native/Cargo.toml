@@ -10,6 +10,11 @@ license = "Apache-2.0"
 name = "spp_native"
 crate-type = ["cdylib", "staticlib", "rlib"]
 
+[[bin]]
+name = "spp_pool_demo"
+path = "src/bin/spp_pool_demo.rs"
+required-features = ["pool-ops"]
+
 [features]
 default = ["derive-keys"]
 # Enable when building libspp_native.so for Android (cargo-ndk). Pulls in jni.
@@ -20,7 +25,8 @@ derive-keys = []
 # Desktop: cargo test --features pool-ops
 # Requires packages/vendor/spp checked out (or EAS hook materializing poseidon2 + sdk).
 # Android NDK: enable with android-jni once wasmer/ark-circom cross-compile is green.
-pool-ops = ["dep:stellar-private-payments-sdk", "dep:parking_lot"]
+# rustls: same as CLI — sdk/stellar uses reqwest without TLS; binary must enable it.
+pool-ops = ["dep:stellar-private-payments-sdk", "dep:parking_lot", "dep:reqwest"]
 
 [dependencies]
 jni = { version = "0.21", optional = true, default-features = false }
@@ -40,6 +46,8 @@ serde_json = "1"
 parking_lot = { version = "0.12", optional = true }
 # Same as CLI: sdk/pool blocking PrivatePool
 stellar-private-payments-sdk = { path = "../vendor/spp/sdk/pool", optional = true }
+# Pull rustls TLS for HTTPS Soroban RPC (sdk/stellar depends on reqwest sans TLS).
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"], optional = true }
 
 [profile.release]
 lto = true

@@ -118,7 +118,8 @@ Open Settings → Private XLM (or hub). Expect:
 
 ### Build with `pool-ops` (desktop)
 
-Requires `packages/vendor/spp` submodule + MSVC (Windows):
+Requires `packages/vendor/spp` submodule + MSVC (Windows). Prefer **X:** for cargo
+cache/target when C: is full (`desktop-pool-demo.ps1` sets this).
 
 ```bat
 call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
@@ -126,6 +127,20 @@ set RUSTFLAGS=-C link-arg=/STACK:0x20000000
 cd packages\spp-native
 rustup run 1.92.0-x86_64-pc-windows-msvc cargo test --features pool-ops
 ```
+
+**Demo day dogfood (native prove/submit, no EAS):**
+
+```powershell
+cd packages\spp-native
+.\scripts\desktop-pool-demo.ps1 ping
+.\scripts\desktop-pool-demo.ps1 open
+$env:SPP_DEMO_SKIP_BUILD=1
+.\scripts\desktop-pool-demo.ps1 deposit 0.1
+```
+
+Uses stellar CLI identity `alice` (or `SPP_IDENTITY=bob`), stages circuits under
+`X:\veilpay\spp-demo\`, enables reqwest rustls (same as CLI). Seeds SQLite from
+`.local/spp-phase0/<id>/spp.db` when present (needs onboarded privacy keys).
 
 zkhash path is always `../vendor/spp/poseidon2` (shared with sdk/pool). EAS materializes
 that path from `vendor/poseidon2` when the submodule is missing.

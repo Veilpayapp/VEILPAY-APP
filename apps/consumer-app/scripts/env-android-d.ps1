@@ -25,10 +25,11 @@ if ($ndk) {
   $env:ANDROID_NDK_ROOT = $ndk.FullName
 }
 
-# Cargo on D: when building NDK locally (keep C: free)
-if (-not $env:CARGO_HOME) { $env:CARGO_HOME = "D:\cargo-home" }
+# Rust + cargo on D: only (never default to C:\Users\...\.cargo / .rustup)
+$env:RUSTUP_HOME = "D:\rustup"
+$env:CARGO_HOME = "D:\cargo-home"
 if (-not $env:CARGO_TARGET_DIR) { $env:CARGO_TARGET_DIR = "D:\cargo-target\spp-native" }
-New-Item -ItemType Directory -Force -Path $env:CARGO_HOME, $env:CARGO_TARGET_DIR, $env:GRADLE_USER_HOME -ErrorAction SilentlyContinue | Out-Null
+New-Item -ItemType Directory -Force -Path $env:CARGO_HOME, $env:CARGO_TARGET_DIR, $env:GRADLE_USER_HOME, $env:RUSTUP_HOME -ErrorAction SilentlyContinue | Out-Null
 
 $paths = @(
   (Join-Path $Jdk "bin"),
@@ -44,6 +45,8 @@ Write-Host "JAVA_HOME=$env:JAVA_HOME"
 Write-Host "ANDROID_HOME=$env:ANDROID_HOME"
 Write-Host "ANDROID_NDK_HOME=$env:ANDROID_NDK_HOME"
 Write-Host "GRADLE_USER_HOME=$env:GRADLE_USER_HOME"
+Write-Host "RUSTUP_HOME=$env:RUSTUP_HOME"
 Write-Host "CARGO_HOME=$env:CARGO_HOME"
+Write-Host "CARGO_TARGET_DIR=$env:CARGO_TARGET_DIR"
 try { & java -version 2>&1 | Select-Object -First 1 | ForEach-Object { Write-Host $_ } } catch {}
 try { & adb version 2>&1 | Select-Object -First 1 | ForEach-Object { Write-Host $_ } } catch { Write-Host "adb not on PATH yet (install platform-tools)" }

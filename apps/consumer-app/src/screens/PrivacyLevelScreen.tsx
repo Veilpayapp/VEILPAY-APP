@@ -1,7 +1,9 @@
 /**
  * Veilpay Privacy Level Screen
- * Allows users to select their privacy level for transactions
- * Uses the current hybrid structural design language for all interactive elements
+ * Chain-aware options:
+ *   - EVM (Sepolia + stack): Standard / Stealth / Max
+ *   - Stellar testnet (SPP): Standard / Private
+ *   - Stellar mainnet: Standard; Private disabled (fail-closed)
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
@@ -9,13 +11,12 @@ import { View, Text, StyleSheet, ScrollView, StatusBar } from 'react-native';
 import { PressableOpacity } from '../components/PressableOpacity';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
-import { useWalletStore } from '../stores/walletStore';
 import { useSettingsStore, type PrivacyLevel } from '../stores/settingsStore';
 import { SCREENS } from '../constants/screens';
-import { SovereignCard } from "../components/SovereignCard";
-import { SovereignButton } from "../components/SovereignButton";
+import { SovereignCard } from '../components/SovereignCard';
+import { SovereignButton } from '../components/SovereignButton';
 import Toast, { useToast } from '../components/Toast';
-import { Icon, IconName } from '../components/Icon';
+import { Icon } from '../components/Icon';
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
@@ -23,9 +24,12 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/AppNavigator';
-import { useNetworkPrivacySupport } from '../hooks/useNetworkPrivacySupport';
+import { usePrivacyOptions } from '../hooks/usePrivacyOptions';
 
-type PrivacyLevelScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'PrivacyLevel'>;
+type PrivacyLevelScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'PrivacyLevel'
+>;
 type PrivacyLevelScreenRoute = RouteProp<RootStackParamList, 'PrivacyLevel'>;
 
 interface PrivacyLevelScreenProps {
@@ -33,88 +37,34 @@ interface PrivacyLevelScreenProps {
   route: PrivacyLevelScreenRoute;
 }
 
-interface PrivacyOption {
-  id: PrivacyLevel;
-  title: string;
-  subtitle: string;
-  iconName: IconName;
-  features: string[];
-  recommended?: boolean;
-}
-
-const PRIVACY_OPTIONS: PrivacyOption[] = [
-  {
-    id: 'standard',
-    title: 'STANDARD',
-    subtitle: 'Direct Transfer',
-    iconName: 'shield',
-    features: [
-      'Direct on-chain transfer',
-      'Visible sender and recipient',
-      'Fast confirmation',
-      'Lowest gas fees',
-    ],
-  },
-  {
-    id: 'stealth',
-    title: 'STEALTH',
-    subtitle: 'One-Time Stealth Address',
-    iconName: 'shield',
-    features: [
-      'One-time stealth address',
-      'Recipient discovers via announcement event',
-      'On-chain looks like a transfer to a fresh address',
-      'Breaks recipient linkability',
-    ],
-  },
-  {
-    id: 'max',
-    title: 'MAXIMUM',
-    subtitle: 'ZK Proof Privacy Pool',
-    iconName: 'private-lock',
-    features: [
-      'Zero-knowledge proofs',
-      'Complete transaction privacy',
-      'Untraceable deposits',
-      'Mathematical guarantees',
-    ],
-    recommended: true,
-  },
-];
-
-/** Stealth-level user-facing description (per task 10.3 / Requirement 12.2). */
-const STEALTH_DESCRIPTION =
-  'One-time stealth address. The recipient discovers the payment via an announcement event; on-chain it looks like a transfer to a fresh address.';
-
 export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const { defaultPrivacyLevel, setPrivacyLevel } = useSettingsStore();
-  const networkSupport = useNetworkPrivacySupport();
+  const { options, clamp, isEnabled } = usePrivacyOptions();
   const toast = useToast();
 
-  // Clamp the persisted default to a level that's actually selectable on the
-  // current network. If the user previously chose 'stealth' or 'max' on
-  // Sepolia and then switched chains, fall back to 'standard' rather than
-  // pre-selecting a disabled row.
-  const initialLevel = useMemo<PrivacyLevel>(() => {
-    if (!networkSupport.supported && defaultPrivacyLevel !== 'standard') {
-      return 'standard';
-    }
-    return defaultPrivacyLevel;
-  }, [defaultPrivacyLevel, networkSupport.supported]);
+  const preferredFromRoute = route?.params?.preferredPrivacyLevel;
 
-  // User's raw pick. The effective level is derived below so an unsupported
-  // choice is clamped during render (no reconciling effect / extra render).
+  const initialLevel = useMemo<PrivacyLevel>(
+    () => clamp(preferredFromRoute ?? defaultPrivacyLevel),
+    [clamp, defaultPrivacyLevel, preferredFromRoute]
+  );
+
   const [levelSelection, setSelectedLevel] = useState<PrivacyLevel>(initialLevel);
-  const selectedLevel: PrivacyLevel =
-    !networkSupport.supported && levelSelection !== 'standard' ? 'standard' : levelSelection;
+  const selectedLevel: PrivacyLevel = isEnabled(levelSelection)
+    ? levelSelection
+    : clamp(levelSelection);
 
-  // Payment data from previous screen
   const recipient = route?.params?.recipient || '';
   const amount = route?.params?.amount || '';
   const memo = route?.params?.memo || '';
   const token = route?.params?.token || 'ETH';
+
+  useEffect(() => {
+    // When chain options change (user switched network mid-flow), re-clamp.
+    setSelectedLevel((prev) => clamp(prev));
+  }, [clamp]);
 
   useEffect(() => {
     trackEvent(ANALYTICS_EVENTS.PRIVACY_LEVEL_VIEWED, {
@@ -131,16 +81,11 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
     navigation.goBack();
   };
 
-  const isOptionDisabled = (level: PrivacyLevel): boolean =>
-    !networkSupport.supported && level !== 'standard';
-
   const handleSelect = (level: PrivacyLevel) => {
-    if (isOptionDisabled(level)) {
-      // Defensive: PressableOpacity is wrapped with `disabled` below, but
-      // accessibility tools may still bubble a press. Surface the reason
-      // rather than mutating selection silently.
-      if (networkSupport.reason) {
-        toast.show(networkSupport.reason, 'error');
+    const opt = options.find((o) => o.id === level);
+    if (!opt?.enabled) {
+      if (opt?.disabledReason) {
+        toast.show(opt.disabledReason, 'error');
       }
       return;
     }
@@ -158,7 +103,6 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
       has_memo: Boolean(memo),
     });
 
-    // Navigate to payment confirmation
     navigation.navigate(SCREENS.PAYMENT_CONFIRMATION, {
       recipient,
       amount,
@@ -172,7 +116,6 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.surfaceScreen} />
 
-      {/* Header */}
       <View style={styles.header}>
         <ScreenBackButton onPress={handleBack} />
         <Text style={styles.headerTitle}>PRIVACY LEVEL</Text>
@@ -180,27 +123,26 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
       </View>
 
       <Animated.View entering={FadeInDown.duration(260)} style={styles.animatedContent}>
-        <ScrollView
-          style={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Info Banner */}
-<SovereignCard backgroundColor={colors.surfaceCard} padding={16} style={{ marginBottom: 24 }}>
-      <View style={styles.infoBanner}>
-        <Icon name="info" size={24} color={colors.accent} />
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <SovereignCard
+            backgroundColor={colors.surfaceCard}
+            padding={16}
+            style={{ marginBottom: 24 }}
+          >
+            <View style={styles.infoBanner}>
+              <Icon name="info" size={24} color={colors.accent} />
               <View style={styles.infoTextContainer}>
                 <Text style={styles.infoTitle}>CHOOSE YOUR PRIVACY</Text>
                 <Text style={styles.infoDesc}>
-                  All transactions are private by default. Select how much privacy you need.
+                  Options adapt to the active network. Stellar Private uses the SPP
+                  pool; EVM stealth/max need the Sepolia privacy stack.
                 </Text>
               </View>
             </View>
           </SovereignCard>
 
-          {/* Privacy Options */}
-          {/* react-doctor-disable-next-line react-doctor/rn-no-scrollview-mapped-list -- fixed 3-item privacy-level constant; virtualization unwarranted */}
-          {PRIVACY_OPTIONS.map((option) => {
-            const disabled = isOptionDisabled(option.id);
+          {options.map((option) => {
+            const disabled = !option.enabled;
             const selected = selectedLevel === option.id;
             return (
               <PressableOpacity
@@ -213,7 +155,7 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
                 accessibilityLabel={`${option.title} privacy. ${option.subtitle}`}
                 accessibilityHint={
                   disabled
-                    ? networkSupport.reason ?? 'Unavailable on the current network'
+                    ? option.disabledReason ?? 'Unavailable on the current network'
                     : 'Selects this privacy mode for the transaction'
                 }
                 accessibilityState={{ selected, disabled }}
@@ -225,10 +167,9 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
                 >
                   <View style={styles.optionContent}>
                     <View style={styles.optionHeader}>
-                      <View style={[
-                        styles.optionIconBox,
-                        selected && styles.optionIconBoxActive
-                      ]}>
+                      <View
+                        style={[styles.optionIconBox, selected && styles.optionIconBoxActive]}
+                      >
                         <Icon
                           name={option.iconName}
                           size={24}
@@ -237,10 +178,9 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
                       </View>
                       <View style={styles.optionHeaderText}>
                         <View style={styles.optionTitleRow}>
-                          <Text style={[
-                            styles.optionTitle,
-                            selected && styles.optionTitleActive
-                          ]}>
+                          <Text
+                            style={[styles.optionTitle, selected && styles.optionTitleActive]}
+                          >
                             {option.title}
                           </Text>
                           {option.recommended && !disabled && (
@@ -249,10 +189,12 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
                             </View>
                           )}
                         </View>
-                        <Text style={[
-                          styles.optionSubtitle,
-                          selected && styles.optionSubtitleActive
-                        ]}>
+                        <Text
+                          style={[
+                            styles.optionSubtitle,
+                            selected && styles.optionSubtitleActive,
+                          ]}
+                        >
                           {option.subtitle}
                         </Text>
                       </View>
@@ -263,8 +205,7 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
                       )}
                     </View>
 
-                    {/* Stealth-specific user-facing description (Req 12.2) */}
-                    {option.id === 'stealth' && (
+                    {option.description ? (
                       <Text
                         style={[
                           styles.optionDescription,
@@ -272,76 +213,82 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
                         ]}
                         testID={`privacy-level-description-${option.id}`}
                       >
-                        {STEALTH_DESCRIPTION}
+                        {option.description}
                       </Text>
-                    )}
+                    ) : null}
 
                     <View style={styles.featuresList}>
                       {option.features.map((feature) => (
                         <View key={feature} style={styles.featureRow}>
-                          <Text style={[
-                            styles.featureBullet,
-                            selected && styles.featureBulletActive
-                          ]}>
+                          <Text
+                            style={[
+                              styles.featureBullet,
+                              selected && styles.featureBulletActive,
+                            ]}
+                          >
                             •
                           </Text>
-                          <Text style={[
-                            styles.featureText,
-                            selected && styles.featureTextActive
-                          ]}>
+                          <Text
+                            style={[styles.featureText, selected && styles.featureTextActive]}
+                          >
                             {feature}
                           </Text>
                         </View>
                       ))}
                     </View>
 
-                    {/* Network-unsupported explanation, rendered on the
-                        disabled rows so the user knows why this is grayed out. */}
-                    {disabled && networkSupport.reason && (
+                    {disabled && option.disabledReason ? (
                       <Text
                         style={styles.unsupportedReason}
                         testID={`privacy-level-unsupported-${option.id}`}
                       >
-                        {networkSupport.reason}
+                        {option.disabledReason}
                       </Text>
-                    )}
+                    ) : null}
                   </View>
                 </SovereignCard>
               </PressableOpacity>
             );
           })}
 
-          {/* Transaction Summary */}
           <View style={styles.summarySection}>
             <Text style={styles.summaryTitle}>TRANSACTION SUMMARY</Text>
-<SovereignCard backgroundColor={colors.surfaceCard} padding={16} style={{ marginBottom: 24 }}>
-      <View style={styles.summaryContent}>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>To</Text>
-          <Text style={styles.summaryValue}>
-            {recipient.slice(0, 10)}…{recipient.slice(-6)}
-          </Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Amount</Text>
-          <Text style={styles.summaryValue}>{amount} {token}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Privacy</Text>
-          <Text style={[styles.summaryValue, { color: colors.accent }]}>
+            <SovereignCard
+              backgroundColor={colors.surfaceCard}
+              padding={16}
+              style={{ marginBottom: 24 }}
+            >
+              <View style={styles.summaryContent}>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>To</Text>
+                  <Text style={styles.summaryValue}>
+                    {recipient.slice(0, 10)}…{recipient.slice(-6)}
+                  </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Amount</Text>
+                  <Text style={styles.summaryValue}>
+                    {amount} {token}
+                  </Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Privacy</Text>
+                  <Text style={[styles.summaryValue, { color: colors.accent }]}>
                     {selectedLevel.toUpperCase()}
                   </Text>
                 </View>
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Network Fee</Text>
-                  <Text style={styles.summaryValue}>~0.001 {token}</Text>
+                  <Text style={styles.summaryLabel}>
+                    {selectedLevel === 'private' ? 'Prove + network' : 'Network Fee'}
+                  </Text>
+                  <Text style={styles.summaryValue}>
+                    {selectedLevel === 'private' ? '~10s prove · testnet' : `~0.001 ${token}`}
+                  </Text>
                 </View>
               </View>
             </SovereignCard>
           </View>
 
-          {/* Continue Button — always enabled because the selection is
-              clamped on mount to a level the network supports. */}
           <SovereignButton
             title="CONFIRM & SEND"
             variant="primary"
@@ -352,7 +299,6 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
         </ScrollView>
       </Animated.View>
 
-      {/* Toast Notification */}
       <Toast
         visible={toast.visible}
         message={toast.message}
@@ -363,217 +309,193 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
   );
 }
 
-const themeStyles = (colors: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surfaceScreen,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    height: 64,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.outlineSubtle,
-  },
-  backButton: {
-    width: 80,
-    paddingVertical: 8,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  backButtonText: {
-    fontFamily: typography.fontFamily.mono,
-    color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
-  headerTitle: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: colors.textPrimary,
-    letterSpacing: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-  },
-  animatedContent: {
-    flex: 1,
-  },
-  infoBanner: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  infoIcon: {
-    fontSize: 20,
-  },
-  infoTextContainer: {
-    flex: 1,
-    gap: 4,
-  },
-  infoTitle: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.accent,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-  infoDesc: {
-    fontFamily: typography.fontFamily.body,
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 18,
-  },
-  optionContent: {},
-  optionDescription: {
-    fontFamily: typography.fontFamily.body,
-    fontSize: 13,
-    color: colors.textTertiary,
-    lineHeight: 18,
-    marginBottom: 12,
-  },
-  optionDescriptionActive: {
-    color: colors.textOnPrimary,
-  },
-  unsupportedReason: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 11,
-    color: colors.textMuted,
-    fontStyle: 'italic',
-    marginTop: 12,
-    lineHeight: 16,
-  },
-  optionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
-  },
-  optionIconBox: {
-    width: 44,
-    height: 44,
-    backgroundColor: 'transparent',
-    borderRadius: 0,
-    borderWidth: 1,
-    borderColor: colors.textPrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  optionIconBoxActive: {
-    backgroundColor: colors.textPrimary,
-  },
-  optionIcon: {
-    fontSize: 24,
-  },
-  optionHeaderText: {
-    flex: 1,
-    gap: 4,
-  },
-  optionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  optionTitle: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.textPrimary,
-  },
-  optionTitleActive: {
-    color: colors.textOnPrimary,
-  },
-  recommendedBadge: {
-    backgroundColor: colors.textPrimary,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 0,
-  },
-  recommendedText: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 10,
-    color: colors.textOnPrimary,
-    fontWeight: 'bold',
-  },
-  optionSubtitle: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  optionSubtitleActive: {
-    color: colors.textTertiary,
-  },
-  checkmarkBox: {
-    width: 24,
-    height: 24,
-    backgroundColor: colors.textOnPrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 0,
-  },
-  checkmark: {
-    color: colors.textOnPrimary,
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  featuresList: {
-    gap: 8,
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  featureBullet: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 14,
-    color: colors.textMuted,
-  },
-  featureBulletActive: {
-    color: colors.textTertiary,
-  },
-  featureText: {
-    fontFamily: typography.fontFamily.body,
-    fontSize: 13,
-    color: colors.textMuted,
-  },
-  featureTextActive: {
-    color: colors.outlineDefault,
-  },
-  summarySection: {
-    marginTop: 8,
-  },
-  summaryTitle: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textMuted,
-    letterSpacing: 1,
-    marginBottom: 8,
-  },
-  summaryContent: {
-    gap: 12,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textTertiary,
-  },
-  summaryValue: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textPrimary,
-    fontWeight: 'bold',
-  },
-});
+const themeStyles = (colors: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surfaceScreen,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 24,
+      height: 64,
+      borderBottomWidth: 2,
+      borderBottomColor: colors.outlineSubtle,
+    },
+    headerTitle: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 16,
+      color: colors.textPrimary,
+      fontWeight: 'bold',
+      letterSpacing: 1,
+    },
+    animatedContent: {
+      flex: 1,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 24,
+      paddingTop: 20,
+    },
+    infoBanner: {
+      flexDirection: 'row',
+      gap: 12,
+      alignItems: 'flex-start',
+    },
+    infoTextContainer: {
+      flex: 1,
+    },
+    infoTitle: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 12,
+      color: colors.accent,
+      letterSpacing: 1,
+      fontWeight: 'bold',
+      marginBottom: 4,
+    },
+    infoDesc: {
+      fontFamily: typography.fontFamily.body,
+      fontSize: 13,
+      color: colors.textMuted,
+      lineHeight: 18,
+    },
+    optionContent: {
+      gap: 12,
+    },
+    optionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    optionIconBox: {
+      width: 44,
+      height: 44,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    optionIconBoxActive: {
+      borderColor: colors.bgPrimary,
+      backgroundColor: colors.bgPrimary,
+    },
+    optionHeaderText: {
+      flex: 1,
+    },
+    optionTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flexWrap: 'wrap',
+    },
+    optionTitle: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 15,
+      color: colors.textPrimary,
+      fontWeight: 'bold',
+      letterSpacing: 0.5,
+    },
+    optionTitleActive: {
+      color: colors.bgPrimary,
+    },
+    optionSubtitle: {
+      fontFamily: typography.fontFamily.body,
+      fontSize: 12,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+    optionSubtitleActive: {
+      color: colors.bgSecondary,
+    },
+    recommendedBadge: {
+      backgroundColor: colors.accent,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+    },
+    recommendedText: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 9,
+      color: colors.bgPrimary,
+      fontWeight: 'bold',
+      letterSpacing: 0.5,
+    },
+    checkmarkBox: {
+      width: 28,
+      height: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    optionDescription: {
+      fontFamily: typography.fontFamily.body,
+      fontSize: 12,
+      color: colors.textMuted,
+      lineHeight: 18,
+    },
+    optionDescriptionActive: {
+      color: colors.bgSecondary,
+    },
+    featuresList: {
+      gap: 6,
+    },
+    featureRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    featureBullet: {
+      fontFamily: typography.fontFamily.mono,
+      color: colors.accent,
+      fontSize: 12,
+    },
+    featureBulletActive: {
+      color: colors.accent,
+    },
+    featureText: {
+      flex: 1,
+      fontFamily: typography.fontFamily.body,
+      fontSize: 12,
+      color: colors.textMuted,
+    },
+    featureTextActive: {
+      color: colors.bgSecondary,
+    },
+    unsupportedReason: {
+      fontFamily: typography.fontFamily.body,
+      fontSize: 12,
+      color: colors.warning,
+      marginTop: 4,
+    },
+    summarySection: {
+      marginTop: 8,
+    },
+    summaryTitle: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 12,
+      color: colors.textMuted,
+      letterSpacing: 1,
+      marginBottom: 12,
+      fontWeight: 'bold',
+    },
+    summaryContent: {
+      gap: 10,
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    summaryLabel: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 12,
+      color: colors.textMuted,
+    },
+    summaryValue: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 12,
+      color: colors.textPrimary,
+      fontWeight: 'bold',
+    },
+  });
 
 export default PrivacyLevelScreen;

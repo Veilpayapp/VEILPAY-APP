@@ -41,4 +41,14 @@ describe("chains.ts", () => {
       expect(svmChains.every((c) => c.type === "svm")).toBe(true);
     });
   });
+
+  describe("SPP config", () => {
+    it("attaches SPP only to stellar-testnet, not mainnet stellar", () => {
+      const testnet = getChainByKey("stellar-testnet");
+      const mainnet = getChainByKey("stellar");
+      expect(testnet?.spp?.poolId).toMatch(/^C/);
+      expect(mainnet?.spp).toBeUndefined();
+    });
+  });
 });
+

@@ -39,6 +39,11 @@
 // addresses), we bail with a config-error toast rather than silently
 // transacting against the zero address. Requirements 13.2, 13.3.
 //
+//   `'private'`  → Stellar Private Payments (SPP) shielded transfer via
+//                   `utils/stellarSpp`. Requires stellar-testnet + native
+//                   poolOps. Until the native bridge is ready, surfaces
+//                   SPP_OPS_NOT_READY with a clear toast (no silent public send).
+//
 // Implementation notes / TODOs:
 //   * `'stealth'` reads only one key from the directory today — the
 //     consumer-app `directory.fetchRecipientPublicKey` returns a single
@@ -103,6 +108,14 @@ import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
 import type { PrivacyLevel } from '../stores/settingsStore';
 import type { ZkpProverRef } from '../components/ZkpProver';
 import type { UiTxStatus } from '../components/payment/TransactionStatusCard';
+import {
+  deposit as sppDeposit,
+  transfer as sppTransfer,
+  withdraw as sppWithdraw,
+  SppClientError,
+  isSppEnabledForChain,
+} from '../utils/stellarSpp';
+
 
 // ABI fragment for the single `StealthAnnouncer.announce` call we make on
 // the stealth path. Kept inline rather than importing the full contract
@@ -137,6 +150,11 @@ interface PaymentTransactionParams {
    * the dispatcher emits a "deposit first" guidance toast.
    */
   sourceCommitmentHash?: Hex;
+  /**
+   * Stellar SPP op when `privacyLevel === 'private'`.
+   * Defaults to private transfer (pay someone from shielded balance).
+   */
+  sppOp?: 'shield' | 'transfer' | 'unshield';
 }
 
 export function usePaymentTransaction({
@@ -153,6 +171,7 @@ export function usePaymentTransaction({
   isSendSupported,
   zkpProverRef,
   sourceCommitmentHash,
+  sppOp = 'transfer',
 }: PaymentTransactionParams) {
   const [txStatus, setTxStatus] = useState<UiTxStatus>('idle');
   const [txResult, setTxResult] = useState<TransactionResult | null>(null);
@@ -382,6 +401,19 @@ export function usePaymentTransaction({
       return;
     }
 
+    if (privacyLevel === 'private' && !isSppEnabledForChain(activeNetworkKey)) {
+      trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_VALIDATION_FAILED, {
+        reason: 'spp_not_enabled',
+        privacy_level: privacyLevel,
+      });
+      toast.show(
+        'Private XLM is only available on Stellar Testnet until audit gates pass.',
+        'error'
+      );
+      setTxStatus('failed');
+      return;
+    }
+
     trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_ATTEMPTED, {
       network_key: activeNetworkKey,
       token,
@@ -406,6 +438,10 @@ export function usePaymentTransaction({
         }
         case 'max': {
           await runMaxFlow();
+          break;
+        }
+        case 'private': {
+          await runSppPrivateTransferFlow();
           break;
         }
         default: {
@@ -462,6 +498,15 @@ export function usePaymentTransaction({
           default:
             toast.show(error.message, 'error');
         }
+      } else if (error instanceof SppClientError) {
+        trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_FAILED, {
+          network_key: activeNetworkKey,
+          reason: error.code,
+          message: error.message,
+          privacy_level: 'private',
+          confirmation_time_ms: Date.now() - attemptStartedAt,
+        });
+        toast.show(error.message, 'error');
       } else if (error instanceof RelayerError) {
         trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_FAILED, {
           network_key: activeNetworkKey,
@@ -883,6 +928,90 @@ export function usePaymentTransaction({
       }
 
       applyNonConfirmedOutcome(txHash, pollResult.status);
+    }
+
+    /**
+     * `'private'` flow — Stellar Private Payments (SPP).
+     * Dispatches shield (deposit) / transfer / unshield (withdraw).
+     * Until native `poolOps` is linked, fails closed (never public send).
+     */
+    async function runSppPrivateTransferFlow(): Promise<void> {
+      if (!address) {
+        throw new TransactionError('No wallet address available', 'UNKNOWN');
+      }
+
+      const op = sppOp ?? 'transfer';
+      const opLabel =
+        op === 'shield' ? 'Shield' : op === 'unshield' ? 'Unshield' : 'Private send';
+
+      if (op === 'transfer' || op === 'unshield') {
+        const to = recipient.trim() || (op === 'unshield' ? address : '');
+        if (!/^G[A-Z2-7]{55}$/.test(to)) {
+          throw new TransactionError(
+            op === 'unshield'
+              ? 'Unshield needs a public Stellar G… address'
+              : 'Private send needs a Stellar G… recipient',
+            'INVALID_ADDRESS'
+          );
+        }
+      }
+
+      setTxStatus('proving');
+      toast.show(
+        op === 'shield'
+          ? 'Creating private proof for shield… usually ~10–20s'
+          : op === 'unshield'
+            ? 'Creating private proof for unshield… usually ~10–20s'
+            : 'Creating private proof… usually ~10–20s',
+        'info'
+      );
+
+      try {
+        let result;
+        if (op === 'shield') {
+          result = await sppDeposit(activeNetworkKey, address, amount);
+        } else if (op === 'unshield') {
+          const to = recipient.trim() || address;
+          result = await sppWithdraw(activeNetworkKey, address, amount, to);
+        } else {
+          result = await sppTransfer(activeNetworkKey, address, amount, {
+            kind: 'address',
+            stellarAddress: recipient.trim(),
+          });
+        }
+
+        if (!isMountedRef.current) return;
+
+        setTxResult({ hash: result.txHash, status: 'confirmed' });
+        setTxStatus('confirmed');
+        trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_CONFIRMED, {
+          network_key: activeNetworkKey,
+          tx_hash: result.txHash,
+          confirmation_time_ms: Date.now() - attemptStartedAt,
+          privacy_level: 'private',
+          spp_op: op,
+        });
+        toast.show(`${opLabel} submitted!`, 'success');
+      } catch (err) {
+        if (err instanceof SppClientError) {
+          if (err.code === 'SPP_OPS_NOT_READY' || err.code === 'SPP_ASP_NOT_READY') {
+            trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_FAILED, {
+              network_key: activeNetworkKey,
+              reason: err.code.toLowerCase(),
+              privacy_level: 'private',
+              confirmation_time_ms: Date.now() - attemptStartedAt,
+            });
+            toast.show(
+              'Private payments aren’t ready on this build yet. Public XLM still works — pick Standard, or try again after the next update.',
+              'info'
+            );
+            setTxStatus('failed');
+            return;
+          }
+          throw new TransactionError(err.message, 'UNKNOWN');
+        }
+        throw err;
+      }
     }
 
     // ===================================================================

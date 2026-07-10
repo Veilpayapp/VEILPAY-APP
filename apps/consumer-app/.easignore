@@ -1,20 +1,22 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# EAS Build archive ignore for apps/consumer-app.
+# When .easignore exists it REPLACES .gitignore — include all gitignore
+# patterns plus build-only exclusions.
+#
+# Monorepo: EAS packs from the git root (D:\Veilpay). The authoritative
+# size wins are in ../../.easignore (vendor, circuits, targets, other apps).
+# spp-native NDK: eas-build-post-install builds .so; poseidon2 is vendored under
+# packages/spp-native/vendor/poseidon2 (must be git-committed).
+#
+# Check size: eas build:inspect -p android -s archive -e preview -o .local/eas-archive-inspect --force
+# https://docs.expo.dev/build-reference/easignore/
+# https://expo.fyi/eas-build-archive
 
-# dependencies
+# ── From .gitignore ───────────────────────────────────────────────
 node_modules/
-
-# Expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
-
-# Secrets — NEVER upload to EAS. Generated at build time by the Doppler hook.
-.env
-.env.local
-.env.*.local
-
-# Native
 .kotlin/
 *.orig.*
 *.jks
@@ -22,25 +24,59 @@ expo-env.d.ts
 *.p12
 *.key
 *.mobileprovision
-
-# Metro
 .metro-health-check*
-
-# debug
 npm-debug.*
 yarn-debug.*
 yarn-error.*
-
-# macOS
 .DS_Store
 *.pem
-
-# typescript
+.env
+.env.*
+!.env.example
+.env*.local
 *.tsbuildinfo
-
-# generated native folders
 /ios
 /android
-
 *storybook.log
 storybook-static
+
+# ── Secrets (Doppler injects on EAS; never upload local env) ─────
+.env
+.env.local
+.env.*.local
+
+# ── Local build / export / test artifacts (main size wins) ───────
+.expo-export-check/
+coverage/
+coverage.json
+coverage4.json
+coverage_output.txt
+.rnstorybook/
+.maestro/
+.turbo/
+graphify-out/
+*.log
+tsc_check.log
+tsc_check2.log
+tsc_output.txt
+jest_modal.log
+jest_onramp.log
+jest_settings.log
+eas_build_android.log
+eas_build_android2.log
+eas_build_preview_build5.log
+eas_build_preview_build6.log
+eas_update_android.log
+eas_update_bg.log
+eas_update_modal.log
+figma-dump.json
+
+# ── Tests not required on EAS Build servers ───────────────────────
+# Unit tests run in CI separately; Metro does not need them to bundle.
+**/__tests__/
+**/__mocks__/
+tests/
+
+# ── Docs (optional; save a little + noise) ────────────────────────
+ENV_SETUP.md
+APP_LINKS_SETUP.md

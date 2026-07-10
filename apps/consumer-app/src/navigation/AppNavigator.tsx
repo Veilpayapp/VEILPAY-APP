@@ -38,7 +38,9 @@ import { OnrampWidgetScreen } from "../screens/OnrampWidgetScreen";
 import { OnrampAmountScreen } from "../screens/OnrampAmountScreen";
 import { OnrampQuotesScreen } from "../screens/OnrampQuotesScreen";
 import { AddCustomNetworkScreen } from "../screens/AddCustomNetworkScreen";
+import { StellarSppScreen } from "../screens/StellarSppScreen";
 import type { TransactionRecord } from "../types/transactions";
+
 import type { PaymentToken } from "../types/tokens";
 import type { ChainType } from "../stores/walletStore";
 import type { TransakFlow } from "../stores/transactionStore";
@@ -96,19 +98,36 @@ export type RootStackParamList = {
   [SCREENS.SEND_PAYMENT]: {
     address?: string;
     amount?: string;
+    /**
+     * Privacy-pool action when sending pXLM (SPP).
+     * `public` / omitted = normal multi-chain send.
+     */
+    mode?: "public" | "shield" | "transfer" | "unshield";
+    /** Skip Privacy Level and confirm as private (SPP). */
+    forcePrivate?: boolean;
+    privacyAssetId?: string;
+    /**
+     * When true (Home quick actions), hide Shield/Transfer/Unshield chips
+     * so the entry intent stays fixed. Token picker / tab Send can still switch.
+     */
+    lockMode?: boolean;
   };
   [SCREENS.PRIVACY_LEVEL]: {
     recipient: string;
     amount: string;
     memo?: string;
     token: string;
+    /** Pre-select when known (e.g. home privacy mode / pXLM token). */
+    preferredPrivacyLevel?: "standard" | "stealth" | "max" | "private";
   };
   [SCREENS.PAYMENT_CONFIRMATION]: {
     recipient: string;
     amount: string;
     memo?: string;
     token: string;
-    privacyLevel: "standard" | "stealth" | "max";
+    privacyLevel: "standard" | "stealth" | "max" | "private";
+    /** SPP op when privacyLevel is private (default transfer). */
+    sppOp?: "shield" | "transfer" | "unshield";
   };
   [SCREENS.PAYMENT_SUCCESS]: {
     transaction: TransactionRecord;
@@ -119,7 +138,9 @@ export type RootStackParamList = {
   [SCREENS.TOKEN_DETAIL]: { tokenSymbol: string; chainKey: string; };
   [SCREENS.SETTINGS]: undefined;
   [SCREENS.ADD_CUSTOM_NETWORK]: undefined;
+  [SCREENS.STELLAR_SPP]: undefined;
   [SCREENS.DEPOSIT_CRYPTO]: undefined;
+
   [SCREENS.WITHDRAW_FIAT]: undefined;
   [SCREENS.BACKUP_WALLET]: undefined;
   [SCREENS.EXPORT_PRIVATE_KEY]: undefined;
@@ -394,8 +415,14 @@ export function AppNavigator({ initialRouteName = SCREENS.ONBOARDING }: AppNavig
       component={AddCustomNetworkScreen}
       options={getScreenTransition(SCREENS.ADD_CUSTOM_NETWORK)}
     />
+        <Stack.Screen
+          name={SCREENS.STELLAR_SPP}
+          component={StellarSppScreen}
+          options={getScreenTransition(SCREENS.STELLAR_SPP)}
+        />
 
         {/* Priority 6: Fiat On/Off Ramps */}
+
         <Stack.Screen
           name={SCREENS.DEPOSIT_CRYPTO}
           component={DepositCryptoScreen}

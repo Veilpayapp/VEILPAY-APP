@@ -84,19 +84,17 @@ Scope = the code users actually touch. Confirmed concrete findings first, then v
 Toolchain verified present on this machine: **Rust 1.96, cargo, stellar-cli 27.0 (Soroban)**, git 2.54
 w/ submodule support. Track B follows `plans/stellar-spp-integration-plan.md §1` exactly:
 
-- [ ] `git submodule add https://github.com/NethermindEth/stellar-private-payments packages/vendor/spp`;
-      record SHA. Read `LICENSE`; note LGPLv3 obligations on `circuits/build.rs` + `dist/` in `SECURITY.md`.
-- [ ] **Prover reality** — determine Rust→WASM (Trunk) vs snarkjs. #1 unknown.
-- [ ] Confirm on-chain verifier curve = **BLS12-381** via Soroban host fns.
-- [ ] Confirm install script ships usable **testnet proving keys** (→ inherit their trusted setup).
-- [ ] Deploy Pool / Verifier / ASP-membership / ASP-non-membership / Public-Key-Registry to
-      **Stellar testnet, unmodified**, via their Makefile/cli. Capture contract IDs.
-- [ ] Run **deposit → transfer → withdraw** via their `spp` CLI end-to-end on testnet.
-- [ ] Benchmark on-device proof-gen time/memory (mid/low-end Android) — the make-or-break UX number.
+- [x] `git submodule add` → `packages/vendor/spp` @ `dbe6a98…`. LICENSE Apache-2.0 + LGPLv3 circuit dist notes.
+- [x] **Prover reality** — ark-circom + ark-groth16 (BN254); browser = wasm-bindgen; mobile = **native** `sdk/pool`.
+- [x] Curve = **BN254** (not BLS12-381). See `plans/spp-phase0-findings.md`.
+- [x] Prebuilt **testnet proving keys** shipped under `deployments/testnet/circuit_keys/`.
+- [x] Live testnet deployment used as-is (IDs in `deployments.json`); contracts verified via `stellar contract info`.
+- [x] **deposit → transfer → withdraw** via `spp` CLI on testnet — **PASS** (2026-07-09). ASP `insert_leaf` required first.
+- [ ] Benchmark on-device proof-gen (Android). Desktop wall ~10 s/tx OK; see findings for numbers.
+- [x] Scaffold `packages/spp-native` (`version` / `ping` FFI).
 
-**Exit gate:** a testnet transfer works via CLI, prover mechanism known, proof-gen tolerable.
-Track B produces **facts + a submodule + docs only** — zero `apps/consumer-app` changes, so it
-cannot regress Track A.
+**Exit gate (CLI):** met. On-device prove still open before shipping Private XLM UX.
+Track B produced facts + submodule + docs + `spp-native` scaffold — no consumer-app product UI yet.
 
 ---
 

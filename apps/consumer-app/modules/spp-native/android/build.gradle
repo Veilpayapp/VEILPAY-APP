@@ -1,0 +1,24 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.veilpay'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.sppnative"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  // Phase 1c: cargo-ndk outputs libspp_native.so under jniLibs/<abi>/
+  sourceSets {
+    main {
+      jniLibs.srcDirs = ['src/main/jniLibs']
+    }
+  }
+  lintOptions {
+    abortOnError false
+  }
+}

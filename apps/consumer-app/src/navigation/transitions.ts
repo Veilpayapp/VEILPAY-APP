@@ -184,6 +184,10 @@ const screenTransitions: Record<string, NativeStackNavigationOptions> = {
   AddCustomNetwork: {
     ...transitionPresets.none,
   },
+
+  StellarSpp: {
+    ...transitionPresets.push,
+  },
   
   // Fiat Gateway Flow
   DepositCrypto: {

@@ -1,31 +1,28 @@
 /**
  * VeilPay — Deployed Contract Addresses (Sepolia)
  *
- * Single source of truth for the on-chain privacy-stack contract addresses
- * that the mobile app talks to. Addresses are sourced from
- * `packages/contracts-evm/deployments/sepolia.json`, which is the
- * deployment manifest written by the Foundry deploy script
- * (`packages/contracts-evm/script/DeployPrivacyStack.s.sol`). When a fresh
- * deployment lands, that JSON file is overwritten and a rebuild of the app
- * picks up the new addresses statically — there is no runtime fetch.
+ * App-local copy of the Foundry deployment manifest lives at
+ * `src/constants/deployments/sepolia.json` so Metro/EAS never need a monorepo
+ * relative path into `packages/contracts-evm` (EAS archives can omit that tree).
  *
- * The placeholder values committed to the JSON are the zero address
- * (`0x000…000`); a build with the unfilled placeholders MUST behave as
- * "privacy stack not configured" so we don't silently send funds to the
- * zero address. {@link isPrivacyStackConfigured} provides that gate, and is
- * consumed by:
+ * Upstream authoring path remains:
+ *   packages/contracts-evm/deployments/sepolia.json
+ * written by `packages/contracts-evm/script/DeployPrivacyStack.s.sol`.
+ * After a fresh deploy, copy that file into this app constants folder and rebuild.
  *
- *   - `PrivacyLevelScreen` — to render `'stealth'` and `'max'` rows as
- *     disabled with a "not configured on this network" explanation.
- *   - `usePaymentTransaction` — to fail fast at flow start with a
- *     configuration-error toast instead of attempting a transaction.
+ * Placeholder values are the zero address (`0x000…000`); a build with unfilled
+ * placeholders MUST behave as "privacy stack not configured".
+ * {@link isPrivacyStackConfigured} is consumed by:
  *
- * @see ../../../../packages/contracts-evm/deployments/sepolia.json
- * @see ../../../../packages/contracts-evm/script/DeployPrivacyStack.s.sol
+ *   - `PrivacyLevelScreen` — disable `'stealth'` / `'max'` when unconfigured
+ *   - `usePaymentTransaction` — fail fast instead of sending to zero address
+ *
+ * @see ./deployments/sepolia.json
+ * @see packages/contracts-evm/script/DeployPrivacyStack.s.sol
  * @see Requirements 5.5, 5.6, 13.1, 13.2, 13.3
  */
 
-import sepolia from '../../../../packages/contracts-evm/deployments/sepolia.json';
+import sepolia from './deployments/sepolia.json';
 
 /**
  * Address of the `VeilPool` shielded-pool contract on Sepolia.

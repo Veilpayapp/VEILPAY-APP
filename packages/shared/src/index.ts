@@ -1,6 +1,7 @@
 export type {
   ChainType,
   ChainConfig,
+  SppChainConfig,
 } from "./chains";
 export {
   SUPPORTED_CHAINS,

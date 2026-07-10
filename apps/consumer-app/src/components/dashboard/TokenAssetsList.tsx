@@ -81,6 +81,18 @@ const TokenAssetItem = memo(TokenAssetItemComponent, (prev, next) => {
   return prev.price === next.price && prev.asset.balance === next.asset.balance;
 });
 
+export type PrivacyAssetListItem = {
+  id: string;
+  name: string;
+  symbol: string;
+  balance: string;
+  subtitle: string;
+  icon: string;
+  enabled: boolean;
+  selected?: boolean;
+  disabledReason?: string;
+};
+
 interface TokenAssetsListProps {
   isLoading: boolean;
   nativeBalance: BalanceResult | null;
@@ -88,9 +100,23 @@ interface TokenAssetsListProps {
   onSend: (symbol: string) => void;
   onTokenPress: (symbol: string) => void;
   fiatRate: number;
+  /** Privacy-pool rows (SPP Private XLM, etc.) under a dedicated section. */
+  privacyAssets?: PrivacyAssetListItem[];
+  onPrivacyAssetPress?: (id: string) => void;
+  selectedPrivacyAssetId?: string | null;
 }
 
-function TokenAssetsListComponent({ isLoading, nativeBalance, tokenBalances, onSend, onTokenPress, fiatRate }: TokenAssetsListProps) {
+function TokenAssetsListComponent({
+  isLoading,
+  nativeBalance,
+  tokenBalances,
+  onSend,
+  onTokenPress,
+  fiatRate,
+  privacyAssets,
+  onPrivacyAssetPress,
+  selectedPrivacyAssetId,
+}: TokenAssetsListProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const nativeCurrency = useSettingsStore((state) => state.nativeCurrency) || 'USD';
@@ -123,7 +149,9 @@ function TokenAssetsListComponent({ isLoading, nativeBalance, tokenBalances, onS
     return list;
   }, [nativeBalance, tokenBalances]);
 
-  if (isLoading && assets.length === 0) {
+  const hasPrivacy = (privacyAssets?.length ?? 0) > 0;
+
+  if (isLoading && assets.length === 0 && !hasPrivacy) {
     return (
       <View style={styles.container}>
         <View style={styles.sectionHeader}>
@@ -136,36 +164,110 @@ function TokenAssetsListComponent({ isLoading, nativeBalance, tokenBalances, onS
     );
   }
 
-  if (assets.length === 0) {
+  if (assets.length === 0 && !hasPrivacy) {
     return null;
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>[ ASSETS ]</Text>
-      </View>
+      {hasPrivacy ? (
+        <>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>[ PRIVACY ]</Text>
+          </View>
+          <View style={styles.list}>
+            {privacyAssets!.map((item) => {
+              const selected = selectedPrivacyAssetId === item.id || item.selected;
+              return (
+                <View key={item.id} style={styles.itemWrapper}>
+                  <PressableOpacity
+                    activeOpacity={item.enabled ? 0.7 : 1}
+                    onPress={() => {
+                      if (!item.enabled) return;
+                      onPrivacyAssetPress?.(item.id);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: !item.enabled, selected }}
+                    accessibilityLabel={`${item.name} ${item.balance} ${item.symbol}`}
+                    accessibilityHint={
+                      item.enabled
+                        ? 'Shows private balance and shield actions on home'
+                        : item.disabledReason || 'Not available'
+                    }
+                  >
+                    <SovereignCard
+                      backgroundColor={selected ? colors.bgTertiary : colors.bgPrimary}
+                      padding={0}
+                      style={{
+                        borderRadius: 0,
+                        borderWidth: 1,
+                        borderColor: selected ? colors.accent : colors.textPrimary,
+                        opacity: item.enabled ? 1 : 0.5,
+                      }}
+                    >
+                      <View style={styles.row}>
+                        <View style={styles.left}>
+                          <View style={[styles.iconWrap, styles.privacyIconWrap]}>
+                            <Text style={styles.iconText}>{item.icon}</Text>
+                          </View>
+                          <View>
+                            <Text style={styles.symbol}>{item.symbol}</Text>
+                            <Text style={styles.name}>{item.name.toUpperCase()}</Text>
+                            <Text style={styles.privacySubtitle} numberOfLines={1}>
+                              {item.enabled ? item.subtitle : item.disabledReason || item.subtitle}
+                            </Text>
+                          </View>
+                        </View>
+                        <View style={styles.right}>
+                          <Text style={styles.balance}>
+                            {item.balance} {item.symbol}
+                          </Text>
+                          <View style={styles.shieldedTag}>
+                            <Icon name="private" size={10} color={colors.accent} />
+                            <Text style={styles.shieldedTagText}>SHIELDED</Text>
+                          </View>
+                        </View>
+                      </View>
+                    </SovereignCard>
+                  </PressableOpacity>
+                </View>
+              );
+            })}
+          </View>
+        </>
+      ) : null}
 
-      <View style={styles.list}>
-        {assets.map((asset) => {
-          const symbol = asset.symbol || 'UNK';
-          const price = marketQuotes[symbol]?.price || 0;
-          const key = 'tokenAddress' in asset ? `token-${asset.tokenAddress}` : `native-${symbol}`;
-          return (
-            <TokenAssetItem
-              key={key}
-              asset={asset}
-              price={price}
-              onSend={onSend}
-              onPress={onTokenPress}
-              fiatRate={fiatRate}
-              nativeCurrency={nativeCurrency}
-              colors={colors}
-              styles={styles}
-            />
-          );
-        })}
-      </View>
+      {assets.length > 0 ? (
+        <>
+          <View style={[styles.sectionHeader, hasPrivacy && styles.sectionHeaderSpaced]}>
+            <Text style={styles.sectionTitle}>[ ASSETS ]</Text>
+          </View>
+
+          <View style={styles.list}>
+            {assets.map((asset) => {
+              const symbol = asset.symbol || 'UNK';
+              const price = marketQuotes[symbol]?.price || 0;
+              const key = 'tokenAddress' in asset ? `token-${asset.tokenAddress}` : `native-${symbol}`;
+              return (
+                <TokenAssetItem
+                  key={key}
+                  asset={asset}
+                  price={price}
+                  onSend={onSend}
+                  onPress={(sym) => {
+                    // Selecting a public asset should leave privacy home mode (caller handles).
+                    onTokenPress(sym);
+                  }}
+                  fiatRate={fiatRate}
+                  nativeCurrency={nativeCurrency}
+                  colors={colors}
+                  styles={styles}
+                />
+              );
+            })}
+          </View>
+        </>
+      ) : null}
     </View>
   );
 }
@@ -183,6 +285,9 @@ const themeStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 24,
     marginBottom: 12,
   },
+  sectionHeaderSpaced: {
+    marginTop: 20,
+  },
   sectionTitle: {
     fontFamily: typography.fontFamily.mono,
     fontSize: 14,
@@ -190,6 +295,30 @@ const themeStyles = (colors: any) => StyleSheet.create({
     fontWeight: "bold",
     letterSpacing: 1,
   },
+  privacyIconWrap: {
+    borderColor: colors.accent,
+  },
+  privacySubtitle: {
+    fontFamily: typography.fontFamily.body,
+    fontSize: 11,
+    color: colors.textTertiary,
+    marginTop: 2,
+    maxWidth: 180,
+  },
+  shieldedTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  shieldedTagText: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 9,
+    color: colors.accent,
+    letterSpacing: 0.5,
+    fontWeight: 'bold',
+  },
+
   skeletonList: {
     marginHorizontal: 24,
     gap: 8,

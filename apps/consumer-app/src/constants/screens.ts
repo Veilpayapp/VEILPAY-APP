@@ -39,6 +39,10 @@ export const SCREENS = {
   SETTINGS: 'Settings',
   ADD_CUSTOM_NETWORK: 'AddCustomNetwork',
 
+  // Priority 4b: Stellar Private Payments (testnet self-custody)
+  STELLAR_SPP: 'StellarSpp',
+
+
   // Priority 5: Fiat On/Off Ramps
   DEPOSIT_CRYPTO: 'DepositCrypto',
   WITHDRAW_FIAT: 'WithdrawFiat',
@@ -81,7 +85,9 @@ export const SCREEN_TITLES: Record<ScreenName, string> = {
   [SCREENS.TOKEN_DETAIL]: 'Token Detail',
   [SCREENS.SETTINGS]: 'Settings',
   [SCREENS.ADD_CUSTOM_NETWORK]: 'Add Network',
+  [SCREENS.STELLAR_SPP]: 'Private XLM status',
   [SCREENS.DEPOSIT_CRYPTO]: 'Deposit',
+
   [SCREENS.WITHDRAW_FIAT]: 'Withdraw',
   [SCREENS.TRANSAK_WEBVIEW]: 'Transak',
   [SCREENS.ONRAMP_WIDGET]: 'Onramp',

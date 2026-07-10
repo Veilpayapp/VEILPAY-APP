@@ -6,8 +6,7 @@ import {
 } from '../deepLinking';
 
 describe('deepLinking utilities', () => {
-  it('parses a send link created by createSendLink', () => {
-    // Use a valid EVM address (0x + 40 hex chars) so validation passes
+  it('parses a send link created by createSendLink (EVM)', () => {
     const validAddress = '0x1111111111111111111111111111111111111111';
     const link = createSendLink(validAddress, '1.25', 'ETH');
     const parsed = parseDeepLink(link);
@@ -17,6 +16,42 @@ describe('deepLinking utilities', () => {
       address: validAddress,
       amount: '1.25',
       token: 'ETH',
+    });
+  });
+
+  it('parses send links with chainType for Stellar G… addresses', () => {
+    // 56-char Stellar public key (G + 55 base32)
+    const stellar = 'GBU4T3ZUDWDCD3XQ2E7DNQ7V6A5FPR24LW7B5XH7LY4TMJXMITXG7ZME';
+    const link = createSendLink(stellar, {
+      amount: '2.5',
+      token: 'XLM',
+      chainType: 'xlm',
+    });
+    const parsed = parseDeepLink(link);
+    expect(parsed).toEqual({
+      action: 'send',
+      address: stellar,
+      amount: '2.5',
+      token: 'XLM',
+      chainType: 'xlm',
+    });
+  });
+
+  it('parses Stellar address without chainType via unknown pattern', () => {
+    const stellar = 'GBU4T3ZUDWDCD3XQ2E7DNQ7V6A5FPR24LW7B5XH7LY4TMJXMITXG7ZME';
+    const link = `veilpay://send?address=${encodeURIComponent(stellar)}&amount=1`;
+    expect(parseDeepLink(link)?.address).toBe(stellar);
+  });
+
+  it('parses address-only send links (no amount)', () => {
+    const validAddress = '0x1111111111111111111111111111111111111111';
+    const link = createSendLink(validAddress, { chainType: 'evm', token: 'ETH' });
+    const parsed = parseDeepLink(link);
+    expect(parsed).toEqual({
+      action: 'send',
+      address: validAddress,
+      token: 'ETH',
+      chainType: 'evm',
     });
   });
 
@@ -38,7 +73,6 @@ describe('deepLinking utilities', () => {
   });
 
   it('parses transaction links and extracts transaction hash', () => {
-    // Use a valid EVM tx hash (0x + 64 hex chars) so validation passes
     const validTxHash = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
     const link = createTransactionLink(validTxHash);
 

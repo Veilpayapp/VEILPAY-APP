@@ -58,21 +58,23 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
     });
   }, [activeChain?.key, activeChain?.type, address]);
 
-  // Generate QR code value based on address and optional amount
+  const deepLinkChainType =
+    activeChain?.type === 'evm' || activeChain?.type === 'svm' || activeChain?.type === 'xlm'
+      ? activeChain.type
+      : undefined;
+
+  // QR: in-app payment link (works for EVM / Solana / Stellar). Wallet apps that
+  // only understand native URIs can still paste the address from the card below.
   const qrValue = useMemo(() => {
     if (!address) return '';
-
-    // If amount is specified, create a payment request URI
-    if (requestedAmount && parseFloat(requestedAmount) > 0) {
-      const schemeMap: Record<string, string> = {
-        evm: 'ethereum',
-        svm: 'solana',
-        xlm: 'stellar',
-      };
-      const scheme = schemeMap[activeChain?.type || 'evm'] || 'ethereum';
-      return `${scheme}:${address}?amount=${requestedAmount}`;
-    }    // Otherwise just encode the address
-    return address;  }, [address, requestedAmount, activeChain?.type]);
+    const amount =
+      requestedAmount && parseFloat(requestedAmount) > 0 ? requestedAmount : undefined;
+    return createSendLink(address, {
+      amount,
+      token: activeChain?.symbol,
+      chainType: deepLinkChainType,
+    });
+  }, [address, requestedAmount, activeChain?.symbol, deepLinkChainType]);
 
   const handleBack = () => {
     trackEvent(ANALYTICS_EVENTS.RECEIVE_QR_BACK_PRESSED, {
@@ -142,39 +144,53 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
       return;
     }
 
-    if (!requestedAmount || parseFloat(requestedAmount) <= 0) {
-      trackEvent(ANALYTICS_EVENTS.RECEIVE_REQUEST_LINK_FAILED, {
-        reason: 'invalid_amount',
+    const hasAmount = Boolean(requestedAmount && parseFloat(requestedAmount) > 0);
+    // Amount optional: without it, link still opens Send with recipient filled.
+    const requestLink = createSendLink(address, {
+      amount: hasAmount ? requestedAmount : undefined,
+      token: activeChain?.symbol,
+      chainType: deepLinkChainType,
+    });
+
+    // Prefer system share (works when clipboard is restricted). Also copy.
+    let shared = false;
+    let copied = false;
+    try {
+      await Share.share({
+        message: hasAmount
+          ? `Pay me ${requestedAmount} ${activeChain?.symbol || ''} on VeilPay:\n${requestLink}`
+          : `Send to me on VeilPay:\n${requestLink}`,
+        title: 'VeilPay payment request',
       });
-      toast.show('Please enter a valid amount', 'error');
-      return;
+      shared = true;
+    } catch {
+      // User dismissed share sheet or Share unavailable — still try clipboard.
     }
 
-    // Generate a payment-request deep link the app can actually parse. The
-    // hand-built `veilpay://pay?to=...` form used an unknown action, so
-    // parseDeepLink() rejected it and the link opened nothing. createSendLink
-    // emits `veilpay://send?address=…&amount=…&token=…`, which the deep-link
-    // handler routes straight into the Send flow, pre-filled.
-    const requestLink = createSendLink(
-      address,
-      requestedAmount,
-      activeChain?.symbol,
-    );
-    const copied = await setClipboardString(requestLink);
-    if (!copied) {
+    copied = await setClipboardString(requestLink);
+
+    if (!shared && !copied) {
       trackEvent(ANALYTICS_EVENTS.RECEIVE_REQUEST_LINK_FAILED, {
-        reason: 'clipboard_unavailable',
+        reason: 'share_and_clipboard_failed',
       });
-      toast.show('Clipboard unavailable in this runtime', 'error');
+      toast.show('Could not share or copy the payment link', 'error');
       return;
     }
 
     trackEvent(ANALYTICS_EVENTS.RECEIVE_REQUEST_LINK_COPIED, {
       chain_key: activeChain?.key || 'unknown',
-      has_amount: Boolean(requestedAmount),
+      has_amount: hasAmount,
+      shared,
+      copied,
     });
 
-    toast.show('Payment request link copied', 'success');
+    if (shared && copied) {
+      toast.show('Payment link shared and copied', 'success');
+    } else if (shared) {
+      toast.show('Payment link ready to share', 'success');
+    } else {
+      toast.show('Payment link copied', 'success');
+    }
   };
 
   const handleNavPress = (screen: keyof RootStackParamList) => {
@@ -293,21 +309,36 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
           />
 
           <SovereignButton
-            title="GENERATE PAYMENT REQUEST"
+            title={
+              requestedAmount && parseFloat(requestedAmount) > 0
+                ? 'SHARE PAYMENT LINK'
+                : 'SHARE RECEIVE LINK'
+            }
             variant="outline"
             onPress={handleRequestAmount}
             style={{ marginBottom: 24 }}
+            disabled={!address}
           />
 
-          {/* Privacy Notice */}
+          {/* Privacy notice — EVM stealth vs Stellar private (SPP) */}
           <View style={styles.privacyNoticeContainer}>
             <View style={styles.privacyHazardTape} />
             <View style={styles.privacyContent}>
               <Icon name="private" size={24} color={colors.success} />
               <View style={styles.privacyTextGroup}>
-                <Text style={styles.privacyTitle}>STEALTH ADDRESS ACTIVE</Text>
+                <Text style={styles.privacyTitle}>
+                  {activeChain?.type === 'xlm'
+                    ? 'PRIVATE RECEIVE'
+                    : activeChain?.type === 'evm'
+                      ? 'STEALTH-READY'
+                      : 'YOUR ADDRESS'}
+                </Text>
                 <Text style={styles.privacyText}>
-                  Each incoming payment uses a unique stealth address. Your real address stays private.
+                  {activeChain?.type === 'xlm'
+                    ? 'Share this G… address for public XLM. For private pay, contacts use Send privately after you have a private balance (pXLM).'
+                    : activeChain?.type === 'evm'
+                      ? 'Incoming private payments can use one-time stealth addresses where supported. Always verify network and token.'
+                      : 'Only send assets on the network shown above. Double-check the address before sharing.'}
                 </Text>
               </View>
             </View>

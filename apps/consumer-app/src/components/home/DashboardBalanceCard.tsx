@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import { PressableOpacity } from '../PressableOpacity';
 import { SovereignCard } from '../SovereignCard';
 import { Icon } from '../Icon';
@@ -18,6 +19,15 @@ interface DashboardBalanceCardProps {
   displayCrypto: string;
   activeChain: ChainConfig | null;
   marketQuote: MarketQuote | undefined;
+  /**
+   * When true, Home is in privacy-pool mode (e.g. Private XLM / SPP).
+   * Same card chrome; labels + badge emphasize shielded balance.
+   */
+  privacyMode?: boolean;
+  /** Crypto ticker for the second line (default: active chain symbol). */
+  cryptoSymbol?: string;
+  /** Optional feature lines under the balance in privacy mode. */
+  privacyFeatures?: string[];
 }
 
 export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
@@ -28,6 +38,9 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
   displayCrypto,
   activeChain,
   marketQuote,
+  privacyMode = false,
+  cryptoSymbol,
+  privacyFeatures,
 }) => {
   const styles = useStyles(themeStyles);
   const theme = useTheme();
@@ -39,6 +52,9 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
   const showSkeleton = isLoadingBalance && (!marketQuote || displayBalance === '0.00');
   
   const formattedBalance = formatFiat(Number(displayBalance), nativeCurrency || 'USD');
+  const symbol = cryptoSymbol || activeChain?.symbol || 'ETH';
+  const balanceLabel = privacyMode ? '[ PRIVATE_BALANCE ]' : '[ LEDGER_BALANCE ]';
+  const badgeText = privacyMode ? 'SHIELDED' : 'PRIVATE';
 
   return (
     <View style={styles.balanceCardWrapper}>
@@ -52,11 +68,15 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
             <>
               <View style={styles.balanceRow}>
                 <View>
-                  <Text style={styles.balanceLabel}>[ LEDGER_BALANCE ]</Text>
+                  <Text style={styles.balanceLabel}>{balanceLabel}</Text>
                   <Text
                     style={styles.balanceAmount}
                     accessibilityLiveRegion="assertive"
-                    accessibilityLabel={`Total balance: ${formattedBalance}`}
+                    accessibilityLabel={
+                      privacyMode
+                        ? `Private balance: ${formattedBalance}`
+                        : `Total balance: ${formattedBalance}`
+                    }
                   >
                     {balanceVisible
                       ? formattedBalance
@@ -64,7 +84,7 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
                   </Text>
                   <Text style={styles.balanceCrypto}>
                     {balanceVisible
-                      ? `${displayCrypto} ${activeChain?.symbol ?? 'ETH'}`
+                      ? `${displayCrypto} ${symbol}`
                       : '••••••••••••'}
                   </Text>
                 </View>
@@ -86,10 +106,14 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
                       color={colors.textPrimary}
                     />
                   </PressableOpacity>
-                  <View style={styles.privacyBadge}>
+                  <Animated.View
+                    key={privacyMode ? 'badge-shielded' : 'badge-private'}
+                    entering={privacyMode ? ZoomIn.springify().damping(14) : FadeIn.duration(180)}
+                    style={[styles.privacyBadge, privacyMode && styles.privacyBadgeActive]}
+                  >
                     <Icon name="private" size={14} color={colors.accent} />
-                    <Text style={styles.privacyBadgeText}>PRIVATE</Text>
-                  </View>
+                    <Text style={styles.privacyBadgeText}>{badgeText}</Text>
+                  </Animated.View>
                 </View>
               </View>
             </>
@@ -99,16 +123,27 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
           {!showSkeleton && marketQuote && (
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>
-                {activeChain?.symbol || 'ETH'} @ {formatFiat(marketQuote.price, nativeCurrency || 'USD')}
+                {privacyMode ? `${symbol} (quote ${activeChain?.symbol || 'XLM'})` : symbol}
+                {' '}@ {formatFiat(marketQuote.price, nativeCurrency || 'USD')}
               </Text>
               <Text style={styles.priceSource}>
-                {marketQuote.source} • {marketQuote.isStale ? 'stale' : 'live'}
+                {privacyMode
+                  ? 'local notes · device'
+                  : `${marketQuote.source} • ${marketQuote.isStale ? 'stale' : 'live'}`}
               </Text>
             </View>
           )}
 
-          {/* Change indicator */}
-          {!showSkeleton && (
+          {/* Change indicator (public) or feature chips (privacy) */}
+          {!showSkeleton && privacyMode && privacyFeatures && privacyFeatures.length > 0 ? (
+            <View style={styles.featureList}>
+              {privacyFeatures.slice(0, 3).map((line) => (
+                <Text key={line} style={styles.featureLine}>
+                  · {line}
+                </Text>
+              ))}
+            </View>
+          ) : !showSkeleton ? (
             <View style={styles.changeRow}>
               {marketQuote?.change24h !== null && marketQuote?.change24h !== undefined ? (
                 <>
@@ -132,7 +167,7 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
               )}
               <Text style={styles.changeLabel}>Today</Text>
             </View>
-          )}
+          ) : null}
         </View>
       </SovereignCard>
     </View>
@@ -194,12 +229,25 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  privacyBadgeActive: {
+    backgroundColor: colors.accentContainer,
+  },
   privacyBadgeText: {
     fontFamily: typography.fontFamily.mono,
     fontSize: 10,
     color: colors.accent,
     letterSpacing: 0.5,
     fontWeight: 'bold',
+  },
+  featureList: {
+    gap: 4,
+    marginTop: 4,
+  },
+  featureLine: {
+    fontFamily: typography.fontFamily.body,
+    fontSize: 12,
+    color: colors.textMuted,
+    lineHeight: 18,
   },
   priceRow: {
     flexDirection: 'row',

@@ -1,0 +1,143 @@
+# EAS Build archive ignore (monorepo root).
+# When this file exists it REPLACES .gitignore for EAS packaging — keep both
+# root gitignore patterns and extra monorepo bloat here.
+# Run builds from apps/consumer-app; EAS packs from the git root.
+# Docs: https://docs.expo.dev/build-reference/easignore/
+#
+# Verified with: eas build:inspect -p android -s archive -e preview
+# Goal: exclude vendor/circuits/targets/tooling so upload stays small.
+
+# ── From root .gitignore ──────────────────────────────────────────
+node_modules/
+.pnpm-store/
+dist/
+build/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+!.env.example
+.idea/
+.vscode/
+*.swp
+*.swo
+.agents/anthropics-skills/
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+pnpm-debug.log*
+coverage/
+.cache/
+.npm/
+.turbo/
+out/
+cache/
+broadcast/
+target/
+.anchor/
+.aptos/
+anvil-data/
+solana-test-validator/
+nul
+
+# ── Never ship VCS / local agent state ────────────────────────────
+.git/
+.agent/
+.agents/
+.audit-evidence/
+.continue/
+.kilo/
+.kilocode/
+.kiro/
+.local/
+.github/
+.expo/
+
+# ── Apps not built by consumer-app EAS ────────────────────────────
+apps/backend/
+apps/indexer/
+apps/merchant-app/
+apps/auditor/
+
+# ── Heavy packages not needed for consumer preview/prod APK ───────
+# Full SPP submodule stays out of the archive. Poseidon2 for ASP leaf derive is
+# vendored under packages/spp-native/vendor/poseidon2 (self-contained for EAS).
+# eas-build-post-install runs cargo-ndk → modules/spp-native/.../jniLibs/*.so
+packages/vendor/
+packages/spp-native/target/
+packages/circuits/
+# contracts-evm: app vendors sepolia.json under
+# apps/consumer-app/src/constants/deployments/ — no monorepo import needed.
+packages/contracts-evm/
+packages/contracts-solana/
+packages/contracts-aptos/
+packages/auditor/
+packages/antigravity-utils/
+
+# ── Docs / graphs / local media ───────────────────────────────────
+graphify-out/
+plans/
+e2e/
+env_backup/
+env_backup.zip
+New logo/
+*.md
+# (do not re-include consumer-app markdown — not needed for native build)
+
+# ── Monorepo root tooling noise ───────────────────────────────────
+*.txt
+*.diff
+tmp_*.diff
+eslint-consumer*.txt
+lint-errors.txt
+kilo_result.txt
+react-doctor-report*.json
+figma-dump.json
+fetch-figma*.js
+graphify-*.py
+audit.js
+autofix.js
+gen_tests.js
+invert-logos.js
+list-mcp-tools.js
+list-unused.js
+maestro.js
+migrate_ui.py
+summarize-report.js
+update_send.js
+buy_crypto_design.html
+VeilPay Workflow.svg
+VeilPay.png
+$null
+
+# ── Consumer-app local bloat ──────────────────────────────────────
+apps/consumer-app/node_modules/
+apps/consumer-app/dist/
+apps/consumer-app/web-build/
+apps/consumer-app/.expo/
+apps/consumer-app/.expo-export-check/
+apps/consumer-app/android/
+apps/consumer-app/ios/
+apps/consumer-app/coverage/
+apps/consumer-app/coverage.json
+apps/consumer-app/coverage4.json
+apps/consumer-app/coverage_output.txt
+apps/consumer-app/.rnstorybook/
+apps/consumer-app/.maestro/
+apps/consumer-app/.turbo/
+apps/consumer-app/graphify-out/
+apps/consumer-app/storybook-static/
+apps/consumer-app/*.log
+apps/consumer-app/tsc_*.log
+apps/consumer-app/tsc_output.txt
+apps/consumer-app/jest_*.log
+apps/consumer-app/eas_*.log
+apps/consumer-app/figma-dump.json
+apps/consumer-app/.env
+apps/consumer-app/.env.local
+apps/consumer-app/.env.*.local
+apps/consumer-app/**/__tests__/
+apps/consumer-app/**/__mocks__/
+apps/consumer-app/tests/
+apps/consumer-app/*.md

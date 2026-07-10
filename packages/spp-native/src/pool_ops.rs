@@ -139,6 +139,7 @@ pub fn pool_readiness_json(pool_ops_linked: bool) -> String {
 }
 
 /// Structured not-ready after successful validation (sdk still unlinked).
+#[allow(dead_code)] // used when feature pool-ops is off
 pub fn ops_not_ready_json(op: &str, amount_stroops: u128) -> String {
     json!({
         "ok": false,

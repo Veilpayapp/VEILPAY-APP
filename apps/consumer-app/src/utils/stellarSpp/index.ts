@@ -55,6 +55,8 @@ export {
   SPP_TESTNET_CONTRACT_CONFIG,
 } from './sppPoolSession';
 
+export { getCircuitsReadiness, type CircuitsReadiness } from './sppCircuits';
+
 export {
   runShieldTransferUnshield,
   planLifecycleAmounts,

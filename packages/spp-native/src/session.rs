@@ -13,7 +13,13 @@ use serde::Deserialize;
 use stellar_private_payments_sdk::{
     LocalSigner, PrivatePoolConfig, ProverArtifacts, TransferRecipient,
     blocking::PrivatePool,
-    types::{ContractConfig, EncryptionPublicKey, NoteAmount, NotePublicKey},
+    state::SqliteStorage,
+    tx::encryption::{
+        derive_encryption_and_note_keypairs, derive_membership_blinding,
+    },
+    types::{
+        ContractConfig, EncryptionPublicKey, KeyDerivationSignature, NoteAmount, NotePublicKey,
+    },
 };
 
 use crate::pool_ops::{is_stellar_g_address, parse_amount_stroops, validate_transfer_recipient};
@@ -34,6 +40,19 @@ pub struct SessionOpenConfig {
     pub circuits_dir: String,
     /// Full deployments.json body (ContractConfig).
     pub contract_config: ContractConfig,
+    /// 64-byte Ed25519 SEP-53 sig hex (128 chars). Required on first open to seed SDK keypairs.
+    #[serde(default)]
+    pub derivation_sig_hex: Option<String>,
+    /// Network context for membership blinding (`testnet` / `mainnet`). Defaults from contract_config.
+    #[serde(default)]
+    pub network: Option<String>,
+    /// Auto-accept protocol disclaimer into local SQLite (mobile product path).
+    #[serde(default = "default_true")]
+    pub accept_disclaimer: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 struct BoundSession {
@@ -69,6 +88,69 @@ fn load_prover_artifacts(circuits_dir: &Path) -> Result<ProverArtifacts, String>
     })
 }
 
+fn parse_sig_hex(hex: &str) -> Result<[u8; 64], String> {
+    let h = hex.trim().trim_start_matches("0x");
+    if h.len() != 128 {
+        return Err("derivationSigHex must be 128 hex chars (64-byte Ed25519 sig)".into());
+    }
+    let mut out = [0u8; 64];
+    for i in 0..64 {
+        let byte = u8::from_str_radix(&h[i * 2..i * 2 + 2], 16)
+            .map_err(|_| "derivationSigHex has invalid hex".to_string())?;
+        out[i] = byte;
+    }
+    Ok(out)
+}
+
+/// Match CLI onboard: disclaimer + privacy keypairs in SQLite before any prove.
+fn ensure_wallet_ready(
+    storage_path: &str,
+    user_address: &str,
+    network: &str,
+    derivation_sig_hex: Option<&str>,
+    accept_disclaimer: bool,
+) -> Result<(), String> {
+    let path = PathBuf::from(storage_path);
+    let mut storage = SqliteStorage::connect_file(&path)
+        .map_err(|e| format!("open wallet sqlite: {e:#}"))?;
+
+    let disc = storage
+        .get_disclaimer_state(user_address)
+        .map_err(|e| format!("disclaimer state: {e:#}"))?;
+    if !disc.accepted {
+        if !accept_disclaimer {
+            return Err(
+                "SPP_DISCLAIMER_REQUIRED: accept protocol disclaimer before pool ops".into(),
+            );
+        }
+        storage
+            .accept_current_disclaimer(user_address, &disc.disclaimer_hash_hex)
+            .map_err(|e| format!("accept disclaimer: {e:#}"))?;
+    }
+
+    if storage
+        .get_user_keys(user_address)
+        .map_err(|e| format!("get_user_keys: {e:#}"))?
+        .is_some()
+    {
+        return Ok(());
+    }
+
+    let sig_hex = derivation_sig_hex.ok_or_else(|| {
+        "SPP_KEYS_REQUIRED: pass derivationSigHex (SEP-53 Privacy Pool Key Derivation [v1]) on first pool_open".to_string()
+    })?;
+    let sig_bytes = parse_sig_hex(sig_hex)?;
+    let signature = KeyDerivationSignature(sig_bytes.to_vec());
+    let (note_kp, enc_kp) = derive_encryption_and_note_keypairs(signature.clone())
+        .map_err(|e| format!("derive privacy keypairs: {e:#}"))?;
+    let blinding = derive_membership_blinding(&signature, network)
+        .map_err(|e| format!("derive membership blinding: {e:#}"))?;
+    storage
+        .save_encryption_and_note_keypairs(user_address, &note_kp, &enc_kp, &blinding)
+        .map_err(|e| format!("save privacy keys: {e:#}"))?;
+    Ok(())
+}
+
 /// Open (or replace) the process-global pool session.
 pub fn open_session(config_json: &str) -> Result<(), String> {
     let mut cfg: SessionOpenConfig =
@@ -95,6 +177,21 @@ pub fn open_session(config_json: &str) -> Result<(), String> {
         fs::create_dir_all(parent).map_err(|e| format!("create storage dir: {e}"))?;
     }
 
+    let network = cfg
+        .network
+        .clone()
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| cfg.contract_config.network.clone());
+
+    // Seed privacy keys + disclaimer into SDK SQLite (same as `spp onboard` key step).
+    ensure_wallet_ready(
+        &cfg.storage_path,
+        &cfg.user_address,
+        &network,
+        cfg.derivation_sig_hex.as_deref(),
+        cfg.accept_disclaimer,
+    )?;
+
     let circuits = PathBuf::from(&cfg.circuits_dir);
     let artifacts = load_prover_artifacts(&circuits)?;
 
@@ -108,6 +205,9 @@ pub fn open_session(config_json: &str) -> Result<(), String> {
     );
     // Drop secret from config string ASAP (cfg still holds it until drop).
     cfg.secret_key.clear();
+    if let Some(ref mut s) = cfg.derivation_sig_hex {
+        s.clear();
+    }
 
     let pool_config = PrivatePoolConfig {
         rpc_url: cfg.rpc_url,

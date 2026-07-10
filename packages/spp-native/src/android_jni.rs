@@ -17,8 +17,8 @@ use std::os::raw::c_char;
 
 use crate::{
     spp_native_capabilities, spp_native_deposit, spp_native_derive_keys, spp_native_ensure_asp,
-    spp_native_ping, spp_native_pool_readiness, spp_native_string_free, spp_native_transfer,
-    spp_native_version, spp_native_withdraw,
+    spp_native_ping, spp_native_pool_close, spp_native_pool_open, spp_native_pool_readiness,
+    spp_native_string_free, spp_native_transfer, spp_native_version, spp_native_withdraw,
 };
 
 fn c_ptr_to_jstring(env: &mut JNIEnv, ptr: *mut c_char) -> jstring {
@@ -151,4 +151,26 @@ pub extern "system" fn Java_expo_modules_sppnative_SppNativeRust_nativePoolReadi
     _class: JClass,
 ) -> jstring {
     c_ptr_to_jstring(&mut env, spp_native_pool_readiness())
+}
+
+#[no_mangle]
+pub extern "system" fn Java_expo_modules_sppnative_SppNativeRust_nativePoolOpen(
+    mut env: JNIEnv,
+    _class: JClass,
+    config_json: JString,
+) -> jstring {
+    let c = jstring_to_cstring(&mut env, config_json);
+    let ptr = match c.as_ref() {
+        Some(cs) => spp_native_pool_open(cs.as_ptr()),
+        None => spp_native_pool_open(std::ptr::null()),
+    };
+    c_ptr_to_jstring(&mut env, ptr)
+}
+
+#[no_mangle]
+pub extern "system" fn Java_expo_modules_sppnative_SppNativeRust_nativePoolClose(
+    mut env: JNIEnv,
+    _class: JClass,
+) -> jstring {
+    c_ptr_to_jstring(&mut env, spp_native_pool_close())
 }

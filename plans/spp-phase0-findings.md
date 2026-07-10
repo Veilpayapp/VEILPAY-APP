@@ -234,9 +234,11 @@ prove time + RSS (handoff item; not done this session).
 - [x] Pool-ops **validation + readiness FFI** (`pool_ops.rs`, feature `pool-ops` gate)
 - [x] **ASP insert retry** — `ensureSppAccountReady` no longer skips insert when leaf exists;
       hub **Register ASP membership** button; higher Soroban fee for insert_leaf
-- [ ] Link real `sdk/pool` prove/submit (flip feature `pool-ops` + circuit assets)
+- [x] Link real `sdk/pool` prove/submit (feature `pool-ops` + session FFI + circuit stage)
+      Desktop: `cargo check --features pool-ops` OK (2026-07-10). Device needs 1.1.0 APK
+      with `SPP_NATIVE_POOL_OPS=1` when EAS quota returns (~Aug 1).
 - [x] Lifecycle E2E **Jest** shield→transfer→unshield (mock CAP_POOL_OPS)
-- [ ] On-device E2E with real prove
+- [ ] On-device E2E with real prove (blocked: EAS free Android until ~Aug 1)
 - [ ] On-device Android prove bench
 - [x] Privacy mode **switch animation** (Home Moti keys + badge/actions)
 

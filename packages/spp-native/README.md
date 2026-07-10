@@ -15,10 +15,12 @@ Phase 0/1 native FFI shell for VeilPay Stellar Private Payments (SPP).
 | `spp_native_version()` | Heap C string; free with `spp_native_string_free` |
 | `spp_native_ping(input)` | `pong` or `pong:<input>` |
 | `spp_native_capabilities()` | `u32` bitmask: bit0=ping, bit1=poolOps, bit2=aspLeaf |
-| `spp_native_deposit(amount)` | JSON (`SPP_OPS_NOT_READY` until sdk/pool) |
-| `spp_native_transfer(amount, recipient)` | JSON stub |
-| `spp_native_withdraw(amount, to)` | JSON stub |
-| `spp_native_ensure_asp()` | JSON (`SPP_ASP_NOT_READY` until leaf helper) |
+| `spp_native_pool_open(config_json)` | Bind session (pool-ops); needs circuits + S… secret |
+| `spp_native_pool_close()` | Drop session |
+| `spp_native_deposit(amount)` | Prove+submit when session bound; else not-ready |
+| `spp_native_transfer(amount, recipient)` | Same |
+| `spp_native_withdraw(amount, to)` | Same |
+| `spp_native_ensure_asp()` | Derive-first hint; insert_leaf is TS/Soroban |
 | `spp_native_string_free(ptr)` | Frees strings from this library |
 
 Phase 1a/1b returns **only bit0** (`CAP_PING`). Op symbols exist as stubs so the RN
@@ -112,10 +114,36 @@ Open Settings → Private XLM (or hub). Expect:
 |---------|---------|---------|
 | `derive-keys` | on | Poseidon2 ASP leaf + note/enc keys |
 | `android-jni` | off | JNI exports for Kotlin `SppNativeRust` |
-| `pool-ops` | off | Flip `CAP_POOL_OPS` when `sdk/pool` is path-linked |
+| `pool-ops` | off | Link `stellar-private-payments-sdk` + real prove/submit (`CAP_POOL_OPS`) |
+
+### Build with `pool-ops` (desktop)
+
+Requires `packages/vendor/spp` submodule + MSVC (Windows):
+
+```bat
+call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+set RUSTFLAGS=-C link-arg=/STACK:0x20000000
+cd packages\spp-native
+rustup run 1.92.0-x86_64-pc-windows-msvc cargo test --features pool-ops
+```
+
+zkhash path is always `../vendor/spp/poseidon2` (shared with sdk/pool). EAS materializes
+that path from `vendor/poseidon2` when the submodule is missing.
+
+### Session API (when `pool-ops` linked)
+
+1. Stage circuits: `.\scripts\stage-circuit-assets.ps1`
+2. `spp_native_pool_open(json)` — binds `PrivatePool` (secret + RPC + circuitsDir)
+3. `spp_native_deposit` / `transfer` / `withdraw` — prove + submit
+4. `spp_native_pool_close()` — drop session
+
+App TS: `ensurePoolSession` in `apps/consumer-app/src/utils/stellarSpp/sppPoolSession.ts`.
 
 Ops validate amounts/recipients even when `pool-ops` is off (`SPP_OPS_NOT_READY` + `amountStroops`).
 `spp_native_pool_readiness()` JSON lists remaining link steps.
+
+Default EAS NDK build stays **derive-only** (`android-jni`). Opt-in full pool:
+`SPP_NATIVE_POOL_OPS=1` (needs full SPP + wasmer NDK; native APK 1.1.0+).
 
 ## ASP leaf
 

@@ -106,14 +106,15 @@ No merchant app, no scanner-by-amount, no DUST — those are out of v1 scope.
 - [x] `@veilpay/expo-spp-native` local Expo module + autolink (npm install verified).
 - [x] Android JNI scaffold (`android-jni` feature, `SppNativeRust`, jniLibs scripts).
 - [ ] cargo-ndk `.so` + dev-client device check (`backend: native`, Rust version string).
-- [ ] Link `sdk/pool` (same as CLI) via NDK/JNI — **not** product WebView / snarkjs.
+- [x] Link `sdk/pool` (same as CLI) via feature `pool-ops` + session FFI — **not** product WebView / snarkjs.
+      Desktop compile OK; device APK with `SPP_NATIVE_POOL_OPS=1` when EAS quota returns.
 - [ ] On-device Android prove bench (desktop ~10s Phase 0).
 
 **Operations (`utils/stellarSpp/sppClient.ts`):**
 - [x] Scaffold + mainnet fail-closed; ops throw `SPP_OPS_NOT_READY` until native poolOps.
-- [ ] `deposit(amount)` → native prove + submit; stash note in `sppNoteStore`.
-- [ ] `withdraw` / `transfer` → same path as CLI; ASP leaf helper first.
-- [ ] ASP membership insert productized (permissionless on current testnet).
+- [x] `deposit` / `transfer` / `withdraw` → `ensurePoolSession` + native prove/submit path (CAP_POOL_OPS).
+- [x] ASP membership insert productized (permissionless on current testnet) — device OK.
+- [ ] Device E2E shield→transfer→unshield with real prove (blocked on native 1.1.0 APK).
 
 **Backend indexer (`jobs/spp-indexer.job.ts`):**
 - [ ] BullMQ worker polling Soroban pool events → maintain a cached Merkle tree so the client can fetch inclusion siblings without re‑scanning the chain. Mirror existing indexer job structure. Persist cursor in the existing `IndexerState`‑style pattern.

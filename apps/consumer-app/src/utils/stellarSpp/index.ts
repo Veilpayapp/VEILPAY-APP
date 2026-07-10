@@ -42,9 +42,18 @@ export {
   sppNativeWithdraw,
   sppNativeEnsureAsp,
   sppNativePoolReadiness,
+  sppNativePoolOpen,
+  sppNativePoolClose,
   type SppNativeOpResult,
   type SppNativeModule,
 } from './sppNativeBridge';
+
+export {
+  ensurePoolSession,
+  closePoolSession,
+  getSppCircuitsDir,
+  SPP_TESTNET_CONTRACT_CONFIG,
+} from './sppPoolSession';
 
 export {
   runShieldTransferUnshield,

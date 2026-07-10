@@ -32,8 +32,18 @@ fi
 APP_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_ROOT="$(cd "$APP_ROOT/../.." && pwd)"
 SPP_NATIVE="$REPO_ROOT/packages/spp-native"
-POSEIDON2="$SPP_NATIVE/vendor/poseidon2"
+# EAS fallback copy (always committed under spp-native).
+POSEIDON2_EAS="$SPP_NATIVE/vendor/poseidon2"
+# Unified Cargo path used by spp-native + sdk/pool (must match Cargo.toml).
+POSEIDON2_SPP="$REPO_ROOT/packages/vendor/spp/poseidon2"
 OUT_JNI="$APP_ROOT/modules/spp-native/android/src/main/jniLibs"
+# Opt-in: build with --features android-jni,pool-ops when SPP_NATIVE_POOL_OPS=1
+# (requires full packages/vendor/spp + wasmer NDK; default stays derive-only).
+POOL_OPS_FEATURES=""
+if [[ "${SPP_NATIVE_POOL_OPS:-}" == "1" ]]; then
+  POOL_OPS_FEATURES=",pool-ops"
+  log "SPP_NATIVE_POOL_OPS=1 — will build with pool-ops (CAP_POOL_OPS)"
+fi
 
 if [[ ! -f "$SPP_NATIVE/Cargo.toml" ]]; then
   log "ERROR: packages/spp-native missing from EAS archive."
@@ -43,9 +53,20 @@ if [[ ! -f "$SPP_NATIVE/Cargo.toml" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$POSEIDON2/Cargo.toml" ]]; then
+if [[ ! -f "$POSEIDON2_EAS/Cargo.toml" ]]; then
   log "ERROR: vendored poseidon2 missing (packages/spp-native/vendor/poseidon2)."
-  log "  expected: $POSEIDON2/Cargo.toml"
+  log "  expected: $POSEIDON2_EAS/Cargo.toml"
+  exit 1
+fi
+
+# Materialize packages/vendor/spp/poseidon2 for Cargo path (submodule may be gitlink-only on EAS).
+if [[ ! -f "$POSEIDON2_SPP/Cargo.toml" ]]; then
+  log "Materializing poseidon2 at packages/vendor/spp/poseidon2 from EAS vendor copy…"
+  mkdir -p "$POSEIDON2_SPP"
+  cp -a "$POSEIDON2_EAS/." "$POSEIDON2_SPP/"
+fi
+if [[ ! -f "$POSEIDON2_SPP/Cargo.toml" ]]; then
+  log "ERROR: could not materialize packages/vendor/spp/poseidon2"
   exit 1
 fi
 
@@ -104,14 +125,14 @@ export ANDROID_NDK_ROOT="$NDK_PATH"
 log "Using NDK: $ANDROID_NDK_HOME"
 
 # ── Build release cdylib with JNI ────────────────────────────────
-log "Building libspp_native.so → $OUT_JNI"
+log "Building libspp_native.so → $OUT_JNI (features: android-jni${POOL_OPS_FEATURES})"
 cd "$SPP_NATIVE"
 cargo ndk \
   -t arm64-v8a \
   -t armeabi-v7a \
   -t x86_64 \
   -o "$OUT_JNI" \
-  -- build --release --features android-jni
+  -- build --release --features "android-jni${POOL_OPS_FEATURES}"
 
 log "Artifacts:"
 find "$OUT_JNI" -name 'libspp_native.so' -print | while read -r f; do

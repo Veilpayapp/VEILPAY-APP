@@ -39,6 +39,8 @@ export type SppNativeExpoModule = {
   ensureAsp(): SppNativeOpResult;
   deriveKeys?(sigHex: string, network: string): SppNativeOpResult;
   poolReadiness?(): SppNativeOpResult;
+  poolOpen?(configJson: string): SppNativeOpResult;
+  poolClose?(): SppNativeOpResult;
 };
 
 let cached: SppNativeExpoModule | null | undefined;

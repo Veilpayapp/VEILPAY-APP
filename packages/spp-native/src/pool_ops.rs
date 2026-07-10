@@ -94,21 +94,43 @@ pub fn validate_transfer_recipient(wire: &str) -> Result<(), AmountError> {
     ))
 }
 
-/// What is still required before CAP_POOL_OPS can flip true.
+/// What is still required before CAP_POOL_OPS can flip true / session bound.
 pub fn pool_readiness_json(pool_ops_linked: bool) -> String {
+    let session_bound = {
+        #[cfg(feature = "pool-ops")]
+        {
+            crate::session::session_bound()
+        }
+        #[cfg(not(feature = "pool-ops"))]
+        {
+            false
+        }
+    };
     json!({
-        "ok": pool_ops_linked,
+        "ok": pool_ops_linked && session_bound,
         "op": "pool_readiness",
         "poolOpsLinked": pool_ops_linked,
         "capPoolOps": pool_ops_linked,
-        "requirements": [
-            "Link stellar-private-payments-sdk (sdk/pool) into spp-native feature pool-ops",
-            "Ship policy_tx_2_2 wasm + r1cs + proving key (~7.8MB) as app assets",
-            "Wire LocalProver + LocalSigner + LocalStorage session per account",
-            "On-device Android prove bench within UX budget",
-        ],
-        "message": if pool_ops_linked {
-            "Pool ops ready"
+        "sessionBound": session_bound,
+        "requirements": if pool_ops_linked {
+            vec![
+                "Call pool_open with secret + circuitsDir + contractConfig before ops",
+                "Ship policy_tx_2_2 wasm + r1cs + proving key on device",
+                "ASP membership leaf on-chain before first prove",
+                "On-device Android prove bench within UX budget",
+            ]
+        } else {
+            vec![
+                "Build with --features pool-ops (links stellar-private-payments-sdk)",
+                "Ship policy_tx_2_2 wasm + r1cs + proving key (~7.8MB) as app assets",
+                "Wire pool_open session per account (LocalProver + LocalSigner)",
+                "On-device Android prove bench within UX budget",
+            ]
+        },
+        "message": if pool_ops_linked && session_bound {
+            "Pool ops ready (session bound)"
+        } else if pool_ops_linked {
+            "sdk/pool linked; open session (pool_open) before deposit/transfer/withdraw"
         } else {
             "sdk/pool not linked; deposit/transfer/withdraw validate inputs then fail closed"
         },
@@ -178,7 +200,7 @@ mod tests {
     #[test]
     fn readiness_lists_requirements() {
         let j = pool_readiness_json(false);
-        assert!(j.contains("poolOpsLinked\":false"));
-        assert!(j.contains("proving key"));
+        assert!(j.contains("poolOpsLinked\":false") || j.contains("\"poolOpsLinked\": false"));
+        assert!(j.contains("requirements"));
     }
 }

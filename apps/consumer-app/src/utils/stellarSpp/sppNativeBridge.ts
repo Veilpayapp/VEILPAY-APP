@@ -39,6 +39,9 @@ export type SppNativeModule = {
     network: string
   ): Promise<SppNativeOpResult> | SppNativeOpResult;
   poolReadiness?(): Promise<SppNativeOpResult> | SppNativeOpResult;
+  /** JSON session config → bind PrivatePool (pool-ops). */
+  poolOpen?(configJson: string): Promise<SppNativeOpResult> | SppNativeOpResult;
+  poolClose?(): Promise<SppNativeOpResult> | SppNativeOpResult;
 };
 
 const notReady = (op: string): SppNativeOpResult => ({
@@ -82,6 +85,8 @@ const JsStub: SppNativeModule = {
     code: 'SPP_OPS_NOT_READY',
     message: 'JS stub: sdk/pool not linked; use native build + feature pool-ops',
   }),
+  poolOpen: () => notReady('pool_open'),
+  poolClose: () => ({ ok: true, op: 'pool_close', message: 'js-stub no-op' }),
 };
 
 function tryLoadExpoNative(): SppNativeModule | null {
@@ -99,6 +104,8 @@ function tryLoadExpoNative(): SppNativeModule | null {
         ensureAsp(): SppNativeOpResult;
         deriveKeys?(sigHex: string, network: string): SppNativeOpResult;
         poolReadiness?(): SppNativeOpResult;
+        poolOpen?(configJson: string): SppNativeOpResult;
+        poolClose?(): SppNativeOpResult;
       };
     };
     const native = mod.getSppNativeExpoModule?.();
@@ -135,6 +142,15 @@ function tryLoadExpoNative(): SppNativeModule | null {
           code: 'SPP_OPS_NOT_READY',
           message: 'poolReadiness not exposed by native module',
         },
+      poolOpen: (configJson) =>
+        native.poolOpen?.(configJson) ?? {
+          ok: false,
+          code: 'SPP_OPS_NOT_READY',
+          op: 'pool_open',
+          message: 'poolOpen not exposed by native module',
+        },
+      poolClose: () =>
+        native.poolClose?.() ?? { ok: true, op: 'pool_close', message: 'no-op' },
     };
   } catch {
     return null;
@@ -207,4 +223,12 @@ export async function sppNativeDeriveKeys(
 
 export async function sppNativePoolReadiness(): Promise<SppNativeOpResult> {
   return asResult(backend.poolReadiness?.(), 'pool_readiness');
+}
+
+export async function sppNativePoolOpen(configJson: string): Promise<SppNativeOpResult> {
+  return asResult(backend.poolOpen?.(configJson), 'pool_open');
+}
+
+export async function sppNativePoolClose(): Promise<SppNativeOpResult> {
+  return asResult(backend.poolClose?.(), 'pool_close');
 }

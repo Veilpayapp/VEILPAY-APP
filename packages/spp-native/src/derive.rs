@@ -8,6 +8,7 @@ use ark_ff::{BigInteger, PrimeField};
 use ark_serialize::CanonicalSerialize;
 use sha2::{Digest, Sha256};
 use x25519_dalek::{PublicKey, StaticSecret};
+
 use zkhash::{
     fields::bn256::FpBN256 as Scalar,
     poseidon2::{

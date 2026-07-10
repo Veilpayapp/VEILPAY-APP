@@ -55,4 +55,9 @@ internal object SppNativeRust {
 
   /** JSON readiness for CAP_POOL_OPS / sdk/pool link */
   @JvmStatic external fun nativePoolReadiness(): String
+
+  /** Bind PrivatePool session (JSON config; never log). */
+  @JvmStatic external fun nativePoolOpen(configJson: String): String
+
+  @JvmStatic external fun nativePoolClose(): String
 }

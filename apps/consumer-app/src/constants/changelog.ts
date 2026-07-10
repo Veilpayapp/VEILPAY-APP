@@ -30,14 +30,13 @@ export interface ReleaseNote {
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
-    version: '1.1.0',
-    build: 12,
+    version: '1.0.1',
+    build: 13,
     date: '2026-07-10',
     highlights: [
-      'Private XLM ASP membership register fixed on Android (no more cryptic Transaction error).',
-      'Smoother privacy mode switch — less bounce on the shield badge and actions.',
-      'Clean gold outline on the Private XLM network card (edge of the card, not a full-screen frame).',
-      'Register ASP membership from Private status when setup still needs on-chain insert.',
+      'Private XLM ASP register fixed — no more “expected a Transaction” error on Android.',
+      'Calmer privacy mode motion (less bounce on the shield badge).',
+      'Gold outline sits on the Private XLM network card edge, not a loose outer frame.',
     ],
   },
   {

@@ -2,7 +2,7 @@
 //!
 //! - `version` / `ping` / `capabilities`
 //! - `derive_keys` — SEP-53 signature → note/enc pubkeys + ASP leaf (Poseidon2)
-//! - deposit/transfer/withdraw stubs until sdk/pool is linked
+//! - `pool_open` / deposit / transfer / withdraw when feature `pool-ops` links sdk/pool
 //!
 //! Product path is native-only — **not** a product WebView of `sdk/web`.
 
@@ -14,6 +14,9 @@ mod android_jni;
 
 mod derive;
 mod pool_ops;
+
+#[cfg(feature = "pool-ops")]
+mod session;
 
 /// Package version string (semver from Cargo).
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -73,20 +76,93 @@ pub extern "C" fn spp_native_ping(input: *const c_char) -> *mut c_char {
     to_c_string(&reply)
 }
 
-/// Shield / deposit — validates amount; prove/submit when `pool-ops` feature linked.
+/// Open pool session (JSON config). Required before deposit/transfer/withdraw when `pool-ops`.
+///
+/// Config camelCase: rpcUrl, networkPassphrase, secretKey, userAddress, poolContractId,
+/// storagePath, circuitsDir, contractConfig (deployments.json body).
+/// Never log the returned or input secret material.
+#[no_mangle]
+pub extern "C" fn spp_native_pool_open(config_json: *const c_char) -> *mut c_char {
+    let raw = c_str_or_empty(config_json);
+    if raw.is_empty() {
+        return to_c_string(&pool_ops::invalid_json(
+            "pool_open",
+            "SPP_INVALID_CONFIG",
+            "config JSON required",
+        ));
+    }
+    #[cfg(feature = "pool-ops")]
+    {
+        return match session::open_session(&raw) {
+            Ok(()) => to_c_string(
+                r#"{"ok":true,"op":"pool_open","message":"session bound"}"#,
+            ),
+            Err(e) => {
+                let code = if e.contains("SPP_POOL_SESSION") {
+                    "SPP_POOL_SESSION_ERROR"
+                } else if e.contains("missing circuit") {
+                    "SPP_CIRCUITS_MISSING"
+                } else if e.contains("secret") {
+                    "SPP_INVALID_CONFIG"
+                } else {
+                    "SPP_POOL_OPEN_FAILED"
+                };
+                to_c_string(&pool_ops::invalid_json("pool_open", code, &e))
+            }
+        };
+    }
+    #[cfg(not(feature = "pool-ops"))]
+    {
+        to_c_string(&pool_ops::invalid_json(
+            "pool_open",
+            "SPP_OPS_NOT_READY",
+            "sdk/pool not linked (build with --features pool-ops)",
+        ))
+    }
+}
+
+/// Close bound pool session (drops prover + sqlite handle).
+#[no_mangle]
+pub extern "C" fn spp_native_pool_close() -> *mut c_char {
+    #[cfg(feature = "pool-ops")]
+    {
+        session::close_session();
+        return to_c_string(r#"{"ok":true,"op":"pool_close"}"#);
+    }
+    #[cfg(not(feature = "pool-ops"))]
+    {
+        to_c_string(r#"{"ok":true,"op":"pool_close","message":"no-op without pool-ops"}"#)
+    }
+}
+
+/// Shield / deposit — validates amount; prove/submit when session bound + `pool-ops`.
 #[no_mangle]
 pub extern "C" fn spp_native_deposit(amount: *const c_char) -> *mut c_char {
     let amount_s = c_str_or_empty(amount);
     match pool_ops::parse_amount_stroops(&amount_s) {
         Ok(stroops) => {
-            if pool_ops_linked() {
-                // Real PrivatePool::deposit lands with feature pool-ops + artifacts.
-                to_c_string(&pool_ops::invalid_json(
-                    "deposit",
-                    "SPP_POOL_SESSION_UNBOUND",
-                    "pool-ops feature on but session not bound in this build",
-                ))
-            } else {
+            #[cfg(feature = "pool-ops")]
+            {
+                return match session::deposit(&amount_s) {
+                    Ok(tx_hash) => to_c_string(&format!(
+                        r#"{{"ok":true,"op":"deposit","txHash":{},"amountStroops":"{}"}}"#,
+                        json_str(&tx_hash),
+                        stroops
+                    )),
+                    Err(e) => {
+                        let code = if e.contains("SPP_POOL_SESSION_UNBOUND") {
+                            "SPP_POOL_SESSION_UNBOUND"
+                        } else if e.contains("ASP membership") {
+                            "SPP_ASP_REQUIRED"
+                        } else {
+                            "SPP_DEPOSIT_FAILED"
+                        };
+                        to_c_string(&pool_ops::invalid_json("deposit", code, &e))
+                    }
+                };
+            }
+            #[cfg(not(feature = "pool-ops"))]
+            {
                 to_c_string(&pool_ops::ops_not_ready_json("deposit", stroops))
             }
         }
@@ -123,14 +199,28 @@ pub extern "C" fn spp_native_transfer(
             &e.0,
         ));
     }
-    if pool_ops_linked() {
-        return to_c_string(&pool_ops::invalid_json(
-            "transfer",
-            "SPP_POOL_SESSION_UNBOUND",
-            "pool-ops feature on but session not bound in this build",
-        ));
+    #[cfg(feature = "pool-ops")]
+    {
+        return match session::transfer(&amount_s, &recipient_s) {
+            Ok(tx_hash) => to_c_string(&format!(
+                r#"{{"ok":true,"op":"transfer","txHash":{},"amountStroops":"{}"}}"#,
+                json_str(&tx_hash),
+                stroops
+            )),
+            Err(e) => {
+                let code = if e.contains("SPP_POOL_SESSION_UNBOUND") {
+                    "SPP_POOL_SESSION_UNBOUND"
+                } else {
+                    "SPP_TRANSFER_FAILED"
+                };
+                to_c_string(&pool_ops::invalid_json("transfer", code, &e))
+            }
+        };
     }
-    to_c_string(&pool_ops::ops_not_ready_json("transfer", stroops))
+    #[cfg(not(feature = "pool-ops"))]
+    {
+        to_c_string(&pool_ops::ops_not_ready_json("transfer", stroops))
+    }
 }
 
 /// Unshield / withdraw — validates amount + optional G… destination.
@@ -155,14 +245,28 @@ pub extern "C" fn spp_native_withdraw(amount: *const c_char, to: *const c_char) 
             "withdraw destination must be a G… address",
         ));
     }
-    if pool_ops_linked() {
-        return to_c_string(&pool_ops::invalid_json(
-            "withdraw",
-            "SPP_POOL_SESSION_UNBOUND",
-            "pool-ops feature on but session not bound in this build",
-        ));
+    #[cfg(feature = "pool-ops")]
+    {
+        return match session::withdraw(&amount_s, &to_s) {
+            Ok(tx_hash) => to_c_string(&format!(
+                r#"{{"ok":true,"op":"withdraw","txHash":{},"amountStroops":"{}"}}"#,
+                json_str(&tx_hash),
+                stroops
+            )),
+            Err(e) => {
+                let code = if e.contains("SPP_POOL_SESSION_UNBOUND") {
+                    "SPP_POOL_SESSION_UNBOUND"
+                } else {
+                    "SPP_WITHDRAW_FAILED"
+                };
+                to_c_string(&pool_ops::invalid_json("withdraw", code, &e))
+            }
+        };
     }
-    to_c_string(&pool_ops::ops_not_ready_json("withdraw", stroops))
+    #[cfg(not(feature = "pool-ops"))]
+    {
+        to_c_string(&pool_ops::ops_not_ready_json("withdraw", stroops))
+    }
 }
 
 /// Ensure ASP — without args returns not-ready for insert; use derive_keys first.
@@ -268,6 +372,9 @@ mod tests {
         let caps = spp_native_capabilities();
         assert_eq!(caps & CAP_PING, CAP_PING);
         assert_eq!(caps & CAP_ASP_LEAF, CAP_ASP_LEAF);
+        #[cfg(feature = "pool-ops")]
+        assert_eq!(caps & CAP_POOL_OPS, CAP_POOL_OPS);
+        #[cfg(not(feature = "pool-ops"))]
         assert_eq!(caps & CAP_POOL_OPS, 0);
     }
 
@@ -289,8 +396,16 @@ mod tests {
         let ptr = spp_native_deposit(amount.as_ptr());
         let s = unsafe { CStr::from_ptr(ptr) }.to_str().unwrap().to_string();
         unsafe { spp_native_string_free(ptr) };
-        assert!(s.contains("SPP_OPS_NOT_READY"), "got {s}");
-        assert!(s.contains("amountStroops"), "got {s}");
+        #[cfg(feature = "pool-ops")]
+        {
+            // Linked but no session: fail closed until pool_open.
+            assert!(s.contains("SPP_POOL_SESSION_UNBOUND"), "got {s}");
+        }
+        #[cfg(not(feature = "pool-ops"))]
+        {
+            assert!(s.contains("SPP_OPS_NOT_READY"), "got {s}");
+            assert!(s.contains("amountStroops"), "got {s}");
+        }
     }
 
     #[test]
@@ -317,8 +432,19 @@ mod tests {
         let ptr = spp_native_pool_readiness();
         let s = unsafe { CStr::from_ptr(ptr) }.to_str().unwrap().to_string();
         unsafe { spp_native_string_free(ptr) };
-        assert!(s.contains("poolOpsLinked\":false") || s.contains("\"poolOpsLinked\": false"));
         assert!(s.contains("requirements"));
+        #[cfg(feature = "pool-ops")]
+        {
+            assert!(
+                s.contains("poolOpsLinked\":true") || s.contains("\"poolOpsLinked\": true"),
+                "got {s}"
+            );
+            assert!(s.contains("sessionBound"), "got {s}");
+        }
+        #[cfg(not(feature = "pool-ops"))]
+        {
+            assert!(s.contains("poolOpsLinked\":false") || s.contains("\"poolOpsLinked\": false"));
+        }
     }
 
     #[test]

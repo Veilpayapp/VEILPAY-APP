@@ -8,7 +8,7 @@ Local **Expo Module** that bridges React Native to Stellar Private Payments nati
 |-------|------|
 | **1b (this module)** | Kotlin/Swift stubs: `version`, `ping`, `capabilities`, op JSON stubs |
 | **1c (NDK)** | `SppNativeRust` JNI + `jniLibs/`; EAS `eas-build-post-install` runs cargo-ndk |
-| **1d (next)** | Link `sdk/pool` prove/submit (`CAP_POOL_OPS`) |
+| **1d** | `sdk/pool` path-linked via feature `pool-ops` + `pool_open` session; device APK pending EAS |
 | Product | Native only — **no** WebView of SPP `sdk/web` |
 
 ## Autolinking

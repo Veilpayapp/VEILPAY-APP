@@ -107,6 +107,22 @@ export function createMockPoolBackend(options?: {
             op: 'derive_keys',
             message: 'mock no derive',
           },
+    poolOpen: async () =>
+      poolOps
+        ? { ok: true, op: 'pool_open', message: 'mock session bound' }
+        : {
+            ok: false,
+            code: 'SPP_OPS_NOT_READY',
+            op: 'pool_open',
+            message: 'mock poolOps false',
+          },
+    poolClose: async () => ({ ok: true, op: 'pool_close' }),
+    poolReadiness: async () => ({
+      ok: poolOps,
+      op: 'pool_readiness',
+      code: poolOps ? undefined : 'SPP_OPS_NOT_READY',
+      message: poolOps ? 'mock ready' : 'mock not ready',
+    }),
   };
 }
 

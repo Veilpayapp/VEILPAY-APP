@@ -1,0 +1,4 @@
+# Staged from scripts/stage-circuit-assets.* (~14MB) — do not commit binaries
+policy_tx_2_2_proving_key.bin
+policy_tx_2_2.wasm
+policy_tx_2_2.r1cs

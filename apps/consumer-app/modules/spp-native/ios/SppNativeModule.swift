@@ -64,6 +64,24 @@ public class SppNativeModule: Module {
           "iOS staticlib link pending (sigLen=\(sigHex.count) network=\(network))."
       ]
     }
+
+    Function("poolReadiness") { () -> [String: Any] in
+      return [
+        "ok": false,
+        "op": "pool_readiness",
+        "poolOpsLinked": false,
+        "capPoolOps": false,
+        "message": "iOS pool-ops staticlib not linked yet",
+      ]
+    }
+
+    Function("poolOpen") { (_configJson: String) -> [String: Any] in
+      return self.notReady(op: "pool_open", detail: "iOS pool-ops pending")
+    }
+
+    Function("poolClose") { () -> [String: Any] in
+      return ["ok": true, "op": "pool_close", "message": "no-op"]
+    }
   }
 
   private func notReady(op: String, detail: String) -> [String: Any] {

@@ -44,6 +44,16 @@ jest.mock('../sppOnboard', () => {
   };
 });
 
+// Real pool_open needs mnemonic + circuits; unit E2E only tests note lifecycle.
+jest.mock('../sppPoolSession', () => ({
+  ensurePoolSession: jest.fn(async () => ({
+    ok: true,
+    op: 'pool_open',
+    message: 'mock session',
+  })),
+  closePoolSession: jest.fn(async () => ({ ok: true, op: 'pool_close' })),
+}));
+
 jest.mock('../../../stores/sppAccountStore', () => ({
   getSppAccount: jest.fn(async () => ({
     chainKey: 'stellar-testnet',

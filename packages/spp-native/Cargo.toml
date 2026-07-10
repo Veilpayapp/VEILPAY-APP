@@ -3,7 +3,7 @@ name = "spp-native"
 version = "0.1.0"
 edition = "2021"
 publish = false
-description = "VeilPay native FFI for Stellar Private Payments (derive + op stubs)"
+description = "VeilPay native FFI for Stellar Private Payments (derive + pool ops)"
 license = "Apache-2.0"
 
 [lib]
@@ -16,9 +16,11 @@ default = ["derive-keys"]
 android-jni = ["dep:jni"]
 # Poseidon2 key derive + ASP leaf (matches SPP CLI / sdk/prover).
 derive-keys = []
-# Flip CAP_POOL_OPS when stellar-private-payments-sdk is path-linked (Phase 1d).
-# Not enabled in default/EAS NDK builds until sdk/pool + circuit assets ship.
-pool-ops = []
+# Link stellar-private-payments-sdk (sdk/pool) for real prove/submit.
+# Desktop: cargo test --features pool-ops
+# Requires packages/vendor/spp checked out (or EAS hook materializing poseidon2 + sdk).
+# Android NDK: enable with android-jni once wasmer/ark-circom cross-compile is green.
+pool-ops = ["dep:stellar-private-payments-sdk", "dep:parking_lot"]
 
 [dependencies]
 jni = { version = "0.21", optional = true, default-features = false }
@@ -28,11 +30,16 @@ ark-ff = { version = "0.6.0", default-features = false }
 ark-serialize = { version = "0.6.0", default-features = false }
 sha2 = "0.10"
 x25519-dalek = { version = "2.0", default-features = false, features = ["static_secrets"] }
-# Vendored from packages/vendor/spp/poseidon2 so EAS archive is self-contained
-# (parent repo only has a gitlink for the SPP submodule; git upload omits it).
-zkhash = { path = "vendor/poseidon2" }
+# Single zkhash path (must match sdk/pool workspace) — avoids lockfile collision.
+# EAS without submodule: eas-hooks copy vendor/poseidon2 → packages/vendor/spp/poseidon2.
+# Offline fallback copy kept at packages/spp-native/vendor/poseidon2 for the hook.
+zkhash = { path = "../vendor/spp/poseidon2" }
 num-bigint = "0.4"
+serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+parking_lot = { version = "0.12", optional = true }
+# Same as CLI: sdk/pool blocking PrivatePool
+stellar-private-payments-sdk = { path = "../vendor/spp/sdk/pool", optional = true }
 
 [profile.release]
 lto = true

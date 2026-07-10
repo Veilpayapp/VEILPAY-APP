@@ -131,6 +131,22 @@ class SppNativeModule : Module() {
         )
       }
     }
+
+    Function("poolOpen") { configJson: String ->
+      if (SppNativeRust.loaded) {
+        jsonResult(SppNativeRust.nativePoolOpen(configJson))
+      } else {
+        notReady("pool_open", "libspp_native.so not loaded")
+      }
+    }
+
+    Function("poolClose") {
+      if (SppNativeRust.loaded) {
+        jsonResult(SppNativeRust.nativePoolClose())
+      } else {
+        mapOf("ok" to true, "op" to "pool_close", "message" to "no-op without .so")
+      }
+    }
   }
 
   private fun notReady(op: String, detail: String): Map<String, Any?> {

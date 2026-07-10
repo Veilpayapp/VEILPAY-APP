@@ -227,6 +227,12 @@ export async function deposit(
     throwFromNative(await sppNativeDeposit(amount), 'deposit');
   }
 
+  const { ensurePoolSession } = await import('./sppPoolSession');
+  const opened = await ensurePoolSession(chainKey, ownerAddress);
+  if (!opened.ok) {
+    throwFromNative(opened, 'pool_open');
+  }
+
   const result = await sppNativeDeposit(amount);
   if (!result.ok || !result.txHash) {
     throwFromNative(result, 'deposit');
@@ -326,6 +332,12 @@ export async function transfer(
     throwFromNative(await sppNativeTransfer(amount, recipientWire), 'transfer');
   }
 
+  const { ensurePoolSession } = await import('./sppPoolSession');
+  const opened = await ensurePoolSession(chainKey, ownerAddress);
+  if (!opened.ok) {
+    throwFromNative(opened, 'pool_open');
+  }
+
   const result = await sppNativeTransfer(amount, recipientWire);
   if (!result.ok || !result.txHash) {
     throwFromNative(result, 'transfer');
@@ -360,6 +372,12 @@ export async function withdraw(
   const caps = sppNativeCapabilities();
   if (!caps.poolOps) {
     throwFromNative(await sppNativeWithdraw(amount, recipient), 'withdraw');
+  }
+
+  const { ensurePoolSession } = await import('./sppPoolSession');
+  const opened = await ensurePoolSession(chainKey, ownerAddress);
+  if (!opened.ok) {
+    throwFromNative(opened, 'pool_open');
   }
 
   const result = await sppNativeWithdraw(amount, recipient);

@@ -28,6 +28,12 @@ foreach ($t in $targets) {
   rustup target add $t.triple 2>$null
 }
 
+$features = "android-jni"
+if ($env:SPP_NATIVE_POOL_OPS -eq "1") {
+  $features = "android-jni,pool-ops"
+  Write-Host "SPP_NATIVE_POOL_OPS=1 — building with pool-ops (CAP_POOL_OPS)"
+}
+
 Push-Location $Root
 try {
   cargo ndk `
@@ -35,7 +41,7 @@ try {
     -t armeabi-v7a `
     -t x86_64 `
     -o $OutJni `
-    -- build --release --features android-jni
+    -- build --release --features $features
   Write-Host "OK: libs under $OutJni"
   Get-ChildItem -Recurse $OutJni -Filter "*.so" | ForEach-Object { Write-Host "  $($_.FullName)" }
 } finally {

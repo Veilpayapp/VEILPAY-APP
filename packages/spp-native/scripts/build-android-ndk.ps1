@@ -28,11 +28,14 @@ foreach ($t in $targets) {
   rustup target add $t.triple 2>$null
 }
 
+# Default stays derive/ASP only (OTA-safe). Full prove: SPP_NATIVE_POOL_OPS=1
+# Host toolchain should be MSVC on Windows (dlltool/mingw breaks aws-lc host deps).
 $features = "android-jni"
 if ($env:SPP_NATIVE_POOL_OPS -eq "1") {
   $features = "android-jni,pool-ops"
-  Write-Host "SPP_NATIVE_POOL_OPS=1 — building with pool-ops (CAP_POOL_OPS)"
+  Write-Host "SPP_NATIVE_POOL_OPS=1 - building CAP_POOL_OPS (sdk/pool + wasmer)"
 }
+
 
 Push-Location $Root
 try {

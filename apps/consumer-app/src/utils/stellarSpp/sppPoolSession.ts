@@ -20,6 +20,7 @@ import {
   sppNativePoolOpen,
   type SppNativeOpResult,
 } from './sppNativeBridge';
+import { signSppKeyDerivationMessage } from './sppOnboard';
 
 const STELLAR_DERIVATION_PATH = "m/44'/148'/0'";
 
@@ -156,6 +157,9 @@ export async function ensurePoolSession(
   const circuitsDir = options?.circuitsDir ?? getSppCircuitsDir();
   const storagePath = options?.storagePath ?? getSppWalletDbPath(ownerAddress);
 
+  // First open seeds SDK SQLite privacy keys (same derive as ASP leaf / CLI onboard).
+  const { signatureHex } = await signSppKeyDerivationMessage();
+
   const openConfig = {
     rpcUrl: config.sorobanRpcUrl,
     networkPassphrase: config.networkPassphrase,
@@ -165,6 +169,9 @@ export async function ensurePoolSession(
     storagePath,
     circuitsDir,
     contractConfig: contractConfigFor(config),
+    derivationSigHex: signatureHex,
+    network: config.network,
+    acceptDisclaimer: true,
   };
 
   return sppNativePoolOpen(JSON.stringify(openConfig));

@@ -13,7 +13,8 @@ export interface TransactionRecord {
   timestamp: number;
   status: TransactionStatus;
   hash: string;
-  privacyLevel?: 'standard' | 'max';
+  privacyLevel?: 'standard' | 'stealth' | 'max' | 'private';
+
   fee?: string;
   network?: string;
 }

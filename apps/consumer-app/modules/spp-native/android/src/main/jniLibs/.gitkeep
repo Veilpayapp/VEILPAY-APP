@@ -1,0 +1,5 @@
+# Place cargo-ndk outputs here:
+#   arm64-v8a/libspp_native.so
+#   armeabi-v7a/libspp_native.so
+#   x86_64/libspp_native.so
+# See packages/spp-native/README.md § Android NDK

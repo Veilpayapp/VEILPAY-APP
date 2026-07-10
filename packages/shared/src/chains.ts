@@ -1,5 +1,19 @@
 export type ChainType = "evm" | "svm" | "mvm" | "xlm";
 
+/**
+ * Optional Stellar Private Payments (SPP) contract set for a chain.
+ * Absent / undefined = SPP disabled (mainnet fail-closed until audit/ceremony).
+ * Consumer app also mirrors these IDs in `apps/consumer-app/src/constants/spp.ts`.
+ */
+export interface SppChainConfig {
+  poolId: string;
+  verifierId: string;
+  aspMembershipId: string;
+  aspNonMembershipId: string;
+  registryId: string;
+  sorobanRpcUrl?: string;
+}
+
 export interface ChainConfig {
   key: string;
   name: string;
@@ -12,6 +26,8 @@ export interface ChainConfig {
     symbol: string;
     decimals: number;
   };
+  /** Present only when SPP is product-enabled for this chain (testnet today). */
+  spp?: SppChainConfig;
 }
 
 export const SUPPORTED_CHAINS: ChainConfig[] = [
@@ -96,6 +112,7 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
     rpcUrl: "https://horizon.stellar.org",
     explorerUrl: "https://stellar.expert/explorer/public",
     nativeCurrency: { name: "Stellar Lumens", symbol: "XLM", decimals: 7 },
+    // Mainnet: no `spp` — fail-closed until audit + ceremony.
   },
   // Testnet chains for development
   {
@@ -115,6 +132,23 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
     rpcUrl: "https://api.devnet.solana.com",
     explorerUrl: "https://explorer.solana.com",
     nativeCurrency: { name: "Solana", symbol: "SOL", decimals: 9 },
+  },
+  {
+    key: "stellar-testnet",
+    name: "Stellar Testnet",
+    type: "xlm",
+    chainId: null,
+    rpcUrl: "https://horizon-testnet.stellar.org",
+    explorerUrl: "https://stellar.expert/explorer/testnet",
+    nativeCurrency: { name: "Stellar Lumens", symbol: "XLM", decimals: 7 },
+    spp: {
+      poolId: "CCR7KZOFBDLS3BR6X5YUR4WP7YL4VZIWHXXNFCXTZPRLRODK5U4P4ESH",
+      verifierId: "CCKNCZXDGM7Z7EHL7PVQEYRDK636TZJIDODO5TSAS5BME2JYGMFR3MU3",
+      aspMembershipId: "CDSJXWV5JITIQLXNM4AEI53RY2UQLOQBCG6WKYCFPWS5AHBAD3FWAVNH",
+      aspNonMembershipId: "CBG3BT6KHJM3UQGSUP2GHPQE5FLPEYBFVF47DCDHH6UOYQ6KDT5URJTI",
+      registryId: "CB3IAFWZPU5H5MQ4NEMQCWLZJ6PAYZWLAA4DZIRZZCWXSI2WV6C7L556",
+      sorobanRpcUrl: "https://soroban-testnet.stellar.org",
+    },
   },
 ];
 

@@ -40,13 +40,30 @@ import { useBalance } from "../hooks/useBalance";
 import { useMarketData } from "../hooks/useMarketData";
 import { useOnramp } from "../hooks/useOnramp";
 import { isFiatGatewayOrderForAddress } from "../utils/fiatGateway";
-import Animated, { FadeInDown, useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, interpolate, Extrapolation } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  LinearTransition,
+  FadeInDown,
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
+} from "react-native-reanimated";
 import { MotiView } from "moti";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 import type { RootStackParamList } from "../navigation/AppNavigator";
 import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "../stores/settingsStore";
+import {
+  getPrivacyAssetById,
+  getPrivacyAssetsForChain,
+  canActivatePrivacyAsset,
+} from "../constants/privacyAssets";
+import { getLocalPrivateBalance } from "../utils/stellarSpp";
+import type { PrivacyAssetListItem } from "../components/dashboard/TokenAssetsList";
 
 const TRANSAK_OUTCOME_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -147,12 +164,28 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
     }))
   );
 
-  const { nativeCurrency, setNativeCurrency } = useSettingsStore(
+  const {
+    nativeCurrency,
+    setNativeCurrency,
+    selectedPrivacyAssetId,
+    setSelectedPrivacyAssetId,
+  } = useSettingsStore(
     useShallow((state) => ({
       nativeCurrency: state.nativeCurrency,
       setNativeCurrency: state.setNativeCurrency,
+      selectedPrivacyAssetId: state.selectedPrivacyAssetId,
+      setSelectedPrivacyAssetId: state.setSelectedPrivacyAssetId,
     }))
   );
+
+  const [privateBalance, setPrivateBalance] = useState('0');
+  const [privateBalanceLoading, setPrivateBalanceLoading] = useState(false);
+
+  const privacyAsset = useMemo(
+    () => getPrivacyAssetById(selectedPrivacyAssetId),
+    [selectedPrivacyAssetId]
+  );
+  const privacyMode = !!privacyAsset && canActivatePrivacyAsset(privacyAsset);
 
   const { checkOrderStatus } = useOnramp();
 
@@ -166,9 +199,38 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
     fiatRate,
   } = useBalance();
 
-  const activeMarketSymbol = activeChain?.symbol?.toUpperCase() || "ETH";
+  const activeMarketSymbol = (
+    privacyMode ? privacyAsset?.quoteSymbol : activeChain?.symbol
+  )?.toUpperCase() || "ETH";
   const { getQuote: getMarketQuote, refresh: refreshMarketData } = useMarketData([activeMarketSymbol]);
   const marketQuote = getMarketQuote(activeMarketSymbol);
+
+  const refreshPrivateBalance = useCallback(async () => {
+    if (!privacyMode || !privacyAsset || !address) {
+      setPrivateBalance('0');
+      return;
+    }
+    setPrivateBalanceLoading(true);
+    try {
+      const { amount } = await getLocalPrivateBalance(privacyAsset.chainKey, address);
+      setPrivateBalance(amount);
+    } finally {
+      setPrivateBalanceLoading(false);
+    }
+  }, [address, privacyAsset, privacyMode]);
+
+  useEffect(() => {
+    void refreshPrivateBalance();
+  }, [refreshPrivateBalance]);
+
+  // If user left the pool's chain, clear privacy home mode (keep selection only when chain matches).
+  useEffect(() => {
+    if (!selectedPrivacyAssetId) return;
+    const asset = getPrivacyAssetById(selectedPrivacyAssetId);
+    if (asset && activeChain?.key && asset.chainKey !== activeChain.key) {
+      setSelectedPrivacyAssetId(null);
+    }
+  }, [activeChain?.key, selectedPrivacyAssetId, setSelectedPrivacyAssetId]);
 
   const toast = useToast();
 
@@ -209,12 +271,17 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
     try {
       // Silent balance refresh: the RefreshControl spinner already signals
       // activity, so don't also flash the balance-card skeleton.
-      await Promise.all([refreshMarketData(), refreshBalance({ silent: true }), refreshTransactions()]);
+      await Promise.all([
+        refreshMarketData(),
+        refreshBalance({ silent: true }),
+        refreshTransactions(),
+        refreshPrivateBalance(),
+      ]);
     } catch (error) {
       console.warn("Failed to refresh:", error);
     }
     setRefreshing(false);
-  }, [refreshBalance, refreshTransactions, refreshMarketData]);
+  }, [refreshBalance, refreshTransactions, refreshMarketData, refreshPrivateBalance]);
 
   // NOTE: This must be a real <RefreshControl> element, NOT a custom wrapper
   // component. On Android, ScrollView.render() does
@@ -236,19 +303,96 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
 
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected";
 
+  const navigatePrivateSend = useCallback(
+    (mode: 'shield' | 'transfer' | 'unshield') => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      if (!privacyAsset || !canActivatePrivacyAsset(privacyAsset)) {
+        toast.show('Private XLM is not available on this network', 'info');
+        return;
+      }
+      navigation.navigate(SCREENS.SEND_PAYMENT, {
+        mode,
+        forcePrivate: true,
+        privacyAssetId: privacyAsset.id,
+        lockMode: true,
+      });
+    },
+    [navigation, privacyAsset, toast]
+  );
+
   const handleSend = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    if (privacyMode && privacyAsset) {
+      navigatePrivateSend('transfer');
+      return;
+    }
     if (activeChain?.type !== 'evm' && activeChain?.type !== 'svm' && activeChain?.type !== 'xlm') {
       toast.show(`Send is not yet available for ${activeChain?.name || 'this chain'}. Coming soon!`, 'info');
       return;
     }
     navigation.navigate(SCREENS.SEND_PAYMENT, {});
-  }, [activeChain, navigation, toast]);
+  }, [activeChain, navigation, navigatePrivateSend, privacyAsset, privacyMode, toast]);
 
   const handleReceive = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     navigation.navigate(SCREENS.RECEIVE_QR);
   }, [navigation]);
+
+  const handleSelectPrivacyAsset = useCallback(
+    (id: string) => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      const asset = getPrivacyAssetById(id);
+      if (!asset || !canActivatePrivacyAsset(asset)) {
+        toast.show(asset?.disabledReason || 'Privacy asset not available', 'info');
+        return;
+      }
+      // Ensure wallet network matches the pool chain.
+      if (activeChain?.key !== asset.chainKey) {
+        const chain = SUPPORTED_CHAINS.find((c) => c.key === asset.chainKey);
+        if (chain) {
+          setActiveChain(chain);
+          toast.show(`Switched to ${chain.name}`, 'success');
+        }
+      }
+      setSelectedPrivacyAssetId(id);
+      toast.show(`${asset.name} selected`, 'success');
+
+      // Privacy setup is part of selecting the token — not a Settings detour.
+      if (asset.protocol === 'spp' && address) {
+        void import('../utils/stellarSpp')
+          .then(({ ensureSppAccountReady }) =>
+            ensureSppAccountReady(asset.chainKey, address)
+          )
+          .catch(() => {
+            /* non-blocking; shield path retries */
+          });
+      }
+    },
+    [activeChain?.key, address, setActiveChain, setSelectedPrivacyAssetId, toast]
+  );
+
+  const handleExitPrivacyMode = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    setSelectedPrivacyAssetId(null);
+    toast.show('Showing public balance', 'info');
+  }, [setSelectedPrivacyAssetId, toast]);
+
+  const privacyListItems: PrivacyAssetListItem[] = useMemo(() => {
+    const catalog = getPrivacyAssetsForChain(activeChain?.key);
+    return catalog.map((a) => ({
+      id: a.id,
+      name: a.name,
+      symbol: a.symbol,
+      // Show local note total when this asset is active; otherwise placeholder
+      // until selection (avoids N parallel SecureStore reads on every render).
+      balance: selectedPrivacyAssetId === a.id ? privateBalance || '0' : a.enabled ? '···' : '0',
+      subtitle: a.subtitle,
+      icon: a.icon,
+      enabled: canActivatePrivacyAsset(a),
+      selected: selectedPrivacyAssetId === a.id,
+      disabledReason: a.disabledReason,
+    }));
+  }, [activeChain?.key, privateBalance, selectedPrivacyAssetId]);
 
   const handleScanQR = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -351,9 +495,15 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
     }
   };
 
-  // Display values
-  const displayBalance = balanceUsd || "0.00";
-  const displayCrypto = balance || "0.000";
+  // Display values — privacy mode uses local shielded notes (fiat via quote price).
+  const publicDisplayBalance = balanceUsd || "0.00";
+  const publicDisplayCrypto = balance || "0.000";
+  const privateFiat =
+    marketQuote?.price != null
+      ? (parseFloat(privateBalance || '0') * marketQuote.price * (fiatRate || 1)).toFixed(2)
+      : '0.00';
+  const displayBalance = privacyMode ? privateFiat : publicDisplayBalance;
+  const displayCrypto = privacyMode ? privateBalance || '0' : publicDisplayCrypto;
   const displayTransactions = transactions.length > 0 ? transactions : [];
   const visibleTransakOrder = latestTransakOrder?.walletAddress === address ? latestTransakOrder : null;
   const visibleOnrampOrder = isFiatGatewayOrderForAddress(latestOnrampOrder, address) ? latestOnrampOrder : null;
@@ -472,28 +622,41 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
           scrollEventThrottle={16}
           refreshControl={refreshControlEl}
         >
-          {/* Chain Selector Dropdown */}
+          {/* Chain Selector Dropdown — keyed crossfade public ↔ private */}
           <MotiView
-            from={{ opacity: 0, translateY: 20 }}
+            key={privacyMode ? 'chain-private' : 'chain-public'}
+            from={{ opacity: 0, translateY: 12 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "spring", stiffness: 250, damping: 20, delay: getDelay(100) }}
+            transition={{ type: "spring", stiffness: 280, damping: 22, delay: getDelay(100) }}
           >
+            <Animated.View
+              entering={FadeIn.duration(220)}
+              exiting={FadeOut.duration(160)}
+              layout={LinearTransition.springify().damping(20)}
+            >
             <PressableOpacity
               onPress={() => setShowChainSelector(true)}
             activeOpacity={0.9}
-            style={styles.chainSelectorWrapper}
+            style={[
+              styles.chainSelectorWrapper,
+              privacyMode && { borderColor: colors.accent, borderWidth: 1 },
+            ]}
             accessibilityRole="button"
-            accessibilityLabel={`Network: ${activeChain?.name || "Ethereum"}`}
+            accessibilityLabel={`Network: ${activeChain?.name || "Ethereum"}${privacyMode ? ', private mode' : ''}`}
             accessibilityHint="Opens network selector to change blockchain network"
           >
             <SovereignCard backgroundColor={colors.bgSecondary} padding={0}>
               <View style={styles.chainSelectorContent}>
                 <View style={styles.chainSelectorLeft}>
                   <Text style={styles.chainLabel}>
-                    [ {activeChain?.symbol || "ETH"} • {activeChain?.isTestnet ? "TESTNET" : "MAINNET"} ]
+                    [ {privacyMode ? privacyAsset?.symbol || 'pXLM' : activeChain?.symbol || "ETH"} •{" "}
+                    {activeChain?.isTestnet ? "TESTNET" : "MAINNET"}
+                    {privacyMode ? " • PRIVATE" : ""} ]
                   </Text>
                   <Text style={styles.chainName}>
-                    {activeChain?.name?.toUpperCase() || "ETHEREUM"}
+                    {privacyMode
+                      ? (privacyAsset?.name || "PRIVATE XLM").toUpperCase()
+                      : activeChain?.name?.toUpperCase() || "ETHEREUM"}
                   </Text>
                 </View>
                 <View style={styles.chainSelectorRight}>
@@ -502,34 +665,48 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
               </View>
             </SovereignCard>
             </PressableOpacity>
+            </Animated.View>
           </MotiView>
 
-          {/* Balance Card */}
+          {/* Balance Card — privacy mode morph (~450–600ms plan) */}
           <MotiView
-            from={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "spring", stiffness: 250, damping: 20, delay: getDelay(150) }}
+            key={privacyMode ? 'balance-private' : 'balance-public'}
+            from={{ opacity: 0, translateY: 16, scale: 0.98 }}
+            animate={{ opacity: 1, translateY: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22, delay: getDelay(150) }}
             style={{ zIndex: -1 }} // Parallax pushed to background
           >
-            <Animated.View style={balanceAnimatedStyle}>
+            <Animated.View
+              style={balanceAnimatedStyle}
+              entering={FadeIn.duration(280)}
+              layout={LinearTransition.duration(320)}
+            >
               <DashboardBalanceCard
-                isLoadingBalance={isLoadingBalance}
+                isLoadingBalance={privacyMode ? privateBalanceLoading : isLoadingBalance}
                 balanceVisible={balanceVisible}
                 onToggleVisibility={() => setBalanceVisible(!balanceVisible)}
                 displayBalance={displayBalance}
                 displayCrypto={displayCrypto}
                 activeChain={activeChain}
                 marketQuote={marketQuote}
+                privacyMode={privacyMode}
+                cryptoSymbol={privacyMode ? privacyAsset?.symbol : activeChain?.symbol}
+                privacyFeatures={privacyMode ? privacyAsset?.features : undefined}
               />
             </Animated.View>
           </MotiView>
 
-          {/* Action Row */}
+          {/* Action Row — SEND/RECEIVE ↔ SHIELD/TRANSFER/UNSHIELD */}
           <MotiView
-            from={{ opacity: 0, translateY: 20 }}
+            key={privacyMode ? 'actions-private' : 'actions-public'}
+            from={{ opacity: 0, translateY: 14 }}
             animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "spring", stiffness: 250, damping: 20, delay: getDelay(200) }}
+            transition={{ type: "spring", stiffness: 270, damping: 22, delay: getDelay(200) }}
           >
+            <Animated.View
+              entering={FadeIn.duration(240)}
+              layout={LinearTransition.springify().damping(18)}
+            >
             <DashboardQuickActions
               activeChain={activeChain}
               onSend={handleSend}
@@ -537,7 +714,13 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
               onScan={handleScanQR}
               onSwap={handleSwap}
               onFaucet={handleFaucet}
+              privacyMode={privacyMode}
+              onShield={() => navigatePrivateSend('shield')}
+              onPrivateTransfer={() => navigatePrivateSend('transfer')}
+              onUnshield={() => navigatePrivateSend('unshield')}
+              onExitPrivacy={handleExitPrivacyMode}
             />
+            </Animated.View>
           </MotiView>
 
           {/* Fiat Gateway Card */}
@@ -568,13 +751,20 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
               isLoading={isLoadingBalance}
               nativeBalance={nativeBalance}
               tokenBalances={tokenBalances}
-              onSend={handleSend}
+              onSend={(symbol) => {
+                setSelectedPrivacyAssetId(null);
+                handleSend();
+              }}
               onTokenPress={(symbol) => {
+                setSelectedPrivacyAssetId(null);
                 if (activeChain?.key) {
                   navigation.navigate(SCREENS.TOKEN_DETAIL, { tokenSymbol: symbol, chainKey: activeChain.key });
                 }
               }}
               fiatRate={fiatRate}
+              privacyAssets={privacyListItems}
+              selectedPrivacyAssetId={selectedPrivacyAssetId}
+              onPrivacyAssetPress={handleSelectPrivacyAsset}
             />
           </MotiView>
 

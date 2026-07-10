@@ -1,0 +1,40 @@
+[package]
+name = "spp-native"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "VeilPay native FFI for Stellar Private Payments (derive + op stubs)"
+license = "Apache-2.0"
+
+[lib]
+name = "spp_native"
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[features]
+default = ["derive-keys"]
+# Enable when building libspp_native.so for Android (cargo-ndk). Pulls in jni.
+android-jni = ["dep:jni"]
+# Poseidon2 key derive + ASP leaf (matches SPP CLI / sdk/prover).
+derive-keys = []
+# Flip CAP_POOL_OPS when stellar-private-payments-sdk is path-linked (Phase 1d).
+# Not enabled in default/EAS NDK builds until sdk/pool + circuit assets ship.
+pool-ops = []
+
+[dependencies]
+jni = { version = "0.21", optional = true, default-features = false }
+# Key derive / ASP leaf (aligned with packages/vendor/spp sdk/prover)
+ark-bn254 = { version = "0.6.0", default-features = false, features = ["curve"] }
+ark-ff = { version = "0.6.0", default-features = false }
+ark-serialize = { version = "0.6.0", default-features = false }
+sha2 = "0.10"
+x25519-dalek = { version = "2.0", default-features = false, features = ["static_secrets"] }
+# Vendored from packages/vendor/spp/poseidon2 so EAS archive is self-contained
+# (parent repo only has a gitlink for the SPP submodule; git upload omits it).
+zkhash = { path = "vendor/poseidon2" }
+num-bigint = "0.4"
+serde_json = "1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"

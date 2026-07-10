@@ -26,6 +26,9 @@
     "storybook:android": "cross-env EXPO_PUBLIC_STORYBOOK_ENABLED=true set NODE_ENV=development&& expo run:android",
     "eas:inject-secrets": "node eas-hooks/inject-secrets.js",
     "eas-build-pre-install": "node eas-hooks/inject-secrets.js",
+    "eas-build-post-install": "node eas-hooks/build-spp-native-android.js",
+    "eas:preview:android": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas build --platform android --profile preview",
+    "eas:preview:android:ci": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas build --platform android --profile preview --non-interactive",
     "ota:prod": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas update --branch production --environment production",
     "ota:preview": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas update --branch preview --environment preview",
     "ota:dev": "cross-env NODE_OPTIONS=--max-old-space-size=8192 doppler run --project veilpay --config prd -- npx eas update --branch development --environment development"
@@ -52,6 +55,7 @@
     "@storybook/addon-ondevice-controls": "^10.4.4",
     "@storybook/react-native": "^10.4.4",
     "@storybook/react-native-ui-lite": "^10.4.4",
+    "@veilpay/expo-spp-native": "file:modules/spp-native",
     "@walletconnect/sign-client": "^2.23.9",
     "@web3icons/core": "4.0.51",
     "babel-loader": "^8.4.1",
@@ -120,3 +124,4 @@
   },
   "private": true
 }
+

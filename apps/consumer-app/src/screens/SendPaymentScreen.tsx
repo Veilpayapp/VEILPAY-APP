@@ -34,9 +34,16 @@ import type { PaymentToken } from '../types/tokens';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/AppNavigator';
+import {
+  canActivatePrivacyAsset,
+  getPrivacyAssetById,
+  privacyAssetToPaymentToken,
+} from '../constants/privacyAssets';
+import { getLocalPrivateBalance } from '../utils/stellarSpp';
 
 type SendPaymentScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SendPayment'>;
 type SendPaymentScreenRoute = RouteProp<RootStackParamList, 'SendPayment'>;
+type SendMode = 'public' | 'shield' | 'transfer' | 'unshield';
 
 interface SendPaymentScreenProps {
   navigation: SendPaymentScreenNavigationProp;
@@ -50,6 +57,11 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
   // Pre-filled data from QR scan (if any). Read once at mount; used to seed the form.
   const scannedAddress = route?.params?.address || '';
   const scannedAmount = route?.params?.amount || '';
+  const routeMode = route?.params?.mode;
+  const routeForcePrivate = route?.params?.forcePrivate;
+  const routePrivacyAssetId = route?.params?.privacyAssetId;
+  const routeLockMode = route?.params?.lockMode === true;
+
   const [recipientAddress, setRecipientAddress] = useState(scannedAddress);
   const [amount, setAmount] = useState(scannedAmount);
   const [memo, setMemo] = useState('');
@@ -58,25 +70,68 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
   const [selectedPercent, setSelectedPercent] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [isAddressBookVisible, setIsAddressBookVisible] = useState(false);
+  const [sendMode, setSendMode] = useState<SendMode>(
+    routeMode === 'shield' || routeMode === 'transfer' || routeMode === 'unshield'
+      ? routeMode
+      : 'public'
+  );
+  const [privateBalance, setPrivateBalance] = useState('0');
   const lastContinueAttemptRef = useRef(0);
 
-  const { activeChain, balance } = useWalletStore();
-  const { nativeCurrency } = useSettingsStore();
+  const { activeChain, balance, address } = useWalletStore();
+  const { nativeCurrency, selectedPrivacyAssetId } = useSettingsStore();
   const toast = useToast();
   const { authenticate } = useBiometrics();
+
+  const privacyAssetId =
+    routePrivacyAssetId ||
+    selectedPrivacyAssetId ||
+    (activeChain?.key === 'stellar-testnet' ? 'spp-xlm-testnet' : null);
+  const privacyAsset = getPrivacyAssetById(privacyAssetId);
+  const isPrivacyMode =
+    sendMode === 'shield' || sendMode === 'transfer' || sendMode === 'unshield';
   
   const [isUsdInput, setIsUsdInput] = useState(false);
-  const [selectedToken, setSelectedToken] = useState<PaymentToken>({
-    id: `${activeChain?.key || 'ethereum'}-${activeChain?.nativeToken.symbol || 'ETH'}`,
-    name: activeChain?.nativeToken.name || 'Ether',
-    symbol: activeChain?.nativeToken.symbol || 'ETH',
-    balance: balance || '0.000',
-    usdPrice: 0,
-    chainTypes: [activeChain?.type || 'evm'],
+  const [selectedToken, setSelectedToken] = useState<PaymentToken>(() => {
+    const asset = getPrivacyAssetById(routePrivacyAssetId || selectedPrivacyAssetId);
+    if (
+      asset &&
+      canActivatePrivacyAsset(asset) &&
+      (routeMode === 'shield' ||
+        routeMode === 'transfer' ||
+        routeMode === 'unshield' ||
+        routeForcePrivate)
+    ) {
+      // shield spends public XLM; transfer/unshield spend private balance
+      if (routeMode === 'shield') {
+        return {
+          id: `${asset.chainKey}-${asset.quoteSymbol}`,
+          name: asset.quoteSymbol,
+          symbol: asset.quoteSymbol,
+          balance: '0',
+          usdPrice: 0,
+          chainTypes: ['xlm'],
+        };
+      }
+      return privacyAssetToPaymentToken(asset, '0');
+    }
+    return {
+      id: `${activeChain?.key || 'ethereum'}-${activeChain?.nativeToken.symbol || 'ETH'}`,
+      name: activeChain?.nativeToken.name || 'Ether',
+      symbol: activeChain?.nativeToken.symbol || 'ETH',
+      balance: balance || '0.000',
+      usdPrice: 0,
+      chainTypes: [activeChain?.type || 'evm'],
+    };
   });
 
-  const { getQuote } = useMarketData([selectedToken.symbol]);
-  const marketData = getQuote(selectedToken.symbol);
+  // pXLM quotes off XLM market price
+  const quoteSymbol =
+    selectedToken.isPrivacyAsset || sendMode === 'transfer' || sendMode === 'unshield'
+      ? privacyAsset?.quoteSymbol || 'XLM'
+      : selectedToken.symbol;
+  const { getQuote } = useMarketData([quoteSymbol, selectedToken.symbol]);
+  const marketData = getQuote(quoteSymbol) || getQuote(selectedToken.symbol);
   const currentFiatUsdPrice = marketData?.price || 0;
   const fiatMultiplier = USD_TO_FIAT[(nativeCurrency as FiatCurrency) || 'USD'] || 1.0;
   const currentFiatPrice = currentFiatUsdPrice * fiatMultiplier;
@@ -85,6 +140,12 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
   const trimmedRecipientAddress = recipientAddress.trim();
   const hasRecipient = trimmedRecipientAddress.length > 0;
   const isRecipientValid = hasRecipient && validateAddress(trimmedRecipientAddress, chainType);
+  /** Shield has no external recipient; unshield may default to self. */
+  const needsRecipient = sendMode === 'public' || sendMode === 'transfer';
+  const recipientOk =
+    sendMode === 'shield' ||
+    (sendMode === 'unshield' && (!hasRecipient || isRecipientValid)) ||
+    ((sendMode === 'public' || sendMode === 'transfer') && isRecipientValid);
 
   const normalizedAmount = amount.replace(',', '.');
   const parsedAmount = Number.parseFloat(normalizedAmount);
@@ -92,11 +153,7 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
   const isAmountValid = hasAmount && Number.isFinite(parsedAmount) && parsedAmount > 0;
 
   // Pre-send balance gate. Compare the *crypto* amount against the available
-  // native-token balance so the user learns up front (rather than only on the
-  // confirm screen) that they can't cover the send. When the user is entering
-  // a fiat amount we convert to crypto with the same rate used on continue.
-  // Fees aren't known here (no gas estimate yet), so this checks amount-only;
-  // the precise amount+fees gate lives on PaymentConfirmationScreen.
+  // balance for the active mode (public XLM for shield, pXLM for transfer/unshield).
   const availableBalanceNum = Number.parseFloat(selectedToken.balance || '0');
   const cryptoAmount = isUsdInput && currentFiatPrice > 0
     ? parsedAmount / currentFiatPrice
@@ -109,11 +166,15 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
 
   const recipientError = !isRecipientTouched
     ? ''
-    : !hasRecipient
-      ? 'Recipient address is required.'
-      : !isRecipientValid
-        ? `Enter a valid ${activeChain?.name || 'EVM'} address.`
-        : '';
+    : sendMode === 'shield'
+      ? ''
+      : sendMode === 'unshield' && !hasRecipient
+        ? ''
+        : !hasRecipient
+          ? 'Recipient address is required.'
+          : !isRecipientValid
+            ? `Enter a valid ${activeChain?.name || 'Stellar'} address.`
+            : '';
 
   const amountError = !isAmountTouched
     ? ''
@@ -125,7 +186,7 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
           ? `Amount exceeds your available balance of ${selectedToken.balance} ${selectedToken.symbol}.`
           : '';
 
-  const canContinue = isRecipientValid && isAmountValid && !exceedsBalance;
+  const canContinue = recipientOk && isAmountValid && !exceedsBalance;
 
   React.useEffect(() => {
     trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_VIEWED, {
@@ -143,8 +204,49 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
     selectedToken.symbol,
   ]);
 
+  // Load private note balance when in transfer/unshield (or privacy token selected).
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!address || !privacyAsset || privacyAsset.protocol !== 'spp') {
+        if (!cancelled) setPrivateBalance('0');
+        return;
+      }
+      try {
+        const { amount: bal } = await getLocalPrivateBalance(privacyAsset.chainKey, address);
+        if (!cancelled) setPrivateBalance(bal);
+      } catch {
+        if (!cancelled) setPrivateBalance('0');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [address, privacyAsset]);
+
+  // Keep token balance in sync with mode: shield uses public XLM; private modes use pXLM.
   React.useEffect(() => {
     if (!activeChain) {
+      return;
+    }
+
+    if (isPrivacyMode && privacyAsset && canActivatePrivacyAsset(privacyAsset)) {
+      if (sendMode === 'shield') {
+        setSelectedToken({
+          id: `${activeChain.key}-${activeChain.nativeToken.symbol}`,
+          name: activeChain.nativeToken.name,
+          symbol: activeChain.nativeToken.symbol,
+          balance: balance || '0.000',
+          usdPrice: FALLBACK_ETH_PRICE,
+          chainTypes: [activeChain.type],
+        });
+      } else {
+        setSelectedToken(privacyAssetToPaymentToken(privacyAsset, privateBalance));
+      }
+      return;
+    }
+
+    if (selectedToken.isPrivacyAsset) {
       return;
     }
 
@@ -156,7 +258,15 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
       usdPrice: FALLBACK_ETH_PRICE,
       chainTypes: [activeChain.type],
     });
-  }, [activeChain, balance]);
+  }, [
+    activeChain,
+    balance,
+    isPrivacyMode,
+    privacyAsset,
+    privateBalance,
+    sendMode,
+    selectedToken.isPrivacyAsset,
+  ]);
 
   const handleBack = () => {
     trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_BACK_PRESSED, {
@@ -263,20 +373,25 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
     setIsRecipientTouched(true);
     setIsAmountTouched(true);
 
-    if (!hasRecipient) {
-      trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_VALIDATION_FAILED, {
-        reason: 'missing_recipient',
-      });
-      toast.show('Please enter a recipient address', 'error');
-      return false;
-    }
+    if (needsRecipient) {
+      if (!hasRecipient) {
+        trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_VALIDATION_FAILED, {
+          reason: 'missing_recipient',
+        });
+        toast.show('Please enter a recipient address', 'error');
+        return false;
+      }
 
-    if (!isRecipientValid) {
-      trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_VALIDATION_FAILED, {
-        reason: 'invalid_recipient',
-        chain_type: chainType,
-      });
-      toast.show(`Invalid ${activeChain?.name || 'EVM'} address format`, 'error');
+      if (!isRecipientValid) {
+        trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_VALIDATION_FAILED, {
+          reason: 'invalid_recipient',
+          chain_type: chainType,
+        });
+        toast.show(`Invalid ${activeChain?.name || 'Stellar'} address format`, 'error');
+        return false;
+      }
+    } else if (sendMode === 'unshield' && hasRecipient && !isRecipientValid) {
+      toast.show('Enter a valid public Stellar address', 'error');
       return false;
     }
 
@@ -343,12 +458,52 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
       }
     }
 
-    // Navigate to privacy level selection
+    // Privacy-pool modes skip the Privacy Level picker and go straight to confirm.
+    if (isPrivacyMode) {
+      const dest =
+        sendMode === 'shield'
+          ? address || ''
+          : sendMode === 'unshield'
+            ? recipientAddress.trim() || address || ''
+            : recipientAddress.trim();
+
+      navigation.navigate(SCREENS.PAYMENT_CONFIRMATION, {
+        recipient: dest,
+        amount: finalCryptoAmount,
+        memo: memo.trim(),
+        token: selectedToken.symbol,
+        privacyLevel: 'private',
+        sppOp: sendMode,
+      });
+      return;
+    }
+
+    // Prefer Private when home is in SPP mode or user picked pXLM in token selector.
+    const storePrivacyId = useSettingsStore.getState().selectedPrivacyAssetId;
+    const preferPrivate =
+      !!selectedToken.isPrivacyAsset ||
+      (!!storePrivacyId && activeChain?.key === 'stellar-testnet') ||
+      !!routeForcePrivate;
+
+    if (preferPrivate && selectedToken.isPrivacyAsset) {
+      navigation.navigate(SCREENS.PAYMENT_CONFIRMATION, {
+        recipient: recipientAddress.trim(),
+        amount: finalCryptoAmount,
+        memo: memo.trim(),
+        token: selectedToken.symbol,
+        privacyLevel: 'private',
+        sppOp: 'transfer',
+      });
+      return;
+    }
+
+    // Navigate to privacy level selection (Stellar shows Standard / Private).
     navigation.navigate(SCREENS.PRIVACY_LEVEL, {
       recipient: recipientAddress.trim(),
       amount: finalCryptoAmount,
       memo: memo.trim(),
       token: selectedToken.symbol,
+      preferredPrivacyLevel: preferPrivate ? 'private' : undefined,
     });
   };
   
@@ -366,8 +521,77 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
       current_token_symbol: selectedToken.symbol,
     });
 
-    toast.show('This build supports only the network native token for sends.', 'info');
+    navigation.navigate(SCREENS.TOKEN_SELECTOR, {
+      chainKey: activeChain?.key,
+      selectedSymbol: selectedToken.symbol,
+      onSelect: (token: PaymentToken) => {
+        setSelectedToken(token);
+        if (token.isPrivacyAsset && token.privacyAssetId) {
+          useSettingsStore.getState().setSelectedPrivacyAssetId(token.privacyAssetId);
+          if (sendMode === 'public') {
+            setSendMode('transfer');
+          }
+        } else {
+          setSendMode('public');
+        }
+      },
+    });
   };
+
+  const setMode = (mode: SendMode) => {
+    setSendMode(mode);
+    if (mode !== 'public' && privacyAsset) {
+      useSettingsStore.getState().setSelectedPrivacyAssetId(privacyAsset.id);
+    }
+    setIsRecipientTouched(false);
+    setIsAmountTouched(false);
+  };
+
+  const headerTitle =
+    sendMode === 'shield'
+      ? 'SHIELD'
+      : sendMode === 'unshield'
+        ? 'UNSHIELD'
+        : sendMode === 'transfer'
+          ? 'SEND PRIVATELY'
+          : 'SEND PAYMENT';
+
+  const privacyHelp =
+    sendMode === 'shield'
+      ? 'Moves public XLM into your private balance. Proof runs on this device (~10–20s).'
+      : sendMode === 'unshield'
+        ? 'Returns private balance to a public Stellar address. Leave blank to unshield to yourself.'
+        : sendMode === 'transfer'
+          ? 'Pays from your private balance. Recipient needs a Stellar address with private receive enabled.'
+          : 'Choose your privacy level on the next screen.';
+
+  // Chips when user is in a privacy context but didn't lock a single Home action.
+  const showModeChips =
+    !routeLockMode &&
+    !!privacyAsset &&
+    canActivatePrivacyAsset(privacyAsset) &&
+    (isPrivacyMode ||
+      selectedToken.isPrivacyAsset ||
+      !!routeForcePrivate ||
+      activeChain?.key === 'stellar-testnet');
+
+  const privateBalanceEmpty =
+    (sendMode === 'transfer' || sendMode === 'unshield') &&
+    Number.parseFloat(privateBalance || '0') <= 0;
+
+  const recipientSectionLabel =
+    sendMode === 'unshield'
+      ? 'PUBLIC ADDRESS (OPTIONAL)'
+      : sendMode === 'transfer'
+        ? 'RECIPIENT ADDRESS'
+        : `${activeChain?.type?.toUpperCase() || 'EVM'} RECIPIENT ADDRESS`;
+
+  const recipientPlaceholder =
+    sendMode === 'unshield'
+      ? 'Leave blank for your address, or paste a G… address'
+      : sendMode === 'transfer'
+        ? 'Enter Stellar address (G…)'
+        : `Enter ${activeChain?.name || 'Ethereum'} address`;
 
   const handleQuickAmount = (percent: string) => {
     setSelectedPercent(percent);
@@ -399,7 +623,7 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
         <View style={styles.header}>
         <ScreenBackButton onPress={handleBack} />
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>SEND PAYMENT</Text>
+            <Text style={styles.headerTitle}>{headerTitle}</Text>
           </View>
           <View style={styles.headerSpacer} />
         </View>
@@ -417,8 +641,18 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
             <SovereignCard backgroundColor={colors.surfaceCard} padding={20} style={{ marginBottom: 24 }}>
               <View style={styles.cardHeader}>
                 <View>
-                  <Text style={styles.cardLabel}>SENDING FROM</Text>
-                  <Text style={styles.chainName}>{activeChain?.name.toUpperCase() || 'ETHEREUM'}</Text>
+                  <Text style={styles.cardLabel}>
+                    {sendMode === 'shield'
+                      ? 'FROM PUBLIC BALANCE'
+                      : sendMode === 'unshield' || sendMode === 'transfer'
+                        ? 'FROM PRIVATE BALANCE'
+                        : 'SENDING FROM'}
+                  </Text>
+                  <Text style={styles.chainName}>
+                    {isPrivacyMode
+                      ? 'PRIVATE XLM · TESTNET'
+                      : activeChain?.name.toUpperCase() || 'ETHEREUM'}
+                  </Text>
                 </View>
                 <View style={styles.iconCircle}>
                   <Logo variant="icon" size="small" />
@@ -430,51 +664,111 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
               </View>
             </SovereignCard>
 
-            {/* Recipient Address */}
-            <Text style={styles.sectionLabel}>{activeChain?.type?.toUpperCase() || 'EVM'} RECIPIENT ADDRESS</Text>
-            <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
-              <View style={styles.inputRow}>
-                <TextInput
-                  style={styles.addressInput}
-                  value={recipientAddress}
-                  onChangeText={handleRecipientAddressChange}
-                  onBlur={() => setIsRecipientTouched(true)}
-                  placeholder={`Enter ${activeChain?.name || 'Ethereum'} address`}
-                  placeholderTextColor={colors.textFaint}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  multiline
-                  numberOfLines={2}
-                />
-                <View style={styles.inputActions}>
+            {showModeChips ? (
+              <View style={styles.modeChipRow}>
+                {(
+                  [
+                    { id: 'shield' as const, label: 'Shield' },
+                    { id: 'transfer' as const, label: 'Send privately' },
+                    { id: 'unshield' as const, label: 'Unshield' },
+                  ] as const
+                ).map((chip) => (
                   <PressableOpacity
-                    onPress={() => setIsAddressBookVisible(true)}
-                    style={styles.inputActionBtn}
+                    key={chip.id}
+                    onPress={() => setMode(chip.id)}
+                    style={[
+                      styles.modeChip,
+                      sendMode === chip.id && styles.modeChipActive,
+                    ]}
                     accessibilityRole="button"
-                    accessibilityLabel="Open address book"
+                    accessibilityState={{ selected: sendMode === chip.id }}
                   >
-                    <Icon name="wallet" size={20} color={colors.accent} />
+                    <Text
+                      style={[
+                        styles.modeChipText,
+                        sendMode === chip.id && styles.modeChipTextActive,
+                      ]}
+                    >
+                      {chip.label}
+                    </Text>
                   </PressableOpacity>
-                  <PressableOpacity
-                    onPress={handleScanQR}
-                    style={styles.inputActionBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel="Scan QR code"
-                  >
-                    <Icon name="camera" size={20} color={colors.accent} />
-                  </PressableOpacity>
-                  <PressableOpacity
-                    onPress={handlePaste}
-                    style={styles.inputActionBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel="Paste from clipboard"
-                  >
-                    <Icon name="copy" size={20} color={colors.accent} />
-                  </PressableOpacity>
-                </View>
+                ))}
               </View>
-            </SovereignCard>
-            {recipientError ? <Text style={styles.validationError}>{recipientError}</Text> : null}
+            ) : null}
+
+            {privateBalanceEmpty ? (
+              <SovereignCard backgroundColor={colors.surfaceCard} padding={16} style={{ marginBottom: 20 }}>
+                <Text style={styles.privacyTitle}>NO PRIVATE BALANCE YET</Text>
+                <Text style={styles.privacyDescription}>
+                  Shield some public XLM first, then you can send privately or unshield.
+                </Text>
+                <PressableOpacity
+                  onPress={() => setMode('shield')}
+                  style={[styles.modeChip, styles.modeChipActive, { alignSelf: 'flex-start', marginTop: 12 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Shield XLM"
+                >
+                  <Text style={[styles.modeChipText, styles.modeChipTextActive]}>Shield XLM</Text>
+                </PressableOpacity>
+              </SovereignCard>
+            ) : null}
+
+            {/* Recipient — hidden for shield (funds your own private balance) */}
+            {sendMode !== 'shield' ? (
+              <>
+                <Text style={styles.sectionLabel}>{recipientSectionLabel}</Text>
+                <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
+                  <View style={styles.inputRow}>
+                    <TextInput
+                      style={styles.addressInput}
+                      value={recipientAddress}
+                      onChangeText={handleRecipientAddressChange}
+                      onBlur={() => setIsRecipientTouched(true)}
+                      placeholder={recipientPlaceholder}
+                      placeholderTextColor={colors.textFaint}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      multiline
+                      numberOfLines={2}
+                    />
+                    <View style={styles.inputActions}>
+                      <PressableOpacity
+                        onPress={() => setIsAddressBookVisible(true)}
+                        style={styles.inputActionBtn}
+                        accessibilityRole="button"
+                        accessibilityLabel="Open address book"
+                      >
+                        <Icon name="wallet" size={20} color={colors.accent} />
+                      </PressableOpacity>
+                      <PressableOpacity
+                        onPress={handleScanQR}
+                        style={styles.inputActionBtn}
+                        accessibilityRole="button"
+                        accessibilityLabel="Scan QR code"
+                      >
+                        <Icon name="camera" size={20} color={colors.accent} />
+                      </PressableOpacity>
+                      <PressableOpacity
+                        onPress={handlePaste}
+                        style={styles.inputActionBtn}
+                        accessibilityRole="button"
+                        accessibilityLabel="Paste from clipboard"
+                      >
+                        <Icon name="copy" size={20} color={colors.accent} />
+                      </PressableOpacity>
+                    </View>
+                  </View>
+                </SovereignCard>
+                {recipientError ? <Text style={styles.validationError}>{recipientError}</Text> : null}
+              </>
+            ) : (
+              <SovereignCard backgroundColor={colors.surfaceCard} padding={16} style={{ marginBottom: 24 }}>
+                <Text style={styles.privacyTitle}>TO YOUR PRIVATE BALANCE</Text>
+                <Text style={styles.privacyDescription}>
+                  No recipient needed — this shields XLM for you.
+                </Text>
+              </SovereignCard>
+            )}
 
             {/* Amount Input */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -544,33 +838,57 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
               ))}
             </View>
 
-            {/* Memo */}
-            <Text style={styles.sectionLabel}>MEMO (OPTIONAL)</Text>
-            <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
-              <TextInput
-                style={styles.memoInput}
-                value={memo}
-                onChangeText={setMemo}
-                placeholder="Add a note for this transaction"
-                placeholderTextColor={colors.textFaint}
-              />
-            </SovereignCard>
+            {/* Memo — public sends only (SPP does not surface memos) */}
+            {!isPrivacyMode ? (
+              <>
+                <Text style={styles.sectionLabel}>MEMO (OPTIONAL)</Text>
+                <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
+                  <TextInput
+                    style={styles.memoInput}
+                    value={memo}
+                    onChangeText={setMemo}
+                    placeholder="Add a note for this transaction"
+                    placeholderTextColor={colors.textFaint}
+                  />
+                </SovereignCard>
+              </>
+            ) : null}
 
-            {/* Privacy Level Info */}
+            {/* Privacy / mode help */}
             <SovereignCard backgroundColor={colors.surfaceCard} padding={16} style={styles.privacyCard}>
               <View style={styles.privacyHeader}>
-                <Icon name="shield" size={18} color={colors.accent} />
-                <Text style={styles.privacyTitle}>PRIVATE BY DEFAULT</Text>
+                <Icon
+                  name={isPrivacyMode ? 'private-lock' : 'shield'}
+                  size={18}
+                  color={colors.accent}
+                />
+                <Text style={styles.privacyTitle}>
+                  {sendMode === 'shield'
+                    ? 'SHIELD'
+                    : sendMode === 'unshield'
+                      ? 'UNSHIELD'
+                      : sendMode === 'transfer'
+                        ? 'PRIVATE SEND'
+                        : 'PRIVACY'}
+                </Text>
               </View>
-              <Text style={styles.privacyDescription}>
-                All transactions use stealth addresses. Choose your privacy level on the next screen.
-              </Text>
+              <Text style={styles.privacyDescription}>{privacyHelp}</Text>
             </SovereignCard>
           </ScrollView>
 
           <View style={[styles.footerContainer, { marginBottom: 72 + Math.max(insets.bottom, 16) }]}>
             <SovereignButton
-              title={isAuthenticating ? "AUTHENTICATING..." : "CONTINUE"}
+              title={
+                isAuthenticating
+                  ? 'AUTHENTICATING...'
+                  : sendMode === 'shield'
+                    ? 'CONTINUE TO SHIELD'
+                    : sendMode === 'unshield'
+                      ? 'CONTINUE TO UNSHIELD'
+                      : sendMode === 'transfer'
+                        ? 'CONTINUE'
+                        : 'CONTINUE'
+              }
               onPress={handleContinue}
               disabled={!canContinue || isAuthenticating}
               variant={canContinue ? 'primary' : 'outline'}
@@ -795,6 +1113,33 @@ const themeStyles = (colors: any) => StyleSheet.create({
     color: colors.textPrimary,
     padding: 16,
     minHeight: 56,
+  },
+  modeChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 20,
+  },
+  modeChip: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle ?? colors.border,
+    backgroundColor: colors.surfaceCard,
+  },
+  modeChipActive: {
+    borderColor: colors.accent,
+  },
+  modeChipText: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    letterSpacing: 0.5,
+  },
+  modeChipTextActive: {
+    color: colors.accent,
   },
   privacyCard: {
     marginBottom: 40,

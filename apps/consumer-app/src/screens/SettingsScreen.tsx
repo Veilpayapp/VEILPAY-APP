@@ -359,6 +359,17 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
 
   const privacySection: SettingsItem[] = [
     {
+      id: "private-xlm",
+      label: "Private XLM diagnostics",
+      description:
+        activeChain?.key === "stellar-testnet"
+          ? "Optional status · select pXLM under Home / Token Selector → Privacy"
+          : "Switch to Stellar Testnet, then pick pXLM under Privacy",
+      iconName: "private",
+      type: "navigate",
+      onPress: () => navigation.navigate(SCREENS.STELLAR_SPP),
+    },
+    {
       id: "privacy-mode",
       label: "Enhanced Privacy",
       description: "Use private transactions by default",

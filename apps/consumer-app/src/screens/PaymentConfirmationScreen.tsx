@@ -10,6 +10,8 @@
  *   - `'standard'` → direct on-chain transfer
  *   - `'stealth'`  → ECDH stealth address + `StealthAnnouncer.announce`
  *   - `'max'`      → ZK proof via {@link ZkpProver} + relayer broadcast
+ *   - `'private'`  → Stellar SPP shielded transfer (`utils/stellarSpp`)
+
  *
  * The legacy inline mock dispatch (which only handled the `'standard'`
  * shape against `signAndSendTransaction`) has been removed in favor of
@@ -138,6 +140,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
   const memo = route?.params?.memo || '';
   const token = route?.params?.token || 'ETH';
   const privacyLevel = route?.params?.privacyLevel || 'standard';
+  const sppOp = route?.params?.sppOp || 'transfer';
 
   // Live token price is derived from the market-data hook rather than mirrored
   // into local state via an effect (which would flash a stale value).
@@ -185,6 +188,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
     isSendSupported,
     zkpProverRef,
     sourceCommitmentHash: undefined,
+    sppOp: privacyLevel === 'private' ? sppOp : undefined,
   });
 
   // The hook owns gas estimation for the privacy-stack flows; for the
@@ -598,7 +602,15 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
 
           {/* Amount Display */}
           <View style={styles.amountSection}>
-            <Text style={styles.amountLabel}>YOU ARE SENDING</Text>
+            <Text style={styles.amountLabel}>
+              {privacyLevel === 'private' && sppOp === 'shield'
+                ? 'YOU ARE SHIELDING'
+                : privacyLevel === 'private' && sppOp === 'unshield'
+                  ? 'YOU ARE UNSHIELDING'
+                  : privacyLevel === 'private'
+                    ? 'YOU ARE SENDING PRIVATELY'
+                    : 'YOU ARE SENDING'}
+            </Text>
           <View style={styles.amountDisplay}>
             <Text style={styles.amountValue} accessibilityLiveRegion="assertive">{amount}</Text>
               <Text style={styles.amountToken}>{token}</Text>
@@ -638,7 +650,13 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
         <View style={styles.detailsContent}>
               <View style={styles.detailRow}>
                 <View style={styles.detailLeft}>
-                  <Text style={styles.detailLabel}>FROM</Text>
+                  <Text style={styles.detailLabel}>
+                    {privacyLevel === 'private' && sppOp === 'shield'
+                      ? 'FROM (PUBLIC)'
+                      : privacyLevel === 'private' && (sppOp === 'transfer' || sppOp === 'unshield')
+                        ? 'FROM (PRIVATE)'
+                        : 'FROM'}
+                  </Text>
                   <Text style={styles.detailValue}>{formatAddress(address || '')}</Text>
                 </View>
                 <Logo variant="icon" size="small" />
@@ -648,8 +666,20 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
 
               <View style={styles.detailRow}>
                 <View style={styles.detailLeft}>
-                  <Text style={styles.detailLabel}>TO</Text>
-                  <Text style={styles.detailValue}>{formatAddress(recipient)}</Text>
+                  <Text style={styles.detailLabel}>
+                    {privacyLevel === 'private' && sppOp === 'shield'
+                      ? 'TO'
+                      : privacyLevel === 'private' && sppOp === 'unshield'
+                        ? 'TO (PUBLIC)'
+                        : privacyLevel === 'private'
+                          ? 'TO (PRIVATE)'
+                          : 'TO'}
+                  </Text>
+                  <Text style={styles.detailValue}>
+                    {privacyLevel === 'private' && sppOp === 'shield'
+                      ? 'Your private balance'
+                      : formatAddress(recipient)}
+                  </Text>
                 </View>
                 <Icon name="receive" size={20} color={colors.accent} />
               </View>
@@ -664,11 +694,13 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
               <View style={styles.detailDivider} />
 
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>PRIVACY LEVEL</Text>
+                <Text style={styles.detailLabel}>
+                  {privacyLevel === 'private' ? 'ACTION' : 'PRIVACY LEVEL'}
+                </Text>
                 <View style={styles.privacyBadge}>
                   <Icon
                     name={
-                      privacyLevel === 'max'
+                      privacyLevel === 'max' || privacyLevel === 'private'
                         ? 'private-lock'
                         : privacyLevel === 'stealth'
                           ? 'private'
@@ -680,9 +712,15 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
                   <Text style={styles.privacyBadgeText}>
                     {privacyLevel === 'max'
                       ? 'MAX'
-                      : privacyLevel === 'stealth'
-                        ? 'STEALTH'
-                        : 'STANDARD'}
+                      : privacyLevel === 'private'
+                        ? sppOp === 'shield'
+                          ? 'SHIELD'
+                          : sppOp === 'unshield'
+                            ? 'UNSHIELD'
+                            : 'PRIVATE'
+                        : privacyLevel === 'stealth'
+                          ? 'STEALTH'
+                          : 'STANDARD'}
                   </Text>
                 </View>
               </View>
@@ -713,6 +751,13 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
                   <Text style={styles.feeValue}>{privacyFee} {token}</Text>
                 </View>
               )}
+              {privacyLevel === 'private' && (
+                <View style={styles.feeRow}>
+                  <Text style={styles.feeLabel}>ZK prove (est.)</Text>
+                  <Text style={styles.feeValue}>~10s · local</Text>
+                </View>
+              )}
+
               <View style={styles.feeDivider} />
               <View style={styles.feeRow}>
                 <Text style={styles.feeLabelTotal}>TOTAL AMOUNT</Text>
@@ -751,10 +796,17 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
                 <Text style={styles.privacyNoticeDesc}>
                   {privacyLevel === 'max'
                     ? 'Zero-knowledge proof ensures complete transaction privacy.'
-                    : privacyLevel === 'stealth'
-                      ? 'One-time stealth address. The recipient discovers the payment via an on-chain announcement event.'
-                      : 'Direct on-chain transfer with visible sender and recipient.'}
+                    : privacyLevel === 'private'
+                      ? sppOp === 'shield'
+                        ? 'Moves public XLM into your private balance. Proof runs on this device (~10–20s).'
+                        : sppOp === 'unshield'
+                          ? 'Returns private balance to a public Stellar address. Proof runs on this device (~10–20s).'
+                          : 'Pays from your private balance. Amount and counterparty stay shielded. Proof ~10–20s on device.'
+                      : privacyLevel === 'stealth'
+                        ? 'One-time stealth address. The recipient discovers the payment via an on-chain announcement event.'
+                        : 'Direct on-chain transfer with visible sender and recipient.'}
                 </Text>
+
               </View>
             </View>
           </SovereignCard>

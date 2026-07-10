@@ -230,8 +230,10 @@ prove time + RSS (handoff item; not done this session).
       - `packages/spp-native` Poseidon2 derive (`spp_native_derive_keys`) + `CAP_ASP_LEAF`
       - Kotlin/Swift + bridge `deriveKeys`; auto insert_leaf when leaf returned
       - On-device derive needs `libspp_native.so` (EAS post-install or local cargo-ndk)
-- [ ] Confirm EAS preview APK loads Rust `.so` on device hub (commit + preview)
+- [x] Confirm EAS preview APK loads Rust `.so` on device hub (`version: 0.1.0`, `ASP leaf: ok`)
 - [x] Pool-ops **validation + readiness FFI** (`pool_ops.rs`, feature `pool-ops` gate)
+- [x] **ASP insert retry** — `ensureSppAccountReady` no longer skips insert when leaf exists;
+      hub **Register ASP membership** button; higher Soroban fee for insert_leaf
 - [ ] Link real `sdk/pool` prove/submit (flip feature `pool-ops` + circuit assets)
 - [x] Lifecycle E2E **Jest** shield→transfer→unshield (mock CAP_POOL_OPS)
 - [ ] On-device E2E with real prove

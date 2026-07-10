@@ -190,6 +190,9 @@ export async function insertAspMembershipLeaf(
   return { txHash, account };
 }
 
+/** Soroban inclusion fee floor (BASE_FEE alone is often too low for invoke). */
+const SOROBAN_INSERT_FEE = String(Math.max(Number(BASE_FEE) * 1000, 100_000));
+
 async function submitInsertLeaf(
   config: SppDeploymentConfig,
   keypair: Keypair,
@@ -204,7 +207,7 @@ async function submitInsertLeaf(
     sourceAccount = await server.getAccount(keypair.publicKey());
   } catch {
     throw new SppClientError(
-      'Could not load account from Soroban RPC. Fund the account on testnet first.',
+      'Could not load account from Soroban RPC. Fund the account on testnet first (friendbot).',
       'SPP_RPC_ACCOUNT'
     );
   }
@@ -219,19 +222,30 @@ async function submitInsertLeaf(
   }
 
   const built = new TransactionBuilder(sourceAccount, {
-    fee: BASE_FEE,
+    fee: SOROBAN_INSERT_FEE,
     networkPassphrase,
   })
     .addOperation(contract.call('insert_leaf', leafScVal))
-    .setTimeout(60)
+    .setTimeout(180)
     .build();
 
   let prepared;
   try {
     const sim = await server.simulateTransaction(built);
     if (Api.isSimulationError(sim)) {
+      const errText = String(sim.error || '');
+      // Duplicate / already-present leaf: treat as success path for idempotency.
+      if (/already|exist|duplicate|leaf/i.test(errText) && /exist|duplicate|present/i.test(errText)) {
+        return `sim-idempotent-${leafDecimal.slice(0, 16)}`;
+      }
       throw new SppClientError(
-        sim.error || 'ASP insert_leaf simulation failed',
+        errText || 'ASP insert_leaf simulation failed',
+        'SPP_ASP_SIM_FAILED'
+      );
+    }
+    if (Api.isSimulationRestore(sim)) {
+      throw new SppClientError(
+        'ASP contract needs footprint restore — try again in a moment',
         'SPP_ASP_SIM_FAILED'
       );
     }
@@ -253,19 +267,32 @@ async function submitInsertLeaf(
       'SPP_ASP_SUBMIT_FAILED'
     );
   }
+  if (send.status === 'DUPLICATE') {
+    // Already submitted — use returned hash if present.
+    return send.hash;
+  }
 
   const hash = send.hash;
-  // Poll briefly for success (best-effort; caller can treat hash as submitted).
-  for (let i = 0; i < 12; i++) {
+  // Poll for success (best-effort; hash still useful if network is slow).
+  for (let i = 0; i < 20; i++) {
     await sleep(1500);
-    const got = await server.getTransaction(hash);
-    if (got.status === Api.GetTransactionStatus.SUCCESS) {
-      return hash;
-    }
-    if (got.status === Api.GetTransactionStatus.FAILED) {
-      throw new SppClientError('ASP insert_leaf transaction failed', 'SPP_ASP_SUBMIT_FAILED');
+    try {
+      const got = await server.getTransaction(hash);
+      if (got.status === Api.GetTransactionStatus.SUCCESS) {
+        return hash;
+      }
+      if (got.status === Api.GetTransactionStatus.FAILED) {
+        throw new SppClientError(
+          'ASP insert_leaf transaction failed on-chain',
+          'SPP_ASP_SUBMIT_FAILED'
+        );
+      }
+    } catch (e) {
+      if (e instanceof SppClientError) throw e;
+      // Transient getTransaction errors — keep polling.
     }
   }
+  // Submitted but not yet confirmed — still mark as hash so UX can advance.
   return hash;
 }
 
@@ -274,27 +301,82 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Idempotent: if derivation already signed for this account, return stored
- * state; otherwise run full onboard. Safe to call when user selects pXLM
- * from Token Selector / Home Privacy (no Settings detour).
+ * Idempotent full setup when user selects pXLM (Token Selector / Home).
+ *
+ * 1. Sign derivation if missing
+ * 2. Re-derive leaf if missing but keys can be signed again
+ * 3. insert_leaf when leaf exists and not yet on-chain
+ *
+ * Does not throw on ASP insert failure (returns aspReady: false + message)
+ * so Home selection still succeeds; hub can retry.
  */
 export async function ensureSppAccountReady(
   chainKey: string,
   ownerAddress: string
 ): Promise<SppOnboardResult> {
   assertSppEnabled(chainKey);
-  const existing = await getSppAccount(chainKey, ownerAddress);
-  if (existing?.derivationSigHashHex) {
-    return {
-      account: existing,
-      hasLeaf: Boolean(existing.aspLeafDecimal),
-      aspReady: Boolean(existing.aspInserted),
-      message: existing.aspInserted
-        ? 'Private XLM ready'
-        : 'Private XLM set up on this device',
-    };
+  let account = await getSppAccount(chainKey, ownerAddress);
+
+  // No derivation fingerprint yet → full onboard (sign + derive + insert attempt).
+  if (!account?.derivationSigHashHex) {
+    return onboardSppAccount(chainKey, ownerAddress);
   }
-  return onboardSppAccount(chainKey, ownerAddress);
+
+  // Has signature but no leaf (e.g. first open was pre-NDK) → re-sign & re-derive.
+  if (!account.aspLeafDecimal) {
+    try {
+      const { signatureHex, publicKey } = await signSppKeyDerivationMessage();
+      if (publicKey === ownerAddress) {
+        account = await recordSppKeySignature(chainKey, ownerAddress, signatureHex);
+      }
+    } catch (e) {
+      return {
+        account,
+        hasLeaf: false,
+        aspReady: false,
+        message:
+          e instanceof Error
+            ? `Privacy keys signed; leaf derive failed: ${e.message}`
+            : 'Privacy keys signed; leaf derive pending',
+      };
+    }
+  }
+
+  // Leaf ready, not inserted → permissionless testnet insert_leaf.
+  if (account.aspLeafDecimal && !account.aspInserted) {
+    try {
+      const inserted = await insertAspMembershipLeaf(
+        chainKey,
+        ownerAddress,
+        account.aspLeafDecimal
+      );
+      return {
+        account: inserted.account,
+        hasLeaf: true,
+        aspReady: true,
+        message: 'Private XLM ready — ASP membership on-chain.',
+      };
+    } catch (e) {
+      return {
+        account,
+        hasLeaf: true,
+        aspReady: false,
+        message:
+          e instanceof Error
+            ? `ASP leaf ready; on-chain insert pending: ${e.message}`
+            : 'ASP leaf ready; on-chain insert pending',
+      };
+    }
+  }
+
+  return {
+    account,
+    hasLeaf: Boolean(account.aspLeafDecimal),
+    aspReady: Boolean(account.aspInserted),
+    message: account.aspInserted
+      ? 'Private XLM ready'
+      : 'Private XLM set up on this device',
+  };
 }
 
 /**

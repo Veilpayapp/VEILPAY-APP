@@ -1,41 +1,33 @@
 # Environment variables
 
-This page summarizes the environment model. Use `.env.example` as the source for local setup.
+This page summarizes the environment model. The authoritative list of variables lives in
+`.env.example` in the repository — use it as the source for local setup. To avoid publishing an
+inventory of sensitive configuration, this page describes categories rather than exact names.
 
 ## Backend
 
-Important backend variables include:
+The backend is configured through server-side environment variables, grouped as:
 
-- `DATABASE_URL`
-- `REDIS_URL`
-- `REDIS_PASSWORD`
-- `JWT_SECRET`
-- `API_KEY_SALT`
-- `WEBHOOK_SIGNING_SECRET`
-- `DEFAULT_MERCHANT_TIER`
-- `NODE_ENV`
-- `PORT`
-- `CORS_ORIGINS`
-- `ALCHEMY_API_KEY`
-- `INFURA_API_KEY`
-- network RPC URL variables
+- **Datastore connections** — PostgreSQL and Redis connection details and credentials.
+- **Signing and auth secrets** — the JWT signing secret, the API-key salt, and the webhook
+  signing secret. These are distinct values so their blast radius and rotation stay independent.
+- **RPC provider credentials** — API keys and RPC URLs for the supported chain providers.
+- **Runtime and policy settings** — environment mode, port, allowed CORS origins, and default
+  merchant tier.
+
+All of the above are secrets or environment-specific settings and are never bundled into the
+mobile app. In production they are sourced from Doppler (see [Secrets and keys](../security/secrets-and-keys.md)).
 
 ## Consumer app
 
-Only variables prefixed with `EXPO_PUBLIC_` are bundled into the mobile app.
+Only variables prefixed with `EXPO_PUBLIC_` are bundled into the mobile app, so **only
+non-secret configuration belongs there** — for example the backend and indexer base URLs, the
+WalletConnect project ID, feature flags, and non-secret analytics/observability identifiers.
 
-Important public variables include:
-
-- `EXPO_PUBLIC_BACKEND_BASE_URL`
-- `EXPO_PUBLIC_INDEXER_BASE_URL`
-- `EXPO_PUBLIC_WALLETCONNECT_PROJECT_ID`
-- `EXPO_PUBLIC_ENABLE_ANALYTICS`
-- `EXPO_PUBLIC_MIXPANEL_TOKEN`
-- `EXPO_PUBLIC_ENABLE_MAINNET_TRANSACTIONS`
-- `EXPO_PUBLIC_SENTRY_DSN`
-- `EXPO_PUBLIC_EAS_PROJECT_ID`
-- `EXPO_PUBLIC_EAS_UPDATE_URL`
+Anything sensitive (signing secrets, provider API keys, database or Redis credentials) must stay
+server-side and must never be given an `EXPO_PUBLIC_` name.
 
 ## Rule
 
-Never place secrets in `EXPO_PUBLIC_*` variables.
+Never place secrets in `EXPO_PUBLIC_*` variables, and treat `.env.example` — not this page — as
+the definitive variable reference.

@@ -4,9 +4,8 @@ The Veilpay consumer app is an Expo React Native application.
 
 ## Technology stack
 
-- Expo SDK 55.
-- React Native 0.83.
-- React 19.
+- Expo and React Native.
+- React.
 - TypeScript.
 - React Navigation.
 - Zustand for state management.

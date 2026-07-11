@@ -7,9 +7,7 @@ Do not commit:
 - private keys
 - mnemonics
 - raw signatures
-- API keys
-- webhook signing secrets
-- JWT secrets
+- signing and session secrets
 - provider credentials
 - Doppler tokens
 
@@ -21,10 +19,6 @@ Production secrets are managed by Doppler and injected into backend or build env
 
 Only `EXPO_PUBLIC_*` variables are bundled into the app. These must never contain secrets.
 
-## Merchant API keys
+## Server-side isolation
 
-Merchant API keys should be stored in merchant server-side secret managers. Veilpay stores hashed API key material server-side.
-
-## Webhook secrets
-
-Webhook signing secrets are separate from API key salts. This separation limits blast radius and makes rotation safer.
+RPC provider credentials and other backend secrets stay server-side and are never exposed to the mobile app or to proxied clients. Distinct secrets are kept separate so their blast radius and rotation stay independent.

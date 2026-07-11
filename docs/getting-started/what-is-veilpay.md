@@ -1,30 +1,28 @@
 # What is Veilpay?
 
-Veilpay is a privacy-first payment system that combines a self-custody mobile wallet with merchant payment infrastructure.
+Veilpay is a privacy-first, self-custody wallet that lets people hold, send, and receive assets across multiple blockchains from one mobile app.
 
-At a high level, Veilpay lets a merchant create an invoice, lets a user pay from a mobile wallet, and lets the backend confirm and notify the merchant when the payment state changes. The system is designed around secure signing boundaries, multi-chain support, privacy primitives, and production-grade API controls.
+At a high level, Veilpay lets a user create or import a wallet, view balances across chains, send and receive payments, connect to dapps, move between fiat and crypto through ramp providers, and use privacy features where supported. The system is designed around secure signing boundaries, multi-chain support, and privacy primitives.
 
 ## Product surfaces
 
-Veilpay has three major surfaces:
+Veilpay has two major surfaces:
 
 | Surface | Purpose |
 | --- | --- |
 | Consumer app | Self-custody wallet, balances, send/receive, privacy UX, fiat ramps |
-| Backend API | Merchants, invoices, payments, webhooks, RPC proxy, health checks |
-| Indexer and workers | Payment detection, chain polling, webhook delivery, invoice expiry |
+| Backend services | RPC proxy, chain indexing, health checks, and supporting infrastructure |
 
 Veilpay also provides shared infrastructure for chain metadata, contracts, circuits, audit tooling, and the native Stellar SPP bridge.
 
 ## What makes Veilpay different
 
-Veilpay is not just a wallet UI. It is a payment stack that combines:
+Veilpay is not just a wallet UI. It is a self-custody payment stack that combines:
 
-- **Self-custody**: user signing happens on the consumer device.
-- **Merchant APIs**: invoices and webhooks give merchants a server-side integration path.
-- **Multi-chain payments**: EVM, Solana, and Stellar flows are represented in the current app architecture.
+- **Self-custody**: user signing happens on the consumer device; the backend never receives signing material.
+- **Multi-chain payments**: EVM, Solana, and Stellar flows in a single wallet.
 - **Privacy primitives**: stealth addresses, encrypted notes, ZK direction, and Stellar Private Payments are part of the protocol roadmap.
-- **Operational safety**: backend request signing, timestamp windows, rate limiting, Redis-backed sessions, queue-based webhook delivery, and health endpoints.
+- **Operational safety**: server-side RPC credential isolation, rate limiting, Redis-backed infrastructure, and health endpoints.
 
 ## Public chain scope
 

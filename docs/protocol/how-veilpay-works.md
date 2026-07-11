@@ -1,18 +1,17 @@
 # How Veilpay works
 
-Veilpay connects a mobile wallet, a merchant API, backend workers, and supported blockchain networks into one payment lifecycle.
+Veilpay connects a mobile wallet, supporting backend services, and multiple blockchain networks into one self-custody payment experience.
 
 ## End-to-end flow
 
-1. A merchant registers and receives API credentials.
-2. The merchant creates an invoice with chain, token, amount, memo, expiry, and privacy-level metadata.
-3. The consumer app displays or scans the payment request.
-4. The user confirms the payment in the mobile wallet.
+1. A user creates or imports a wallet in the mobile app.
+2. The app derives chain-specific addresses and displays balances across networks.
+3. To pay, the user enters or scans a recipient and selects a network, token, and amount.
+4. The app validates the address, amount, balance, and fees, then asks the user to confirm.
 5. Signing happens inside wallet-controlled code paths. Mnemonic material is not sent to the backend.
-6. The transaction is broadcast to the selected network.
-7. Backend workers or polling flows detect payment status.
-8. The invoice moves to a terminal or updated state.
-9. Veilpay sends signed webhook notifications to the merchant.
+6. The transaction is broadcast to the selected network, optionally through the backend RPC proxy.
+7. The app records local transaction state and polls the network for confirmation.
+8. Transaction history and balances update once the payment is confirmed on-chain.
 
 ## Main components
 
@@ -20,14 +19,14 @@ Veilpay connects a mobile wallet, a merchant API, backend workers, and supported
 Consumer App
   Wallet, balances, send/receive, privacy UX, WalletConnect, fiat ramps
 
-Backend API
-  Merchants, invoices, payments, webhooks, RPC proxy, health, docs
+Backend services
+  RPC proxy, chain indexer, health, queues
 
 Workers
-  Invoice expiry, webhook delivery, chain indexer, queues
+  Chain indexing, transaction-status detection, queues
 
 Data stores
-  PostgreSQL through Prisma, Redis for queues and sessions
+  PostgreSQL through Prisma, Redis for queues and coordination
 
 Blockchain layer
   EVM networks, Solana, Stellar, Stellar SPP testnet track
@@ -36,8 +35,7 @@ Blockchain layer
 ## Design principles
 
 - Keep user signing material on-device.
-- Keep API keys and RPC provider credentials server-side.
-- Validate request bodies and chain identifiers before state-changing operations.
-- Sign webhooks and protect them with timestamp windows.
+- Keep RPC provider credentials server-side.
+- Validate addresses, amounts, and chain identifiers before signing.
 - Treat stronger privacy as a gated, explicit mode rather than an ambiguous default.
 - Clearly separate shipped features from testnet and roadmap work.

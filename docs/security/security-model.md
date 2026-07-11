@@ -11,20 +11,11 @@ Veilpay is designed around explicit trust boundaries.
 
 ## Backend boundary
 
-- Authenticates merchants.
-- Stores invoices and payment state.
-- Proxies infrastructure RPC calls.
-- Signs and verifies webhooks.
-- Runs workers and queues.
-- Must not receive user mnemonics or private keys.
-
-## Merchant boundary
-
-- Stores API keys server-side.
-- Verifies webhook signatures.
-- Handles events idempotently.
-- Protects order state from replayed or forged events.
+- Proxies infrastructure RPC calls while keeping provider credentials server-side.
+- Runs chain-indexing workers and queues.
+- Serves fiat-ramp and health endpoints.
+- Must not receive user mnemonics, private keys, or raw signatures.
 
 ## Chain boundary
 
-The underlying chain is the source of transaction finality, but merchant systems should rely on Veilpay invoice status and signed webhook notifications for integration consistency.
+The underlying chain is the source of transaction finality. The app tracks confirmation through chain-specific status polling rather than assuming a single client-side screen is authoritative.

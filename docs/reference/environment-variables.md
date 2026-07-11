@@ -9,11 +9,10 @@ inventory of sensitive configuration, this page describes categories rather than
 The backend is configured through server-side environment variables, grouped as:
 
 - **Datastore connections** — PostgreSQL and Redis connection details and credentials.
-- **Signing and auth secrets** — the JWT signing secret, the API-key salt, and the webhook
-  signing secret. These are distinct values so their blast radius and rotation stay independent.
+- **Signing and auth secrets** — server-side signing and session secrets. These are distinct
+  values so their blast radius and rotation stay independent.
 - **RPC provider credentials** — API keys and RPC URLs for the supported chain providers.
-- **Runtime and policy settings** — environment mode, port, allowed CORS origins, and default
-  merchant tier.
+- **Runtime and policy settings** — environment mode, port, and allowed CORS origins.
 
 All of the above are secrets or environment-specific settings and are never bundled into the
 mobile app. In production they are sourced from Doppler (see [Secrets and keys](../security/secrets-and-keys.md)).

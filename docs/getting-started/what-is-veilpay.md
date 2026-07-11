@@ -8,13 +8,13 @@ At a high level, Veilpay lets a merchant create an invoice, lets a user pay from
 
 Veilpay has three major surfaces:
 
-| Surface | Purpose | Primary location |
-| --- | --- | --- |
-| Consumer app | Self-custody wallet, balances, send/receive, privacy UX, fiat ramps | `apps/consumer-app` |
-| Backend API | Merchants, invoices, payments, webhooks, RPC proxy, health checks | `apps/backend` |
-| Indexer and workers | Payment detection, chain polling, webhook delivery, invoice expiry | `apps/indexer`, `apps/backend/src/jobs` |
+| Surface | Purpose |
+| --- | --- |
+| Consumer app | Self-custody wallet, balances, send/receive, privacy UX, fiat ramps |
+| Backend API | Merchants, invoices, payments, webhooks, RPC proxy, health checks |
+| Indexer and workers | Payment detection, chain polling, webhook delivery, invoice expiry |
 
-The repo also includes shared packages for chain metadata, contracts, circuits, audit tooling, and the native Stellar SPP bridge.
+Veilpay also provides shared infrastructure for chain metadata, contracts, circuits, audit tooling, and the native Stellar SPP bridge.
 
 ## What makes Veilpay different
 

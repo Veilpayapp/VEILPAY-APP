@@ -17,13 +17,13 @@ Stellar Testnet
   └─ registry contract
 
 Consumer app
-  ├─ StellarSppScreen
-  ├─ stellarSpp utilities
-  ├─ spp note store
-  └─ native module bridge
+  ├─ Private XLM screen
+  ├─ SPP client utilities
+  ├─ Private note store
+  └─ Native module bridge
 
 Native layer
-  └─ packages/spp-native Rust bridge
+  └─ Rust proving bridge
 ```
 
 ## Key technical facts

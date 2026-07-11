@@ -18,12 +18,6 @@ GET /api/v1/merchant/{id}/stats
 PUT /api/v1/merchant/{id}
 ```
 
-## Directory
-
-```http
-GET /api/v1/directory/{id}
-```
-
 ## Invoices
 
 ```http
@@ -59,12 +53,6 @@ POST /api/v1/onramp/url
 GET /api/v1/onramp/quotes
 POST /api/v1/onramp/webhook
 GET /api/v1/onramp/status/{id}
-```
-
-## Relayer
-
-```http
-POST /api/v1/relayer/withdraw
 ```
 
 ## RPC proxy

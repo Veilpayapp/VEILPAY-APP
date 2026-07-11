@@ -27,9 +27,11 @@ The Veilpay backend is an Express and TypeScript API server.
 | `/api/v1/payment` | Payment confirmation and payment lookup |
 | `/api/v1/webhook` | Webhook test, verification, failed delivery recovery |
 | `/api/v1/onramp` | Fiat ramp URL, quotes, webhook, status |
-| `/api/v1/relayer` | Withdrawal relay endpoint |
 | `/api/v1/rpc` | Backend RPC proxy |
 | `/api/docs` | OpenAPI JSON and local docs UI |
+
+Additional internal and privacy-track routes exist for backend-to-backend operations. They are
+authenticated and rate-limited, and are intentionally kept out of the public route reference.
 
 ## Request protection
 

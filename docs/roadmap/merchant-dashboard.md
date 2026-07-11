@@ -14,7 +14,7 @@ The merchant dashboard is a planned self-service web surface for merchants.
 
 ## Current boundary
 
-The authoritative merchant API surface is the Express backend in `apps/backend`. The dashboard plan should consume those APIs rather than redefining the backend contract.
+The authoritative merchant API surface is the Veilpay backend API. The dashboard plan should consume those APIs rather than redefining the backend contract.
 
 ## Design direction
 

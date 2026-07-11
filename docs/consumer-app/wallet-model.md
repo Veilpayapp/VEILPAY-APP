@@ -20,4 +20,4 @@ Veilpay uses a self-custody wallet model.
 
 ## Security boundaries
 
-The backend can authenticate merchants, create invoices, relay non-secret infrastructure requests, and verify payment state. It must not receive user mnemonics, private keys, raw signatures, or unredacted signing material.
+The backend relays non-secret infrastructure requests, such as proxied RPC calls, and provides supporting services. It must not receive user mnemonics, private keys, raw signatures, or unredacted signing material.

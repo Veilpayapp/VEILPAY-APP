@@ -1,6 +1,6 @@
 # Backend architecture
 
-The Veilpay backend is an Express and TypeScript API server.
+The Veilpay backend is an Express and TypeScript service that supports the consumer wallet with an RPC proxy, chain indexing, fiat-ramp integration, and health checks. It never receives user signing material.
 
 ## Technology stack
 
@@ -22,11 +22,7 @@ The Veilpay backend is an Express and TypeScript API server.
 | Route group | Purpose |
 | --- | --- |
 | `/api/v1/health` | Health, readiness, liveness |
-| `/api/v1/merchant` | Merchant registration, profile, stats, public keys |
-| `/api/v1/invoice` | Invoice creation, status, details, cancellation, payment mark |
-| `/api/v1/payment` | Payment confirmation and payment lookup |
-| `/api/v1/webhook` | Webhook test, verification, failed delivery recovery |
-| `/api/v1/onramp` | Fiat ramp URL, quotes, webhook, status |
+| `/api/v1/onramp` | Fiat ramp URL, quotes, status |
 | `/api/v1/rpc` | Backend RPC proxy |
 | `/api/docs` | OpenAPI JSON and local docs UI |
 
@@ -39,12 +35,11 @@ The backend applies:
 
 - Helmet security headers.
 - JSON body size limits.
-- raw body capture for HMAC verification.
 - CORS from explicit config.
 - global and route-specific rate limiters.
-- API-key and request-signature authentication for merchant routes.
+- server-side provider-credential isolation for proxied RPC calls.
 - error handling through centralized middleware and Sentry.
 
 ## Background processes
 
-When the backend runs as the main process, it starts invoice-expiry workers, webhook queues/workers, and chain indexing jobs. Shutdown closes workers and disconnects Prisma cleanly.
+When the backend runs as the main process, it starts chain-indexing jobs and supporting queues/workers. Shutdown closes workers and disconnects Prisma cleanly.

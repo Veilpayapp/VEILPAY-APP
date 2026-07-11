@@ -18,11 +18,11 @@ Required before production exposure:
 
 ## Future track: Monero
 
-Monero would require wallet integration, address/payment ID handling strategy, node or provider architecture, transaction monitoring, merchant reconciliation design, and compliance review.
+Monero would require wallet integration, address/payment ID handling strategy, node or provider architecture, transaction monitoring, balance reconciliation design, and compliance review.
 
 ## Future track: Zcash
 
-Zcash would require shielded-address UX, viewing-key strategy, memo handling, note scanning, light-client or provider strategy, and merchant reconciliation design.
+Zcash would require shielded-address UX, viewing-key strategy, memo handling, note scanning, light-client or provider strategy, and balance reconciliation design.
 
 ## Future track: Midnight
 

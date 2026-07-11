@@ -8,13 +8,11 @@ Veilpay backend hardening includes application-level controls and operational gu
 - Explicit CORS origin configuration.
 - JSON body size limits.
 - Zod validation patterns.
-- HMAC request signing.
-- Timestamp replay protection.
 - Global and route-specific rate limits.
-- Merchant-scoped resource access.
+- Server-side provider-credential isolation.
 - Sentry error reporting.
 - Structured logging.
-- Redis-backed session and queue infrastructure.
+- Redis-backed queue infrastructure.
 
 ## RPC protection
 

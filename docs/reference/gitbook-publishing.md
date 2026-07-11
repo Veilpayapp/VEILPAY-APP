@@ -86,7 +86,7 @@ Rules:
 Before publishing to a public space, confirm the diff contains none of the following:
 
 - [ ] Private keys, mnemonics, or raw signatures.
-- [ ] Real API keys, webhook signing secrets, JWT secrets, or provider credentials.
+- [ ] Real API keys, JWT secrets, or provider credentials.
 - [ ] A GitBook API token or any other access token.
 - [ ] Internal-only hostnames, or real production endpoints that should stay private.
 - [ ] Claims that testnet, gated, or planned features are production-live.

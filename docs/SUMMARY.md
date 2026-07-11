@@ -12,7 +12,6 @@
 
 - [How Veilpay works](protocol/how-veilpay-works.md)
 - [Payment lifecycle](protocol/payment-lifecycle.md)
-- [Invoice lifecycle](protocol/invoice-lifecycle.md)
 - [Privacy levels](protocol/privacy-levels.md)
 
 ## Architecture
@@ -30,16 +29,6 @@
 - [Balances and assets](consumer-app/balances-and-assets.md)
 - [WalletConnect](consumer-app/walletconnect.md)
 - [Fiat ramps](consumer-app/fiat-ramps.md)
-
-## Merchant API
-
-- [API overview](merchant-api/overview.md)
-- [Authentication](merchant-api/authentication.md)
-- [Merchants](merchant-api/merchants.md)
-- [Invoices](merchant-api/invoices.md)
-- [Payments](merchant-api/payments.md)
-- [Webhooks](merchant-api/webhooks.md)
-- [RPC proxy](merchant-api/rpc-proxy.md)
 
 ## Chains
 
@@ -61,14 +50,12 @@
 
 - [Security model](security/security-model.md)
 - [Secrets and keys](security/secrets-and-keys.md)
-- [Webhook security](security/webhook-security.md)
 - [API hardening](security/api-hardening.md)
 - [Production checklist](security/production-checklist.md)
 
 ## Roadmap
 
 - [Product roadmap](roadmap/product-roadmap.md)
-- [Merchant dashboard](roadmap/merchant-dashboard.md)
 - [Mainnet privacy gates](roadmap/mainnet-privacy-gates.md)
 
 ## Reference

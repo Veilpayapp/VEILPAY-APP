@@ -31,10 +31,10 @@ User device
 Backend
   ├─ Express routes
   ├─ Prisma database access
-  ├─ Redis sessions
+  ├─ Redis coordination
   ├─ BullMQ queues
   ├─ RPC proxy
-  └─ Webhook delivery
+  └─ Chain indexer
 
 Networks and services
   ├─ EVM RPC providers

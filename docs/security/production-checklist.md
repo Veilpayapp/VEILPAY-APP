@@ -7,7 +7,6 @@ Use this checklist before exposing a Veilpay environment to production traffic.
 - [ ] Doppler configured.
 - [ ] JWT secret set and strong.
 - [ ] API key salt set and strong.
-- [ ] Webhook signing secret set and separate.
 - [ ] Provider API keys server-side only.
 - [ ] No secrets in Expo public variables.
 
@@ -19,7 +18,7 @@ Use this checklist before exposing a Veilpay environment to production traffic.
 - [ ] Rate limiters enabled.
 - [ ] CORS origins explicit.
 - [ ] Sentry configured.
-- [ ] Webhook queue and worker running.
+- [ ] Background job queue and worker running.
 
 ## Mobile
 

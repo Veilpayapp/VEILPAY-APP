@@ -5,6 +5,8 @@
   "scripts": {
     "build": "anchor build",
     "test": "anchor test",
+    "test:unit": "cargo test --manifest-path programs/veil_pool/Cargo.toml --lib",
+    "gen:vk": "node scripts/generate_verifying_key.js ../circuits/build/verification_key.json programs/veil_pool/src/verifying_key.rs",
     "deploy": "anchor deploy",
     "clean": "rm -rf target"
   },

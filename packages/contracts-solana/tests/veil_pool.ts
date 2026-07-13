@@ -134,12 +134,17 @@ describe("veil_pool", () => {
     assert.equal(poolState.paused, false);
   });
 
+  // Shared across deposit/withdraw scaffold tests (single-leaf deploy gate).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let firstCommitment: number[] = [];
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  it("Can deposit", async () => {
-    const commitment = Array.from(crypto.randomBytes(32));
-    
+  it("Can deposit once (scaffold single-leaf)", async () => {
+    firstCommitment = Array.from(crypto.randomBytes(32));
+    firstCommitment[0] = firstCommitment[0] & 0x0f;
+
     await program.methods
-      .deposit(commitment, amount)
+      .deposit(firstCommitment, amount)
       .accounts({
         pool,
         poolTokenAccount,
@@ -155,6 +160,8 @@ describe("veil_pool", () => {
     const poolState = await program.account.pool.fetch(pool);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     assert.equal(poolState.leafCount.toNumber(), 1);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    assert.deepEqual(Array.from(poolState.merkleRoot), firstCommitment);
 
     const poolTokenBalance = await provider.connection.getTokenAccountBalance(poolTokenAccount);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
@@ -162,25 +169,35 @@ describe("veil_pool", () => {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  it("Cannot deposit with duplicate commitment", async () => {
-    const commitment = Array.from(crypto.randomBytes(32));
-    
-    await program.methods
-      .deposit(commitment, amount)
-      .accounts({
-        pool,
-        poolTokenAccount,
-        mint,
-        depositor: depositor.publicKey,
-        depositorTokenAccount,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .signers([depositor])
-      .rpc();
-
+  it("Rejects second distinct deposit (ScaffoldSingleLeafOnly deploy gate)", async () => {
+    const other = Array.from(crypto.randomBytes(32));
+    other[0] = other[0] & 0x0f;
     try {
       await program.methods
-        .deposit(commitment, amount)
+        .deposit(other, amount)
+        .accounts({
+          pool,
+          poolTokenAccount,
+          mint,
+          depositor: depositor.publicKey,
+          depositorTokenAccount,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .signers([depositor])
+        .rpc();
+      assert.fail("Should have failed scaffold single-leaf gate");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      assert.include(e.toString(), "ScaffoldSingleLeafOnly");
+    }
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  it("Cannot re-deposit the same commitment (DuplicateCommitment)", async () => {
+    try {
+      await program.methods
+        .deposit(firstCommitment, amount)
         .accounts({
           pool,
           poolTokenAccount,
@@ -257,19 +274,21 @@ describe("veil_pool", () => {
     assert.equal(poolState.paused, false);
   });
 
-  // SEC-007: verify_proof is a hard fail-closed stub — no proof is accepted until a
-  // real Groth16 verifier is integrated. Withdraw must revert with InvalidProof and
-  // move no funds. (The old `[1, 2, 3, 4]` dummy-proof backdoor was removed.)
+  // SEC-007: real Groth16 verifier is live. Forged / malformed proofs and
+  // unknown merkle roots must fail closed (no funds, no nullifier). The old
+  // `[1, 2, 3, 4]` dummy-proof backdoor must never succeed.
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  it("Withdraw fails closed (InvalidProof) until a real verifier is integrated", async () => {
+  it("Withdraw with unknown merkle root fails closed", async () => {
     const nullifier = Array.from(crypto.randomBytes(32));
-    const proof = Buffer.from([1, 2, 3, 4]);
+    const unknownRoot = Array.from(crypto.randomBytes(32));
+    // 256-byte zero proof — well-formed length, invalid curve points.
+    const proof = Buffer.alloc(256);
 
     const preBalance = await provider.connection.getTokenAccountBalance(recipientTokenAccount);
 
     try {
       await program.methods
-        .withdraw(nullifier, proof, amount)
+        .withdraw(nullifier, proof, unknownRoot, amount)
         .accounts({
           pool,
           poolTokenAccount,
@@ -283,48 +302,64 @@ describe("veil_pool", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      assert.include(e.toString(), "InvalidProof");
+      assert.include(e.toString(), "InvalidMerkleRoot");
     }
 
-    // No funds released.
     const postBalance = await provider.connection.getTokenAccountBalance(recipientTokenAccount);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     assert.equal(postBalance.value.amount, preBalance.value.amount);
   });
 
-  // A rejected withdraw must not record its nullifier (verify_proof rejects before the
-  // nullifier is inserted). On-chain double-spend rejection is re-tested once withdraw
-  // is functional under the real verifier (SEC-007).
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  it("Fail-closed withdraw records no nullifier", async () => {
-    const nullifier = Array.from(crypto.randomBytes(32));
-    const proof = Buffer.from([1, 2, 3, 4]);
+  it("Withdraw with matching root + forged proof fails InvalidProof", async () => {
+    // Use the single scaffold leaf from the earlier deposit (no second deposit).
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const poolBefore = await program.account.pool.fetch(pool);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const commitment = Array.from(poolBefore.merkleRoot as number[]);
+    assert.equal(commitment.length, 32);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    assert.equal(poolBefore.leafCount.toNumber(), 1);
 
-    try {
-      await program.methods
-        .withdraw(nullifier, proof, amount)
-        .accounts({
-          pool,
-          poolTokenAccount,
-          mint,
-          recipient: recipient.publicKey,
-          recipientTokenAccount,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .rpc();
-      assert.fail("Should have failed closed");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      assert.include(e.toString(), "InvalidProof");
+    const nullifier = Array.from(crypto.randomBytes(32));
+    nullifier[0] = nullifier[0] & 0x0f;
+    // Historical dummy backdoor + well-formed-length zeros — both must fail.
+    const forgedShort = Buffer.from([1, 2, 3, 4]);
+    const forgedFull = Buffer.alloc(256);
+
+    const preBalance = await provider.connection.getTokenAccountBalance(recipientTokenAccount);
+
+    for (const proof of [forgedShort, forgedFull]) {
+      try {
+        await program.methods
+          .withdraw(nullifier, proof, commitment, amount)
+          .accounts({
+            pool,
+            poolTokenAccount,
+            mint,
+            recipient: recipient.publicKey,
+            recipientTokenAccount,
+            tokenProgram: TOKEN_PROGRAM_ID,
+          })
+          .rpc();
+        assert.fail("Should have failed closed on forged proof");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        assert.include(e.toString(), "InvalidProof");
+      }
     }
+
+    const postBalance = await provider.connection.getTokenAccountBalance(recipientTokenAccount);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    assert.equal(postBalance.value.amount, preBalance.value.amount);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const poolState = await program.account.pool.fetch(pool);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     assert.equal(poolState.nullifiersSpent.spent.length, 0);
   });
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   it("Cannot withdraw when paused", async () => {
     await program.methods
@@ -337,12 +372,13 @@ describe("veil_pool", () => {
       .rpc();
 
     const nullifier = Array.from(crypto.randomBytes(32));
-    // The pause guard runs before verify_proof, so this reverts with PoolPaused
-    // regardless of the proof value.
-    const proof = Buffer.from([1, 2, 3, 4]);
+    const merkleRoot = Array.from(crypto.randomBytes(32));
+    // The pause guard runs before root/proof checks, so this reverts with
+    // PoolPaused regardless of the proof / root values.
+    const proof = Buffer.alloc(256);
     try {
       await program.methods
-        .withdraw(nullifier, proof, amount)
+        .withdraw(nullifier, proof, merkleRoot, amount)
         .accounts({
           pool,
           poolTokenAccount,

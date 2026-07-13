@@ -1,0 +1,30 @@
+[package]
+name = "veil_pool"
+version = "0.1.0"
+description = "VeilPay Privacy Pool for Solana"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "veil_pool"
+
+[features]
+default = []
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+
+[dependencies]
+anchor-lang = "0.30.1"
+anchor-spl = { version = "0.30.1", features = ["token"] }
+# BN254 pairing via Solana alt_bn128 syscalls (mainnet since 1.18).
+# SEC-007: real Groth16 verify_proof for withdraw.
+groth16-solana = "0.2.0"
+
+[dev-dependencies]
+# Host-side helpers for unit tests that exercise proof A negation.
+ark-bn254 = "0.5"
+ark-ff = "0.5"
+ark-serialize = "0.5"

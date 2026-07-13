@@ -22,24 +22,32 @@ export interface PaymentTxInput {
 }
 
 export type ProcessPaymentOutcome =
-  | { kind: 'created'; paymentId: string }
-  | { kind: 'idempotent'; paymentId: string };
+  | { kind: 'created'; paymentId: string; paidAt: Date }
+  | { kind: 'idempotent'; paymentId: string; paidAt: Date | null };
 
 /**
- * Internal sentinel thrown inside the transaction when a concurrent request
- * has already flipped the invoice from `pending` → `paid`. The caller catches
- * it the same way P2002 is handled and returns the idempotent outcome.
- *
- * This closes the double-payment race where two concurrent confirms with
- * DIFFERENT txHashes for the same invoice both pass the controller's
- * out-of-transaction `status === "pending"` check, both create distinct
- * Payment rows (no P2002 because the unique key `(chainKey, txHash)`
- * differs), and both fire webhooks.
+ * Internal sentinel: concurrent request already flipped invoice off `pending`
+ * (paid), OR invoice was expired/cancelled mid-flight.
  */
-class InvoiceAlreadyPaidError extends Error {
+class InvoiceStatusRaceError extends Error {
   constructor() {
-    super('Invoice already paid by a concurrent request');
-    this.name = 'InvoiceAlreadyPaidError';
+    super('Invoice is no longer pending');
+    this.name = 'InvoiceStatusRaceError';
+  }
+}
+
+/**
+ * Thrown when pay races with expiry/cancel and there is no winning payment.
+ * Controllers map this to HTTP 409.
+ */
+export class InvoiceNotPayableError extends Error {
+  readonly status: number = 409;
+  readonly invoiceStatus: string;
+
+  constructor(invoiceStatus: string) {
+    super(`Invoice is ${invoiceStatus} and cannot accept payment`);
+    this.name = 'InvoiceNotPayableError';
+    this.invoiceStatus = invoiceStatus;
   }
 }
 
@@ -47,36 +55,19 @@ class InvoiceAlreadyPaidError extends Error {
  * Atomically record a confirmed payment against `invoice`, mark the invoice
  * paid, and enqueue the merchant webhook.
  *
- * DATA-003 / REL-001 fix: the Payment create + Invoice update now run inside
- * a single `prisma.$transaction` so a crash between them can no longer leave
- * a Payment row pointing at an still-pending Invoice.
+ * DATA-003 / REL-001 fix: the Payment create + Invoice update run inside
+ * a single `prisma.$transaction`.
  *
- * Idempotent by `(chainKey, txHash)`: a duplicate submission for the same
- * transaction hash returns `{ kind: 'idempotent' }` without re-mutating the
- * invoice or re-firing the webhook. A concurrent duplicate that loses the
- * create race surfaces as Prisma P2002 and is converted to the same
- * idempotent outcome.
- *
- * The webhook is enqueued AFTER the DB transaction commits so a Redis/queue
- * outage never rolls back committed payment state. `enqueueWebhook` has its
- * own DB fallback that persists a failed delivery row when the queue is down.
- *
- * Callers are responsible for validating invoice ownership and chain
- * parameters BEFORE calling this helper — the indexer trusts its own chain
- * reads; the HTTP controller validates merchant auth then
- * `verifyPaymentTxOnChain` (SEC-001 residual) before calling this helper.
+ * Idempotent by `(chainKey, txHash)`. Concurrent different-txHash races that
+ * lose the pending→paid update resolve to the winning payment. If the invoice
+ * was expired/cancelled instead, throws `InvoiceNotPayableError` (409).
  */
 export async function confirmInvoicePayment(
   invoice: InvoiceContext,
   tx: PaymentTxInput
 ): Promise<ProcessPaymentOutcome> {
-  // No pre-check findUnique: the `@@unique([chainKey, txHash])` constraint
-  // is the authoritative dedupe guard, and the P2002 catch below converts a
-  // duplicate create into the idempotent outcome. A pre-check would add a
-  // guaranteed DB round trip on the happy path — the indexer (high-frequency
-  // caller) rarely sees duplicates, so the transaction + P2002 path is
-  // cheaper overall than findUnique + transaction for the common case.
   try {
+    const paidAt = new Date();
     const created = await prisma.$transaction(async (txClient) => {
       const payment = await txClient.payment.create({
         data: {
@@ -95,30 +86,21 @@ export async function confirmInvoicePayment(
         select: { id: true },
       });
 
-      // CRITICAL fix: make the `pending → paid` transition conditional INSIDE
-      // the transaction so a concurrent confirm with a DIFFERENT txHash
-      // cannot also flip the invoice and double-fire the webhook. The
-      // unique constraint `@@unique([chainKey, txHash])` only dedupes the
-      // SAME txHash — it does not prevent two distinct txHashes from
-      // double-paying one invoice. `updateMany` with a `status: 'pending'`
-      // predicate is atomic within the transaction: if `count === 0`, a
-      // concurrent request already paid it.
       const updateResult = await txClient.invoice.updateMany({
         where: { id: invoice.id, status: 'pending' },
         data: {
           status: 'paid',
-          paidAt: new Date(),
+          paidAt,
           paymentTxHash: tx.txHash,
         },
       });
       if (updateResult.count === 0) {
-        throw new InvoiceAlreadyPaidError();
+        throw new InvoiceStatusRaceError();
       }
 
       return payment;
     });
 
-    // Webhook enqueued after commit (see function doc).
     await enqueueWebhook({
       eventType: 'payment.received',
       merchantId: invoice.merchantId,
@@ -130,11 +112,8 @@ export async function confirmInvoicePayment(
       timestamp: Date.now(),
     });
 
-    return { kind: 'created', paymentId: created.id };
+    return { kind: 'created', paymentId: created.id, paidAt };
   } catch (err) {
-    // P2002 = unique constraint violation on `(chainKey, txHash)` → a
-    // concurrent request with the SAME txHash won the race. Re-read and
-    // return the idempotent outcome.
     if (
       err instanceof Prisma.PrismaClientKnownRequestError &&
       err.code === 'P2002'
@@ -144,24 +123,39 @@ export async function confirmInvoicePayment(
         select: { id: true },
       });
       if (raced) {
-        return { kind: 'idempotent', paymentId: raced.id };
+        const inv = await prisma.invoice.findUnique({
+          where: { id: invoice.id },
+          select: { paidAt: true },
+        });
+        return { kind: 'idempotent', paymentId: raced.id, paidAt: inv?.paidAt ?? null };
       }
     }
 
-    // InvoiceAlreadyPaidError = a concurrent request with a DIFFERENT txHash
-    // already flipped the invoice to `paid` inside its own transaction. Find
-    // the winning Payment by the invoice id and return the idempotent
-    // outcome so this request does NOT create a duplicate Payment or fire a
-    // second webhook.
-    if (err instanceof InvoiceAlreadyPaidError) {
+    if (err instanceof InvoiceStatusRaceError) {
       const winner = await prisma.payment.findFirst({
         where: { invoiceId: invoice.id, status: 'confirmed' },
         select: { id: true },
         orderBy: { timestamp: 'desc' },
       });
       if (winner) {
-        return { kind: 'idempotent', paymentId: winner.id };
+        const inv = await prisma.invoice.findUnique({
+          where: { id: invoice.id },
+          select: { paidAt: true },
+        });
+        return { kind: 'idempotent', paymentId: winner.id, paidAt: inv?.paidAt ?? null };
       }
+
+      // No winning payment → likely expired/cancelled during the race.
+      const current = await prisma.invoice.findUnique({
+        where: { id: invoice.id },
+        select: { status: true },
+      });
+      const status = current?.status ?? 'unknown';
+      if (status === 'paid') {
+        // Paid without a payment row is inconsistent; still avoid 500.
+        throw new InvoiceNotPayableError('paid');
+      }
+      throw new InvoiceNotPayableError(status);
     }
 
     throw err;
@@ -169,10 +163,7 @@ export async function confirmInvoicePayment(
 }
 
 /**
- * Indexer entry point — retained for backward compatibility with the
- * Goldrush chain indexer that calls this directly (no HTTP hop). The
- * indexer has already matched the on-chain tx to the invoice, so it
- * delegates to the shared transactional helper.
+ * Indexer entry point — delegates to the shared transactional helper.
  */
 export async function processPaymentMatch(
   invoice: InvoiceContext,

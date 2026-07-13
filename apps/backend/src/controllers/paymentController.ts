@@ -3,7 +3,10 @@ import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import type { AuthenticatedRequest } from "../middleware/auth";
 import { prisma } from "../lib/prisma";
-import { confirmInvoicePayment } from "../services/paymentProcessor";
+import {
+  confirmInvoicePayment,
+  InvoiceNotPayableError,
+} from "../services/paymentProcessor";
 import { verifyPaymentTxOnChain } from "../services/paymentTxVerifier";
 import {
   PaymentListQuerySchema,
@@ -81,6 +84,7 @@ export const confirmPayment = async (req: AuthenticatedRequest, res: Response, n
         tokenSymbol: invoice.tokenSymbol,
         amount: invoice.amount,
         paymentAddress: invoice.paymentAddress,
+        tokenAddress: invoice.tokenAddress,
       },
       {
         txHash: body.txHash,
@@ -97,35 +101,49 @@ export const confirmPayment = async (req: AuthenticatedRequest, res: Response, n
       return;
     }
 
-    const outcome = await confirmInvoicePayment(
-      {
-        id: invoice.id,
-        merchantId: invoice.merchantId,
-        chainKey: invoice.chainKey,
-        tokenSymbol: invoice.tokenSymbol,
-        amount: invoice.amount,
-        privacyLevel: invoice.privacyLevel,
-      },
-      verified.tx
-    );
+    try {
+      const outcome = await confirmInvoicePayment(
+        {
+          id: invoice.id,
+          merchantId: invoice.merchantId,
+          chainKey: invoice.chainKey,
+          tokenSymbol: invoice.tokenSymbol,
+          amount: invoice.amount,
+          privacyLevel: invoice.privacyLevel,
+        },
+        verified.tx
+      );
 
-    if (outcome.kind === "idempotent") {
-      res.status(200).json({
+      if (outcome.kind === "idempotent") {
+        res.status(200).json({
+          success: true,
+          paymentId: outcome.paymentId,
+          invoiceId: invoice.id,
+          status: "confirmed",
+          idempotent: true,
+          paidAt: outcome.paidAt ? outcome.paidAt.toISOString() : null,
+        });
+        return;
+      }
+
+      res.status(201).json({
         success: true,
         paymentId: outcome.paymentId,
         invoiceId: invoice.id,
         status: "confirmed",
-        idempotent: true,
+        paidAt: outcome.paidAt.toISOString(),
       });
-      return;
+    } catch (err) {
+      if (err instanceof InvoiceNotPayableError) {
+        res.status(409).json({
+          error: err.message,
+          code: "INVOICE_NOT_PAYABLE",
+          invoiceStatus: err.invoiceStatus,
+        });
+        return;
+      }
+      throw err;
     }
-
-    res.status(201).json({
-      success: true,
-      paymentId: outcome.paymentId,
-      invoiceId: invoice.id,
-      status: "confirmed",
-    });
   } catch (error) {
     next(error);
   }

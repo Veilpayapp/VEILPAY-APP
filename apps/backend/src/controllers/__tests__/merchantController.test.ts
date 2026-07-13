@@ -304,6 +304,15 @@ describe('merchantController', () => {
   // ── publishKey ────────────────────────────────────────────────────────────
 
   describe('POST /merchant/keys', () => {
+    // SEC-001: the directory serves these values unauthenticated, so publishKey
+    // now rejects anything that is not a well-formed PUBLIC key. Use real
+    // public keys per chain family in the happy-path tests.
+    const EVM_PUBKEY =
+      '0x02ba5734d8f7091719471e7f7ed6b9df170dc70cc661ca05e688601ad984f068b0';
+    const SVM_PUBKEY = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+    // Valid StrKey ed25519 public (all-zero payload + CRC16-XModem)
+    const XLM_PUBKEY = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
+
     it('upserts viewing key and returns success', async () => {
       mockPrisma.chainViewingKey.upsert.mockResolvedValue({
         chainKey: 'ethereum',
@@ -311,7 +320,7 @@ describe('merchantController', () => {
 
       const res = await request(app)
         .post('/merchant/keys')
-        .send({ chainKey: 'ethereum', viewingKey: 'vk_test_key', settlementAddress: '0xAbCdEf' });
+        .send({ chainKey: 'ethereum', viewingKey: EVM_PUBKEY, settlementAddress: '0xAbCdEf' });
 
       expect(res.status).toBe(200);
       expect(res.body.chainKey).toBe('ethereum');
@@ -323,23 +332,32 @@ describe('merchantController', () => {
 
       await request(app)
         .post('/merchant/keys')
-        .send({ chainKey: 'solana', viewingKey: 'vk_sol', settlementAddress: 'SolanaAddress123' });
+        .send({ chainKey: 'solana', viewingKey: SVM_PUBKEY, settlementAddress: 'SolanaAddress123' });
 
       expect(mockPrisma.chainViewingKey.upsert).toHaveBeenCalledWith(
         expect.objectContaining({ create: expect.objectContaining({ chainType: 'svm' }) })
       );
     });
 
-    it('maps aptos chain to mvm type', async () => {
-      mockPrisma.chainViewingKey.upsert.mockResolvedValue({ chainKey: 'aptos' });
+    it('maps stellar chain to xlm type', async () => {
+      mockPrisma.chainViewingKey.upsert.mockResolvedValue({ chainKey: 'stellar' });
 
       await request(app)
         .post('/merchant/keys')
-        .send({ chainKey: 'aptos', viewingKey: 'vk_apt', settlementAddress: '0xAptosAddr' });
+        .send({ chainKey: 'stellar', viewingKey: XLM_PUBKEY, settlementAddress: 'GABCDEFGHIJKLMNOPQRSTUVWXYZ234567' });
 
       expect(mockPrisma.chainViewingKey.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({ create: expect.objectContaining({ chainType: 'mvm' }) })
+        expect.objectContaining({ create: expect.objectContaining({ chainType: 'xlm' }) })
       );
+    });
+
+    it('rejects unsupported chainKey (e.g. removed aptos)', async () => {
+      const res = await request(app)
+        .post('/merchant/keys')
+        .send({ chainKey: 'aptos', viewingKey: 'vk_apt', settlementAddress: '0xAptosAddr' });
+
+      expect(res.status).toBe(400);
+      expect(mockPrisma.chainViewingKey.upsert).not.toHaveBeenCalled();
     });
 
     it('returns 400 for invalid/missing fields', async () => {
@@ -348,6 +366,62 @@ describe('merchantController', () => {
         .send({}); // no chainKey, no viewingKey, no settlementAddress
 
       expect(res.status).toBe(400);
+    });
+
+    // SEC-001: reject secret/private keys and malformed values before they can
+    // ever be persisted and served by the unauthenticated directory endpoint.
+    it('rejects an EVM private key (32-byte) instead of a public key', async () => {
+      const res = await request(app)
+        .post('/merchant/keys')
+        .send({
+          chainKey: 'ethereum',
+          // 32-byte secp256k1 private key — must never be published.
+          viewingKey:
+            '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+          settlementAddress: '0xAbCdEf',
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('INVALID_PUBLIC_VIEWING_KEY');
+      expect(mockPrisma.chainViewingKey.upsert).not.toHaveBeenCalled();
+    });
+
+    it('rejects an off-curve EVM point', async () => {
+      const res = await request(app)
+        .post('/merchant/keys')
+        .send({
+          chainKey: 'ethereum',
+          viewingKey: '0x02' + '11'.repeat(32),
+          settlementAddress: '0xAbCdEf',
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('INVALID_PUBLIC_VIEWING_KEY');
+      expect(mockPrisma.chainViewingKey.upsert).not.toHaveBeenCalled();
+    });
+
+    it('rejects a placeholder / non-key EVM string', async () => {
+      const res = await request(app)
+        .post('/merchant/keys')
+        .send({ chainKey: 'ethereum', viewingKey: 'vk_test_key', settlementAddress: '0xAbCdEf' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('INVALID_PUBLIC_VIEWING_KEY');
+      expect(mockPrisma.chainViewingKey.upsert).not.toHaveBeenCalled();
+    });
+
+    it('rejects a Stellar secret seed (S…) published as a viewing key', async () => {
+      const res = await request(app)
+        .post('/merchant/keys')
+        .send({
+          chainKey: 'stellar',
+          viewingKey: 'S' + 'A'.repeat(55),
+          settlementAddress: 'GABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.code).toBe('INVALID_PUBLIC_VIEWING_KEY');
+      expect(mockPrisma.chainViewingKey.upsert).not.toHaveBeenCalled();
     });
   });
 

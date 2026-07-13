@@ -1,75 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { config } from '../config';
+import { getRpcUrl } from '../lib/rpcEndpoints';
 
 const router = Router();
 
 // ─── Upstream configuration ────────────────────────────────────────────────
 // Provider priority: Alchemy → Infura → public fallback (read-only).
 // Keys are never sent to the client; the proxy injects them server-side.
-
-const PUBLIC_FALLBACKS: Record<string, string> = {
-  ethereum:       'https://ethereum-rpc.publicnode.com',
-  bsc:            'https://bsc-dataseed.binance.org',
-  polygon:        'https://polygon-rpc.com',
-  arbitrum:       'https://arb1.arbitrum.io/rpc',
-  base:           'https://mainnet.base.org',
-  sepolia:        'https://rpc.sepolia.org',
-  solana:         'https://api.mainnet-beta.solana.com',
-  'solana-devnet': 'https://api.devnet.solana.com',
-  aptos:          'https://fullnode.mainnet.aptoslabs.com',
-  stellar:        'https://horizon.stellar.org',
-  'stellar-testnet': 'https://horizon-testnet.stellar.org',
-};
-
-function buildAlchemyUrl(chainKey: string): string | null {
-  const apiKey = config.rpc.alchemyApiKey?.trim();
-  if (!apiKey) return null;
-
-  const slugs: Record<string, string> = {
-    ethereum:  'eth-mainnet',
-    polygon:   'polygon-mainnet',
-    arbitrum:  'arb-mainnet',
-    base:      'base-mainnet',
-    sepolia:   'eth-sepolia',
-    solana:    'solana-mainnet',
-    bsc:       'bnb-mainnet',
-  };
-
-  const slug = slugs[chainKey];
-  if (!slug) return null;
-
-  return chainKey === 'solana'
-    ? `https://solana-mainnet.g.alchemy.com/v2/${apiKey}`
-    : `https://${slug}.g.alchemy.com/v2/${apiKey}`;
-}
-
-function buildInfuraUrl(chainKey: string): string | null {
-  const apiKey = config.rpc.infuraApiKey?.trim();
-  if (!apiKey) return null;
-
-  const slugs: Record<string, string> = {
-    ethereum: 'mainnet',
-    polygon:  'polygon-mainnet',
-    arbitrum: 'arbitrum-mainnet',
-    base:     'base-mainnet',
-    sepolia:  'sepolia',
-  };
-
-  const slug = slugs[chainKey];
-  if (!slug) return null;
-
-  return `https://${slug}.infura.io/v3/${apiKey}`;
-}
-
-function getRpcUrl(chainKey: string): string {
-  const alchemyUrl = buildAlchemyUrl(chainKey);
-  if (alchemyUrl) return alchemyUrl;
-
-  const infuraUrl = buildInfuraUrl(chainKey);
-  if (infuraUrl) return infuraUrl;
-
-  return PUBLIC_FALLBACKS[chainKey] || '';
-}
+// Resolution lives in lib/rpcEndpoints (shared with paymentTxVerifier).
 
 // ─── JSON-RPC method allowlist (S2) ────────────────────────────────────────
 // Read-only methods only. Signing/admin/debug/trace methods are rejected so an
@@ -367,8 +304,8 @@ router.post('/:chainKey', asyncRoute(async (req: Request, res: Response) => {
   }
 }));
 
-// REST GET passthrough — used by Aptos (`/v1/accounts/...`) and Stellar
-// (`/accounts/...`) which expose HTTP REST APIs rather than JSON-RPC. (C2 fix)
+// REST GET passthrough — used by Stellar (`/accounts/...`) which exposes
+// an HTTP REST API rather than JSON-RPC.
 router.get('/:chainKey/*', asyncRoute(async (req: Request, res: Response) => {
   const { chainKey } = req.params;
   const subPath: string = req.params[0] || '';

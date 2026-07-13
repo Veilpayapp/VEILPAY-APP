@@ -37,6 +37,9 @@ const envSchema = z.object({
   GOLDRUSH_API_KEY: z.string().default(''),
   SENTRY_DSN: z.string().default(''),
   RELAYER_PRIVATE_KEY: z.string().optional(),
+  // EVM receipt confirmation floor for pay/confirm (0 = accept in the same block).
+  // Production default 1 reduces reorg/false-confirm risk; set higher for L1 if needed.
+  PAYMENT_MIN_CONFIRMATIONS: z.coerce.number().int().min(0).max(64).default(1),
 });
 
 const env = envSchema.parse(process.env);
@@ -123,6 +126,7 @@ export const config = {
     infuraApiKey: env.INFURA_API_KEY,
     goldrushApiKey: env.GOLDRUSH_API_KEY,
   },
+  paymentMinConfirmations: env.PAYMENT_MIN_CONFIRMATIONS,
   sentryDsn: env.SENTRY_DSN,
   relayerPrivateKey: env.RELAYER_PRIVATE_KEY,
   cors: {

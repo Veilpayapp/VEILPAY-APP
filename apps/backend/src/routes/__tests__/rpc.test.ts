@@ -11,7 +11,7 @@ describe('RPC Proxy Routes', () => {
       }));
 
     expect(routes).toContainEqual({ path: '/:chainKey', method: 'post' });
-    // C2 fix: REST GET passthrough for Aptos/Stellar
+    // REST GET passthrough for Stellar Horizon
     expect(routes).toContainEqual({ path: '/:chainKey/*', method: 'get' });
   });
 
@@ -97,14 +97,14 @@ describe('RPC Proxy Routes', () => {
   });
 
   describe('chain support (C2)', () => {
-    it('resolves upstream URLs for REST chains (Aptos/Stellar)', () => {
-      expect(__test.isChainSupported('aptos')).toBe(true);
+    it('resolves upstream URLs for REST chains (Stellar)', () => {
       expect(__test.isChainSupported('stellar')).toBe(true);
       expect(__test.isChainSupported('stellar-testnet')).toBe(true);
     });
 
-    it('rejects unknown chains', () => {
+    it('rejects unknown chains and removed Aptos', () => {
       expect(__test.isChainSupported('dogechain')).toBe(false);
+      expect(__test.isChainSupported('aptos')).toBe(false);
     });
   });
 

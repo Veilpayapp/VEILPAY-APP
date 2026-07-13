@@ -193,6 +193,7 @@ describe('paymentController', () => {
       (confirmInvoicePayment as jest.Mock).mockResolvedValue({
         kind: 'created',
         paymentId: 'payment-1',
+        paidAt: new Date('2026-03-01T00:00:00.000Z'),
       });
 
       await confirmPayment(req as any, res as any, next);
@@ -214,6 +215,7 @@ describe('paymentController', () => {
         paymentId: 'payment-1',
         invoiceId: INVOICE_ID,
         status: 'confirmed',
+        paidAt: '2026-03-01T00:00:00.000Z',
       });
     });
 
@@ -223,6 +225,7 @@ describe('paymentController', () => {
       (confirmInvoicePayment as jest.Mock).mockResolvedValue({
         kind: 'idempotent',
         paymentId: 'payment-1',
+        paidAt: new Date('2026-03-01T00:00:00.000Z'),
       });
 
       await confirmPayment(req as any, res as any, next);
@@ -235,6 +238,7 @@ describe('paymentController', () => {
         invoiceId: INVOICE_ID,
         status: 'confirmed',
         idempotent: true,
+        paidAt: '2026-03-01T00:00:00.000Z',
       });
     });
 
@@ -253,6 +257,7 @@ describe('paymentController', () => {
       (confirmInvoicePayment as jest.Mock).mockResolvedValue({
         kind: 'created',
         paymentId: 'payment-1',
+        paidAt: new Date('2026-03-01T00:00:00.000Z'),
       });
 
       await confirmPayment(req as any, res as any, next);

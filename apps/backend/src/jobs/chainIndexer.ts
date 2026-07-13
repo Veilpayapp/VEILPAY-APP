@@ -1,8 +1,8 @@
 /**
- * VeilPay Multi-Chain Indexer (Solana, Aptos, Stellar)
+ * Veilpay Multi-Chain Indexer (Solana, Stellar)
  *
  * Periodically polls the Goldrush API for incoming transactions matching
- * pending invoices on SVM / MVM / XLM chains.
+ * pending invoices on SVM / XLM chains.
  *
  * REL-001 / PERF-002:
  *  - group invoices by (chainKey, paymentAddress) so each address is fetched once
@@ -12,8 +12,10 @@
 
 import { prisma } from '../lib/prisma';
 import { fetchGoldrushTransactions } from '../services/goldrush';
+import { fetchStellarPayments } from '../services/stellarHorizon';
 import { processPaymentMatch } from '../services/paymentProcessor';
 import { withRedisLock } from '../lib/redisLock';
+import type { GoldrushTxResponse } from '../services/goldrush';
 
 let indexerInterval: NodeJS.Timeout | null = null;
 const POLL_INTERVAL_MS = 15_000; // 15 seconds
@@ -55,6 +57,14 @@ function symbolsMatch(a: string | null | undefined, b: string | null | undefined
   return (a || '').trim().toUpperCase() === (b || '').trim().toUpperCase();
 }
 
+/** Case-insensitive payment address equality (EVM hex / SVM base58 / XLM). */
+export function addressesMatch(
+  a: string | null | undefined,
+  b: string | null | undefined
+): boolean {
+  return (a || '').trim().toLowerCase() === (b || '').trim().toLowerCase();
+}
+
 async function mapPool<T, R>(
   items: T[],
   concurrency: number,
@@ -85,9 +95,7 @@ export async function sweepPendingInvoices(): Promise<void> {
         chainKey: {
           in: [
             'solana',
-            'aptos',
             'solana-devnet',
-            'aptos-mainnet',
             'stellar',
             'stellar-testnet',
           ],
@@ -126,9 +134,15 @@ export async function sweepPendingInvoices(): Promise<void> {
       // address was lowercased for the key — prefer original paymentAddress casing
       const paymentAddress = invoices[0]?.paymentAddress || address;
       try {
-        const txs = await fetchGoldrushTransactions(chainKey, paymentAddress);
+        const txs = await fetchPaymentsForChain(chainKey, paymentAddress);
         for (const invoice of invoices) {
+          const invoicePaymentAddress = invoice.paymentAddress || paymentAddress;
           for (const tx of txs) {
+            // Recipient is load-bearing: never confirm on amount/symbol alone
+            // (multi-leg txs can include an unrelated Transfer of the same size).
+            if (!addressesMatch(tx.toAddress, invoicePaymentAddress)) {
+              continue;
+            }
             if (
               amountsMatch(tx.amount, invoice.amount) &&
               symbolsMatch(tx.tokenSymbol, invoice.tokenSymbol)
@@ -164,6 +178,17 @@ export async function sweepPendingInvoices(): Promise<void> {
     // eslint-disable-next-line no-console
     console.error(`[ChainIndexer] Error sweeping invoices:`, error);
   }
+}
+
+async function fetchPaymentsForChain(
+  chainKey: string,
+  paymentAddress: string
+): Promise<GoldrushTxResponse[]> {
+  const key = chainKey.trim().toLowerCase();
+  if (key === 'stellar' || key === 'stellar-testnet') {
+    return fetchStellarPayments(chainKey, paymentAddress);
+  }
+  return fetchGoldrushTransactions(chainKey, paymentAddress);
 }
 
 export function startChainIndexer(): void {

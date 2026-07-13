@@ -13,20 +13,16 @@ export {
 export type {
   Address,
   SolanaAddress,
-  AptosAddress,
   TxHash,
   SolanaTxHash,
-  AptosTxHash,
   TokenAmount,
   FeeEstimate,
 } from "./types";
 export {
   addressSchema,
   solanaAddressSchema,
-  aptosAddressSchema,
   txHashSchema,
   solanaTxHashSchema,
-  aptosTxHashSchema,
   tokenAmountSchema,
   feeEstimateSchema,
   numericAmountSchema,

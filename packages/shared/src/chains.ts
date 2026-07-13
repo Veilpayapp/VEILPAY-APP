@@ -1,4 +1,4 @@
-export type ChainType = "evm" | "svm" | "mvm" | "xlm";
+export type ChainType = "evm" | "svm" | "xlm";
 
 /**
  * Optional Stellar Private Payments (SPP) contract set for a chain.
@@ -94,15 +94,6 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
     rpcUrl: "https://api.mainnet-beta.solana.com",
     explorerUrl: "https://explorer.solana.com",
     nativeCurrency: { name: "Solana", symbol: "SOL", decimals: 9 },
-  },
-  {
-    key: "aptos",
-    name: "Aptos",
-    type: "mvm",
-    chainId: null,
-    rpcUrl: "https://fullnode.mainnet.aptoslabs.com",
-    explorerUrl: "https://explorer.aptoslabs.com",
-    nativeCurrency: { name: "Aptos", symbol: "APT", decimals: 8 },
   },
   {
     key: "stellar",

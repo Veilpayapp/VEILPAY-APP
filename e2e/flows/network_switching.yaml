@@ -12,7 +12,7 @@ appId: com.veilpay.consumer
 - assertVisible: "Ethereum"
 - assertVisible: "Polygon"
 - assertVisible: "Solana"
-- assertVisible: "Aptos"
+- assertNotVisible: "Aptos"
 - tapOn: "Solana"
 - assertNotVisible: "Ethereum"
 - assertVisible: "Solana"

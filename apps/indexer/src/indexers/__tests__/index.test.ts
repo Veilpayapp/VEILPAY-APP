@@ -1,7 +1,7 @@
-// Comprehensive tests for the EVMIndexer, SolanaIndexer, AptosIndexer, and runIndexers
+// Comprehensive tests for the EVMIndexer, SolanaIndexer, and runIndexers
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { EVMIndexer, SolanaIndexer, AptosIndexer, runIndexers, IndexedEvent } from '../index';
+import { EVMIndexer, SolanaIndexer, runIndexers, IndexedEvent } from '../index';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -44,7 +44,7 @@ jest.mock('ethers', () => ({
 }));
 
 jest.mock('../../config', () => ({
-  config: { indexSolana: false, indexAptos: false },
+  config: { indexSolana: false },
 }));
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -209,14 +209,6 @@ describe('EVMIndexer', () => {
 describe('SolanaIndexer', () => {
   it('returns empty array (stub)', () => {
     const indexer = new SolanaIndexer();
-    const events = indexer.indexNewBlocks();
-    expect(events).toEqual([]);
-  });
-});
-
-describe('AptosIndexer', () => {
-  it('returns empty array (stub)', () => {
-    const indexer = new AptosIndexer();
     const events = indexer.indexNewBlocks();
     expect(events).toEqual([]);
   });

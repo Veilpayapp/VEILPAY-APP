@@ -94,10 +94,22 @@ Related product gates live in [Mainnet privacy gates](../roadmap/mainnet-privacy
 
 ## Sign-off
 
-| Role | Name | Date | Gate |
-|------|------|------|------|
-| Protocol | | | SEC-008 |
-| Security | | | SEC-011 |
-| Eng lead | | | Both + product gates |
+| Role | Name | Date | Gate | Evidence path |
+|------|------|------|------|---------------|
+| Protocol | | | SEC-008 | |
+| Security | | | SEC-011 | |
+| Eng lead | | | Both + product gates | |
 
 Update this table when a gate passes; link evidence paths. Do not delete historical rows—append.
+
+## Agent / CI automated coverage (not a substitute for sign-off)
+
+| Control | How enforced today |
+|---------|-------------------|
+| Max privacy withdraw off | `EVM_MAX_PRIVACY_WITHDRAW_READY === false` + TEST-001 |
+| Stellar SPP mainnet private off | TEST-001 + `isSppEnabledForChain` |
+| Solana multi-deposit | `MAX_SCAFFOLD_LEAVES = 1` + cargo unit test |
+| Ceremony doc present | TEST-001 backend |
+| SSL pins release fail-closed | `security.ts` + TEST-001 consumer |
+
+Human ceremony + external audit **must still** complete the sign-off table before any mainnet privacy claim.

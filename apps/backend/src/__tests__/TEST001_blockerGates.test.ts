@@ -83,4 +83,38 @@ describe('TEST-001 blocker gates (backend)', () => {
     expect(amountsMatch('1.0', '1.00')).toBe(true);
     expect(amountsMatch('1.0', '1.01')).toBe(false);
   });
+
+  it('Pass B: paymentTxVerifier uses configured RPC URLs (not bare http())', () => {
+    const v = read('services/paymentTxVerifier.ts');
+    expect(v).toMatch(/getEvmHttpTransportUrl/);
+    expect(v).toMatch(/http\(rpcUrl\)/);
+  });
+
+  it('Pass B: indexer requires payment recipient match', () => {
+    const idx = read('jobs/chainIndexer.ts');
+    expect(idx).toMatch(/addressesMatch/);
+    expect(idx).toMatch(/toAddress/);
+  });
+
+  it('Pass B: Stellar Horizon verifier module is present', () => {
+    expect(fs.existsSync(path.join(srcRoot, 'services/stellarHorizon.ts'))).toBe(
+      true
+    );
+  });
+
+  it('SEC-008/011: ceremony and audit gate doc exists in monorepo', () => {
+    const doc = path.join(
+      srcRoot,
+      '..',
+      '..',
+      '..',
+      'docs',
+      'security',
+      'ceremony-and-audit-gates.md'
+    );
+    expect(fs.existsSync(doc)).toBe(true);
+    const text = fs.readFileSync(doc, 'utf8');
+    expect(text).toMatch(/SEC-008/);
+    expect(text).toMatch(/SEC-011/);
+  });
 });

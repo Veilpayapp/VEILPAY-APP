@@ -43,18 +43,29 @@ jest.mock('../../stores/settingsStore', () => {
 });
 
 
+function mockWallet(activeChain: Record<string, unknown>, address = '0xabc') {
+  const chains = [activeChain];
+  (useWalletStore as unknown as jest.Mock).mockReturnValue({
+    address,
+    balance: '0',
+    activeChain,
+    allChains: () => chains,
+  });
+}
+
 describe('TokenSelectorScreen', () => {
   beforeEach(() => {
-    (useWalletStore as unknown as jest.Mock).mockReturnValue({
-      address: 'GBU4T3ZUDWDCD3XQ2E7DNQ7V6A5FPR24LW7B5XH7LY4TMJXMITXG7ZME',
-      activeChain: {
+    mockWallet(
+      {
         key: 'stellar-testnet',
         type: 'xlm',
         name: 'Stellar Testnet',
         symbol: 'XLM',
         isTestnet: true,
+        nativeToken: { name: 'Stellar Lumens', symbol: 'XLM', decimals: 7 },
       },
-    });
+      'GBU4T3ZUDWDCD3XQ2E7DNQ7V6A5FPR24LW7B5XH7LY4TMJXMITXG7ZME'
+    );
   });
 
   it('renders and shows Privacy section on stellar-testnet', async () => {
@@ -71,5 +82,74 @@ describe('TokenSelectorScreen', () => {
       expect(getByText('Privacy')).toBeTruthy();
       expect(getByText('pXLM')).toBeTruthy();
     });
+  });
+
+  it.each([
+    {
+      key: 'bsc',
+      symbol: 'BNB',
+      name: 'BNB',
+      type: 'evm',
+      absent: ['Ether', 'MATIC'],
+    },
+    {
+      key: 'ethereum',
+      symbol: 'ETH',
+      name: 'Ether',
+      type: 'evm',
+      absent: ['BNB', 'MATIC'],
+    },
+    {
+      key: 'polygon',
+      symbol: 'MATIC',
+      name: 'MATIC',
+      type: 'evm',
+      absent: ['BNB', 'Ether'],
+    },
+    {
+      key: 'base',
+      symbol: 'ETH',
+      name: 'Ether',
+      type: 'evm',
+      absent: ['BNB', 'MATIC'],
+    },
+    {
+      key: 'solana',
+      symbol: 'SOL',
+      name: 'Solana',
+      type: 'svm',
+      absent: ['Ether', 'BNB', 'MATIC'],
+    },
+  ])('shows $symbol for chain $key (not cross-chain natives)', async ({
+    key,
+    symbol,
+    name,
+    type,
+    absent,
+  }) => {
+    mockWallet({
+      key,
+      type,
+      name: key,
+      symbol,
+      nativeToken: { name, symbol, decimals: 18 },
+    });
+
+    const { getByText, getAllByText, queryByText } = render(
+      <NavigationContainer>
+        <TokenSelectorScreen
+          navigation={{ goBack: jest.fn() } as any}
+          route={{ params: { chainKey: key } } as any}
+        />
+      </NavigationContainer>
+    );
+
+    await waitFor(() => {
+      expect(getAllByText(symbol).length).toBeGreaterThanOrEqual(1);
+      expect(getByText('Assets')).toBeTruthy();
+    });
+    for (const label of absent) {
+      expect(queryByText(label)).toBeNull();
+    }
   });
 });

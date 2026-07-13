@@ -18,6 +18,7 @@ import Toast, { useToast } from '../components/Toast';
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { validateMnemonic, deriveAddressFromMnemonic } from '../utils/bip39';
 import { clearStoredMnemonic, storeMnemonic } from '../utils/transactions';
+import { useSecureScreen } from '../hooks/useSecureScreen';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -29,6 +30,7 @@ interface ImportWalletScreenProps {
   navigation: ImportWalletScreenNavigationProp;
 }
 export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {
+  useSecureScreen('ImportWallet');
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const [wordCount, setWordCount] = useState<WordCount>(12);

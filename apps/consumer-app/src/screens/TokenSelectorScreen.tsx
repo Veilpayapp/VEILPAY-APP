@@ -28,7 +28,14 @@ import {
   listPrivacyAssetsForSelector,
   privacyAssetToPaymentToken,
 } from '../constants/privacyAssets';
+import {
+  listPublicTokensForChain,
+  marketSymbolsForPublicCatalog,
+} from '../constants/publicTokenCatalog';
 import { ensureSppAccountReady, getLocalPrivateBalance } from '../utils/stellarSpp';
+import { StellarAddAssetModal } from '../components/StellarAddAssetModal';
+import { formatStellarIssuerShort } from '../utils/stellarSigner';
+import Toast, { useToast } from '../components/Toast';
 
 type TokenSelectorScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'TokenSelector'>;
@@ -38,17 +45,6 @@ type TokenSelectorScreenProps = {
 type ListRow =
   | { kind: 'header'; id: string; title: string }
   | { kind: 'token'; id: string; token: PaymentToken };
-
-const TOKEN_METADATA: Omit<PaymentToken, 'balance' | 'usdPrice'>[] = [
-  { id: 'eth', name: 'Ether', symbol: 'ETH', chainTypes: ['evm'], icon: '◆' },
-  { id: 'usdt', name: 'Tether USD', symbol: 'USDT', chainTypes: ['evm', 'svm'], icon: '◉' },
-  { id: 'usdc', name: 'USD Coin', symbol: 'USDC', chainTypes: ['evm', 'svm'], icon: '●' },
-  { id: 'matic', name: 'MATIC', symbol: 'MATIC', chainTypes: ['evm'], icon: '⬢' },
-  { id: 'sol', name: 'Solana', symbol: 'SOL', chainTypes: ['svm'], icon: '◍' },
-  { id: 'xlm', name: 'Stellar Lumens', symbol: 'XLM', chainTypes: ['xlm'], icon: '✦' },
-];
-
-const MARKET_SYMBOLS = [...new Set(TOKEN_METADATA.map((t) => t.symbol).concat(['XLM']))];
 
 const MIN_TOUCH_TARGET = 44;
 
@@ -77,13 +73,20 @@ const formatFiatDisplay = (
   return formatFiatValue(num, nativeCurrency);
 };
 
+function assetKey(symbol: string, issuer?: string | null): string {
+  const s = symbol.toUpperCase();
+  const i = (issuer || '').trim();
+  return i ? `${s}:${i}` : s;
+}
+
 export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const [query, setQuery] = useState('');
+  const [addAssetOpen, setAddAssetOpen] = useState(false);
+  const toast = useToast();
 
-  const { activeChain, address } = useWalletStore();
-  const { quotes: marketQuotes } = useMarketData(MARKET_SYMBOLS);
+  const { activeChain, address, balance: nativeWalletBalance, allChains } = useWalletStore();
   const { nativeCurrency, selectedPrivacyAssetId } = useSettingsStore();
   const [fiatRate, setFiatRate] = useState(1);
   const [privacyBalances, setPrivacyBalances] = useState<Record<string, string>>({});
@@ -95,13 +98,43 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
   const selectedSymbol = route.params?.selectedSymbol;
   const chainKey = route.params?.chainKey || activeChain?.key;
   const onSelect = route.params?.onSelect;
+  const isStellar =
+    routeChainTypeIsXlm(chainKey, activeChain?.type) ||
+    chainKey === 'stellar' ||
+    chainKey === 'stellar-testnet';
 
-  const chainType = useMemo(() => {
-    const routeChain = SUPPORTED_CHAINS.find((chain) => chain.key === chainKey);
-    return routeChain?.type || activeChain?.type || 'evm';
-  }, [activeChain?.type, chainKey]);
+  // Resolve from full product + custom chain list so every network (incl. custom)
+  // gets its own native asset, not a generic EVM dump.
+  const routeChain = useMemo(() => {
+    const chains =
+      typeof allChains === 'function'
+        ? allChains()
+        : SUPPORTED_CHAINS;
+    return (
+      chains.find((chain) => chain.key === chainKey) ||
+      SUPPORTED_CHAINS.find((chain) => chain.key === chainKey) ||
+      activeChain ||
+      null
+    );
+  }, [activeChain, allChains, chainKey]);
 
-  const { tokens: liveTokenBalances, isLoading, error } = useTokenBalances(chainKey || activeChain?.key);
+  const publicCatalog = useMemo(
+    () => listPublicTokensForChain(chainKey, routeChain),
+    [chainKey, routeChain]
+  );
+
+  const marketSymbols = useMemo(
+    () => marketSymbolsForPublicCatalog(publicCatalog),
+    [publicCatalog]
+  );
+  const { quotes: marketQuotes } = useMarketData(marketSymbols);
+
+  const {
+    tokens: liveTokenBalances,
+    isLoading,
+    error,
+    refresh: refreshTokenBalances,
+  } = useTokenBalances(chainKey || activeChain?.key);
 
   const privacyCatalog = useMemo(() => listPrivacyAssetsForSelector(chainKey), [chainKey]);
 
@@ -129,17 +162,96 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
   }, [address, privacyCatalog]);
 
   const publicTokens = useMemo((): PaymentToken[] => {
+    // Key balances by symbol and (when present) issuer so Stellar multi-issuer
+    // assets do not overwrite each other.
     const balanceMap: Record<string, string> = {};
     for (const token of liveTokenBalances) {
-      balanceMap[token.tokenSymbol] = token.balanceFormatted;
+      const sym = (token.tokenSymbol || token.symbol || '').toUpperCase();
+      if (!sym) continue;
+      balanceMap[assetKey(sym, token.tokenAddress)] = token.balanceFormatted;
+      // Native / single-issuer convenience: also map bare symbol when no issuer.
+      if (!token.tokenAddress) {
+        balanceMap[sym] = token.balanceFormatted;
+      }
     }
 
-    return TOKEN_METADATA.map((meta) => ({
-      ...meta,
-      balance: balanceMap[meta.symbol] || '0.00',
-      usdPrice: marketQuotes[meta.symbol]?.price || 0,
-    }));
-  }, [liveTokenBalances, marketQuotes]);
+    const nativeSym = (routeChain?.nativeToken?.symbol || routeChain?.symbol || '')
+      .toUpperCase();
+    if (
+      nativeSym &&
+      nativeWalletBalance &&
+      (!chainKey || !activeChain?.key || chainKey === activeChain.key)
+    ) {
+      balanceMap[nativeSym] = nativeWalletBalance;
+    }
+
+    const type = (routeChain?.type || 'evm') as PaymentToken['chainTypes'][number];
+    const isXlm = type === 'xlm';
+
+    const catalogRows: PaymentToken[] = publicCatalog.map((meta) => {
+      const key = assetKey(meta.symbol, meta.address);
+      const bal =
+        balanceMap[key] ??
+        (meta.address ? undefined : balanceMap[meta.symbol.toUpperCase()]) ??
+        '0.00';
+      return {
+        ...meta,
+        balance: bal,
+        usdPrice: marketQuotes[meta.symbol]?.price || 0,
+        subtitle:
+          isXlm && meta.address
+            ? `Issuer ${formatStellarIssuerShort(meta.address)} · curated`
+            : meta.address && !isXlm
+              ? undefined
+              : undefined,
+      };
+    });
+
+    const seen = new Set(
+      catalogRows.map((t) => assetKey(t.symbol, t.address).toUpperCase())
+    );
+
+    // Wallet trustlines / discovered tokens (Stellar: include zero-balance
+    // trustlines; EVM/SVM: still require non-zero to avoid noise).
+    for (const live of liveTokenBalances) {
+      const sym = (live.tokenSymbol || live.symbol || '').toUpperCase();
+      if (!sym) continue;
+      const key = assetKey(sym, live.tokenAddress).toUpperCase();
+      if (seen.has(key)) {
+        // Refresh catalog row balance if live has issuer match already handled
+        continue;
+      }
+      const bal = safeParseFloat(live.balanceFormatted);
+      if (!isXlm && bal <= 0) continue;
+
+      catalogRows.push({
+        id: `live-${chainKey || 'chain'}-${key.replace(/:/g, '-')}`,
+        name: live.tokenName || sym,
+        symbol: sym,
+        chainTypes: [type],
+        icon: '◉',
+        address: live.tokenAddress,
+        decimals: live.decimals,
+        balance: live.balanceFormatted,
+        usdPrice: marketQuotes[sym]?.price || 0,
+        subtitle:
+          isXlm && live.tokenAddress
+            ? `Issuer ${formatStellarIssuerShort(live.tokenAddress)} · wallet trustline`
+            : undefined,
+      });
+      seen.add(key);
+    }
+
+    return catalogRows;
+  }, [
+    activeChain?.key,
+    chainKey,
+    liveTokenBalances,
+    marketQuotes,
+    nativeWalletBalance,
+    publicCatalog,
+    routeChain,
+  ]);
 
   const privacyTokens = useMemo((): PaymentToken[] => {
     return privacyCatalog.map((asset) =>
@@ -158,6 +270,8 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
       return (
         t.name.toLowerCase().includes(normalizedQuery) ||
         t.symbol.toLowerCase().includes(normalizedQuery) ||
+        (t.subtitle?.toLowerCase().includes(normalizedQuery) ?? false) ||
+        (t.address?.toLowerCase().includes(normalizedQuery) ?? false) ||
         (t.privacySubtitle?.toLowerCase().includes(normalizedQuery) ?? false)
       );
     };
@@ -172,9 +286,8 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
       }
     }
 
-    const publicFiltered = publicTokens.filter(
-      (token) => token.chainTypes.includes(chainType) && match(token)
-    );
+    // Catalog is already chain-scoped — no family-wide EVM dump.
+    const publicFiltered = publicTokens.filter(match);
     if (publicFiltered.length > 0) {
       rows.push({ kind: 'header', id: 'hdr-public', title: 'Assets' });
       for (const token of publicFiltered) {
@@ -183,7 +296,7 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
     }
 
     return rows;
-  }, [chainType, privacyTokens, publicTokens, query]);
+  }, [privacyTokens, publicTokens, query]);
 
   const handleSelect = useCallback(
     (token: PaymentToken) => {
@@ -231,12 +344,14 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
       const marketQuote = marketQuotes[isPrivacy ? (token.symbol === 'pXLM' ? 'XLM' : token.symbol) : token.symbol]
         || marketQuotes['XLM'];
       const change24h = marketQuote?.change24h;
-      const hasChange = typeof change24h === 'number' && !isPrivacy;
+      const hasChange = typeof change24h === 'number' && !isPrivacy && !token.subtitle;
       const changeLabel = isPrivacy
         ? token.privacySubtitle || 'Private'
-        : hasChange
-          ? `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}% 24h`
-          : '24h unavailable';
+        : token.subtitle
+          ? token.subtitle
+          : hasChange
+            ? `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}% 24h`
+            : '24h unavailable';
 
       return (
         <PressableOpacity
@@ -270,6 +385,11 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
                 <View style={styles.tokenMeta}>
                   <Text style={styles.tokenSymbol}>{token.symbol}</Text>
                   <Text style={styles.tokenName}>{token.name}</Text>
+                  {token.subtitle && !isPrivacy ? (
+                    <Text style={styles.tokenSubtitle} numberOfLines={1}>
+                      {token.subtitle}
+                    </Text>
+                  ) : null}
                   {disabled && token.privacyDisabledReason ? (
                     <Text style={styles.disabledReason} numberOfLines={2}>
                       {token.privacyDisabledReason}
@@ -379,13 +499,58 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
                 onAction={() => setQuery('')}
               />
             }
+            ListFooterComponent={
+              isStellar && address ? (
+                <PressableOpacity
+                  style={styles.addAssetButton}
+                  onPress={() => setAddAssetOpen(true)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add Stellar asset trustline"
+                >
+                  <Icon name="plus" size={18} color={colors.accent} />
+                  <View style={styles.addAssetTextWrap}>
+                    <Text style={styles.addAssetTitle}>ADD ASSET / TRUSTLINE</Text>
+                    <Text style={styles.addAssetHint}>
+                      Enter asset code + issuer to hold a custom Stellar asset
+                    </Text>
+                  </View>
+                </PressableOpacity>
+              ) : null
+            }
             renderItem={renderRow}
             getItemType={(item) => item.kind}
           />
         )}
       </Animated.View>
+
+      {isStellar && chainKey ? (
+        <StellarAddAssetModal
+          visible={addAssetOpen}
+          chainKey={chainKey}
+          onClose={() => setAddAssetOpen(false)}
+          onSuccess={({ code }) => {
+            toast.show(`Trustline added for ${code}. Refreshing balances…`, 'success');
+            void refreshTokenBalances();
+          }}
+        />
+      ) : null}
+
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onDismiss={toast.hide}
+      />
     </SafeAreaView>
   );
+}
+
+function routeChainTypeIsXlm(
+  chainKey: string | undefined,
+  activeType: string | undefined
+): boolean {
+  if (chainKey?.startsWith('stellar')) return true;
+  return activeType === 'xlm';
 }
 
 const themeStyles = (colors: any) =>
@@ -509,6 +674,40 @@ const themeStyles = (colors: any) =>
       fontSize: 12,
       color: colors.textMuted,
       marginTop: 2,
+    },
+    tokenSubtitle: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 10,
+      color: colors.textFaint,
+      marginTop: 2,
+    },
+    addAssetButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginTop: 8,
+      marginBottom: 24,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: colors.outline,
+      borderStyle: 'dashed',
+      minHeight: MIN_TOUCH_TARGET,
+    },
+    addAssetTextWrap: {
+      flex: 1,
+    },
+    addAssetTitle: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 12,
+      fontWeight: 'bold',
+      letterSpacing: 0.5,
+      color: colors.accent,
+    },
+    addAssetHint: {
+      fontFamily: typography.fontFamily.body,
+      fontSize: 11,
+      color: colors.textMuted,
+      marginTop: 4,
     },
     disabledReason: {
       fontFamily: typography.fontFamily.body,

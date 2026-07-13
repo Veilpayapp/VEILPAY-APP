@@ -28,13 +28,18 @@ import { generateMnemonic, deriveAddressFromMnemonic } from '../utils/bip39';
 import { setClipboardString } from '../utils/clipboard';
 import { clearStoredMnemonic, storeMnemonic } from '../utils/transactions';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useSecureScreen } from '../hooks/useSecureScreen';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
 
 type CreateWalletScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateWallet'>;
 
 interface CreateWalletScreenProps {
-  navigation: CreateWalletScreenNavigationProp;}export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
+  navigation: CreateWalletScreenNavigationProp;
+}
+
+export function CreateWalletScreen({ navigation }: CreateWalletScreenProps) {
+  useSecureScreen('CreateWallet');
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const [savedConfirmed, setSavedConfirmed] = useState(false);

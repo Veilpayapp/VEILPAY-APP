@@ -66,7 +66,9 @@ export type PrivacyOptionsContext = {
 export function getPrivacyOptionsForChain(
   chainKey: string | null | undefined,
   chainId: number | string | null | undefined,
-  ctx: PrivacyOptionsContext = {}
+  ctx: PrivacyOptionsContext = {},
+  /** When set (e.g. USDC), SPP Private is disabled — pool is XLM-only. */
+  tokenSymbol?: string | null
 ): PrivacyOptionDef[] {
   const isSepolia = chainId === SEPOLIA_CHAIN_ID;
   const evmPrivacyOk = isSepolia && isPrivacyStackConfigured();
@@ -81,21 +83,27 @@ export function getPrivacyOptionsForChain(
   // SPP-001: chain allowlist AND native poolOps — derive-only builds cannot shield.
   const sppOk = sppChainOk && poolOpsReady;
   const isStellar = chainKey === 'stellar' || chainKey === 'stellar-testnet';
+  const sym = (tokenSymbol || 'XLM').trim().toUpperCase();
+  const isXlmFamily = sym === 'XLM' || sym === 'PXLM';
 
   if (isStellar) {
     let privateDisabledReason: string | undefined;
-    if (!sppChainOk) {
+    if (!isXlmFamily) {
+      privateDisabledReason = `Private mode is XLM-only. Send ${sym} as a public Stellar payment.`;
+    } else if (!sppChainOk) {
       privateDisabledReason = 'Private XLM is not available on mainnet yet';
     } else if (!poolOpsReady) {
       privateDisabledReason =
         'Private XLM needs a pool-ops build. Public XLM still works — use Standard, or install the full preview APK.';
     }
 
+    const privateEnabled = sppOk && isXlmFamily;
+
     return [
       {
         id: 'standard',
         title: 'STANDARD',
-        subtitle: 'Public XLM transfer',
+        subtitle: isXlmFamily ? 'Public XLM transfer' : `Public ${sym} transfer`,
         iconName: 'shield',
         features: [
           'Direct Stellar payment',
@@ -115,8 +123,8 @@ export function getPrivacyOptionsForChain(
           'Self-custody on this device',
           'Takes a few seconds to prepare',
         ],
-        recommended: sppOk,
-        enabled: sppOk,
+        recommended: privateEnabled,
+        enabled: privateEnabled,
         disabledReason: privateDisabledReason,
         description:
           'Send privately. Recipient uses a standard Stellar address.',
@@ -185,9 +193,12 @@ export function isPrivacyLevelEnabled(
   level: PrivacyLevel,
   chainKey: string | null | undefined,
   chainId: number | string | null | undefined,
-  ctx: PrivacyOptionsContext = {}
+  ctx: PrivacyOptionsContext = {},
+  tokenSymbol?: string | null
 ): boolean {
-  const opt = getPrivacyOptionsForChain(chainKey, chainId, ctx).find((o) => o.id === level);
+  const opt = getPrivacyOptionsForChain(chainKey, chainId, ctx, tokenSymbol).find(
+    (o) => o.id === level
+  );
   return opt?.enabled ?? level === 'standard';
 }
 
@@ -198,19 +209,20 @@ export function clampPrivacyLevel(
   preferred: PrivacyLevel,
   chainKey: string | null | undefined,
   chainId: number | string | null | undefined,
-  ctx: PrivacyOptionsContext = {}
+  ctx: PrivacyOptionsContext = {},
+  tokenSymbol?: string | null
 ): PrivacyLevel {
-  if (isPrivacyLevelEnabled(preferred, chainKey, chainId, ctx)) {
+  if (isPrivacyLevelEnabled(preferred, chainKey, chainId, ctx, tokenSymbol)) {
     return preferred;
   }
   // Prefer private on SPP testnet when poolOps is ready (max/stealth defaults).
   if (
     (preferred === 'max' || preferred === 'stealth') &&
-    isPrivacyLevelEnabled('private', chainKey, chainId, ctx)
+    isPrivacyLevelEnabled('private', chainKey, chainId, ctx, tokenSymbol)
   ) {
     return 'private';
   }
-  // Saved `private` without poolOps (or mainnet) → public Standard.
+  // Saved `private` without poolOps (or mainnet / non-XLM) → public Standard.
   if (preferred === 'private') {
     return 'standard';
   }
@@ -226,7 +238,7 @@ export function clampPrivacyLevel(
   return 'standard';
 }
 
-export function usePrivacyOptions(): {
+export function usePrivacyOptions(tokenSymbol?: string | null): {
   options: PrivacyOptionDef[];
   chainKey: string | null;
   clamp: (level: PrivacyLevel) => PrivacyLevel;
@@ -238,16 +250,19 @@ export function usePrivacyOptions(): {
   const chainId = activeChain?.id ?? null;
   // Re-read on each render so a late-loaded native module can flip private on.
   const poolOpsReady = isSppPoolOpsReady();
+  const tokenKey = (tokenSymbol || '').trim().toUpperCase() || null;
 
   return useMemo(() => {
     const ctx: PrivacyOptionsContext = { poolOpsReady };
-    const options = getPrivacyOptionsForChain(chainKey, chainId, ctx);
+    const options = getPrivacyOptionsForChain(chainKey, chainId, ctx, tokenKey);
     return {
       options,
       chainKey,
       poolOpsReady,
-      clamp: (level: PrivacyLevel) => clampPrivacyLevel(level, chainKey, chainId, ctx),
-      isEnabled: (level: PrivacyLevel) => isPrivacyLevelEnabled(level, chainKey, chainId, ctx),
+      clamp: (level: PrivacyLevel) =>
+        clampPrivacyLevel(level, chainKey, chainId, ctx, tokenKey),
+      isEnabled: (level: PrivacyLevel) =>
+        isPrivacyLevelEnabled(level, chainKey, chainId, ctx, tokenKey),
     };
-  }, [chainKey, chainId, poolOpsReady]);
+  }, [chainKey, chainId, poolOpsReady, tokenKey]);
 }

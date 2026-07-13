@@ -38,6 +38,7 @@ const ERC20_ABI = parseAbi([
   'function name() view returns (string)',
 ]);
 
+/** Aligned with `constants/publicTokenCatalog` CHAIN_STABLES (EVM addresses only). */
 const POPULAR_TOKENS: Record<string, Array<{ address: string; symbol: string; name: string; decimals: number }>> = {
   ethereum: [
     { address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', symbol: 'USDT', name: 'Tether USD', decimals: 6 },
@@ -46,11 +47,15 @@ const POPULAR_TOKENS: Record<string, Array<{ address: string; symbol: string; na
   ],
   polygon: [
     { address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F', symbol: 'USDT', name: 'Tether USD', decimals: 6 },
-    { address: '0x2791bca1f2de4661ed88a30c99a7a9449aa8f49a', symbol: 'USDC', name: 'USD Coin', decimals: 6 },
+    { address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', symbol: 'USDC', name: 'USD Coin', decimals: 6 },
   ],
   arbitrum: [
-    { address: '0xFd086bC7CD5C481DCC946852337f388B320e6b60', symbol: 'USDT', name: 'Tether USD', decimals: 6 },
-    { address: '0xaf88d06a609973603eC6DDde780F52eBdfb93154', symbol: 'USDC', name: 'USD Coin', decimals: 6 },
+    { address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', symbol: 'USDT', name: 'Tether USD', decimals: 6 },
+    { address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', symbol: 'USDC', name: 'USD Coin', decimals: 6 },
+  ],
+  optimism: [
+    { address: '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58', symbol: 'USDT', name: 'Tether USD', decimals: 6 },
+    { address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85', symbol: 'USDC', name: 'USD Coin', decimals: 6 },
   ],
   base: [
     { address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', symbol: 'USDC', name: 'USD Coin', decimals: 6 },
@@ -239,38 +244,53 @@ async function fetchStellarBalance(address: string, chainConfig: ChainConfig): P
   }
 }
 
+/**
+ * All classic-asset trustlines on a Stellar account (including zero balance).
+ * `tokenAddress` is the issuer G… key. Callers merge with the curated catalog.
+ */
 async function fetchStellarTokens(address: string, chainConfig: ChainConfig): Promise<TokenBalance[]> {
   const baseUrl = getHorizonBaseUrl(chainConfig.key);
 
   try {
     const response = await withTimeout(fetch(`${baseUrl}/accounts/${address}`), REQUEST_TIMEOUT_MS);
-    if (!response.ok) return [];
+    if (!response.ok) {
+      // Unfunded account — no trustlines yet
+      if (response.status === 404 || response.status === 400) return [];
+      return [];
+    }
 
-    const data = await response.json() as { balances?: Array<{ balance: string; asset_type: string; asset_code?: string; asset_issuer?: string }> };
+    const data = await response.json() as {
+      balances?: Array<{
+        balance: string;
+        asset_type: string;
+        asset_code?: string;
+        asset_issuer?: string;
+      }>;
+    };
     const balances = data.balances || [];
-    
+
     const tokenBalances: TokenBalance[] = [];
-    
+
     for (const b of balances) {
-      if (b.asset_type === 'native' || !b.asset_code) continue;
-      if (b.balance === '0' || b.balance === '0.0000000') continue;
-      
-      const numValue = parseFloat(b.balance);
-      const stroops = Math.floor(numValue * 1e7).toString();
-      
+      if (b.asset_type === 'native' || !b.asset_code || !b.asset_issuer) continue;
+
+      const numValue = parseFloat(b.balance || '0');
+      const safe = Number.isFinite(numValue) ? numValue : 0;
+      const stroops = Math.floor(safe * 1e7).toString();
+
       tokenBalances.push({
-        tokenAddress: b.asset_issuer || '',
+        tokenAddress: b.asset_issuer,
         tokenName: b.asset_code,
         tokenSymbol: b.asset_code,
         balance: stroops,
-        balanceFormatted: numValue.toFixed(7).replace(/\.?0+$/, '') || '0',
+        balanceFormatted: safe.toFixed(7).replace(/\.?0+$/, '') || '0',
         symbol: b.asset_code,
         decimals: 7,
         lastUpdated: Date.now(),
-        source: 'rpc'
+        source: 'rpc',
       });
     }
-    
+
     return tokenBalances;
   } catch (error) {
     console.warn(`Failed to fetch Stellar tokens on ${chainConfig.key}`, error);
@@ -315,6 +335,22 @@ export async function fetchNativeBalance(address: string, chainKey: string): Pro
     });
     return { balance: '0', balanceFormatted: '0.000', symbol: nativeToken.symbol, decimals: nativeToken.decimals, lastUpdated: Date.now(), source: 'fallback', error: error instanceof Error ? error.message : 'Unknown error' };
   }
+}
+
+/**
+ * Token (non-native) balances for any product chain type.
+ * EVM → ERC-20; Solana → SPL; Stellar → classic assets (e.g. USDC).
+ */
+export async function fetchTokenBalancesForChain(
+  address: string,
+  chainKey: string
+): Promise<TokenBalance[]> {
+  const chainConfig = getChainConfig(chainKey);
+  if (!chainConfig) return [];
+  if (chainConfig.type === 'evm') return fetchERC20Balances(address, chainKey);
+  if (chainConfig.type === 'svm') return fetchSolanaTokens(address, chainConfig);
+  if (chainConfig.type === 'xlm') return fetchStellarTokens(address, chainConfig);
+  return [];
 }
 
 export async function fetchERC20Balances(address: string, chainKey: string): Promise<TokenBalance[]> {

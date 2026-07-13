@@ -1,6 +1,6 @@
 /**
  * Stellar (XLM) Transaction Signer
- * Signs and submits XLM payment transactions using the stored mnemonic.
+ * Signs and submits XLM + classic asset (e.g. USDC) payments using the stored mnemonic.
  * Follows the same pattern as solanaSigner.ts.
  */
 
@@ -11,7 +11,6 @@ import {
   Operation,
   Asset,
   Memo,
-  BASE_FEE,
   Account,
 } from 'stellar-sdk';
 import { mnemonicToSeed } from '@scure/bip39';
@@ -28,9 +27,6 @@ const HORIZON_TIMEOUT_MS = 30_000;
 // Stellar minimum-balance protocol constants. An account's reserved (un-spendable)
 // balance is `(2 + numSubentries) × BASE_RESERVE`, where a subentry is each
 // trustline, offer, signer beyond the master key, or data entry on the account.
-// A flat 1 XLM reserve is only correct for a bare account (0 subentries); an
-// account with trustlines/offers reserves more, so a naive check would let a
-// send through that Horizon then rejects with `tx_insufficient_balance`.
 // See: https://developers.stellar.org/docs/learn/fundamentals/lumens#minimum-balance
 const STELLAR_BASE_RESERVE_XLM = 0.5;
 
@@ -82,12 +78,62 @@ async function horizonFetch(url: string, options?: RequestInit): Promise<any> {
   }
 }
 
-export async function signAndSendStellarTransaction(
+function buildPaymentAsset(
   params: SignerParams,
+  tokenCode?: string
+): Asset {
+  const issuer = params.tokenAddress?.trim();
+  const code = (tokenCode || '').trim().toUpperCase();
+  if (!issuer || !code || code === 'XLM') {
+    return Asset.native();
+  }
+  if (!/^G[A-Z2-7]{55}$/.test(issuer)) {
+    throw new TransactionError(`Invalid Stellar asset issuer: ${issuer}`, 'UNKNOWN');
+  }
+  // credit_alphanum4 for codes ≤ 4 chars (USDC); alphanum12 for longer.
+  if (code.length <= 4) {
+    return new Asset(code, issuer);
+  }
+  return new Asset(code, issuer);
+}
+
+function findAssetBalance(
+  balances: Array<{
+    balance: string;
+    asset_type: string;
+    asset_code?: string;
+    asset_issuer?: string;
+  }>,
+  asset: Asset
+): number {
+  if (asset.isNative()) {
+    const native = balances.find((b) => b.asset_type === 'native');
+    return parseFloat(native?.balance || '0');
+  }
+  const code = asset.getCode();
+  const issuer = asset.getIssuer();
+  const row = balances.find(
+    (b) =>
+      b.asset_type !== 'native' &&
+      (b.asset_code || '').toUpperCase() === code.toUpperCase() &&
+      b.asset_issuer === issuer
+  );
+  return parseFloat(row?.balance || '0');
+}
+
+/**
+ * @param tokenCode - Classic asset code when sending non-native (e.g. "USDC").
+ *   Issuer is `params.tokenAddress`. Omit / XLM → native payment.
+ */
+export async function signAndSendStellarTransaction(
+  params: SignerParams & { tokenCode?: string },
   chainKey: string,
   xlmPriceUsd?: number
 ): Promise<SignerResult> {
-  addBreadcrumb('Stellar transaction signing initiated', 'transaction', { chain: chainKey });
+  addBreadcrumb('Stellar transaction signing initiated', 'transaction', {
+    chain: chainKey,
+    asset: params.tokenCode || 'XLM',
+  });
 
   const toAddress = params.to.trim();
 
@@ -112,25 +158,38 @@ export async function signAndSendStellarTransaction(
     const sourceAddress = keypair.publicKey();
     const horizonUrl = getHorizonUrl(chainKey);
     const networkPassphrase = getStellarNetwork(chainKey);
+    const asset = buildPaymentAsset(params, params.tokenCode);
+    const isNative = asset.isNative();
 
     // Load source account
     const accountData = await horizonFetch(`${horizonUrl}/accounts/${sourceAddress}`);
+    const balances = accountData.balances || [];
 
-    // Check XLM balance
-    const nativeBalance = accountData.balances?.find((b: any) => b.asset_type === 'native');
-    const balanceXlm = parseFloat(nativeBalance?.balance || '0');
     const feeXlm = STELLAR_FEE_STROOPS / XLM_STROOPS;
-    // Reserve scales with the account's subentries (trustlines, offers, extra
-    // signers, data entries), not a flat 1 XLM. Under-counting here lets a send
-    // pass our gate only to be rejected by Horizon as `tx_insufficient_balance`.
     const reserveXlm = computeStellarMinReserveXlm(accountData.subentry_count);
-    const requiredXlm = parsedAmount + feeXlm + reserveXlm;
+    const nativeBal = findAssetBalance(balances, Asset.native());
 
-    if (balanceXlm < requiredXlm) {
+    // When sending native, include amount in the XLM requirement.
+    // Classic assets (USDC) only need fee + reserve in XLM.
+    const requiredXlm = isNative
+      ? parsedAmount + feeXlm + reserveXlm
+      : feeXlm + reserveXlm;
+
+    if (nativeBal < requiredXlm) {
       throw new TransactionError(
-        `Insufficient XLM. Balance: ${balanceXlm.toFixed(7)} XLM, required: ${requiredXlm.toFixed(7)} XLM (incl. reserve)`,
+        `Insufficient XLM for ${isNative ? 'payment' : 'fees/reserve'}. Balance: ${nativeBal.toFixed(7)} XLM, required: ${requiredXlm.toFixed(7)} XLM`,
         'INSUFFICIENT_FUNDS'
       );
+    }
+
+    if (!isNative) {
+      const assetBal = findAssetBalance(balances, asset);
+      if (assetBal < parsedAmount) {
+        throw new TransactionError(
+          `Insufficient ${asset.getCode()}. Balance: ${assetBal}, required: ${parsedAmount}. Ensure you have a trustline and funds.`,
+          'INSUFFICIENT_FUNDS'
+        );
+      }
     }
 
     // Build transaction
@@ -140,11 +199,14 @@ export async function signAndSendStellarTransaction(
       networkPassphrase,
     });
 
+    // Stellar amounts are decimal strings; 7 dp is the protocol max for payments.
+    const amountStr = parsedAmount.toFixed(7).replace(/\.?0+$/, '') || '0';
+
     txBuilder.addOperation(
       Operation.payment({
         destination: toAddress,
-        asset: Asset.native(),
-        amount: parsedAmount.toFixed(7),
+        asset,
+        amount: amountStr,
       })
     );
 
@@ -197,4 +259,122 @@ export async function signAndSendStellarTransaction(
     captureError(new Error(message), { scope: 'stellar-signer', chain: chainKey });
     throw new TransactionError(message, 'UNKNOWN');
   }
+}
+
+const STELLAR_CODE_RE = /^[A-Z0-9]{1,12}$/;
+const STELLAR_G_RE = /^G[A-Z2-7]{55}$/;
+
+/**
+ * Establish (or raise) a trustline for a classic asset (code + issuer).
+ * Required before the account can hold or receive that asset (e.g. custom USDC).
+ */
+export async function establishStellarTrustline(args: {
+  chainKey: string;
+  assetCode: string;
+  assetIssuer: string;
+  /** Max credit limit; default unlimited (MAX). */
+  limit?: string;
+  xlmPriceUsd?: number;
+}): Promise<SignerResult> {
+  const chainKey = args.chainKey;
+  const code = args.assetCode.trim().toUpperCase();
+  const issuer = args.assetIssuer.trim();
+
+  if (!STELLAR_CODE_RE.test(code) || code === 'XLM') {
+    throw new TransactionError(
+      'Asset code must be 1–12 A–Z / 0–9 characters (not XLM)',
+      'UNKNOWN'
+    );
+  }
+  if (!STELLAR_G_RE.test(issuer)) {
+    throw new TransactionError(`Invalid Stellar issuer address: ${issuer}`, 'INVALID_ADDRESS');
+  }
+
+  addBreadcrumb('Stellar changeTrust initiated', 'transaction', {
+    chain: chainKey,
+    code,
+    issuer: `${issuer.slice(0, 4)}…${issuer.slice(-4)}`,
+  });
+
+  const mnemonicWords = await getStoredMnemonic();
+  if (!mnemonicWords || mnemonicWords.length === 0) {
+    throw new TransactionError('No wallet found. Please create or import a wallet first.', 'UNKNOWN');
+  }
+
+  try {
+    const keypair = await deriveKeypair(mnemonicWords.join(' '));
+    const sourceAddress = keypair.publicKey();
+    const horizonUrl = getHorizonUrl(chainKey);
+    const networkPassphrase = getStellarNetwork(chainKey);
+
+    const accountData = await horizonFetch(`${horizonUrl}/accounts/${sourceAddress}`);
+    const balances = accountData.balances || [];
+    const nativeBal = findAssetBalance(balances, Asset.native());
+    const feeXlm = STELLAR_FEE_STROOPS / XLM_STROOPS;
+    // changeTrust adds a subentry → reserve rises by 0.5 XLM after success.
+    const reserveNow = computeStellarMinReserveXlm(accountData.subentry_count);
+    const reserveAfter = reserveNow + STELLAR_BASE_RESERVE_XLM;
+    const requiredXlm = feeXlm + reserveAfter;
+    if (nativeBal < requiredXlm) {
+      throw new TransactionError(
+        `Insufficient XLM to open a trustline. Need ~${requiredXlm.toFixed(2)} XLM (fee + reserve), have ${nativeBal.toFixed(7)} XLM.`,
+        'INSUFFICIENT_FUNDS'
+      );
+    }
+
+    const asset = new Asset(code, issuer);
+    const account = new Account(sourceAddress, accountData.sequence);
+    const txBuilder = new TransactionBuilder(account, {
+      fee: String(STELLAR_FEE_STROOPS),
+      networkPassphrase,
+    });
+
+    txBuilder.addOperation(
+      Operation.changeTrust({
+        asset,
+        limit: args.limit, // undefined → max
+      })
+    );
+    txBuilder.setTimeout(180);
+    const transaction = txBuilder.build();
+    transaction.sign(keypair);
+
+    const submitRes = await horizonFetch(`${horizonUrl}/transactions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `tx=${encodeURIComponent(transaction.toXDR())}`,
+    });
+
+    const txHash: string = submitRes.hash;
+    const feeXlmCost = feeXlm;
+    return {
+      hash: txHash,
+      chainId: chainKey === 'stellar' ? 1 : 0,
+      gasEstimate: {
+        gasLimit: 0n,
+        maxFeePerGas: 0n,
+        maxPriorityFeePerGas: 0n,
+        gasPrice: 0n,
+        estimatedCostWei: BigInt(STELLAR_FEE_STROOPS),
+        estimatedCostEth: feeXlmCost.toFixed(7),
+        estimatedCostUsd: args.xlmPriceUsd
+          ? (feeXlmCost * args.xlmPriceUsd).toFixed(6)
+          : null,
+        isStale: false,
+        fetchedAt: Date.now(),
+      },
+    };
+  } catch (err) {
+    if (err instanceof TransactionError) throw err;
+    const message = (err as any)?.message || 'Unknown Stellar trustline error';
+    captureError(new Error(message), { scope: 'stellar-signer-trustline', chain: chainKey });
+    throw new TransactionError(message, 'UNKNOWN');
+  }
+}
+
+/** Short issuer label for UI (GABC…WXYZ). */
+export function formatStellarIssuerShort(issuer: string, head = 4, tail = 4): string {
+  const s = issuer.trim();
+  if (s.length < head + tail + 3) return s;
+  return `${s.slice(0, head)}…${s.slice(-tail)}`;
 }

@@ -16,6 +16,7 @@ import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
 import { createDemoEvmAddress } from '../utils/demoWallet';
 import { createWalletConnectSession, hasWalletConnectProjectId, buildOptionalNamespaces } from '../utils/walletConnectSession';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useSecureScreen } from '../hooks/useSecureScreen';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -75,6 +76,7 @@ function resolveChainTypeFromWalletConnect(
   return 'evm';
 }
 export function WalletConnectScreen({ navigation, route }: WalletConnectScreenProps) {
+  useSecureScreen('WalletConnect');
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const [connecting, setConnecting] = useState<string | null>(null);

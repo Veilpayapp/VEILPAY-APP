@@ -140,6 +140,8 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
   const amount = route?.params?.amount || '';
   const memo = route?.params?.memo || '';
   const token = route?.params?.token || 'ETH';
+  const tokenAddress = route?.params?.tokenAddress;
+  const tokenDecimals = route?.params?.tokenDecimals;
   const privacyLevel = route?.params?.privacyLevel || 'standard';
   const sppOp = route?.params?.sppOp || 'transfer';
 
@@ -187,6 +189,8 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
     amount,
     memo,
     token,
+    tokenAddress,
+    tokenDecimals,
     privacyLevel,
     ethPrice: tokenPrice,
     activeNetworkKey,

@@ -68,8 +68,8 @@ function RecentTransactionsListComponent({
           </Text>
           <Text style={styles.emptyLedgerSub}>
             {privateMode
-              ? 'Shield or send pXLM to get started.'
-              : 'Your recent payments will appear here.'}
+              ? 'Shield, transfer, or unshield to see clean private activity.'
+              : 'Payments and on-chain contract calls appear here.'}
           </Text>
         </View>
       ) : (

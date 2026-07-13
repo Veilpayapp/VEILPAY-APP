@@ -1,9 +1,13 @@
 /**
  * Home / history privacy-mode list filtering.
  *
- * Private mode: only local SPP pool activity (shield / transfer / unshield).
- * Public mode: hide private-pool rows so normal chain history stays clean.
- * (Horizon also omits SPP infrastructure invokes — see publicIndexers.)
+ * Private mode: **only** reconstructed clean SPP activity
+ * (`createSppActivityRecord` — shield / transfer / unshield summaries).
+ * Never raw Horizon contract spam.
+ *
+ * Public mode: Freighter-style chain history (including SPP pool/verifier
+ * contract invokes from Horizon). Hide private reconstructed pool rows so
+ * they don't double-label the same shield/unshield.
  */
 import type { TransactionRecord } from '../types/transactions';
 import { isSppActivityRecord } from './stellarSpp/sppActivity';
@@ -22,15 +26,8 @@ export function filterTransactionsForPrivacyMode(
 
   if (privacyMode) {
     return transactions.filter((tx) => {
-      if (!isSppActivityRecord(tx) && tx.privacyLevel !== 'private') {
-        return false;
-      }
-      // Prefer isPrivatePoolTx / sppOp; also accept privacyLevel private.
-      const isPrivate =
-        isSppActivityRecord(tx) ||
-        tx.privacyLevel === 'private' ||
-        tx.tokenSymbol === 'pXLM';
-      if (!isPrivate) return false;
+      // Clean reconstructed activity only — no freighter/raw contract rows.
+      if (!isSppActivityRecord(tx)) return false;
       if (!privacyChainKey) return true;
       // Match chain when recorded; allow missing network on older local rows.
       if (!tx.network) return true;
@@ -38,9 +35,9 @@ export function filterTransactionsForPrivacyMode(
     });
   }
 
-  // Public: exclude private pool rows.
+  // Public: Freighter-style chain rows; exclude private reconstructed summaries.
   return transactions.filter((tx) => {
-    if (isSppActivityRecord(tx) || tx.privacyLevel === 'private') {
+    if (isSppActivityRecord(tx)) {
       return false;
     }
     if (publicChainKey && tx.network && tx.network !== publicChainKey) {

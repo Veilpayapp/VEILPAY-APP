@@ -1062,10 +1062,10 @@ export function usePaymentTransaction({
           })
         );
 
-        // Public activity lag fix: shield spends public XLM on-chain; force a
-        // silent history refresh so Standard/wallet activity picks up the
-        // outbound (and unshield inbound) without waiting for pull-to-refresh.
-        // Private history remains local-only by design (session activity).
+        // Public Freighter-style activity: Horizon will surface the SPP pool
+        // contract invoke — force a silent history refresh so Standard mode
+        // picks it up without pull-to-refresh. Private mode keeps the clean
+        // local createSppActivityRecord row above (reconstructed summary).
         void useTransactionStore
           .getState()
           .refreshTransactions({ silent: true })

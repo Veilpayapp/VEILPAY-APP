@@ -2,7 +2,9 @@ import {
   fetchEvmHistory,
   fetchSolanaHistory,
   fetchStellarHistory,
+  getSppPublicContractRole,
   isAspMembershipOperation,
+  isSppAspTreeOperation,
   isSppInfrastructureOperation,
   mapStellarOperationToTransaction,
 } from '../publicIndexers';
@@ -104,7 +106,7 @@ describe('publicIndexers', () => {
       expect(res.transactions[0].amount).toBe('10.5');
     });
 
-    it('skips noise ops, SPP pool invokes, and zero-amount contracts; keeps payments', async () => {
+    it('skips noise + ASP trees; keeps Freighter-style SPP pool, valued contracts, payments', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: jest.fn().mockResolvedValue({
@@ -134,7 +136,7 @@ describe('publicIndexers', () => {
                 created_at: '2023-01-02T12:00:00Z',
                 transaction_hash: 'hpool',
                 paging_token: '1.7',
-                // SPP pool — public feed must hide (private activity is local)
+                // SPP pool — public Freighter-style contract row
                 contract_id: SPP_TESTNET.poolId,
                 asset_balance_changes: [{ amount: '50', asset_type: 'native', from: 'GABC' }],
               },
@@ -186,15 +188,24 @@ describe('publicIndexers', () => {
       });
 
       const res = await fetchStellarHistory('GABC', 'stellar-testnet', undefined, 10);
-      expect(res.transactions.map((t) => t.id)).toEqual(['valued-inv', 'path1', 'pay1']);
+      expect(res.transactions.map((t) => t.id)).toEqual([
+        'pool-inv',
+        'valued-inv',
+        'path1',
+        'pay1',
+      ]);
       expect(res.transactions[0].displayTitle).toBe('Contract');
-      expect(res.transactions[0].amount).toBe('3');
-      expect(res.transactions[1].displayTitle).toBe('Path payment');
-      expect(res.transactions[2].type).toBe('received');
-      expect(res.transactions[2].amount).toBe('100');
+      expect(res.transactions[0].displaySubtitle).toMatch(/SPP pool/);
+      expect(res.transactions[0].amount).toBe('50');
+      expect(res.transactions[0].privacyLevel).toBe('standard');
+      expect(res.transactions[1].displayTitle).toBe('Contract');
+      expect(res.transactions[1].amount).toBe('3');
+      expect(res.transactions[2].displayTitle).toBe('Path payment');
+      expect(res.transactions[3].type).toBe('received');
+      expect(res.transactions[3].amount).toBe('100');
     });
 
-    it('hides all SPP infrastructure invokes from public mapping', () => {
+    it('maps SPP pool/verifier/registry Freighter-style; hides ASP trees and zero non-SPP', () => {
       const aspOp = {
         id: 'a1',
         type: 'invoke_host_function',
@@ -212,6 +223,14 @@ describe('publicIndexers', () => {
         contract_id: SPP_TESTNET.poolId,
         asset_balance_changes: [{ amount: '50', asset_type: 'native', from: 'GABC' }],
       };
+      const poolZeroOp = {
+        id: 'p0',
+        type: 'invoke_host_function',
+        source_account: 'GABC',
+        created_at: '2023-01-01T00:00:00Z',
+        transaction_hash: 'txpool0',
+        contract_id: SPP_TESTNET.poolId,
+      };
       const zeroOp = {
         id: 'z1',
         type: 'invoke_host_function',
@@ -222,10 +241,21 @@ describe('publicIndexers', () => {
       };
 
       expect(isAspMembershipOperation(aspOp, 'stellar-testnet')).toBe(true);
+      expect(isSppAspTreeOperation(aspOp, 'stellar-testnet')).toBe(true);
       expect(isSppInfrastructureOperation(poolOp, 'stellar-testnet')).toBe(true);
       expect(isSppInfrastructureOperation(aspOp, 'stellar-testnet')).toBe(true);
+      expect(getSppPublicContractRole(poolOp, 'stellar-testnet')).toBe('pool');
       expect(mapStellarOperationToTransaction(aspOp, 'GABC', 'stellar-testnet')).toBeNull();
-      expect(mapStellarOperationToTransaction(poolOp, 'GABC', 'stellar-testnet')).toBeNull();
+      const mappedPool = mapStellarOperationToTransaction(poolOp, 'GABC', 'stellar-testnet');
+      expect(mappedPool).not.toBeNull();
+      expect(mappedPool?.displayTitle).toBe('Contract');
+      expect(mappedPool?.displaySubtitle).toMatch(/SPP pool/);
+      expect(mappedPool?.amount).toBe('50');
+      expect(mappedPool?.privacyLevel).toBe('standard');
+      // Proof-only pool invoke with no balance change still surfaces (Freighter-style).
+      const mappedZeroPool = mapStellarOperationToTransaction(poolZeroOp, 'GABC', 'stellar-testnet');
+      expect(mappedZeroPool).not.toBeNull();
+      expect(mappedZeroPool?.amount).toBe('0');
       expect(mapStellarOperationToTransaction(zeroOp, 'GABC', 'stellar-testnet')).toBeNull();
     });
 

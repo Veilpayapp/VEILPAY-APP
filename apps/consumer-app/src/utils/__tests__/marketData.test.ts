@@ -62,6 +62,17 @@ describe('marketData utility tests', () => {
       expect(map.UNKNOWN_TOKEN.source).toBe('fallback');
       expect(map.UNKNOWN_TOKEN.isStale).toBe(true);
     });
+
+    it('maps pXLM to XLM so privacy confirm never quotes a missing ticker', () => {
+      const { createFallbackQuoteMap, resolveMarketQuoteSymbol } = require('../marketData');
+      expect(resolveMarketQuoteSymbol('pXLM')).toBe('XLM');
+      expect(resolveMarketQuoteSymbol('pxlm')).toBe('XLM');
+      const map = createFallbackQuoteMap(['pXLM']);
+      // Normalized map is keyed by public quote symbol.
+      expect(map.XLM).toBeDefined();
+      expect(map.XLM.price).toBe(0.11);
+      expect(map.PXLM).toBeUndefined();
+    });
   });
 
   describe('getTokenMarketQuote', () => {

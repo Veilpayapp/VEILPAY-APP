@@ -304,10 +304,10 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
         description={
           privacyMode
             ? filter === 'all'
-              ? 'Shield, transfer, or unshield pXLM to see private activity here.'
+              ? 'Shield, transfer, or unshield to see clean private activity here.'
               : `No ${filter} private activity for this wallet.`
             : filter === 'all'
-              ? 'Your transaction history will appear here once you send or receive funds.'
+              ? 'Payments and on-chain contract calls will appear here.'
               : `No ${filter} transactions found for this wallet.`
         }
         actionLabel={privacyMode ? undefined : 'Send payment'}

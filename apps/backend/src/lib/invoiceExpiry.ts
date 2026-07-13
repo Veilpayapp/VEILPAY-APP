@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { prisma } from "../lib/prisma";
 import { withRedisLock } from "./redisLock";
+import { enqueueWebhook } from "../jobs/webhookQueue";
 
 const EXPIRY_CHECK_INTERVAL_MS = 60 * 1000;
 
@@ -38,23 +39,73 @@ export function stopInvoiceExpiryWorker(): void {
   }
 }
 
-// BE-C2 fix: transition expired invoices from pending to expired
+// BE-C2 fix: transition expired invoices from pending to expired.
+// REL-002: emit an `invoice.expired` webhook for each invoice we expire so
+// merchants are notified (the event enum already includes `invoice.expired`,
+// but nothing previously enqueued it).
 async function expirePendingInvoices(): Promise<number> {
-  const result = await prisma.invoice.updateMany({
-    where: {
-      status: "pending",
-      expiresAt: {
-        lt: new Date(),
-      },
-    },
-    data: {
-      status: "expired",
+  const now = new Date();
+
+  // Claim the rows to expire in a single atomic pass. We select first so we
+  // have each invoice's details for the webhook, then flip only the ones that
+  // are still pending — `updateMany` with the `status: "pending"` predicate is
+  // idempotent under concurrent sweeps (another worker that already flipped a
+  // row updates 0 and we never double-enqueue for it).
+  const candidates = await prisma.invoice.findMany({
+    where: { status: "pending", expiresAt: { lt: now } },
+    select: {
+      id: true,
+      merchantId: true,
+      chainKey: true,
+      tokenSymbol: true,
+      amount: true,
+      privacyLevel: true,
     },
   });
 
-  if (result.count > 0) {
-    console.log(`[InvoiceExpiry] Expired ${result.count} invoice(s)`);
+  if (candidates.length === 0) {
+    return 0;
   }
 
-  return result.count;
+  let expiredCount = 0;
+  for (const invoice of candidates) {
+    const updated = await prisma.invoice.updateMany({
+      where: { id: invoice.id, status: "pending" },
+      data: { status: "expired" },
+    });
+
+    // Only notify if THIS sweep is the one that expired the invoice, so a
+    // concurrent worker or retry cannot double-fire the webhook.
+    if (updated.count === 0) {
+      continue;
+    }
+    expiredCount += 1;
+
+    try {
+      await enqueueWebhook({
+        eventType: "invoice.expired",
+        merchantId: invoice.merchantId,
+        invoiceId: invoice.id,
+        chainKey: invoice.chainKey,
+        tokenSymbol: invoice.tokenSymbol,
+        amount: invoice.amount.toString(),
+        privacyLevel: invoice.privacyLevel,
+        timestamp: now.getTime(),
+      });
+    } catch (error) {
+      // A webhook enqueue failure must not abort the sweep or roll back the
+      // already-committed status change. enqueueWebhook has its own DB outbox
+      // fallback; log and continue.
+      console.error(
+        `[InvoiceExpiry] Failed to enqueue invoice.expired webhook for ${invoice.id}:`,
+        error
+      );
+    }
+  }
+
+  if (expiredCount > 0) {
+    console.log(`[InvoiceExpiry] Expired ${expiredCount} invoice(s)`);
+  }
+
+  return expiredCount;
 }

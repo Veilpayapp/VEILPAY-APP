@@ -50,8 +50,7 @@ jest.mock('../../lib/redis', () => ({
 describe('auth middleware', () => {
   beforeEach(() => {
     (getRedisClient as jest.Mock).mockReturnValue({
-      exists: jest.fn().mockResolvedValue(0),
-      setex: jest.fn().mockResolvedValue('OK'),
+      set: jest.fn().mockResolvedValue('OK'),
     });
     jest.spyOn(prisma.merchant, 'findFirst').mockResolvedValue(null as never);
   });
@@ -161,7 +160,7 @@ describe('auth middleware', () => {
     assert.deepEqual(res.payload, { error: 'Invalid or expired timestamp' });
   });
 
-  it('rejects if signature has been used (replay attack)', async () => {
+  it('rejects if signature has been used (replay attack via SET NX)', async () => {
     const apiKey = 'vp_test_api_key';
     const timestamp = String(Date.now());
     const req = {
@@ -170,22 +169,134 @@ describe('auth middleware', () => {
       rawBody: '{"amount":"10"}',
       headers: {
         'x-api-key': apiKey,
-        'x-signature': 'deadbeef',
         'x-timestamp': timestamp,
       },
     } as any;
+    req.headers['x-signature'] = generateSignature(buildSignedPayload(req, timestamp), apiKey);
+
+    jest.spyOn(prisma.merchant, 'findFirst').mockResolvedValue({
+      id: 'merchant-1',
+      businessName: 'Acme',
+      email: 'billing@acme.com',
+    } as never);
 
     (getRedisClient as jest.Mock).mockReturnValue({
-      exists: jest.fn().mockResolvedValue(1),
+      // null = key already exists (SET NX lost the race)
+      set: jest.fn().mockResolvedValue(null),
     });
 
     const res = createMockResponse();
     let nextCalled = false;
-    await authMiddleware(req, res as never, () => { nextCalled = true; });
+    // asyncHandler does not return the inner promise — wait on response/next.
+    await new Promise<void>((resolve) => {
+      const originalJson = res.json.bind(res);
+      res.json = (body: unknown) => {
+        originalJson(body);
+        resolve();
+        return res as any;
+      };
+      authMiddleware(req, res as never, () => {
+        nextCalled = true;
+        resolve();
+      });
+    });
 
     assert.equal(nextCalled, false);
     assert.equal(res.statusCode, 401);
     assert.deepEqual(res.payload, { error: 'Replay attack detected: signature already used' });
+  });
+
+  it('returns 503 in production when Redis is unavailable', async () => {
+    const config = require('../../config').config;
+    const prevEnv = config.nodeEnv;
+    config.nodeEnv = 'production';
+    try {
+      (getRedisClient as jest.Mock).mockReturnValue(null);
+
+      const apiKey = 'vp_test_api_key';
+      const timestamp = String(Date.now());
+      const req = {
+        method: 'post',
+        originalUrl: '/api/v1/invoice/create',
+        rawBody: '{"amount":"10"}',
+        headers: {
+          'x-api-key': apiKey,
+          'x-signature': 'ab'.repeat(32),
+          'x-timestamp': timestamp,
+        },
+      } as any;
+
+      const res = createMockResponse();
+      let nextCalled = false;
+      await new Promise<void>((resolve) => {
+        const originalJson = res.json.bind(res);
+        res.json = (body: unknown) => {
+          originalJson(body);
+          resolve();
+          return res as any;
+        };
+        authMiddleware(req, res as never, () => {
+          nextCalled = true;
+          resolve();
+        });
+      });
+
+      assert.equal(nextCalled, false);
+      assert.equal(res.statusCode, 503);
+      assert.deepEqual(res.payload, { error: 'Authentication temporarily unavailable' });
+    } finally {
+      config.nodeEnv = prevEnv;
+    }
+  });
+
+  it('returns 503 in production when Redis SET throws', async () => {
+    const config = require('../../config').config;
+    const prevEnv = config.nodeEnv;
+    config.nodeEnv = 'production';
+    try {
+      const apiKey = 'vp_test_api_key';
+      const timestamp = String(Date.now());
+      const req = {
+        method: 'post',
+        originalUrl: '/api/v1/invoice/create',
+        rawBody: '{"amount":"10"}',
+        headers: {
+          'x-api-key': apiKey,
+          'x-timestamp': timestamp,
+        },
+      } as any;
+      req.headers['x-signature'] = generateSignature(buildSignedPayload(req, timestamp), apiKey);
+
+      jest.spyOn(prisma.merchant, 'findFirst').mockResolvedValue({
+        id: 'merchant-1',
+        businessName: 'Acme',
+        email: 'billing@acme.com',
+      } as never);
+
+      (getRedisClient as jest.Mock).mockReturnValue({
+        set: jest.fn().mockRejectedValue(new Error('redis down')),
+      });
+
+      const res = createMockResponse();
+      let nextCalled = false;
+      await new Promise<void>((resolve) => {
+        const originalJson = res.json.bind(res);
+        res.json = (body: unknown) => {
+          originalJson(body);
+          resolve();
+          return res as any;
+        };
+        authMiddleware(req, res as never, () => {
+          nextCalled = true;
+          resolve();
+        });
+      });
+
+      assert.equal(nextCalled, false);
+      assert.equal(res.statusCode, 503);
+    } finally {
+      config.nodeEnv = prevEnv;
+    }
   });
 
   it('rejects missing API key', async () => {

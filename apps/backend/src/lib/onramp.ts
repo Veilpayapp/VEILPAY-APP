@@ -102,7 +102,7 @@ export class OnrampService {
    * IDs like `erc20`/`matic20`/`spl` belong to the separate `allConfigMapping`
    * REST API, not this widget URL, so they are deliberately NOT used here.)
    *
-   * Testnets and chains Onramp.money doesn't support (aptos, stellar, sepolia,
+   * Testnets and chains Onramp.money doesn't support (stellar, sepolia,
    * devnets) are intentionally absent so `mapNetwork` rejects them instead of
    * silently handing the widget an unusable `network` value.
    */

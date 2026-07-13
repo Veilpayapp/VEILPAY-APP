@@ -19,6 +19,8 @@ import {
   PayInvoiceRequestSchema,
 } from '../../types';
 import { enqueueWebhook } from '../../jobs/webhookQueue';
+import { verifyPaymentTxOnChain } from '../../services/paymentTxVerifier';
+import { confirmInvoicePayment } from '../../services/paymentProcessor';
 
 jest.mock('../../lib/prisma', () => ({
   prisma: {
@@ -48,6 +50,14 @@ jest.mock('../../types', () => ({
 
 jest.mock('../../jobs/webhookQueue', () => ({
   enqueueWebhook: jest.fn(),
+}));
+
+jest.mock('../../services/paymentTxVerifier', () => ({
+  verifyPaymentTxOnChain: jest.fn(),
+}));
+
+jest.mock('../../services/paymentProcessor', () => ({
+  confirmInvoicePayment: jest.fn(),
 }));
 
 jest.mock('viem', () => ({
@@ -297,10 +307,10 @@ describe('invoiceController', () => {
   });
 
   describe('payInvoice', () => {
-    it('pays pending invoice with valid txHash', async () => {
+    it('pays pending invoice with valid txHash via shared verifier + processor', async () => {
       req.params = { id: '00000000-0000-0000-0000-000000000000' };
       req.body = { txHash: '0x1234567890123456789012345678901234567890' };
-      
+
       (prisma.invoice.findUnique as jest.Mock).mockResolvedValue({
         id: '00000000-0000-0000-0000-000000000000',
         merchantId: 'merchant-1',
@@ -308,24 +318,66 @@ describe('invoiceController', () => {
         chainKey: 'ethereum',
         paymentAddress: '0x1234567890123456789012345678901234567890',
         amount: '1.0',
+        tokenSymbol: 'ETH',
+        privacyLevel: 'standard',
         merchant: { id: 'merchant-1' }
       });
-      
-      (prisma.invoice.update as jest.Mock).mockResolvedValue({
-        id: '00000000-0000-0000-0000-000000000000',
-        status: 'paid',
-        paidAt: new Date(),
-        chainKey: 'ethereum',
-        tokenSymbol: 'ETH',
-        amount: '1.0',
-        privacyLevel: 'standard',
+
+      (verifyPaymentTxOnChain as jest.Mock).mockResolvedValue({
+        ok: true,
+        tx: {
+          txHash: '0x1234567890123456789012345678901234567890',
+          fromAddress: '0xfrom',
+          toAddress: '0x1234567890123456789012345678901234567890',
+          amount: '1.0',
+          tokenSymbol: 'ETH',
+        },
+      });
+      (confirmInvoicePayment as jest.Mock).mockResolvedValue({
+        kind: 'created',
+        paymentId: 'pay-1',
+        paidAt: new Date('2026-03-01T00:00:00.000Z'),
       });
 
       await payInvoice(req as any, res as any, next);
 
-      expect(prisma.invoice.update).toHaveBeenCalled();
-      expect(enqueueWebhook).toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalled();
+      expect(verifyPaymentTxOnChain).toHaveBeenCalled();
+      expect(confirmInvoicePayment).toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'paid',
+          paymentId: 'pay-1',
+          paidAt: '2026-03-01T00:00:00.000Z',
+        })
+      );
+    });
+
+    it('rejects when on-chain verification fails', async () => {
+      req.params = { id: '00000000-0000-0000-0000-000000000000' };
+      req.body = { txHash: '0x1234567890123456789012345678901234567890' };
+
+      (prisma.invoice.findUnique as jest.Mock).mockResolvedValue({
+        id: '00000000-0000-0000-0000-000000000000',
+        merchantId: 'merchant-1',
+        status: 'pending',
+        chainKey: 'ethereum',
+        paymentAddress: '0x1234567890123456789012345678901234567890',
+        amount: '1.0',
+        tokenSymbol: 'ETH',
+        privacyLevel: 'standard',
+        merchant: { id: 'merchant-1' }
+      });
+
+      (verifyPaymentTxOnChain as jest.Mock).mockResolvedValue({
+        ok: false,
+        status: 400,
+        error: 'Transaction value is less than invoice amount',
+      });
+
+      await payInvoice(req as any, res as any, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(confirmInvoicePayment).not.toHaveBeenCalled();
     });
 
     it('returns 404 if not found', async () => {

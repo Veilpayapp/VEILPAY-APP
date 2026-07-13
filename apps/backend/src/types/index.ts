@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidTokenAddressForChain } from "../lib/tokenAddress";
 
 export const MerchantStatus = z.enum(["pending", "active", "suspended", "deleted"]);
 export type MerchantStatus = z.infer<typeof MerchantStatus>;
@@ -6,7 +7,7 @@ export type MerchantStatus = z.infer<typeof MerchantStatus>;
 export const InvoiceStatus = z.enum(["pending", "paid", "expired", "cancelled"]);
 export type InvoiceStatus = z.infer<typeof InvoiceStatus>;
 
-export const ChainType = z.enum(["evm", "svm", "mvm"]);
+export const ChainType = z.enum(["evm", "svm", "xlm"]);
 export type ChainType = z.infer<typeof ChainType>;
 
 export const PrivacyLevel = z.enum(["standard", "max"]);
@@ -68,28 +69,46 @@ export const PaymentSchema = z.object({
   timestamp: z.date(),
 });
 
-export const CreateInvoiceRequestSchema = z.object({
-  merchantId: z.string().uuid(),
-  chainKey: z.string().trim().min(1).max(50),
-  tokenSymbol: z.string().trim().min(1).max(20),
-  // BE-H1 fix: strict numeric amount validation — must be positive, numeric, limited precision
-  amount: z
-    .string()
-    .trim()
-    .min(1)
-    .max(50)
-    .regex(
-      /^\d+(\.\d{1,18})?$/,
-      "Amount must be a positive numeric string with at most 18 decimal places"
-    )
-    .refine((val) => {
-      const num = parseFloat(val);
-      return !isNaN(num) && num > 0 && isFinite(num);
-    }, "Amount must be greater than 0"),
-  memo: z.string().trim().max(2000).optional(),
-  expiresInMinutes: z.number().int().min(1).max(43200).default(60),
-  privacyLevel: PrivacyLevel.default("standard"),
-});
+export const CreateInvoiceRequestSchema = z
+  .object({
+    merchantId: z.string().uuid(),
+    chainKey: z.string().trim().min(1).max(50),
+    tokenSymbol: z.string().trim().min(1).max(20),
+    /**
+     * Optional token identity: ERC-20 (0x…), Solana mint (base58), or Stellar
+     * issuer (G…). When omitted for non-native tokens, the server resolves from
+     * the chain token registry.
+     */
+    tokenAddress: z.string().trim().min(1).max(100).optional(),
+    // BE-H1 fix: strict numeric amount validation — must be positive, numeric, limited precision
+    amount: z
+      .string()
+      .trim()
+      .min(1)
+      .max(50)
+      .regex(
+        /^\d+(\.\d{1,18})?$/,
+        "Amount must be a positive numeric string with at most 18 decimal places"
+      )
+      .refine((val) => {
+        const num = parseFloat(val);
+        return !isNaN(num) && num > 0 && isFinite(num);
+      }, "Amount must be greater than 0"),
+    memo: z.string().trim().max(2000).optional(),
+    expiresInMinutes: z.number().int().min(1).max(43200).default(60),
+    privacyLevel: PrivacyLevel.default("standard"),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.tokenAddress) return;
+    const check = isValidTokenAddressForChain(data.chainKey, data.tokenAddress);
+    if (!check.ok) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["tokenAddress"],
+        message: check.error,
+      });
+    }
+  });
 
 export const CreateInvoiceResponseSchema = z.object({
   invoiceId: z.string().uuid(),

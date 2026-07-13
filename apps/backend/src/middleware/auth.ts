@@ -82,13 +82,14 @@ export const authMiddleware = asyncHandler(async (
   }
 
   const redis = getRedisClient();
-  if (redis) {
-    const replayKey = `auth:nonce:${signature}`;
-    const exists = await redis.exists(replayKey);
-    if (exists) {
-      res.status(401).json({ error: 'Replay attack detected: signature already used' });
-      return;
-    }
+
+  // Replay protection depends on Redis to track used signatures. If Redis is
+  // unavailable we cannot detect replays, so in production we fail closed
+  // rather than silently accepting potentially-replayed signatures.
+  if (!redis && config.nodeEnv === 'production') {
+    console.error('[Auth] Redis unavailable — refusing request (replay protection unavailable)');
+    res.status(503).json({ error: 'Authentication temporarily unavailable' });
+    return;
   }
 
   try {
@@ -112,9 +113,25 @@ export const authMiddleware = asyncHandler(async (
       return;
     }
 
+    // Atomic claim AFTER signature validation so invalid signatures do not burn
+    // a nonce, but concurrent identical signatures cannot both pass (SET NX).
     if (redis) {
       const replayKey = `auth:nonce:${signature}`;
-      await redis.setex(replayKey, 300, '1'); // 5 minute TTL
+      try {
+        // ioredis: SET key value EX seconds NX → 'OK' if claimed, null if taken
+        const claimed = await redis.set(replayKey, '1', 'EX', 300, 'NX');
+        if (claimed !== 'OK') {
+          res.status(401).json({ error: 'Replay attack detected: signature already used' });
+          return;
+        }
+      } catch (err) {
+        if (config.nodeEnv === 'production') {
+          console.error('[Auth] Redis error during replay claim — failing closed:', err);
+          res.status(503).json({ error: 'Authentication temporarily unavailable' });
+          return;
+        }
+        // Non-production: proceed without replay tracking if Redis errors.
+      }
     }
 
     req.merchantId = merchant.id;

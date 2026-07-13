@@ -8,6 +8,10 @@ import { prisma } from "../lib/prisma";
 // here so a future change to rejection semantics cannot drift between
 // the two write paths (see review warning #10).
 import { rejectUnsafeWebhookUrl } from "../utils/urlSafety";
+// SEC-001: server-side guard that a published viewing key is genuinely PUBLIC
+// key material before it can be persisted and served unauthenticated by the
+// Directory endpoint. Rejects private/secret keys per chain family.
+import { validatePublishedViewingKey } from "../utils/publicKey";
 import {
   uuidParamSchema,
   MerchantUpdateRequestSchema,
@@ -107,18 +111,38 @@ export const publishKey = async (req: AuthenticatedRequest, res: Response, next:
     const data = publishKeySchema.parse(req.body);
     const merchantId = req.merchantId as string;
 
-    const CHAIN_TYPE_MAP: Record<string, "evm" | "svm" | "mvm"> = {
+    const CHAIN_TYPE_MAP: Record<string, "evm" | "svm" | "xlm"> = {
       ethereum: "evm",
       polygon: "evm",
       arbitrum: "evm",
       optimism: "evm",
       base: "evm",
+      bsc: "evm",
       sepolia: "evm",
       solana: "svm",
       "solana-devnet": "svm",
-      aptos: "mvm",
+      stellar: "xlm",
+      "stellar-testnet": "xlm",
     };
-    const chainType = CHAIN_TYPE_MAP[data.chainKey] ?? "evm";
+    const chainType = CHAIN_TYPE_MAP[data.chainKey];
+    if (!chainType) {
+      res.status(400).json({ error: `Unsupported chainKey: ${data.chainKey}` });
+      return;
+    }
+
+    // SEC-001: the Directory serves this value UNAUTHENTICATED so any sender can
+    // derive a stealth address / encrypt a memo for the merchant. That is safe
+    // only if the value is a PUBLIC key. Reject anything that is not a
+    // well-formed public key (in particular a private/secret key) so spend/scan
+    // authority can never be published to the world.
+    const keyCheck = validatePublishedViewingKey(chainType, data.viewingKey);
+    if (!keyCheck.ok) {
+      res.status(400).json({
+        error: keyCheck.error,
+        code: "INVALID_PUBLIC_VIEWING_KEY",
+      });
+      return;
+    }
 
     const viewingKey = await prisma.chainViewingKey.upsert({
       where: {

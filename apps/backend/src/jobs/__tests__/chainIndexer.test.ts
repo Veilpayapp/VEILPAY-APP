@@ -50,7 +50,9 @@ describe('chainIndexer', () => {
         {
           amount: '100',
           tokenSymbol: 'USDC',
-          txHash: 'hash1'
+          txHash: 'hash1',
+          toAddress: 'addr1',
+          fromAddress: 'payer',
         }
       ]);
       await sweepPendingInvoices();
@@ -59,6 +61,31 @@ describe('chainIndexer', () => {
         expect.objectContaining({ id: 'inv1' }),
         expect.objectContaining({ txHash: 'hash1' })
       );
+    });
+
+    it('does not match amount/symbol when toAddress is not the payment address', async () => {
+      (prisma.invoice.findMany as jest.Mock).mockResolvedValue([
+        {
+          id: 'inv1',
+          merchantId: 'merch1',
+          chainKey: 'solana',
+          amount: '100',
+          tokenSymbol: 'USDC',
+          privacyLevel: 'standard',
+          paymentAddress: 'addr1',
+        },
+      ]);
+      (fetchGoldrushTransactions as jest.Mock).mockResolvedValue([
+        {
+          amount: '100',
+          tokenSymbol: 'USDC',
+          txHash: 'hash-other',
+          toAddress: 'someone-else',
+          fromAddress: 'payer',
+        },
+      ]);
+      await sweepPendingInvoices();
+      expect(processPaymentMatch).not.toHaveBeenCalled();
     });
 
     it('PERF-002: bounds pending invoice query with take + orderBy + expiry filter', async () => {

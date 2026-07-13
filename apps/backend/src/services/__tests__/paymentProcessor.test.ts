@@ -17,6 +17,7 @@ jest.mock('../../lib/prisma', () => {
     },
     invoice: {
       updateMany: jest.fn(),
+      findUnique: jest.fn(),
     },
     $transaction: jest.fn(),
   };
@@ -63,7 +64,11 @@ describe('paymentProcessor (DATA-003: transactional + idempotent)', () => {
 
       const outcome = await confirmInvoicePayment(invoice, tx);
 
-      expect(outcome).toEqual({ kind: 'created', paymentId: 'pay-1' });
+      expect(outcome).toEqual({
+        kind: 'created',
+        paymentId: 'pay-1',
+        paidAt: expect.any(Date),
+      });
 
       // The create + invoice.updateMany MUST run inside the same $transaction.
       expect(prisma.$transaction).toHaveBeenCalledTimes(1);
@@ -118,13 +123,18 @@ describe('paymentProcessor (DATA-003: transactional + idempotent)', () => {
         })
       );
       (prisma.payment.findUnique as jest.Mock).mockResolvedValue({ id: 'pay-existing' });
+      (prisma.invoice.findUnique as jest.Mock).mockResolvedValue({ paidAt: new Date('2026-01-01') });
       (prisma.$transaction as jest.Mock).mockImplementationOnce(
         async (fn: any) => fn(prisma)
       );
 
       const outcome = await confirmInvoicePayment(invoice, tx);
 
-      expect(outcome).toEqual({ kind: 'idempotent', paymentId: 'pay-existing' });
+      expect(outcome).toEqual({
+        kind: 'idempotent',
+        paymentId: 'pay-existing',
+        paidAt: new Date('2026-01-01'),
+      });
       // Must NOT fire a webhook on the idempotent path.
       expect(enqueueWebhook).not.toHaveBeenCalled();
     });
@@ -133,20 +143,22 @@ describe('paymentProcessor (DATA-003: transactional + idempotent)', () => {
       // Two concurrent confirms with DIFFERENT txHashes for the same invoice.
       // This request's Payment create succeeds, but the invoice.updateMany
       // returns count=0 because a concurrent request already flipped the
-      // invoice to 'paid' inside its own transaction. The transaction throws
-      // InvoiceAlreadyPaidError; the catch block re-reads the winning Payment
-      // by invoiceId and returns idempotent WITHOUT creating a second
-      // Payment or firing a second webhook.
+      // invoice to 'paid' inside its own transaction.
       (prisma.payment.create as jest.Mock).mockResolvedValue({ id: 'pay-loser' });
       (prisma.invoice.updateMany as jest.Mock).mockResolvedValue({ count: 0 }); // concurrent winner
       (prisma.payment.findFirst as jest.Mock).mockResolvedValue({ id: 'pay-winner' });
+      (prisma.invoice.findUnique as jest.Mock).mockResolvedValue({ paidAt: new Date('2026-02-01') });
       (prisma.$transaction as jest.Mock).mockImplementationOnce(
         async (fn: any) => fn(prisma)
       );
 
       const outcome = await confirmInvoicePayment(invoice, tx);
 
-      expect(outcome).toEqual({ kind: 'idempotent', paymentId: 'pay-winner' });
+      expect(outcome).toEqual({
+        kind: 'idempotent',
+        paymentId: 'pay-winner',
+        paidAt: new Date('2026-02-01'),
+      });
       // Must NOT fire a webhook — the winning request already did.
       expect(enqueueWebhook).not.toHaveBeenCalled();
       // Must look up the winning Payment by invoiceId (not chainKey_txHash).
@@ -155,6 +167,22 @@ describe('paymentProcessor (DATA-003: transactional + idempotent)', () => {
         select: { id: true },
         orderBy: { timestamp: 'desc' },
       });
+    });
+
+    it('throws InvoiceNotPayableError when race loses and invoice is expired', async () => {
+      const { InvoiceNotPayableError } = require('../paymentProcessor');
+      (prisma.payment.create as jest.Mock).mockResolvedValue({ id: 'pay-loser' });
+      (prisma.invoice.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
+      (prisma.payment.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.invoice.findUnique as jest.Mock).mockResolvedValue({ status: 'expired' });
+      (prisma.$transaction as jest.Mock).mockImplementationOnce(
+        async (fn: any) => fn(prisma)
+      );
+
+      await expect(confirmInvoicePayment(invoice, tx)).rejects.toBeInstanceOf(
+        InvoiceNotPayableError
+      );
+      expect(enqueueWebhook).not.toHaveBeenCalled();
     });
 
     it('converts a concurrent P2002 race into idempotent (no double webhook)', async () => {
@@ -167,13 +195,14 @@ describe('paymentProcessor (DATA-003: transactional + idempotent)', () => {
         })
       );
       (prisma.payment.findUnique as jest.Mock).mockResolvedValue({ id: 'pay-raced' });
+      (prisma.invoice.findUnique as jest.Mock).mockResolvedValue({ paidAt: null });
       (prisma.$transaction as jest.Mock).mockImplementationOnce(
         async (fn: any) => fn(prisma)
       );
 
       const outcome = await confirmInvoicePayment(invoice, tx);
 
-      expect(outcome).toEqual({ kind: 'idempotent', paymentId: 'pay-raced' });
+      expect(outcome).toEqual({ kind: 'idempotent', paymentId: 'pay-raced', paidAt: null });
       expect(enqueueWebhook).not.toHaveBeenCalled();
     });
 

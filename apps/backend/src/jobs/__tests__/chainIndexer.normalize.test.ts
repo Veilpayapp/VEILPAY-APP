@@ -1,4 +1,4 @@
-import { amountsMatch, normalizeAmountString } from '../chainIndexer';
+import { addressesMatch, amountsMatch, normalizeAmountString } from '../chainIndexer';
 
 describe('chainIndexer amount normalize (REL-001 / PERF-002)', () => {
   it('normalizes trailing zeros', () => {
@@ -14,5 +14,11 @@ describe('chainIndexer amount normalize (REL-001 / PERF-002)', () => {
     expect(amountsMatch('1.01', '1.010')).toBe(true);
     expect(amountsMatch('2', '2.0')).toBe(true);
     expect(amountsMatch('1', '2')).toBe(false);
+  });
+
+  it('addressesMatch is case-insensitive and rejects wrong recipients', () => {
+    expect(addressesMatch('addr1', 'ADDR1')).toBe(true);
+    expect(addressesMatch('0xAbC', '0xabc')).toBe(true);
+    expect(addressesMatch('addr1', 'addr2')).toBe(false);
   });
 });

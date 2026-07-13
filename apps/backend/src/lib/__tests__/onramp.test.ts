@@ -73,7 +73,7 @@ describe('OnrampService', () => {
   });
 
   it('rejects networks Onramp.money does not support', () => {
-    for (const key of ['aptos', 'stellar', 'sepolia', 'solana-devnet']) {
+    for (const key of ['stellar', 'sepolia', 'solana-devnet']) {
       assert.throws(() => OnrampService.mapNetwork(key), /does not support/);
     }
   });

@@ -50,6 +50,8 @@ model Invoice {
   merchantId      String        @map("merchant_id")
   chainKey        String        @map("chain_key") @db.VarChar(50)
   tokenSymbol     String        @map("token_symbol") @db.VarChar(20)
+  /// Expected ERC-20 contract for non-native invoices (anti spoof-symbol).
+  tokenAddress    String?       @map("token_address") @db.VarChar(100)
   amount          String        @db.VarChar(50)
   amountUsd       String?       @map("amount_usd") @db.VarChar(50)
   memo            String?       @db.Text
@@ -161,7 +163,6 @@ enum PaymentStatus {
 enum ChainType {
   evm
   svm
-  mvm
   xlm
 }
 

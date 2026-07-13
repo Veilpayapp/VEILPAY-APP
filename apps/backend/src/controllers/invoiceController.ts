@@ -12,19 +12,15 @@ import {
   uuidParamSchema,
   PayInvoiceRequestSchema,
 } from "../types";
-import { enqueueWebhook } from "../jobs/webhookQueue";
-import { createPublicClient, http, parseEther, type Chain } from "viem";
-import { mainnet, polygon, arbitrum, sepolia } from "viem/chains";
-
-const getViemChain = (chainKey: string): Chain => {
-  switch (chainKey) {
-    case 'ethereum': return mainnet;
-    case 'polygon': return polygon;
-    case 'arbitrum': return arbitrum;
-    case 'sepolia': return sepolia;
-    default: return mainnet;
-  }
-};
+import { verifyPaymentTxOnChain } from "../services/paymentTxVerifier";
+import {
+  confirmInvoicePayment,
+  InvoiceNotPayableError,
+} from "../services/paymentProcessor";
+import {
+  expectedTokenAddressForInvoice,
+  isNativeTokenSymbol,
+} from "../lib/tokenRegistry";
 
 export const getInvoices = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -105,6 +101,26 @@ export const createInvoice = async (req: AuthenticatedRequest, res: Response, ne
       return;
     }
 
+    // Bind ERC-20 identity at create time so verification never trusts symbol alone.
+    let tokenAddress: string | null = data.tokenAddress ?? null;
+    if (!isNativeTokenSymbol(data.tokenSymbol)) {
+      tokenAddress = expectedTokenAddressForInvoice({
+        chainKey: data.chainKey,
+        tokenSymbol: data.tokenSymbol,
+        tokenAddress: data.tokenAddress,
+      });
+      if (!tokenAddress) {
+        res.status(400).json({
+          error:
+            "tokenAddress is required for non-native tokens not in the chain registry",
+          code: "TOKEN_ADDRESS_REQUIRED",
+        });
+        return;
+      }
+    } else {
+      tokenAddress = null;
+    }
+
     const expiresAt = new Date(Date.now() + data.expiresInMinutes * 60 * 1000);
 
     const invoice = await prisma.invoice.create({
@@ -112,6 +128,7 @@ export const createInvoice = async (req: AuthenticatedRequest, res: Response, ne
         merchantId,
         chainKey: data.chainKey,
         tokenSymbol: data.tokenSymbol,
+        tokenAddress,
         amount: data.amount,
         memo: data.memo,
         expiresAt,
@@ -303,79 +320,68 @@ export const payInvoice = async (req: AuthenticatedRequest, res: Response, next:
       return;
     }
 
-    if (['ethereum', 'polygon', 'arbitrum', 'sepolia'].includes(invoice.chainKey)) {
-      try {
-        const publicClient = createPublicClient({
-          chain: getViemChain(invoice.chainKey),
-          transport: http(),
-        });
-        
-        const txHash = body.txHash as `0x${string}`;
-        const tx = await publicClient.getTransaction({ hash: txHash });
-        const receipt = await publicClient.getTransactionReceipt({ hash: txHash });
-        
-        if (!receipt || receipt.status !== 'success') {
-          res.status(400).json({ error: "Transaction failed or not found on-chain" });
-          return;
-        }
-        
-        if (tx.to?.toLowerCase() !== invoice.paymentAddress?.toLowerCase()) {
-          res.status(400).json({ error: "Transaction recipient does not match invoice payment address" });
-          return;
-        }
-        
-        const invoiceValue = parseEther(invoice.amount.toString());
-        if (tx.value < invoiceValue) {
-          res.status(400).json({ error: "Transaction value is less than invoice amount" });
-          return;
-        }
-      } catch (err) {
-        console.error("On-chain verification failed:", err);
-        res.status(400).json({ error: "Failed to verify transaction on-chain" });
-        return;
+    // SEC-002: route this endpoint through the SAME on-chain verifier and
+    // transactional processor as `/api/v1/payment/confirm`. This endpoint only
+    // receives a `txHash`, so the claimed payment facts are taken from the
+    // invoice itself; the real check is `verifyPaymentTxOnChain`, which fetches
+    // the transaction (EVM) or indexer history (non-EVM) and confirms the
+    // recipient, amount, and token before any state is mutated. This closes the
+    // previous weaker path that skipped verification entirely for non-EVM
+    // chains and never deduped a txHash across invoices.
+    const verified = await verifyPaymentTxOnChain(
+      {
+        id: invoice.id,
+        chainKey: invoice.chainKey,
+        tokenSymbol: invoice.tokenSymbol,
+        amount: invoice.amount,
+        paymentAddress: invoice.paymentAddress,
+        tokenAddress: invoice.tokenAddress,
+      },
+      {
+        txHash: body.txHash,
+        fromAddress: "",
+        toAddress: invoice.paymentAddress ?? "",
+        amount: String(invoice.amount),
+        tokenSymbol: invoice.tokenSymbol,
       }
+    );
+
+    if (!verified.ok) {
+      res.status(verified.status).json({ error: verified.error });
+      return;
     }
 
-    const paidAt = new Date();
+    try {
+      const outcome = await confirmInvoicePayment(
+        {
+          id: invoice.id,
+          merchantId: invoice.merchantId,
+          chainKey: invoice.chainKey,
+          tokenSymbol: invoice.tokenSymbol,
+          amount: invoice.amount,
+          privacyLevel: invoice.privacyLevel,
+        },
+        verified.tx
+      );
 
-    const updated = await prisma.invoice.update({
-      where: { id },
-      data: {
+      res.json({
+        invoiceId: invoice.id,
         status: "paid",
-        paidAt,
-        paymentTxHash: body.txHash,
-      },
-      select: {
-        id: true,
-        status: true,
-        paidAt: true,
-        expiresAt: true,
-        chainKey: true,
-        tokenSymbol: true,
-        amount: true,
-        memo: true,
-        privacyLevel: true,
-        paymentTxHash: true,
-        merchant: true,
-      },
-    });
-
-    await enqueueWebhook({
-      eventType: "invoice.paid",
-      merchantId: invoice.merchant.id,
-      invoiceId: updated.id,
-      chainKey: updated.chainKey,
-      tokenSymbol: updated.tokenSymbol,
-      amount: updated.amount.toString(),
-      privacyLevel: updated.privacyLevel,
-      timestamp: Date.now(),
-    });
-
-    res.json({
-      invoiceId: updated.id,
-      status: updated.status,
-      paidAt: updated.paidAt,
-    });
+        paidAt: outcome.paidAt ? outcome.paidAt.toISOString() : null,
+        paymentId: outcome.paymentId,
+        idempotent: outcome.kind === "idempotent",
+      });
+    } catch (err) {
+      if (err instanceof InvoiceNotPayableError) {
+        res.status(409).json({
+          error: err.message,
+          code: "INVOICE_NOT_PAYABLE",
+          invoiceStatus: err.invoiceStatus,
+        });
+        return;
+      }
+      throw err;
+    }
   } catch (error) {
     next(error);
   }

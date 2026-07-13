@@ -51,27 +51,33 @@ export interface OnrampOrderRecord {
 }
 
 /**
- * Dedupe history rows. Prefer local SPP summaries over raw chain rows when
- * they share a tx hash (private activity is the source of truth for pool ops).
+ * Dedupe history rows **within** each activity lane.
+ *
+ * Public Freighter-style Horizon rows and private reconstructed SPP summaries
+ * often share a tx hash (same on-chain proof). They must both survive so
+ * public mode can show the contract invoke and private mode the clean label.
  */
 const dedupeTransactions = (transactions: TransactionRecord[]): TransactionRecord[] => {
-  // Private-pool rows first so they win hash collisions.
-  const ordered = [...transactions].sort((a, b) => {
-    const aScore = isSppActivityRecord(a) ? 1 : 0;
-    const bScore = isSppActivityRecord(b) ? 1 : 0;
-    return bScore - aScore;
-  });
-
-  const seenHash = new Set<string>();
+  const seenPublicHash = new Set<string>();
+  const seenPrivateHash = new Set<string>();
   const seenId = new Set<string>();
   const out: TransactionRecord[] = [];
 
-  for (const transaction of ordered) {
+  for (const transaction of transactions) {
     const hash = transaction.hash?.trim();
     const id = transaction.id?.trim();
-    if (hash && seenHash.has(hash)) continue;
+    const privateLane = isSppActivityRecord(transaction);
+
     if (id && seenId.has(id)) continue;
-    if (hash) seenHash.add(hash);
+    if (hash) {
+      if (privateLane) {
+        if (seenPrivateHash.has(hash)) continue;
+        seenPrivateHash.add(hash);
+      } else {
+        if (seenPublicHash.has(hash)) continue;
+        seenPublicHash.add(hash);
+      }
+    }
     if (id) seenId.add(id);
     out.push(transaction);
   }

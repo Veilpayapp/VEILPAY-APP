@@ -51,12 +51,25 @@ const memoryCache: MarketQuoteMap = {};
 let hasLoadedCache = false;
 const inFlightRequests = new Map<string, Promise<MarketQuoteMap>>();
 
+/**
+ * Privacy-pool display tickers (e.g. pXLM) have no separate spot market —
+ * they track the underlying public asset (XLM). Without this mapping,
+ * confirm / unshield screens request "PXLM", miss Binance, and forever show
+ * a stale fallback quote labeled "(cached)".
+ */
+export function resolveMarketQuoteSymbol(symbol: string): string {
+  const s = symbol.trim().toUpperCase();
+  if (s === 'PXLM') return 'XLM';
+  return s;
+}
+
 function normalizeSymbols(symbols: readonly string[]): string[] {
-  return Array.from(    new Set(      symbols
-        .flatMap((symbol) => {
-          const s = symbol.trim().toUpperCase();
-          return s.length > 0 ? [s] : [];
-        })
+  return Array.from(
+    new Set(
+      symbols.flatMap((symbol) => {
+        const s = resolveMarketQuoteSymbol(symbol);
+        return s.length > 0 ? [s] : [];
+      })
     )
   ).sort();
 }
@@ -331,13 +344,13 @@ export async function getTokenMarketQuote(
   symbol: string,
   options: { preferCache?: boolean } = {}
 ): Promise<MarketQuote> {
-  const normalized = symbol.trim().toUpperCase();
+  const normalized = resolveMarketQuoteSymbol(symbol);
   const quotes = await getTokenMarketData([normalized], options);
   return quotes[normalized] ?? createFallbackQuote(normalized);
 }
 
 export function getCachedTokenMarketQuote(symbol: string): MarketQuote {
-  const normalized = symbol.trim().toUpperCase();
+  const normalized = resolveMarketQuoteSymbol(symbol);
   const cached = memoryCache[normalized];
 
   if (cached) {

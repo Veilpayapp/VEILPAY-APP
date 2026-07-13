@@ -3,6 +3,7 @@ import {
   createFallbackQuoteMap,
   getTokenMarketData,
   getCachedTokenMarketQuote,
+  resolveMarketQuoteSymbol,
   type MarketQuote,
   type MarketQuoteMap,
 } from '../utils/marketData';
@@ -24,10 +25,16 @@ export function useMarketData(
   const { throttleMs = 1000 } = options;
   const symbolsKey = symbols.join('|');
   const normalizedSymbols = useMemo(
-    () => Array.from(new Set(symbols.flatMap((symbol) => {
-      const s = symbol.trim().toUpperCase();
-      return s ? [s] : [];
-    }))).sort(),
+    () =>
+      Array.from(
+        new Set(
+          symbols.flatMap((symbol) => {
+            // pXLM → XLM so privacy confirm screens get a live spot quote.
+            const s = resolveMarketQuoteSymbol(symbol);
+            return s ? [s] : [];
+          })
+        )
+      ).sort(),
     // react-doctor-disable-next-line react-doctor/exhaustive-deps -- `symbols` is a fresh array each render; symbolsKey captures its contents, which is the real dependency.
     [symbolsKey]
   );
@@ -120,7 +127,7 @@ export function useMarketData(
 
   const getQuote = useCallback(
     (symbol: string) => {
-      const normalized = symbol.trim().toUpperCase();
+      const normalized = resolveMarketQuoteSymbol(symbol);
       return quotes[normalized] ?? getCachedTokenMarketQuote(normalized);
     },
     [quotes]

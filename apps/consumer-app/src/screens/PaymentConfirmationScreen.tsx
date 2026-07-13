@@ -50,6 +50,7 @@ import { estimateTransactionGas, isGasExpensive, type GasEstimate } from '../uti
 import { fetchNativeBalance } from '../utils/balanceFetcher';
 import { TransactionResultModal } from '../components/payment/TransactionResultModal';
 import { FALLBACK_PRICES, getFiatExchangeRate, formatFiatValue, formatLastUpdated } from '../utils/priceFeed';
+import { resolveMarketQuoteSymbol } from '../utils/marketData';
 import { triggerLightImpactHaptic } from '../utils/haptics';
 import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
@@ -144,12 +145,17 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
 
   // Live token price is derived from the market-data hook rather than mirrored
   // into local state via an effect (which would flash a stale value).
-  const { getQuote, isLoading: isQuoteLoading } = useMarketData([token]);
-  const marketQuote = getQuote(token);
+  // Privacy tickers (pXLM) have no separate spot market — quote the public
+  // underlying (XLM) so unshield/transfer confirm never sticks on "(cached)".
+  const quoteSymbol = resolveMarketQuoteSymbol(token);
+  const { getQuote, isLoading: isQuoteLoading } = useMarketData([quoteSymbol]);
+  const marketQuote = getQuote(quoteSymbol);
   const tokenPrice = marketQuote ? marketQuote.price : null;
   const priceLoading = isQuoteLoading;
   const lastUpdated = marketQuote ? marketQuote.lastUpdated : null;
   const isStale = marketQuote ? marketQuote.isStale : true;
+  const fallbackPrice =
+    FALLBACK_PRICES[quoteSymbol] ?? FALLBACK_PRICES[token] ?? 0;
 
   // -----------------------------------------------------------------
   // Privacy-aware payment dispatcher (task 11.1).
@@ -626,11 +632,11 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
               ) : (
                 <>
                   <Text style={styles.usdValue}>
-                    ≈ {formatFiatValue(parseFloat(amount || '0') * (tokenPrice ?? FALLBACK_PRICES[token] ?? 0) * fiatRate, nativeCurrency || 'USD')}
+                    ≈ {formatFiatValue(parseFloat(amount || '0') * (tokenPrice ?? fallbackPrice) * fiatRate, nativeCurrency || 'USD')}
                   </Text>
                   {lastUpdated && (
                     <Text style={styles.priceUpdated}>
-                      @ {formatFiatValue((tokenPrice ?? FALLBACK_PRICES[token] ?? 0) * fiatRate, nativeCurrency || 'USD')}/{token}
+                      @ {formatFiatValue((tokenPrice ?? fallbackPrice) * fiatRate, nativeCurrency || 'USD')}/{quoteSymbol}
                       {' • '}
                       {formatLastUpdated(lastUpdated)}
                       {isStale && <Text style={styles.staleWarning}> (cached)</Text>}

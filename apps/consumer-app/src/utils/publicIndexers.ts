@@ -55,11 +55,25 @@ export function isAspMembershipOperation(
 }
 
 /**
- * True when this Soroban invoke targets SPP infrastructure (pool, verifier,
- * ASP trees, registry). These must not appear in **public** activity —
- * private mode shows the local `createSppActivityRecord` summary instead.
- * Leaving them as Horizon "Contract / -0 XLM" rows polluted public feed and
- * duplicated what private history is for.
+ * ASP membership + non-membership tree writes (Merkle plumbing).
+ * Hidden from public Freighter-style activity — not user-facing payments.
+ */
+export function isSppAspTreeOperation(
+  record: Record<string, unknown>,
+  chainKey: string
+): boolean {
+  const config = getSppConfigForChain(chainKey);
+  if (!config) return false;
+  const aspIds = new Set(
+    [config.aspMembershipId, config.aspNonMembershipId].map((id) => id.toUpperCase())
+  );
+  return extractSorobanContractIds(record).some((id) => aspIds.has(id));
+}
+
+/**
+ * True when this Soroban invoke targets any SPP infrastructure (pool, verifier,
+ * ASP trees, registry). Used for classification; public mapping only hides ASP
+ * trees — pool/verifier/registry surface Freighter-style as contract rows.
  */
 export function isSppInfrastructureOperation(
   record: Record<string, unknown>,
@@ -77,6 +91,31 @@ export function isSppInfrastructureOperation(
     ].map((id) => id.toUpperCase())
   );
   return extractSorobanContractIds(record).some((id) => sppIds.has(id));
+}
+
+/** Short C…xxxx label for Freighter-style contract rows. */
+function shortContractLabel(contractId: string): string {
+  const id = contractId.trim();
+  if (id.length <= 12) return id || 'Contract';
+  return `${id.slice(0, 4)}…${id.slice(-4)}`;
+}
+
+/**
+ * User-facing SPP contract role for public activity labels.
+ * ASP trees return null (hidden plumbing).
+ */
+export function getSppPublicContractRole(
+  record: Record<string, unknown>,
+  chainKey: string
+): 'pool' | 'verifier' | 'registry' | null {
+  const config = getSppConfigForChain(chainKey);
+  if (!config) return null;
+  const ids = extractSorobanContractIds(record);
+  const upper = new Set(ids);
+  if (upper.has(config.poolId.toUpperCase())) return 'pool';
+  if (upper.has(config.verifierId.toUpperCase())) return 'verifier';
+  if (upper.has(config.registryId.toUpperCase())) return 'registry';
+  return null;
 }
 
 export async function fetchEvmHistory(
@@ -312,21 +351,23 @@ export function mapStellarOperationToTransaction(
     amount = '0';
     displayTitle = 'Account merge';
   } else if (opType === 'invoke_host_function') {
-    // SPP pool / verifier / ASP / registry: private activity only (local rows).
-    if (isSppInfrastructureOperation(record, chainKey)) {
+    // ASP Merkle tree writes are infrastructure noise — never show in activity.
+    if (isSppAspTreeOperation(record, chainKey)) {
       return null;
     }
 
-    // Soroban (non-SPP). Amount/counterparty aren't always on the op the way
-    // payments are — only surface rows with a real balance change.
+    // Public activity is Freighter-style for SPP pool / verifier / registry:
+    // raw contract invokes with amount when Horizon attaches balance changes.
+    // Private mode uses separate local reconstructed rows (createSppActivityRecord).
+    const sppRole = getSppPublicContractRole(record, chainKey);
+    const contractIds = extractSorobanContractIds(record);
+    const primaryContract =
+      contractIds[0] ||
+      String((record as { contract_id?: string }).contract_id || '').toUpperCase() ||
+      '';
+
     from = String(record.source_account || '');
-    to = String(
-      (record as { contract_id?: string }).contract_id
-        || (Array.isArray(record.asset_balance_changes)
-          ? ''
-          : '')
-        || 'Contract'
-    );
+    to = primaryContract || 'Contract';
     // Prefer first balance change if Horizon attaches them
     const changes = record.asset_balance_changes as
       | Array<{ amount?: string; asset_type?: string; asset_code?: string; from?: string; to?: string }>
@@ -338,26 +379,48 @@ export function mapStellarOperationToTransaction(
       if (c.to) to = c.to;
       ({ tokenSymbol, tokenName } = stellarAssetFields(c));
     }
-    // Hide zero-amount contract spam ("Contract / -0 XLM") — not user payments.
+    // Non-SPP: hide zero-amount contract spam ("Contract / -0 XLM").
+    // SPP user-facing contracts: still surface Freighter-style (proof-only
+    // transfers often have no classic balance change on the op).
     const amountNum = Number(amount);
-    if (!Number.isFinite(amountNum) || amountNum === 0) {
+    if (!sppRole && (!Number.isFinite(amountNum) || amountNum === 0)) {
       return null;
     }
-    const isSender = from.toLowerCase() === addrLower || String(record.source_account || '').toLowerCase() === addrLower;
+    const isSender =
+      from.toLowerCase() === addrLower ||
+      String(record.source_account || '').toLowerCase() === addrLower;
     displayTitle = 'Contract';
-    displaySubtitle = 'On-chain contract call';
+    if (sppRole === 'pool') {
+      displaySubtitle = primaryContract
+        ? `SPP pool · ${shortContractLabel(primaryContract)}`
+        : 'SPP pool contract';
+    } else if (sppRole === 'verifier') {
+      displaySubtitle = primaryContract
+        ? `SPP verifier · ${shortContractLabel(primaryContract)}`
+        : 'SPP verifier contract';
+    } else if (sppRole === 'registry') {
+      displaySubtitle = primaryContract
+        ? `SPP registry · ${shortContractLabel(primaryContract)}`
+        : 'SPP registry contract';
+    } else {
+      displaySubtitle = primaryContract
+        ? shortContractLabel(primaryContract)
+        : 'On-chain contract call';
+    }
     return {
       id,
       type: isSender ? 'sent' : 'received',
-      amount,
+      amount: Number.isFinite(amountNum) ? amount : '0',
       token: tokenName,
       tokenSymbol,
       from: from || String(record.source_account || 'unknown'),
-      to: to || 'Contract',
+      to: to || primaryContract || 'Contract',
       timestamp,
       status,
       hash: txHash,
       network: chainKey,
+      // Explicit public lane — never treat as private reconstructed activity.
+      privacyLevel: 'standard',
       displayTitle,
       displaySubtitle,
     };

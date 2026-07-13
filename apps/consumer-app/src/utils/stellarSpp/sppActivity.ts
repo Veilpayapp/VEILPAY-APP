@@ -34,12 +34,12 @@ export function getSppActivitySubtitle(op: SppActivityOp): string {
 }
 
 /**
- * Creates the local activity row for an SPP Soroban pool invocation.
+ * Creates the **private-mode** reconstructed activity row for an SPP pool op.
  *
- * The public explorer correctly shows raw contract/proof fields for these
- * transactions. This record is intentionally a UX summary only: it stores the
- * tx hash and high-level operation, never note material, nullifiers, encrypted
- * outputs, signatures, or proof calldata.
+ * Public (Standard) activity shows Freighter-style Horizon contract invokes
+ * for the same tx. This record is the clean product summary only (shield /
+ * transfer / unshield): tx hash + high-level op — never note material,
+ * nullifiers, encrypted outputs, signatures, or proof calldata.
  */
 export function createSppActivityRecord({
   op,

@@ -17,6 +17,8 @@ const CACHE_DURATION = 5 * 60 * 1000;
 export const FALLBACK_PRICES: Record<string, number> = {
   ETH: 3200,
   XLM: 0.11,
+  // pXLM is shielded XLM — same unit value for fiat estimates.
+  PXLM: 0.11,
   SOL: 145,
   BNB: 580,
   MATIC: 0.72,

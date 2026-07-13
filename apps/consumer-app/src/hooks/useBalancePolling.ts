@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import { useWalletStore, useWalletAddress, useActiveChain } from '../stores/walletStore';
 import { fetchNativeBalance, BalanceResult } from '../utils/balanceFetcher';
 import { getTokenMarketQuote } from '../utils/marketData';
@@ -167,8 +168,21 @@ export function useBalancePolling(options: UseBalancePollingOptions = {}) {
  await fetchBalance();
  }, [fetchBalance]);
 
+ // PERF-001: pause balance polling in background to save battery + RPC quota.
  useEffect(() => {
- if (enabled && address && activeChain) {
+ const onAppState = (next: AppStateStatus) => {
+ if (next === 'active' && enabled && address && activeChain) {
+ start();
+ } else if (next !== 'active') {
+ stop();
+ }
+ };
+ const sub = AppState.addEventListener('change', onAppState);
+ return () => sub.remove();
+ }, [enabled, address, activeChain, start, stop]);
+
+ useEffect(() => {
+ if (enabled && address && activeChain && AppState.currentState === 'active') {
  start();
  } else {
  stop();

@@ -11,6 +11,7 @@
  */
 
 import * as SecureStore from 'expo-secure-store';
+import { formatStroops, tryParseStroops } from '../utils/stellarSpp/sppAmount';
 
 /** 0x-prefixed hex field element or key material. */
 export type SppHex = `0x${string}`;
@@ -106,9 +107,11 @@ export async function listSppNotes(filter?: {
   unspentOnly?: boolean;
 }): Promise<SppNoteRecord[]> {
   const ids = await readIndex();
+  // PERF-003: parallel SecureStore reads instead of serial await-in-loop.
+  // Note payloads stay small; parallelizing cuts latency as note count grows.
+  const loaded = await Promise.all(ids.map((id) => getSppNote(id)));
   const out: SppNoteRecord[] = [];
-  for (const id of ids) {
-    const note = await getSppNote(id);
+  for (const note of loaded) {
     if (!note) continue;
     if (filter?.ownerAddress && note.ownerAddress !== filter.ownerAddress) continue;
     if (filter?.poolId && note.poolId !== filter.poolId) continue;
@@ -136,23 +139,12 @@ export async function markSppNoteSpent(id: string, lastTxHash?: string): Promise
  * Uses integer stroops when amounts look like fixed 7-decimal strings.
  */
 export function sumSppNoteAmounts(notes: SppNoteRecord[]): string {
-  const DECIMALS = 7;
   let stroops = 0n;
   for (const n of notes) {
     if (n.spent) continue;
-    const parts = n.amount.trim().split('.');
-    const whole = parts[0] || '0';
-    const frac = (parts[1] || '').padEnd(DECIMALS, '0').slice(0, DECIMALS);
-    if (!/^-?\d+$/.test(whole) || !/^\d*$/.test(frac)) continue;
-    const sign = whole.startsWith('-') ? -1n : 1n;
-    const w = BigInt(whole.replace('-', '') || '0');
-    const f = BigInt(frac || '0');
-    stroops += sign * (w * 10n ** BigInt(DECIMALS) + f);
+    const amount = tryParseStroops(n.amount);
+    if (amount === null) continue;
+    stroops += amount;
   }
-  const neg = stroops < 0n;
-  const abs = neg ? -stroops : stroops;
-  const whole = abs / 10n ** BigInt(DECIMALS);
-  const frac = (abs % 10n ** BigInt(DECIMALS)).toString().padStart(DECIMALS, '0').replace(/0+$/, '');
-  const body = frac.length ? `${whole}.${frac}` : `${whole}`;
-  return neg ? `-${body}` : body;
+  return formatStroops(stroops);
 }

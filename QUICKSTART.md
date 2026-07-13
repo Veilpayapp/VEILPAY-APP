@@ -1,4 +1,4 @@
-# VeilPay - Quick Reference
+# Veilpay - Quick Reference
 
 ## Commands
 

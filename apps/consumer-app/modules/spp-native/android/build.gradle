@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 plugins {
   id 'com.android.library'
   id 'expo-module-gradle-plugin'
@@ -5,6 +7,13 @@ plugins {
 
 group = 'com.veilpay'
 version = '0.1.0'
+
+repositories {
+  maven {
+    url = findRustlsPlatformVerifierMavenRepo()
+    metadataSources { artifact() }
+  }
+}
 
 android {
   namespace "expo.modules.sppnative"
@@ -21,4 +30,27 @@ android {
   lintOptions {
     abortOnError false
   }
+}
+
+dependencies {
+  // The crate ships an AAR in a local Maven repo without a POM; force AAR
+  // resolution so Gradle does not look for a default .jar artifact.
+  implementation "rustls:rustls-platform-verifier:0.1.1@aar"
+}
+
+String findRustlsPlatformVerifierMavenRepo() {
+  def manifest = file("../../../../../packages/spp-native/Cargo.toml")
+  def cargoExe = System.getenv("CARGO") ?: "cargo"
+  def metadataText = providers.exec {
+    it.workingDir = manifest.parentFile
+    commandLine(cargoExe, "metadata", "--format-version", "1", "--filter-platform", "aarch64-linux-android", "--manifest-path", manifest.absolutePath)
+  }.standardOutput.asText.get()
+
+  def metadata = new JsonSlurper().parseText(metadataText)
+  def rustlsAndroid = metadata.packages.find { it.name == "rustls-platform-verifier-android" }
+  if (rustlsAndroid == null) {
+    throw new GradleException("Cargo metadata did not include rustls-platform-verifier-android; build packages/spp-native with Android pool-ops dependencies first")
+  }
+
+  return new File(file(rustlsAndroid.manifest_path).parentFile, "maven").path
 }

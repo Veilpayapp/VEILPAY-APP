@@ -1,114 +1,102 @@
 /**
- * Veilpay Logo Component
- * Reusable logo component for consistent branding across the app
- * 
- * Usage:
- * - <Logo variant="full" /> - Full Veilpay logo with text (uses Veilpay.png)   
- * - <Logo variant="icon" /> - Icon only (shield logo from Logo.png)
- * - <Logo variant="header" /> - Compact icon version for headers
- * - <Logo variant="manual" /> - Shield icon + Manually written text
- */import React from 'react';import { View, Image, StyleSheet, Text, ViewStyle, TextStyle, ImageStyle } from 'react-native';
-import { useTheme, useStyles, typography, spacing, type Colors } from "../styles/design-tokens";
+ * Veilpay Logo
+ *
+ * Brand mark from `New logo/Logo.png`, inlined as base64 (logoIconBase64.ts)
+ * and drawn via react-native-svg — same pipeline as the rest of the icon system.
+ *
+ * Why not `require()` + RN Image?
+ * Local APK builds were showing a blank shield next to the VEILPAY text while
+ * the native splash (assets/logo-icon.png) painted fine. Inlining the bitmap
+ * into the JS bundle avoids the asset-resolve path entirely so a local
+ * assembleRelease/Debug always ships a visible mark.
+ *
+ * `assets/logo-icon.png` is kept only for app icon + expo-splash-screen.
+ */
+import React, { useMemo } from 'react';
+import { View, StyleSheet, Text, type ViewStyle, type TextStyle, type ImageStyle } from 'react-native';
+import Svg, { Image as SvgImage } from 'react-native-svg';
+import { useTheme, useStyles, typography, spacing, type Colors } from '../styles/design-tokens';
+import { LOGO_ICON_DATA_URI } from './logoIconBase64';
 
 export type LogoVariant = 'full' | 'icon' | 'header' | 'manual';
 
-// Size configurations for different variants (static — hoisted to module scope).
 const LOGO_SIZE_CONFIG = {
-  small: { icon: 24, full: 100, header: 28, fontSize: 20 },
-  medium: { icon: 40, full: 140, header: 36, fontSize: 28 },
-  large: { icon: 64, full: 200, header: 56, fontSize: 36 },
-};
+  small: { icon: 28, header: 28, fontSize: 18 },
+  medium: { icon: 44, header: 36, fontSize: 26 },
+  large: { icon: 72, header: 56, fontSize: 34 },
+} as const;
 
 interface LogoProps {
   variant?: LogoVariant;
   style?: ViewStyle;
   size?: 'small' | 'medium' | 'large';
   textStyle?: TextStyle;
+  /** Kept for API compatibility; SVG image uses width/height from size. */
   imageStyle?: ImageStyle;
 }
 
-export function Logo({ 
-  variant = 'full', 
-  style, 
+export function Logo({
+  variant = 'full',
+  style,
   size = 'medium',
   textStyle,
-  imageStyle
-}: LogoProps) { 
-  const { theme, colors } = useTheme();
+}: LogoProps) {
+  const { colors } = useTheme();
   const styles = useStyles(themeStyles);
-  
-  const iconSource = theme === 'dark' ? require('../../assets/logo-icon-dark.png') : require('../../assets/logo-icon.png');
-  const fullSource = theme === 'dark' ? require('../../assets/logo-full-dark.png') : require('../../assets/logo-full.png');
-  
   const currentSize = LOGO_SIZE_CONFIG[size];
 
-  // Render manual variant: Logo icon + Manually written VEILPAY text
-  if (variant === 'manual') {
-    return (
-      <View style={[styles.manualContainer, style]}>
-        <Image
-          source={iconSource}
-          style={[{ width: currentSize.icon, height: currentSize.icon }, imageStyle]}
-          resizeMode="contain"
-        />
-        <Text style={[
-          styles.manualText,
-          { fontSize: currentSize.fontSize },
-          textStyle
-        ]}>
-          VEILPAY
-        </Text>
-      </View>
-    );
-  }
+  const iconPx = variant === 'header' ? currentSize.header : currentSize.icon;
+  const showText = variant === 'manual' || variant === 'full';
 
-  // Render icon only (Logo.png - shield icon)
-  if (variant === 'icon') {
-    return (
-      <View style={[styles.iconContainer, style]}>
-        <Image
-          source={iconSource}
-          style={[{ width: currentSize.icon, height: currentSize.icon }, imageStyle]}
-          resizeMode="contain"
-        />
-      </View>
-    );
-  }
-
-  // Render full logo (Veilpay.png - full name logo) or header icon
-  const logoSize = variant === 'full' ? currentSize.full : currentSize.header;  
+  const href = useMemo(() => LOGO_ICON_DATA_URI, []);
 
   return (
-    <View style={[styles.container, style]}>
-      <Image
-        source={fullSource}
-        style={[{ width: logoSize, height: logoSize * 0.3 }, imageStyle]}
-        resizeMode="contain"
-      />
+    <View
+      collapsable={false}
+      style={[showText ? styles.row : styles.iconOnly, style]}
+      accessibilityLabel="VeilPay"
+    >
+      <View style={{ width: iconPx, height: iconPx }} collapsable={false}>
+        <Svg width={iconPx} height={iconPx} viewBox="0 0 256 256">
+          <SvgImage
+            href={href}
+            width={256}
+            height={256}
+            preserveAspectRatio="xMidYMid meet"
+          />
+        </Svg>
+      </View>
+      {showText ? (
+        <Text
+          style={[
+            styles.wordmark,
+            { fontSize: currentSize.fontSize, color: colors.textPrimary },
+            textStyle,
+          ]}
+        >
+          VEILPAY
+        </Text>
+      ) : null}
     </View>
   );
 }
 
-const themeStyles = (colors: Colors) => StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  manualContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing[3],
-  },
-  manualText: {
-    fontFamily: typography.fontFamily.headlineBold,
-    color: colors.textPrimary,
-    letterSpacing: 2,
-  },
-});
+const themeStyles = (_colors: Colors) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing[2],
+    },
+    iconOnly: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    wordmark: {
+      fontFamily: typography.fontFamily.headlineBold,
+      letterSpacing: 2,
+    },
+  });
 
 export default Logo;

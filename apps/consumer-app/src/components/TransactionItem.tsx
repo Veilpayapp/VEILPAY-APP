@@ -42,10 +42,15 @@ function TransactionItemComponent({ item, onPress }: TransactionItemProps) {
   const isSent = item.type === 'sent';
   const amountColor = isSent ? colors.error : colors.success;
   const amountPrefix = isSent ? '-' : '+';
+  const isPrivate = item.privacyLevel === 'max' || item.privacyLevel === 'private';
+  const isPrivatePoolTx = item.isPrivatePoolTx === true || item.sppOp !== undefined;
   
   // Logic to handle counterparty address for HomeDashboard variant (optional)
   const isReceived = item.type === 'received';
   const counterparty = isReceived ? item.from : item.to;
+  const title = item.displayTitle || (counterparty ? formatAddress(counterparty) : (isSent ? 'SENT' : 'RECEIVED'));
+  const subtitle = item.displaySubtitle || formatTime(item.timestamp);
+  const iconName = isPrivatePoolTx ? 'private-lock' : isSent ? 'send' : 'receive';
 
   const renderRightActions = () => {
     return (
@@ -64,7 +69,7 @@ function TransactionItemComponent({ item, onPress }: TransactionItemProps) {
       onPress={() => onPress(item)}
       activeOpacity={0.7}
       accessibilityRole="button"
-      accessibilityLabel={`${isSent ? 'Sent' : 'Received'} ${item.amount} ${item.tokenSymbol}, ${item.status}`}
+      accessibilityLabel={`${item.displayTitle || (isSent ? 'Sent' : 'Received')} ${item.amount} ${item.tokenSymbol}, ${item.status}`}
       accessibilityHint="Opens transaction details"
     >
       <Swipeable renderRightActions={renderRightActions} containerStyle={styles.swipeableContainer}>
@@ -76,13 +81,13 @@ function TransactionItemComponent({ item, onPress }: TransactionItemProps) {
                 sharedTransitionTag={`txIcon-${item.id}`}
                 style={[styles.typeIcon, { backgroundColor: isSent ? colors.errorBg : colors.successBg }]}
               >
-                <Icon name={isSent ? 'send' : 'receive'} size={16} color={colors.textPrimary} />
+                <Icon name={iconName} size={16} color={colors.textPrimary} />
               </Animated.View>
               <View style={styles.transactionInfo}>
               <Text style={styles.transactionType}>
-                {counterparty ? formatAddress(counterparty) : (isSent ? 'SENT' : 'RECEIVED')}
+                {title}
               </Text>
-              <Text style={styles.transactionTime}>{formatTime(item.timestamp)}</Text>
+              <Text style={styles.transactionTime}>{subtitle}</Text>
             </View>
           </View>
 
@@ -100,7 +105,7 @@ function TransactionItemComponent({ item, onPress }: TransactionItemProps) {
                   <Text style={styles.pendingText}>Pending</Text>
                 </View>
               )}
-              {item.privacyLevel === 'max' && (
+              {isPrivate && (
                 <View style={styles.privacyBadge}>
                   <Icon name="private" size={12} color={colors.accent} />
                   <Text style={styles.privacyText}>Private</Text>
@@ -120,7 +125,11 @@ export const TransactionItem = memo(TransactionItemComponent, (prevProps, nextPr
   return (
     prevProps.item.id === nextProps.item.id &&
     prevProps.item.status === nextProps.item.status &&
-    prevProps.item.timestamp === nextProps.item.timestamp
+    prevProps.item.timestamp === nextProps.item.timestamp &&
+    prevProps.item.privacyLevel === nextProps.item.privacyLevel &&
+    prevProps.item.sppOp === nextProps.item.sppOp &&
+    prevProps.item.displayTitle === nextProps.item.displayTitle &&
+    prevProps.item.displaySubtitle === nextProps.item.displaySubtitle
   );
 });
 

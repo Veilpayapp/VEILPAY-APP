@@ -45,7 +45,7 @@ function OnrampWidgetHeaderCenter({
 }
 
 export function OnrampWidgetScreen({ navigation, route }: OnrampWidgetScreenProps) {
-  const { url, title = 'PAYMENT GATEWAY', orderId } = route.params;
+  const { url, title = 'PAYMENT GATEWAY', statusToken } = route.params;
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const webViewRef = useRef<WebView>(null);
@@ -104,12 +104,13 @@ export function OnrampWidgetScreen({ navigation, route }: OnrampWidgetScreenProp
   }, [url]);
 
   useEffect(() => {
-    if (!orderId) {
+    // SEC-005: poll status with the opaque signed token, not the raw order UUID.
+    if (!statusToken) {
       return;
     }
 
     const syncOrderStatus = async () => {
-      const order = await checkOrderStatus(orderId);
+      const order = await checkOrderStatus(statusToken);
 
       if (!order) {
         return;
@@ -126,7 +127,7 @@ export function OnrampWidgetScreen({ navigation, route }: OnrampWidgetScreenProp
     return () => {
       clearInterval(intervalId);
     };
-  }, [checkOrderStatus, navigation, orderId]);
+  }, [checkOrderStatus, navigation, statusToken]);
 
   /**
    * Listen for events from the Onramp.money widget via postMessage.

@@ -36,6 +36,7 @@ import { NetworkStatusBanner } from './src/components/NetworkStatusBanner';
 import { CommitmentSaveBanner } from './src/components/CommitmentSaveBanner';
 import { UpdatePromptModal } from './src/components/UpdatePromptModal';
 import { useDepositPersistenceRecovery } from './src/hooks/useDepositPersistenceRecovery';
+import { useSppBackgroundSetup } from './src/hooks/useSppBackgroundSetup';
 import { useWalletStore } from './src/stores/walletStore';
 import { useSettingsStore } from './src/stores/settingsStore';
 import { useTransactionStore } from './src/stores/transactionStore';
@@ -163,6 +164,10 @@ function MainApp() {
   // cold launch / fresh App mount before the privacy flow is reachable.
   // See requirements.md Requirement 7.7 and tasks.md task 7.4.
   useDepositPersistenceRecovery();
+
+  // UX-001: premium background ASP/key setup on app entry (Stellar only).
+  // No diagnostic screen required — users never need to open Private status.
+  useSppBackgroundSetup();
 
   // ── P0: Environment validation (fail-fast on missing critical vars) ──
   useEffect(() => {

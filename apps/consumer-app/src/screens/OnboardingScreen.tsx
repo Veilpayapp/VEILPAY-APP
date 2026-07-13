@@ -30,7 +30,7 @@ interface OnboardingScreenProps {
 const FEATURES = [
   { id: '1', iconName: 'shield' as const, title: 'STEALTH ADDRESS', description: 'Generated one-time addresses for every transaction to break on-chain links.' },
   { id: '2', iconName: 'zk-proof' as const, title: 'ZK PROOFS', description: 'Mathematical privacy guarantees while ensuring total integrity limits.' },
-  { id: '3', iconName: 'globe' as const, title: 'MULTI-CHAIN', description: 'Seamless support for EVM, SVM, and MVM ecosystems within a single vault.' },
+  { id: '3', iconName: 'globe' as const, title: 'MULTI-CHAIN', description: 'Seamless support for EVM, Solana, and Stellar ecosystems within a single vault.' },
 ];
 
 export function OnboardingScreen({ navigation }: OnboardingScreenProps) {

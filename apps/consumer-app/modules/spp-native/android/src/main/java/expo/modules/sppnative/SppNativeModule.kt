@@ -2,6 +2,7 @@ package expo.modules.sppnative
 
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import java.io.File
 import org.json.JSONObject
 
 /**
@@ -18,7 +19,9 @@ class SppNativeModule : Module() {
     Name("SppNative")
 
     OnCreate {
-      SppNativeRust.tryLoad()
+      if (SppNativeRust.tryLoad()) {
+        initPlatformVerifier()
+      }
     }
 
     Function("version") {
@@ -61,11 +64,24 @@ class SppNativeModule : Module() {
       }
     }
 
+    Function("platformInit") {
+      if (SppNativeRust.loaded) {
+        initPlatformVerifier()
+      } else {
+        mapOf(
+          "ok" to false,
+          "code" to "SPP_OPS_NOT_READY",
+          "op" to "platform_init",
+          "message" to "libspp_native.so not loaded"
+        )
+      }
+    }
+
     Function("deposit") { amount: String ->
       if (SppNativeRust.loaded) {
         jsonResult(SppNativeRust.nativeDeposit(amount))
       } else {
-        notReady("deposit", "amount=$amount")
+        notReady("deposit", "pool-ops unavailable")
       }
     }
 
@@ -73,7 +89,7 @@ class SppNativeModule : Module() {
       if (SppNativeRust.loaded) {
         jsonResult(SppNativeRust.nativeTransfer(amount, recipient))
       } else {
-        notReady("transfer", "amount=$amount recipientLen=${recipient.length}")
+        notReady("transfer", "pool-ops unavailable")
       }
     }
 
@@ -81,7 +97,7 @@ class SppNativeModule : Module() {
       if (SppNativeRust.loaded) {
         jsonResult(SppNativeRust.nativeWithdraw(amount, to))
       } else {
-        notReady("withdraw", "amount=$amount toLen=${to.length}")
+        notReady("withdraw", "pool-ops unavailable")
       }
     }
 
@@ -133,19 +149,176 @@ class SppNativeModule : Module() {
     }
 
     Function("poolOpen") { configJson: String ->
-      if (SppNativeRust.loaded) {
+      if (!SppNativeRust.loaded) {
+        return@Function notReady("pool_open", "libspp_native.so not loaded")
+      }
+      try {
         jsonResult(SppNativeRust.nativePoolOpen(configJson))
-      } else {
-        notReady("pool_open", "libspp_native.so not loaded")
+      } catch (e: UnsatisfiedLinkError) {
+        linkMissing("pool_open", e)
+      } catch (e: Exception) {
+        nativeException("pool_open", e)
       }
     }
 
     Function("poolClose") {
-      if (SppNativeRust.loaded) {
-        jsonResult(SppNativeRust.nativePoolClose())
-      } else {
-        mapOf("ok" to true, "op" to "pool_close", "message" to "no-op without .so")
+      if (!SppNativeRust.loaded) {
+        return@Function mapOf("ok" to true, "op" to "pool_close", "message" to "no-op without .so")
       }
+      try {
+        jsonResult(SppNativeRust.nativePoolClose())
+      } catch (e: UnsatisfiedLinkError) {
+        // Close is best-effort on outdated .so
+        mapOf("ok" to true, "op" to "pool_close", "message" to "no-op (symbol missing)")
+      } catch (e: Exception) {
+        mapOf("ok" to true, "op" to "pool_close", "message" to (e.message ?: "close failed"))
+      }
+    }
+
+    // DATA-001: chain-backed note recovery primitives (session must be open).
+    // Catch UnsatisfiedLinkError: older .so may load but lack pool_sync/balance symbols.
+    Function("poolSync") {
+      if (!SppNativeRust.loaded) {
+        return@Function notReady("pool_sync", "libspp_native.so not loaded")
+      }
+      try {
+        jsonResult(SppNativeRust.nativePoolSync())
+      } catch (e: UnsatisfiedLinkError) {
+        linkMissing("pool_sync", e)
+      } catch (e: Exception) {
+        nativeException("pool_sync", e)
+      }
+    }
+
+    Function("poolBalance") {
+      if (!SppNativeRust.loaded) {
+        return@Function notReady("pool_balance", "libspp_native.so not loaded")
+      }
+      try {
+        jsonResult(SppNativeRust.nativePoolBalance())
+      } catch (e: UnsatisfiedLinkError) {
+        linkMissing("pool_balance", e)
+      } catch (e: Exception) {
+        nativeException("pool_balance", e)
+      }
+    }
+
+    /**
+     * Writable absolute path for SQLite + circuit staging (no file:// prefix).
+     * Prefers external app files dir so `adb push .../Android/data/<pkg>/files/` works.
+     */
+    Function("appDataDir") {
+      appDataDirPath()
+    }
+
+    Function("ensureCircuitAssets") {
+      ensureCircuitAssets()
+    }
+  }
+
+  private fun appDataDirPath(): String {
+    val ctx = appContext.reactContext ?: return ""
+    val external = ctx.getExternalFilesDir(null)
+    val dir = external ?: ctx.filesDir
+    return dir.absolutePath.trimEnd('/')
+  }
+
+  private fun initPlatformVerifier(): Map<String, Any?> {
+    val ctx = appContext.reactContext?.applicationContext
+      ?: appContext.reactContext
+      ?: return mapOf(
+        "ok" to false,
+        "code" to "SPP_NO_CONTEXT",
+        "op" to "platform_init",
+        "message" to "Android context unavailable for rustls platform verifier initialization"
+      )
+
+    return try {
+      jsonResult(SppNativeRust.nativeInitPlatform(ctx))
+    } catch (e: UnsatisfiedLinkError) {
+      mapOf(
+        "ok" to false,
+        "code" to "SPP_PLATFORM_INIT_UNAVAILABLE",
+        "op" to "platform_init",
+        "message" to "Native rustls platform verifier init symbol unavailable"
+      )
+    } catch (e: Exception) {
+      mapOf(
+        "ok" to false,
+        "code" to "SPP_PLATFORM_INIT_EXCEPTION",
+        "op" to "platform_init",
+        "message" to (e.message ?: "rustls platform verifier initialization failed")
+      )
+    }
+  }
+
+  private fun ensureCircuitAssets(): Map<String, Any?> {
+    val ctx = appContext.reactContext
+      ?: return mapOf(
+        "ok" to false,
+        "code" to "SPP_NO_CONTEXT",
+        "op" to "ensure_circuit_assets",
+        "message" to "Android context unavailable for circuit asset seeding"
+      )
+    val root = appDataDirPath()
+    if (root.isEmpty()) {
+      return mapOf(
+        "ok" to false,
+        "code" to "SPP_STORAGE_PATH",
+        "op" to "ensure_circuit_assets",
+        "message" to "No writable app data directory for SPP circuit assets"
+      )
+    }
+
+    val targetDir = File(root, "spp/circuits")
+    if (!targetDir.exists() && !targetDir.mkdirs()) {
+      return mapOf(
+        "ok" to false,
+        "code" to "SPP_STORAGE_PATH",
+        "op" to "ensure_circuit_assets",
+        "message" to "Could not create SPP circuit asset directory"
+      )
+    }
+
+    val copied = mutableListOf<String>()
+    val missing = mutableListOf<String>()
+    val required = listOf(
+      "policy_tx_2_2_proving_key.bin",
+      "policy_tx_2_2.wasm",
+      "policy_tx_2_2.r1cs"
+    )
+
+    for (name in required) {
+      val out = File(targetDir, name)
+      if (out.exists() && out.length() > 0L) continue
+
+      try {
+        ctx.assets.open("spp/circuits/$name").use { input ->
+          out.outputStream().use { output -> input.copyTo(output) }
+        }
+        copied.add(name)
+      } catch (_: Exception) {
+        missing.add(name)
+        if (out.exists() && out.length() == 0L) out.delete()
+      }
+    }
+
+    return if (missing.isEmpty()) {
+      mapOf(
+        "ok" to true,
+        "op" to "ensure_circuit_assets",
+        "message" to if (copied.isEmpty()) "Circuit assets already staged" else "Circuit assets staged from APK",
+        "circuitsDir" to targetDir.absolutePath,
+        "copied" to copied
+      )
+    } else {
+      mapOf(
+        "ok" to false,
+        "code" to "SPP_CIRCUITS_NOT_BUNDLED",
+        "op" to "ensure_circuit_assets",
+        "message" to "APK missing bundled SPP circuit assets: ${missing.joinToString(", ")}",
+        "circuitsDir" to targetDir.absolutePath
+      )
     }
   }
 
@@ -156,6 +329,26 @@ class SppNativeModule : Module() {
       "op" to op,
       "message" to
         "Native sdk/pool not linked yet ($detail). Phase 0 CLI path works; NDK link is next."
+    )
+  }
+
+  /** Older jniLibs may omit newer JNI exports — never throw into Expo (red banner). */
+  private fun linkMissing(op: String, e: UnsatisfiedLinkError): Map<String, Any?> {
+    return mapOf(
+      "ok" to false,
+      "code" to "SPP_JNI_SYMBOL_MISSING",
+      "op" to op,
+      "message" to
+        "Native library is outdated (missing $op). Rebuild libspp_native.so with pool-ops."
+    )
+  }
+
+  private fun nativeException(op: String, e: Exception): Map<String, Any?> {
+    return mapOf(
+      "ok" to false,
+      "code" to "SPP_NATIVE_EXCEPTION",
+      "op" to op,
+      "message" to (e.message ?: "Native $op failed")
     )
   }
 

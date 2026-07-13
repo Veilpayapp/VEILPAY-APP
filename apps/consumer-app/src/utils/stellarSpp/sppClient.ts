@@ -25,11 +25,15 @@ import {
   sppNativeDeposit,
   sppNativeEnsureAsp,
   sppNativePing,
+  sppNativePoolBalance,
+  sppNativePoolSync,
   sppNativeTransfer,
   sppNativeVersion,
   sppNativeWithdraw,
   type SppNativeOpResult,
 } from './sppNativeBridge';
+import { getCircuitsReadiness } from './sppCircuits';
+import { formatStroops, parsePositiveStroops, tryParseStroops } from './sppAmount';
 import { probeAspMembershipRoot } from './sppOnboard';
 import {
   SppClientError,
@@ -57,6 +61,9 @@ export type SppPrepChecklist = {
   /** insert_leaf confirmed on-chain for this account. */
   aspInserted: boolean;
   asp: AspMembershipStatus;
+  circuitsReady: boolean;
+  circuitsDir: string;
+  circuitsMissing: string[];
   readyForProve: boolean;
   blockers: string[];
 };
@@ -77,9 +84,17 @@ function throwFromNative(result: SppNativeOpResult, fallbackOp: string): never {
 }
 
 function requirePositiveAmount(amount: string): void {
-  if (!amount || Number(amount) <= 0) {
-    throw new SppClientError('Amount must be positive', 'SPP_INVALID_AMOUNT');
-  }
+  parsePositiveStroops(amount);
+}
+
+function throwSppBlockers(blockers: string[]): never {
+  const useful = blockers.filter(Boolean);
+  throw new SppClientError(
+    useful.length
+      ? `Private payment is not prove-ready yet: ${useful.join('; ')}`
+      : 'Private payment is not prove-ready yet',
+    'SPP_PROVE_NOT_READY'
+  );
 }
 
 /** Diagnostic surface for Settings / Private XLM / Home. */
@@ -165,6 +180,20 @@ export async function prepareSppOp(
     }
   }
 
+  const circuits = await getCircuitsReadiness().catch(() => ({
+    dir: '',
+    ready: false,
+    missing: [
+      'policy_tx_2_2_proving_key.bin',
+      'policy_tx_2_2.wasm',
+      'policy_tx_2_2.r1cs',
+    ],
+    message: 'Circuit readiness unavailable',
+  }));
+  if (!circuits.ready) {
+    blockers.push(circuits.message);
+  }
+
   return {
     chainEnabled,
     nativePing,
@@ -173,12 +202,16 @@ export async function prepareSppOp(
     hasAspLeaf,
     aspInserted,
     asp,
+    circuitsReady: circuits.ready,
+    circuitsDir: circuits.dir,
+    circuitsMissing: circuits.missing,
     readyForProve:
       chainEnabled &&
       poolOps &&
       keysSigned &&
       hasAspLeaf &&
-      (aspInserted || asp.status === 'ready'),
+      (aspInserted || asp.status === 'ready') &&
+      circuits.ready,
     blockers,
   };
 }
@@ -200,6 +233,185 @@ export async function getLocalPrivateBalance(
     unspentOnly: true,
   });
   return { amount: sumSppNoteAmounts(notes), notes };
+}
+
+export type SppNoteRecoveryResult = {
+  /** Whether native pool sync + balance succeeded */
+  recovered: boolean;
+  /** Local note balance after reconciliation */
+  amount: string;
+  notes: SppNoteRecord[];
+  /** Native private balance (stroops → XLM) when available */
+  nativeAmount?: string;
+  message: string;
+};
+
+/**
+ * DATA-001: attempt chain-backed recovery of private balance after reinstall /
+ * SecureStore loss.
+ *
+ * Flow: seed circuits → ASP soft-ready → open pool session → native
+ * `pool_sync` → `pool_balance` → reconcile SecureStore note cache to native
+ * total so the home UI can show pXLM again.
+ *
+ * Spend uses the native SDK sqlite (rehydrated by pool_sync from the seed),
+ * not the SecureStore summary. The summary is for display / spend planning.
+ */
+export async function recoverSppNotesFromChain(
+  chainKey: string,
+  ownerAddress: string
+): Promise<SppNoteRecoveryResult> {
+  const config = getSppConfigForChain(chainKey);
+  if (!config) {
+    return {
+      recovered: false,
+      amount: '0',
+      notes: [],
+      message: 'SPP not enabled for this chain',
+    };
+  }
+
+  const localBefore = await getLocalPrivateBalance(chainKey, ownerAddress);
+  const caps = sppNativeCapabilities();
+  if (!caps.poolOps) {
+    return {
+      recovered: false,
+      amount: localBefore.amount,
+      notes: localBefore.notes,
+      message:
+        'Native poolOps required for chain note recovery. Install a pool-ops build.',
+    };
+  }
+
+  try {
+    // Seed bundled circuits before session open (fresh install has empty app data).
+    try {
+      const { sppNativeEnsureCircuitAssets } = await import('./sppNativeBridge');
+      await sppNativeEnsureCircuitAssets();
+    } catch {
+      /* non-fatal; getCircuitsReadinessForDir also seeds */
+    }
+
+    await ensureSppAccountReadySoft(chainKey, ownerAddress);
+    const { ensurePoolSession } = await import('./sppPoolSession');
+    let opened = await ensurePoolSession(chainKey, ownerAddress);
+    // One retry: first open after reinstall often races mnemonic / FS seed.
+    if (!opened.ok) {
+      await new Promise((r) => setTimeout(r, 750));
+      opened = await ensurePoolSession(chainKey, ownerAddress);
+    }
+    if (!opened.ok) {
+      return {
+        recovered: false,
+        amount: localBefore.amount,
+        notes: localBefore.notes,
+        message: opened.message || 'Could not open pool session for recovery',
+      };
+    }
+
+    const sync = await sppNativePoolSync();
+    if (!sync.ok) {
+      return {
+        recovered: false,
+        amount: localBefore.amount,
+        notes: localBefore.notes,
+        message: sync.message || 'Native pool sync failed',
+      };
+    }
+
+    // Second sync pass — first scan after empty sqlite can miss late pages.
+    await sppNativePoolSync().catch(() => ({ ok: false }));
+
+    const bal = await sppNativePoolBalance();
+    if (!bal.ok || bal.balanceStroops == null) {
+      return {
+        recovered: false,
+        amount: localBefore.amount,
+        notes: localBefore.notes,
+        message: bal.message || 'Native balance unavailable after sync',
+      };
+    }
+
+    let nativeStroops: bigint;
+    try {
+      nativeStroops = BigInt(bal.balanceStroops);
+    } catch {
+      return {
+        recovered: false,
+        amount: localBefore.amount,
+        notes: localBefore.notes,
+        message: 'Invalid native balance stroops',
+      };
+    }
+
+    const nativeAmount = formatStroops(nativeStroops);
+    const localStroops = tryParseStroops(localBefore.amount) ?? 0n;
+    const recoverNoteId = `recover-${chainKey}-${ownerAddress}`;
+    const hasRealNotes = localBefore.notes.some((n) => !n.id.startsWith('recover-'));
+
+    // Reconcile SecureStore summary with native total without double-counting.
+    // - Fresh install (no real notes): one recover-* row = full native total.
+    // - Existing real notes under native: add/update recover-* for the gap only.
+    if (nativeStroops > 0n) {
+      if (!hasRealNotes) {
+        await saveSppNote({
+          id: recoverNoteId,
+          chainKey,
+          poolId: config.poolId,
+          ownerAddress,
+          amount: nativeAmount,
+          createdAt: Date.now(),
+          spent: false,
+        });
+      } else if (nativeStroops > localStroops) {
+        await saveSppNote({
+          id: recoverNoteId,
+          chainKey,
+          poolId: config.poolId,
+          ownerAddress,
+          amount: formatStroops(nativeStroops - localStroops),
+          createdAt: Date.now(),
+          spent: false,
+        });
+      }
+    }
+
+    const localAfter = await getLocalPrivateBalance(chainKey, ownerAddress);
+    const afterStroops = tryParseStroops(localAfter.amount) ?? 0n;
+    // Never under-report native: if SecureStore lag/fails, still surface native.
+    const displayAmount =
+      nativeStroops > afterStroops ? nativeAmount : localAfter.amount;
+
+    return {
+      recovered: true,
+      amount: displayAmount,
+      notes: localAfter.notes,
+      nativeAmount,
+      message:
+        nativeStroops > 0n
+          ? `Recovered private balance ${nativeAmount} XLM from chain`
+          : 'Sync complete — no private balance on-chain for this account',
+    };
+  } catch (e) {
+    return {
+      recovered: false,
+      amount: localBefore.amount,
+      notes: localBefore.notes,
+      message: e instanceof Error ? e.message : 'Recovery failed',
+    };
+  }
+}
+
+async function ensureSppAccountReadySoft(
+  chainKey: string,
+  ownerAddress: string
+): Promise<void> {
+  try {
+    const { ensureSppAccountReady } = await import('./sppOnboard');
+    await ensureSppAccountReady(chainKey, ownerAddress);
+  } catch {
+    /* non-fatal for recovery path */
+  }
 }
 
 /**
@@ -227,6 +439,11 @@ export async function deposit(
     throwFromNative(await sppNativeDeposit(amount), 'deposit');
   }
 
+  const prep = await prepareSppOp(chainKey, ownerAddress);
+  if (!prep.readyForProve) {
+    throwSppBlockers(prep.blockers);
+  }
+
   const { ensurePoolSession } = await import('./sppPoolSession');
   const opened = await ensurePoolSession(chainKey, ownerAddress);
   if (!opened.ok) {
@@ -252,49 +469,75 @@ export async function deposit(
   return withExplorer(ctx.config, result.txHash);
 }
 
+type SpendPlanItem = { note: SppNoteRecord; amount: bigint };
+
 /**
- * Pick unspent notes covering `amount` (greedy newest-first).
- * Whole notes are marked spent; residual (change) is re-saved as a new note.
+ * Pick unspent notes covering `amount` (greedy newest-first), without mutating
+ * SecureStore. This lets transfer/withdraw fail before native submission when
+ * the app-visible note cache is known to be insufficient.
  */
-async function spendNotesForAmount(
+async function planNotesForAmount(
   chainKey: string,
   ownerAddress: string,
   poolId: string,
-  amount: string,
-  txHash: string
-): Promise<void> {
-  const need = Number(amount);
-  if (!(need > 0)) return;
+  amount: string
+): Promise<{ amount: bigint; items: SpendPlanItem[] }> {
+  let remaining = parsePositiveStroops(amount);
   const notes = await listSppNotes({
     ownerAddress,
     poolId,
     unspentOnly: true,
   });
   const mine = notes.filter((n) => n.chainKey === chainKey);
-  let remaining = need;
+
+  const selected: SpendPlanItem[] = [];
   for (const n of mine) {
-    if (remaining <= 0) break;
-    const a = Number(n.amount);
-    if (!(a > 0)) continue;
-    await markSppNoteSpent(n.id, txHash);
-    if (a > remaining + 1e-12) {
-      const change = (a - remaining).toFixed(7).replace(/\.?0+$/, '') || '0';
-      if (Number(change) > 0) {
-        await saveSppNote({
-          id: `chg-${txHash}-${n.id}`,
-          chainKey,
-          poolId,
-          ownerAddress,
-          amount: change,
-          createdAt: Date.now(),
-          spent: false,
-          lastTxHash: txHash,
-        });
-      }
-      remaining = 0;
-    } else {
-      remaining -= a;
+    if (remaining <= 0n) break;
+    const a = tryParseStroops(n.amount);
+    if (!a || a <= 0n) continue;
+    selected.push({ note: n, amount: a });
+    remaining -= a;
+  }
+
+  if (remaining > 0n) {
+    throw new SppClientError(
+      'Local private note cache does not cover this amount; refresh/recover notes before spending again.',
+      'SPP_LOCAL_NOTES_INSUFFICIENT'
+    );
+  }
+
+  return { amount: parsePositiveStroops(amount), items: selected };
+}
+
+/**
+ * Commit a successful native spend into the local note cache.
+ */
+async function commitSpendPlan(
+  chainKey: string,
+  ownerAddress: string,
+  poolId: string,
+  plan: { amount: bigint; items: SpendPlanItem[] },
+  txHash: string
+): Promise<void> {
+  let toSpend = plan.amount;
+  for (const { note, amount: noteAmount } of plan.items) {
+    await markSppNoteSpent(note.id, txHash);
+    if (noteAmount > toSpend) {
+      const change = formatStroops(noteAmount - toSpend);
+      await saveSppNote({
+        id: `chg-${txHash}-${note.id}`,
+        chainKey,
+        poolId,
+        ownerAddress,
+        amount: change,
+        createdAt: Date.now(),
+        spent: false,
+        lastTxHash: txHash,
+      });
+      toSpend = 0n;
+      break;
     }
+    toSpend -= noteAmount;
   }
 }
 
@@ -327,9 +570,21 @@ export async function transfer(
     recipientWire = `keys:${recipient.notePublicKey}:${recipient.encryptionPublicKey}`;
   }
 
+  const spendPlan = await planNotesForAmount(
+    chainKey,
+    ownerAddress,
+    ctx.config.poolId,
+    amount
+  );
+
   const caps = sppNativeCapabilities();
   if (!caps.poolOps) {
     throwFromNative(await sppNativeTransfer(amount, recipientWire), 'transfer');
+  }
+
+  const prep = await prepareSppOp(chainKey, ownerAddress);
+  if (!prep.readyForProve) {
+    throwSppBlockers(prep.blockers);
   }
 
   const { ensurePoolSession } = await import('./sppPoolSession');
@@ -342,11 +597,11 @@ export async function transfer(
   if (!result.ok || !result.txHash) {
     throwFromNative(result, 'transfer');
   }
-  await spendNotesForAmount(
+  await commitSpendPlan(
     chainKey,
     ownerAddress,
     ctx.config.poolId,
-    amount,
+    spendPlan,
     result.txHash
   );
   return withExplorer(ctx.config, result.txHash);
@@ -369,9 +624,21 @@ export async function withdraw(
     throw new SppClientError('Invalid withdraw destination', 'SPP_INVALID_RECIPIENT');
   }
 
+  const spendPlan = await planNotesForAmount(
+    chainKey,
+    ownerAddress,
+    ctx.config.poolId,
+    amount
+  );
+
   const caps = sppNativeCapabilities();
   if (!caps.poolOps) {
     throwFromNative(await sppNativeWithdraw(amount, recipient), 'withdraw');
+  }
+
+  const prep = await prepareSppOp(chainKey, ownerAddress);
+  if (!prep.readyForProve) {
+    throwSppBlockers(prep.blockers);
   }
 
   const { ensurePoolSession } = await import('./sppPoolSession');
@@ -384,11 +651,11 @@ export async function withdraw(
   if (!result.ok || !result.txHash) {
     throwFromNative(result, 'withdraw');
   }
-  await spendNotesForAmount(
+  await commitSpendPlan(
     chainKey,
     ownerAddress,
     ctx.config.poolId,
-    amount,
+    spendPlan,
     result.txHash
   );
   return withExplorer(ctx.config, result.txHash);

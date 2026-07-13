@@ -845,6 +845,14 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
                       ? 'INSUFFICIENT FUNDS'
                       : 'CONFIRM & SEND'
                 }
+                accessibilityLabel={
+                  isWalletVerificationPending
+                    ? 'Verifying wallet'
+                    : insufficientFunds
+                      ? 'Insufficient funds'
+                      : 'Confirm and send payment'
+                }
+                accessibilityHint="Submits the payment with the selected privacy level"
                 variant={isSendDisabled || insufficientFunds ? 'outline' : 'primary'}
                 onPress={() => {
                   void triggerLightImpactHaptic();

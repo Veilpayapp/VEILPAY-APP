@@ -1,4 +1,4 @@
-# VeilPay — Consumer Hardening (Track A) + SPP Phase 0 Spike (Track B)
+# Veilpay — Consumer Hardening (Track A) + SPP Phase 0 Spike (Track B)
 
 > **Decision (2026-07-09):** Harden the *live* consumer app first, in parallel with the
 > read-only SPP Phase 0 spike. Merchant side fully parked. No new merchant flows.
@@ -33,24 +33,14 @@ correctly-gated typed stubs they are.
 Scope = the code users actually touch. Confirmed concrete findings first, then verification sweep.
 
 ### A1. Confirmed defects to fix
-1. **Duplicate, divergent `validateAddress`.** Two implementations exist:
-   - `stores/walletStore.ts` (used by `SendPaymentScreen`) — `mvm` branch adds `&& length <= 66`.
-   - `utils/validation.ts` — `mvm` branch has **no** length cap (`/^0x[a-fA-F0-9]{1,64}$/`).
-   Two sources of truth for "is this address valid" is a latent correctness/consistency bug.
-   **Fix:** make `walletStore.validateAddress` re-export/delegate to `utils/validation.ts`
-   (single source), reconciling the `mvm` length rule (keep the stricter `<= 66`). Add a test
-   asserting the two entry points agree across all four chain types.
+1. **Duplicate, divergent `validateAddress`.** ✅ **DONE** — `walletStore` / `deepLinking` delegate to
+   `utils/validation.ts` (single source; aptos/`mvm` removed from product chain set).
 
-2. **Stellar reserve is hardcoded to 1 XLM.** `stellarSigner.ts:102` uses a flat `reserveXlm = 1`,
-   but Stellar's minimum reserve is `(2 + numSubentries) × base_reserve (0.5)`, so an account with
-   trustlines/offers needs **more** than 1 XLM reserved. A send that passes this check can fail at
-   Horizon with `tx_insufficient_balance`. **Fix:** compute reserve from
-   `accountData.subentry_count` (already in the Horizon response): `reserve = (2 + subentry_count) * 0.5`.
-   Add a unit test with a mocked multi-subentry account.
+2. **Stellar reserve is hardcoded to 1 XLM.** ✅ **DONE** — `computeStellarMinReserveXlm(subentry_count)`
+   in `stellarSigner.ts` + unit tests for multi-subentry accounts.
 
-3. **Poller `privacyLevel` type excludes `'stealth'`.** `PollOptions.privacyLevel?: 'standard' | 'max'`
-   but the stealth flow calls the poller (with `'standard'`, so no runtime bug today) — the type is
-   just narrower than reality. Low priority; widen to `PrivacyLevel` for honesty or leave a note.
+3. **Poller `privacyLevel` type excludes `'stealth'`.** ✅ **DONE** — `PollOptions.privacyLevel`
+   aligned to `TransactionRecord['privacyLevel']` (`standard` | `stealth` | `max` | `private`).
 
 ### A2. Verification sweep (find-or-clear; each ends in a test or a clean bill)
 - **Four signers**: `secureSigner` (EVM), `solanaSigner` (SVM), `aptosSigner` (MVM), `stellarSigner`

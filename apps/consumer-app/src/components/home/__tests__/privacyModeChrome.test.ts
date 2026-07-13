@@ -34,4 +34,11 @@ describe('privacy mode chrome contracts', () => {
     expect(publicFrame.borderWidth).toBe(privateFrame.borderWidth);
     expect(publicFrame.borderColor).not.toBe(privateFrame.borderColor);
   });
+
+  it('testnet privacy subtitle has no protocol jargon', () => {
+    const testnet = getPrivacyAssetById('spp-xlm-testnet');
+    expect(testnet?.subtitle).toMatch(/Private XLM/i);
+    expect(testnet?.subtitle).not.toMatch(/SPP|pool|notes|G…/i);
+    expect(testnet?.features ?? []).toEqual([]);
+  });
 });

@@ -107,4 +107,46 @@ describe('RPC Proxy Routes', () => {
       expect(__test.isChainSupported('dogechain')).toBe(false);
     });
   });
+
+  describe('SEC-004 complexity caps', () => {
+    it('rejects oversized JSON-RPC batches', () => {
+      const batch = Array.from({ length: __test.MAX_BATCH_SIZE + 1 }, (_, i) => ({
+        jsonrpc: '2.0',
+        id: i,
+        method: 'eth_blockNumber',
+        params: [],
+      }));
+      const check = __test.checkRequestComplexity(batch);
+      expect(check.ok).toBe(false);
+      expect(check.code).toBe('RPC_BATCH_TOO_LARGE');
+    });
+
+    it('rejects eth_getLogs with oversized block range', () => {
+      const from = 0;
+      const to = __test.MAX_ETH_GETLOGS_BLOCK_RANGE + 1;
+      const check = __test.checkRequestComplexity({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'eth_getLogs',
+        params: [
+          {
+            fromBlock: `0x${from.toString(16)}`,
+            toBlock: `0x${to.toString(16)}`,
+          },
+        ],
+      });
+      expect(check.ok).toBe(false);
+      expect(check.code).toBe('RPC_LOGS_RANGE_TOO_LARGE');
+    });
+
+    it('allows a normal eth_getBalance call', () => {
+      const check = __test.checkRequestComplexity({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'eth_getBalance',
+        params: ['0x0', 'latest'],
+      });
+      expect(check.ok).toBe(true);
+    });
+  });
 });

@@ -1,4 +1,4 @@
-# VeilPay Smart Contract Deployment Guide
+# Veilpay Smart Contract Deployment Guide
 
 This guide covers two flows:
 
@@ -13,7 +13,7 @@ for the registry / pool contracts that predate the privacy stack.
 
 ---
 
-## 1. VeilPay Privacy Stack — Sepolia Deployment Runbook
+## 1. Veilpay Privacy Stack — Sepolia Deployment Runbook
 
 This runbook deploys the four-layer privacy stack to Sepolia testnet:
 

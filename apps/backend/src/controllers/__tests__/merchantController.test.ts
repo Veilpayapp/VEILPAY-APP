@@ -37,6 +37,38 @@ jest.mock('../../middleware/auth', () => ({
   hashApiKey: (key: string) => `hashed_${key}`,
 }));
 
+// SEC-002: mock the SSRF guard so controller tests don't hit real DNS.
+// Individual tests override assertSafeWebhookUrl to simulate safe/unsafe URLs.
+jest.mock('../../utils/urlSafety', () => {
+  const assertSafeWebhookUrl = jest.fn();
+  class UnsafeUrlError extends Error {
+    constructor(message: string) {
+      super(message);
+      this.name = 'UnsafeUrlError';
+    }
+  }
+  // The controllers delegate to `rejectUnsafeWebhookUrl` (single source of
+  // truth for the 400 error contract — see review warning #10). Forward to
+  // the mocked assert + UnsafeUrlError so existing tests keep working.
+  const rejectUnsafeWebhookUrl = async (
+    rawUrl: string | undefined,
+    res: { status: (code: number) => { json: (body: unknown) => void } }
+  ): Promise<boolean> => {
+    if (rawUrl === undefined || rawUrl === null || rawUrl === '') return true;
+    try {
+      await assertSafeWebhookUrl(rawUrl);
+      return true;
+    } catch (e) {
+      if (e instanceof UnsafeUrlError) {
+        res.status(400).json({ error: e.message });
+        return false;
+      }
+      throw e;
+    }
+  };
+  return { assertSafeWebhookUrl, UnsafeUrlError, rejectUnsafeWebhookUrl };
+});
+
 jest.mock('crypto', () => ({
   ...jest.requireActual('crypto'),
   randomUUID: () => 'aaaabbbb-cccc-dddd-eeee-ffffgggghhhh',
@@ -59,6 +91,9 @@ jest.mock('../../types', () => ({
 
 // Retrieve the mock prisma reference after mocking
 const { prisma: mockPrisma } = require('../../lib/prisma') as { prisma: any };
+const { assertSafeWebhookUrl: mockAssertSafeWebhookUrl } = require('../../utils/urlSafety') as {
+  assertSafeWebhookUrl: jest.Mock;
+};
 
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -98,6 +133,9 @@ describe('merchantController', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // By default the SSRF guard accepts all URLs; individual tests override
+    // this to simulate an unsafe URL.
+    mockAssertSafeWebhookUrl.mockResolvedValue(undefined);
   });
 
   // ── registerMerchant ──────────────────────────────────────────────────────
@@ -165,6 +203,101 @@ describe('merchantController', () => {
       expect(mockPrisma.merchant.create).toHaveBeenCalledWith(
         expect.objectContaining({ data: expect.objectContaining({ webhookUrl: 'https://example.com/webhook' }) })
       );
+    });
+
+    it('SEC-002: rejects a webhook URL that fails the SSRF guard with 400', async () => {
+      const { UnsafeUrlError } = require('../../utils/urlSafety');
+      mockAssertSafeWebhookUrl.mockRejectedValue(
+        new UnsafeUrlError('Webhook URL points at a private/reserved IP')
+      );
+
+      const res = await request(app)
+        .post('/merchant/register')
+        .send({
+          businessName: 'Evil Corp',
+          email: 'evil@acme.com',
+          webhookUrl: 'http://169.254.169.254/latest/meta-data/',
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('private/reserved IP');
+      // Must NOT create the merchant when the webhook URL is unsafe.
+      expect(mockPrisma.merchant.create).not.toHaveBeenCalled();
+    });
+
+    it('SEC-003: creates pending merchant when NODE_ENV is production and auto-activate is off', async () => {
+      const prevEnv = process.env.NODE_ENV;
+      const prevAuto = process.env.MERCHANT_REGISTRATION_AUTO_ACTIVATE;
+      process.env.NODE_ENV = 'production';
+      delete process.env.MERCHANT_REGISTRATION_AUTO_ACTIVATE;
+
+      mockPrisma.merchant.findUnique.mockResolvedValue(null);
+      mockPrisma.merchant.create.mockResolvedValue({
+        id: 'pending-merchant',
+        businessName: 'Pending Co',
+        email: 'pending@acme.com',
+        status: 'pending',
+      });
+
+      const res = await request(app)
+        .post('/merchant/register')
+        .send({ businessName: 'Pending Co', email: 'pending@acme.com' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.status).toBe('pending');
+      expect(res.body.message).toMatch(/pending activation/i);
+      expect(mockPrisma.merchant.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: 'pending' }),
+        })
+      );
+
+      process.env.NODE_ENV = prevEnv;
+      if (prevAuto !== undefined) {
+        process.env.MERCHANT_REGISTRATION_AUTO_ACTIVATE = prevAuto;
+      } else {
+        delete process.env.MERCHANT_REGISTRATION_AUTO_ACTIVATE;
+      }
+    });
+
+    it('SEC-003: rejects register without invite token when MERCHANT_REGISTRATION_TOKEN is set', async () => {
+      const prev = process.env.MERCHANT_REGISTRATION_TOKEN;
+      process.env.MERCHANT_REGISTRATION_TOKEN = 'invite-secret';
+
+      const res = await request(app)
+        .post('/merchant/register')
+        .send({ businessName: 'No Token', email: 'notoken@acme.com' });
+
+      expect(res.status).toBe(403);
+      expect(res.body.code).toBe('MERCHANT_REGISTRATION_FORBIDDEN');
+      expect(mockPrisma.merchant.create).not.toHaveBeenCalled();
+
+      if (prev !== undefined) process.env.MERCHANT_REGISTRATION_TOKEN = prev;
+      else delete process.env.MERCHANT_REGISTRATION_TOKEN;
+    });
+
+    it('SEC-003: accepts register with valid X-Registration-Token header', async () => {
+      const prev = process.env.MERCHANT_REGISTRATION_TOKEN;
+      process.env.MERCHANT_REGISTRATION_TOKEN = 'invite-secret';
+
+      mockPrisma.merchant.findUnique.mockResolvedValue(null);
+      mockPrisma.merchant.create.mockResolvedValue({
+        id: 'invited-merchant',
+        businessName: 'Invited Co',
+        email: 'invited@acme.com',
+        status: 'active',
+      });
+
+      const res = await request(app)
+        .post('/merchant/register')
+        .set('X-Registration-Token', 'invite-secret')
+        .send({ businessName: 'Invited Co', email: 'invited@acme.com' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.merchantId).toBe('invited-merchant');
+
+      if (prev !== undefined) process.env.MERCHANT_REGISTRATION_TOKEN = prev;
+      else delete process.env.MERCHANT_REGISTRATION_TOKEN;
     });
   });
 
@@ -322,6 +455,21 @@ describe('merchantController', () => {
         .send({ businessName: 'Hacker' });
 
       expect(res.status).toBe(403);
+    });
+
+    it('SEC-002: rejects an unsafe webhookUrl update with 400', async () => {
+      const { UnsafeUrlError } = require('../../utils/urlSafety');
+      mockAssertSafeWebhookUrl.mockRejectedValue(
+        new UnsafeUrlError('Webhook hostname \'localhost\' is blocked')
+      );
+
+      const res = await request(app)
+        .patch('/merchant/merchant-uuid-1234')
+        .send({ webhookUrl: 'https://localhost/admin' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('blocked');
+      expect(mockPrisma.merchant.update).not.toHaveBeenCalled();
     });
   });
 });

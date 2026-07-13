@@ -12,14 +12,44 @@
 use jni::objects::{JClass, JString};
 use jni::sys::{jint, jstring};
 use jni::JNIEnv;
+#[cfg(target_os = "android")]
+use jni22::objects::{JClass as JClass22, JObject as JObject22};
+#[cfg(target_os = "android")]
+use jni22::sys::{jobject, jstring as jstring22};
+#[cfg(target_os = "android")]
+use jni22::{Env as Env22, EnvUnowned, Outcome};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 
 use crate::{
     spp_native_capabilities, spp_native_deposit, spp_native_derive_keys, spp_native_ensure_asp,
-    spp_native_ping, spp_native_pool_close, spp_native_pool_open, spp_native_pool_readiness,
-    spp_native_string_free, spp_native_transfer, spp_native_version, spp_native_withdraw,
+    spp_native_ping, spp_native_pool_balance, spp_native_pool_close, spp_native_pool_open,
+    spp_native_pool_readiness, spp_native_pool_sync, spp_native_string_free, spp_native_transfer,
+    spp_native_version, spp_native_withdraw,
 };
+
+#[cfg(target_os = "android")]
+fn env22_new_string(env: &mut Env22, value: &str) -> jstring22 {
+    env.new_string(value)
+        .unwrap_or_else(|_| env.new_string(r#"{"ok":false,"code":"SPP_JNI_STRING_ERROR","op":"platform_init","message":"Could not allocate JNI string"}"#).expect("fallback jstring"))
+        .into_raw()
+}
+
+#[cfg(target_os = "android")]
+fn env22_platform_error(env: &mut EnvUnowned, code: &str, message: &str) -> jstring22 {
+    let message = serde_json::to_string(message)
+        .unwrap_or_else(|_| r#""rustls platform verifier initialization failed""#.to_string());
+    let json = format!(
+        r#"{{"ok":false,"code":"{code}","op":"platform_init","message":{message}}}"#
+    );
+    match env
+        .with_env(|env| -> jni22::errors::Result<jstring22> { Ok(env22_new_string(env, &json)) })
+        .into_outcome()
+    {
+        Outcome::Ok(value) => value,
+        _ => std::ptr::null_mut(),
+    }
+}
 
 fn c_ptr_to_jstring(env: &mut JNIEnv, ptr: *mut c_char) -> jstring {
     if ptr.is_null() {
@@ -34,6 +64,51 @@ fn c_ptr_to_jstring(env: &mut JNIEnv, ptr: *mut c_char) -> jstring {
     let js = env.new_string(s).expect("jstring");
     unsafe { spp_native_string_free(ptr) };
     js.into_raw()
+}
+
+#[cfg(target_os = "android")]
+#[no_mangle]
+pub extern "system" fn Java_expo_modules_sppnative_SppNativeRust_nativeInitPlatform(
+    mut env: EnvUnowned,
+    _class: JClass22,
+    context: jobject,
+) -> jstring22 {
+    let outcome = env.with_env(|env| -> jni22::errors::Result<jstring22> {
+        if context.is_null() {
+            return Ok(env22_new_string(
+                env,
+                r#"{"ok":false,"code":"SPP_ANDROID_CONTEXT_UNAVAILABLE","op":"platform_init","message":"Android context unavailable for rustls platform verifier initialization"}"#,
+            ));
+        }
+
+        let context = unsafe { JObject22::from_raw(env, context) };
+        match rustls_platform_verifier::android::init_with_env(env, context) {
+            Ok(()) => Ok(env22_new_string(
+                env,
+                r#"{"ok":true,"op":"platform_init","message":"rustls platform verifier initialized"}"#,
+            )),
+            Err(e) => Ok(env22_new_string(
+                env,
+                &format!(
+                    r#"{{"ok":false,"code":"SPP_PLATFORM_INIT_FAILED","op":"platform_init","message":{}}}"#,
+                    serde_json::to_string(&e.to_string()).unwrap_or_else(|_| r#""JNI initialization failed""#.to_string())
+                ),
+            )),
+        }
+    });
+
+    match outcome.into_outcome() {
+        Outcome::Ok(value) => value,
+        Outcome::Err(e) => env22_platform_error(&mut env, "SPP_PLATFORM_INIT_FAILED", &e.to_string()),
+        Outcome::Panic(payload) => {
+            let panic_message = payload
+                .downcast_ref::<&str>()
+                .map(|s| (*s).to_string())
+                .or_else(|| payload.downcast_ref::<String>().cloned())
+                .unwrap_or_else(|| "unknown Rust panic".to_string());
+            env22_platform_error(&mut env, "SPP_PLATFORM_INIT_PANIC", &panic_message)
+        }
+    }
 }
 
 fn jstring_to_cstring(env: &mut JNIEnv, value: JString) -> Option<CString> {
@@ -173,4 +248,20 @@ pub extern "system" fn Java_expo_modules_sppnative_SppNativeRust_nativePoolClose
     _class: JClass,
 ) -> jstring {
     c_ptr_to_jstring(&mut env, spp_native_pool_close())
+}
+
+#[no_mangle]
+pub extern "system" fn Java_expo_modules_sppnative_SppNativeRust_nativePoolSync(
+    mut env: JNIEnv,
+    _class: JClass,
+) -> jstring {
+    c_ptr_to_jstring(&mut env, spp_native_pool_sync())
+}
+
+#[no_mangle]
+pub extern "system" fn Java_expo_modules_sppnative_SppNativeRust_nativePoolBalance(
+    mut env: JNIEnv,
+    _class: JClass,
+) -> jstring {
+    c_ptr_to_jstring(&mut env, spp_native_pool_balance())
 }

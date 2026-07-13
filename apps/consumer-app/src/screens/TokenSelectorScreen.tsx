@@ -166,7 +166,7 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
 
     const privacyFiltered = privacyTokens.filter(match);
     if (privacyFiltered.length > 0) {
-      rows.push({ kind: 'header', id: 'hdr-privacy', title: 'PRIVACY' });
+      rows.push({ kind: 'header', id: 'hdr-privacy', title: 'Privacy' });
       for (const token of privacyFiltered) {
         rows.push({ kind: 'token', id: token.id, token });
       }
@@ -176,7 +176,7 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
       (token) => token.chainTypes.includes(chainType) && match(token)
     );
     if (publicFiltered.length > 0) {
-      rows.push({ kind: 'header', id: 'hdr-public', title: 'ASSETS' });
+      rows.push({ kind: 'header', id: 'hdr-public', title: 'Assets' });
       for (const token of publicFiltered) {
         rows.push({ kind: 'token', id: token.id, token });
       }
@@ -217,7 +217,7 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
       if (item.kind === 'header') {
         return (
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>[ {item.title} ]</Text>
+            <Text style={styles.sectionTitle}>{item.title}</Text>
           </View>
         );
       }
@@ -233,7 +233,7 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
       const change24h = marketQuote?.change24h;
       const hasChange = typeof change24h === 'number' && !isPrivacy;
       const changeLabel = isPrivacy
-        ? token.privacySubtitle || 'Shielded pool'
+        ? token.privacySubtitle || 'Private'
         : hasChange
           ? `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}% 24h`
           : '24h unavailable';
@@ -293,7 +293,7 @@ export function TokenSelectorScreen({ navigation, route }: TokenSelectorScreenPr
                   {isPrivacy ? (
                     <>
                       <Icon name="private" size={10} color={colors.accent} />
-                      <Text style={styles.privacyTag}>SHIELDED</Text>
+                      <Text style={styles.privacyTag}>PRIVATE</Text>
                     </>
                   ) : (
                     <Text

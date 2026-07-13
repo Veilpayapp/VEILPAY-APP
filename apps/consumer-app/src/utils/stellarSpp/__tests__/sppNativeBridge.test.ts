@@ -3,9 +3,11 @@ import {
   setSppNativeBackend,
   sppNativeCapabilities,
   sppNativeDeposit,
+  sppNativeEnsureCircuitAssets,
   sppNativePing,
   sppNativePoolReadiness,
   sppNativeVersion,
+  type SppNativeOpResult,
 } from '../sppNativeBridge';
 import { createMockPoolBackend } from '../testUtils/mockPoolBackend';
 
@@ -33,6 +35,12 @@ describe('sppNativeBridge', () => {
         op: 'pool_readiness',
         message: 'stub',
       }),
+      ensureCircuitAssets: async () => ({
+        ok: false,
+        code: 'SPP_OPS_NOT_READY',
+        op: 'ensure_circuit_assets',
+        message: 'stub',
+      }),
     });
   });
 
@@ -51,6 +59,35 @@ describe('sppNativeBridge', () => {
     expect(r.txHash).toBeTruthy();
   });
 
+  it('fails closed on malformed native result', async () => {
+    setSppNativeBackend({
+      ...createMockPoolBackend(),
+      deposit: async () => ({ ok: 'true' }) as unknown as SppNativeOpResult,
+    });
+    const r = await sppNativeDeposit('1');
+    expect(r).toMatchObject({
+      ok: false,
+      code: 'SPP_NATIVE_BAD_RESULT',
+      op: 'deposit',
+    });
+  });
+
+  it('fails closed when native call throws synchronously', async () => {
+    setSppNativeBackend({
+      ...createMockPoolBackend(),
+      deposit: () => {
+        throw new Error('boom from native');
+      },
+    });
+    const r = await sppNativeDeposit('1');
+    expect(r).toMatchObject({
+      ok: false,
+      code: 'SPP_NATIVE_EXCEPTION',
+      op: 'deposit',
+      message: 'boom from native',
+    });
+  });
+
   it('poolReadiness available on mock', async () => {
     setSppNativeBackend({
       ...createMockPoolBackend(),
@@ -62,6 +99,19 @@ describe('sppNativeBridge', () => {
     });
     const r = await sppNativePoolReadiness();
     expect(r.op).toBe('pool_readiness');
+  });
+
+  it('ensureCircuitAssets normalizes native result', async () => {
+    setSppNativeBackend({
+      ...createMockPoolBackend(),
+      ensureCircuitAssets: async () => ({
+        ok: true,
+        op: 'ensure_circuit_assets',
+        message: 'seeded',
+      }),
+    });
+    const r = await sppNativeEnsureCircuitAssets();
+    expect(r).toMatchObject({ ok: true, op: 'ensure_circuit_assets' });
   });
 
   it('reloadSppNativeBackend returns a module', () => {

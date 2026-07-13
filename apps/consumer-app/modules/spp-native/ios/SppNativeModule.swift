@@ -31,18 +31,15 @@ public class SppNativeModule: Module {
     }
 
     Function("deposit") { (amount: String) -> [String: Any] in
-      return self.notReady(op: "deposit", detail: "amount=\(amount)")
+      return self.notReady(op: "deposit", detail: "pool-ops unavailable")
     }
 
     Function("transfer") { (amount: String, recipient: String) -> [String: Any] in
-      return self.notReady(
-        op: "transfer",
-        detail: "amount=\(amount) recipientLen=\(recipient.count)"
-      )
+      return self.notReady(op: "transfer", detail: "pool-ops unavailable")
     }
 
     Function("withdraw") { (amount: String, to: String) -> [String: Any] in
-      return self.notReady(op: "withdraw", detail: "amount=\(amount) toLen=\(to.count)")
+      return self.notReady(op: "withdraw", detail: "pool-ops unavailable")
     }
 
     Function("ensureAsp") { () -> [String: Any] in
@@ -61,7 +58,7 @@ public class SppNativeModule: Module {
         "code": "SPP_DERIVE_NOT_READY",
         "op": "derive_keys",
         "message":
-          "iOS staticlib link pending (sigLen=\(sigHex.count) network=\(network))."
+          "iOS staticlib link pending for SPP key derivation."
       ]
     }
 
@@ -81,6 +78,24 @@ public class SppNativeModule: Module {
 
     Function("poolClose") { () -> [String: Any] in
       return ["ok": true, "op": "pool_close", "message": "no-op"]
+    }
+
+    Function("poolSync") { () -> [String: Any] in
+      return self.notReady(op: "pool_sync", detail: "iOS pool-ops pending")
+    }
+
+    Function("poolBalance") { () -> [String: Any] in
+      return self.notReady(op: "pool_balance", detail: "iOS pool-ops pending")
+    }
+
+    /// Writable absolute path for SQLite + circuit staging (no file:// prefix).
+    Function("appDataDir") { () -> String in
+      let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+      guard let path = urls.first?.path else { return "" }
+      if path.hasSuffix("/") {
+        return String(path.dropLast())
+      }
+      return path
     }
   }
 

@@ -8,6 +8,8 @@
 
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
+#[cfg(feature = "pool-ops")]
+use std::panic::{catch_unwind, AssertUnwindSafe};
 
 #[cfg(feature = "android-jni")]
 mod android_jni;
@@ -143,14 +145,16 @@ pub extern "C" fn spp_native_deposit(amount: *const c_char) -> *mut c_char {
         Ok(stroops) => {
             #[cfg(feature = "pool-ops")]
             {
-                return match session::deposit(&amount_s) {
+                return match catch_pool_panic("deposit", || session::deposit(&amount_s)) {
                     Ok(tx_hash) => to_c_string(&format!(
                         r#"{{"ok":true,"op":"deposit","txHash":{},"amountStroops":"{}"}}"#,
                         json_str(&tx_hash),
                         stroops
                     )),
                     Err(e) => {
-                        let code = if e.contains("SPP_POOL_SESSION_UNBOUND") {
+                        let code = if e.contains("SPP_NATIVE_PANIC") {
+                            "SPP_NATIVE_PANIC"
+                        } else if e.contains("SPP_POOL_SESSION_UNBOUND") {
                             "SPP_POOL_SESSION_UNBOUND"
                         } else if e.contains("ASP membership") {
                             "SPP_ASP_REQUIRED"
@@ -201,14 +205,16 @@ pub extern "C" fn spp_native_transfer(
     }
     #[cfg(feature = "pool-ops")]
     {
-        return match session::transfer(&amount_s, &recipient_s) {
+        return match catch_pool_panic("transfer", || session::transfer(&amount_s, &recipient_s)) {
             Ok(tx_hash) => to_c_string(&format!(
                 r#"{{"ok":true,"op":"transfer","txHash":{},"amountStroops":"{}"}}"#,
                 json_str(&tx_hash),
                 stroops
             )),
             Err(e) => {
-                let code = if e.contains("SPP_POOL_SESSION_UNBOUND") {
+                let code = if e.contains("SPP_NATIVE_PANIC") {
+                    "SPP_NATIVE_PANIC"
+                } else if e.contains("SPP_POOL_SESSION_UNBOUND") {
                     "SPP_POOL_SESSION_UNBOUND"
                 } else {
                     "SPP_TRANSFER_FAILED"
@@ -247,14 +253,16 @@ pub extern "C" fn spp_native_withdraw(amount: *const c_char, to: *const c_char) 
     }
     #[cfg(feature = "pool-ops")]
     {
-        return match session::withdraw(&amount_s, &to_s) {
+        return match catch_pool_panic("withdraw", || session::withdraw(&amount_s, &to_s)) {
             Ok(tx_hash) => to_c_string(&format!(
                 r#"{{"ok":true,"op":"withdraw","txHash":{},"amountStroops":"{}"}}"#,
                 json_str(&tx_hash),
                 stroops
             )),
             Err(e) => {
-                let code = if e.contains("SPP_POOL_SESSION_UNBOUND") {
+                let code = if e.contains("SPP_NATIVE_PANIC") {
+                    "SPP_NATIVE_PANIC"
+                } else if e.contains("SPP_POOL_SESSION_UNBOUND") {
                     "SPP_POOL_SESSION_UNBOUND"
                 } else {
                     "SPP_WITHDRAW_FAILED"
@@ -266,6 +274,70 @@ pub extern "C" fn spp_native_withdraw(amount: *const c_char, to: *const c_char) 
     #[cfg(not(feature = "pool-ops"))]
     {
         to_c_string(&pool_ops::ops_not_ready_json("withdraw", stroops))
+    }
+}
+
+/// DATA-001: sync pool notes from chain into the native SDK sqlite store.
+/// Requires an open session + `pool-ops`.
+#[no_mangle]
+pub extern "C" fn spp_native_pool_sync() -> *mut c_char {
+    #[cfg(feature = "pool-ops")]
+    {
+        return match catch_pool_panic("pool_sync", || {
+            session::sync().map(|_| "synced".to_string())
+        }) {
+            Ok(_) => to_c_string(r#"{"ok":true,"op":"pool_sync","message":"synced"}"#),
+            Err(e) => {
+                let code = if e.contains("SPP_POOL_SESSION_UNBOUND") {
+                    "SPP_POOL_SESSION_UNBOUND"
+                } else if e.contains("SPP_NATIVE_PANIC") {
+                    "SPP_NATIVE_PANIC"
+                } else {
+                    "SPP_SYNC_FAILED"
+                };
+                to_c_string(&pool_ops::invalid_json("pool_sync", code, &e))
+            }
+        };
+    }
+    #[cfg(not(feature = "pool-ops"))]
+    {
+        to_c_string(&pool_ops::invalid_json(
+            "pool_sync",
+            "SPP_OPS_NOT_READY",
+            "sdk/pool not linked (build with --features pool-ops)",
+        ))
+    }
+}
+
+/// DATA-001: private balance in stroops after sync (session required).
+#[no_mangle]
+pub extern "C" fn spp_native_pool_balance() -> *mut c_char {
+    #[cfg(feature = "pool-ops")]
+    {
+        return match catch_pool_panic("pool_balance", || session::balance_stroops()) {
+            Ok(stroops) => to_c_string(&format!(
+                r#"{{"ok":true,"op":"pool_balance","balanceStroops":{}}}"#,
+                json_str(&stroops)
+            )),
+            Err(e) => {
+                let code = if e.contains("SPP_POOL_SESSION_UNBOUND") {
+                    "SPP_POOL_SESSION_UNBOUND"
+                } else if e.contains("SPP_NATIVE_PANIC") {
+                    "SPP_NATIVE_PANIC"
+                } else {
+                    "SPP_BALANCE_FAILED"
+                };
+                to_c_string(&pool_ops::invalid_json("pool_balance", code, &e))
+            }
+        };
+    }
+    #[cfg(not(feature = "pool-ops"))]
+    {
+        to_c_string(&pool_ops::invalid_json(
+            "pool_balance",
+            "SPP_OPS_NOT_READY",
+            "sdk/pool not linked (build with --features pool-ops)",
+        ))
     }
 }
 
@@ -352,6 +424,26 @@ fn to_c_string(s: &str) -> *mut c_char {
     CString::new(s)
         .unwrap_or_else(|_| CString::new("error").expect("static"))
         .into_raw()
+}
+
+#[cfg(feature = "pool-ops")]
+fn catch_pool_panic<F>(op: &str, f: F) -> Result<String, String>
+where
+    F: FnOnce() -> Result<String, String>,
+{
+    match catch_unwind(AssertUnwindSafe(f)) {
+        Ok(result) => result,
+        Err(payload) => {
+            let panic_message = payload
+                .downcast_ref::<&str>()
+                .map(|s| (*s).to_string())
+                .or_else(|| payload.downcast_ref::<String>().cloned())
+                .unwrap_or_else(|| "unknown Rust panic".to_string());
+            Err(format!(
+                "SPP_NATIVE_PANIC: {op} aborted before returning a result: {panic_message}"
+            ))
+        }
+    }
 }
 
 #[cfg(test)]

@@ -25,7 +25,7 @@ import { UpdatePromptModal } from "../components/UpdatePromptModal";
 import { UpdateDetailsModal } from "../components/UpdateDetailsModal";
 import { setClipboardString } from "../utils/clipboard";
 import { CurrencySelectorModal } from "../components/CurrencySelectorModal";
-import { openExternalUrl } from "../utils/externalLink";
+import { LEGAL_URLS } from "../constants/legalUrls";
 import { clearStoredMnemonic, getStoredMnemonic } from "../utils/transactions";
 import { useBiometrics } from "../hooks/useBiometrics";
 import { useOTAUpdates } from "../hooks/useOTAUpdates";
@@ -206,7 +206,24 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
 
   const handleAnalyticsToggle = (value: boolean) => {
     setAnalyticsEnabled(value);
+    // PRIV-001: opt-out clears local Mixpanel identity (DSAR-style local erase).
+    void import("../utils/analytics").then(({ setAnalyticsConsent, deleteAnalyticsData }) => {
+      if (value) {
+        setAnalyticsConsent(true);
+      } else {
+        deleteAnalyticsData();
+      }
+    });
     toast.show(value ? "Analytics enabled" : "Analytics disabled", "success");
+  };
+
+  /** PRIV-001 DSAR: explicit erase without requiring the toggle path. */
+  const handleDeleteAnalyticsData = () => {
+    setAnalyticsEnabled(false);
+    void import("../utils/analytics").then(({ deleteAnalyticsData }) => {
+      deleteAnalyticsData();
+    });
+    toast.show("Local analytics data erased", "success");
   };
 
   const handleNetworkSelect = (chain: (typeof SUPPORTED_CHAINS)[number]) => {
@@ -358,17 +375,8 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
   ];
 
   const privacySection: SettingsItem[] = [
-    {
-      id: "private-xlm",
-      label: "Private XLM diagnostics",
-      description:
-        activeChain?.key === "stellar-testnet"
-          ? "Optional status · select pXLM under Home / Token Selector → Privacy"
-          : "Switch to Stellar Testnet, then pick pXLM under Privacy",
-      iconName: "private",
-      type: "navigate",
-      onPress: () => navigation.navigate(SCREENS.STELLAR_SPP),
-    },
+    // SPP-001 / UX-001: no diagnostic Private XLM screen in any build.
+    // Background ASP + recovery: useSppBackgroundSetup. User path: select pXLM.
     {
       id: "privacy-mode",
       label: "Enhanced Privacy",
@@ -395,6 +403,14 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
       type: "toggle",
       value: analyticsEnabled,
       onPress: () => handleAnalyticsToggle(!analyticsEnabled),
+    },
+    {
+      id: "delete-analytics",
+      label: "Delete analytics data",
+      description: "Erase local analytics identity (DSAR)",
+      iconName: "info",
+      type: "action",
+      onPress: handleDeleteAnalyticsData,
     },
   ];
 
@@ -449,12 +465,10 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
       iconName: "document",
       type: "navigate",
       onPress: () => {
-        void (async () => {
-          const opened = await openExternalUrl('https://veilpay.app/terms');
-          if (!opened) {
-            toast.show('Terms page is unavailable right now', 'error');
-          }
-        })();
+        navigation.navigate(SCREENS.IN_APP_BROWSER, {
+          url: LEGAL_URLS.terms,
+          title: "Terms of Service",
+        });
       },
     },
     {
@@ -463,12 +477,23 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
       iconName: "shield",
       type: "navigate",
       onPress: () => {
-        void (async () => {
-          const opened = await openExternalUrl('https://veilpay.app/privacy');
-          if (!opened) {
-            toast.show('Privacy policy page is unavailable right now', 'error');
-          }
-        })();
+        navigation.navigate(SCREENS.IN_APP_BROWSER, {
+          url: LEGAL_URLS.privacy,
+          title: "Privacy Policy",
+        });
+      },
+    },
+    {
+      id: "docs",
+      label: "Docs",
+      description: "Guides and product documentation",
+      iconName: "document",
+      type: "navigate",
+      onPress: () => {
+        navigation.navigate(SCREENS.IN_APP_BROWSER, {
+          url: LEGAL_URLS.docs,
+          title: "Docs",
+        });
       },
     },
   ];

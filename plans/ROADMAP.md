@@ -1,4 +1,4 @@
-# VeilPay Roadmap
+# Veilpay Roadmap
 
 > **Last verified:** 2026-05-25 — All items cross-referenced with source code
 > **Current Version:** 1.0.0 (Pre-Mainnet)
@@ -272,7 +272,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                       VeilPay System                        │
+│                       Veilpay System                        │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  ┌─────────────────────┐    ┌──────────────────────────┐    │

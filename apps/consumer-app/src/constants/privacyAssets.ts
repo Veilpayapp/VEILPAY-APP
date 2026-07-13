@@ -49,14 +49,12 @@ export const PRIVACY_ASSETS: PrivacyAsset[] = [
     symbol: 'pXLM',
     quoteSymbol: 'XLM',
     chainKey: 'stellar-testnet',
-    subtitle: 'Stellar privacy pool (SPP) · testnet',
+    // User-facing subtitle only — no protocol jargon (SPP, pool, notes).
+    subtitle: 'Private XLM · Testnet',
     icon: '◈',
-    features: [
-      'Shield public XLM into the pool',
-      'Private transfer between notes',
-      'Unshield to any G… address',
-      'Self-custody notes on this device',
-    ],
+    // Kept empty: home balance card no longer renders feature bullets.
+    // Actions (Shield / Transfer / Unshield) carry the product meaning.
+    features: [],
     spp: SPP_TESTNET,
     enabled: true,
   },
@@ -67,11 +65,11 @@ export const PRIVACY_ASSETS: PrivacyAsset[] = [
     symbol: 'pXLM',
     quoteSymbol: 'XLM',
     chainKey: 'stellar',
-    subtitle: 'Stellar privacy pool · mainnet',
+    subtitle: 'Private XLM · Mainnet',
     icon: '◈',
-    features: ['Fail-closed until audit and ceremony'],
+    features: [],
     enabled: false,
-    disabledReason: 'Private XLM on mainnet is locked until audit and ceremony',
+    disabledReason: 'Coming after audit',
   },
 ];
 

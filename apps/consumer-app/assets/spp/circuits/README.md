@@ -20,7 +20,13 @@ Copies from Phase 0 dogfood (`.local/spp-phase0/alice/circuits`) or vendor testd
 ## Runtime paths
 
 - **Desktop / env override:** `EXPO_PUBLIC_SPP_CIRCUITS_DIR=<absolute path>`
-- **Device:** app documents `spp/circuits/` (see `sppPoolSession.getSppCircuitsDir()`)
+- **Device:** `{appDataDir}/spp/circuits/` from `SppNative.appDataDir()` (Android external files) — see `sppPoolSession.getSppCircuitsDir()`
+- **adb dogfood:**
+  ```text
+  adb shell mkdir -p /sdcard/Android/data/com.veilpay.consumer/files/spp/circuits
+  adb push policy_tx_2_2_proving_key.bin policy_tx_2_2.wasm policy_tx_2_2.r1cs \
+    /sdcard/Android/data/com.veilpay.consumer/files/spp/circuits/
+  ```
 
 ## License note
 

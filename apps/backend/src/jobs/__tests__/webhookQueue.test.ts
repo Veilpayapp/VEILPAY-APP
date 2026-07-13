@@ -16,8 +16,11 @@ jest.mock('../../lib/redis', () => ({
 
 jest.mock('../../lib/prisma', () => ({
   prisma: {
-    webhookDelivery: { create: jest.fn().mockResolvedValue({}) }
-  }
+    webhookDelivery: {
+      create: jest.fn().mockResolvedValue({ id: 'delivery-1' }),
+      update: jest.fn().mockResolvedValue({ id: 'delivery-1' }),
+    },
+  },
 }));
 
 jest.mock('../../lib/logger', () => ({
@@ -66,6 +69,12 @@ describe('webhookQueue', () => {
     const job = await webhookQueue.enqueueWebhook(payload);
     expect(job).toBeTruthy();
     expect(job?.id).toBe('job123');
+    // REL-002: outbox row created before enqueue
+    expect(prismaMock.webhookDelivery.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'pending' }),
+      })
+    );
 
     const dlqJob = await webhookQueue.enqueueWebhookDlq(payload, 'test error');
     expect(dlqJob).toBeTruthy();
@@ -91,6 +100,12 @@ describe('webhookQueue', () => {
 
     const job = await webhookQueue.enqueueWebhook(payload);
     expect(job).toBeNull();
+    // Outbox create then mark failed when queue down
     expect(prismaMock.webhookDelivery.create).toHaveBeenCalled();
+    expect(prismaMock.webhookDelivery.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'failed' }),
+      })
+    );
   });
 });

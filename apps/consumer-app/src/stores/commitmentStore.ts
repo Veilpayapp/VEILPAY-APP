@@ -46,6 +46,14 @@ export interface CommitmentRecord {
   timestamp: number;
   /** True after the corresponding withdraw is confirmed on-chain. */
   spent: boolean;
+  /**
+   * DATA-002 (forward-compat): Merkle path + nullifier hash for max withdraw.
+   * Optional until deposit-time capture + indexer reconstruction land.
+   * `EVM_MAX_PRIVACY_WITHDRAW_READY` stays false until these are populated e2e.
+   */
+  pathElements?: Hex[];
+  pathIndices?: number[];
+  nullifierHash?: Hex;
 }
 
 /**

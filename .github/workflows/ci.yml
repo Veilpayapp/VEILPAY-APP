@@ -52,20 +52,57 @@ jobs:
       - name: Lint consumer app
         run: pnpm --filter consumer-app lint
 
+      # A11Y-001: lightweight static gate — primary interactive surfaces should
+      # not ship icon-only pressables without accessibility labels. This is a
+      # smoke check, not a full WCAG 2.2 AA audit.
+      - name: Accessibility smoke (labeled pressables)
+        run: |
+          set -e
+          # Fail if we introduce Pressable/TouchableOpacity without nearby accessibilityLabel
+          # in core payment screens (heuristic; expand as coverage grows).
+          node -e "
+            const fs=require('fs');const path=require('path');
+            const roots=['apps/consumer-app/src/screens'];
+            const files=[];
+            function walk(d){for(const e of fs.readdirSync(d,{withFileTypes:true})){const p=path.join(d,e.name);if(e.isDirectory())walk(p);else if(/\\.(tsx|jsx)$/.test(e.name))files.push(p);}}
+            roots.forEach(walk);
+            let warn=0;
+            for(const f of files){
+              const t=fs.readFileSync(f,'utf8');
+              const pressables=(t.match(/<(Pressable|TouchableOpacity)\\b/g)||[]).length;
+              const labels=(t.match(/accessibilityLabel=/g)||[]).length;
+              if(pressables>0 && labels===0 && /Payment|Send|Shield|Wallet|Home|Onramp|Privacy/i.test(f)){
+                console.warn('A11Y smoke: no accessibilityLabel in', f, '(pressables=',pressables,')');
+                warn++;
+              }
+            }
+            if(warn>5){console.error('A11Y smoke failed:',warn,'core screens lack any accessibilityLabel');process.exit(1);}
+            console.log('A11Y smoke ok (warnings=',warn,')');
+          "
+
       - name: Typecheck consumer app
         run: pnpm --filter consumer-app typecheck
 
       - name: Test consumer app
         run: pnpm --filter consumer-app test -- --coverage --passWithNoTests --coverageThreshold='{"global":{"lines":60,"functions":60,"branches":50,"statements":60}}'
 
-      # Security scanning
-      - name: Audit dependencies
-        run: pnpm audit --audit-level=high || true
-        continue-on-error: true
-
-      - name: Check for known vulnerabilities
-        run: npx better-npm-audit audit --level=high || true
-        continue-on-error: true
+      # Security scanning — DEV-001 fix. Two layers:
+      #
+      # 1. `better-npm-audit` is the GATING check. `pnpm audit --audit-level=high`
+      #    was tried first but `pnpm audit` does NOT honour the `better-npm-audit`
+      #    allowlist (`.nsprc` / `package.json#audit`) — it only takes
+      #    `--ignore=<id>` flags per call, with no centralised config file.
+      #    A `pnpm audit` step on top of the gating one would re-fail on
+      #    advisories we have explicitly accepted via `.nsprc` below. Use
+      #    ONLY `better-npm-audit` here, and document accepted advisories
+      #    in `.nsprc` with rationale + expiry.
+      #
+      # 2. Renaming `.nsprc.example` to `.nsprc` is the escape hatch: add
+      #    `{ "GHSA-xxxx-yyyy-zzzz": { "active": true, "reason": "...", "expiry": "2026-12-31" } }`
+      #    for each accepted advisory. Without an `.nsprc` entry, CI fails
+      #    on the next introduction of a known-flagship advisory.
+      - name: Audit dependencies (fail on high/critical, allowlist-aware)
+        run: npx better-npm-audit audit --level=high
 
   contracts:
     runs-on: ubuntu-latest

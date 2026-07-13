@@ -81,6 +81,7 @@ jest.mock('react-native-reanimated', () => {
 		FadeInDown: createAnimatedPreset('FadeInDown'),
 		FadeInUp: createAnimatedPreset('FadeInUp'),
 		FadeOut: createAnimatedPreset('FadeOut'),
+		LinearTransition: createAnimatedPreset('LinearTransition'),
 		Easing: {
 			ease: jest.fn(),
 		},

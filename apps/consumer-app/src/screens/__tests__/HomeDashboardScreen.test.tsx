@@ -12,6 +12,27 @@ jest.mock('@react-native-community/netinfo', () => ({
   useNetInfo: () => ({ type: 'wifi', isConnected: true, isInternetReachable: true }),
 }));
 
+// Home uses useFocusEffect; unit tests render outside NavigationContainer.
+jest.mock('@react-navigation/native', () => {
+  const R = require('react');
+  const actual = jest.requireActual('@react-navigation/native');
+  return {
+    ...actual,
+    useFocusEffect: (effect: () => void | (() => void)) => {
+      // Run once on mount, matching a focused screen for tests.
+      R.useEffect(() => {
+        const cleanup = effect();
+        return typeof cleanup === 'function' ? cleanup : undefined;
+      }, [effect]);
+    },
+    useNavigation: () => ({
+      navigate: jest.fn(),
+      goBack: jest.fn(),
+      addListener: jest.fn(() => jest.fn()),
+    }),
+  };
+});
+
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn().mockResolvedValue(undefined),
   notificationAsync: jest.fn().mockResolvedValue(undefined),

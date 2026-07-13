@@ -3,6 +3,11 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import { hashApiKey, type AuthenticatedRequest } from "../middleware/auth";
 import { prisma } from "../lib/prisma";
+// SSRF guard helper. Single source of truth for the URL-validation
+// error contract — registerMerchant and updateMerchant both delegate
+// here so a future change to rejection semantics cannot drift between
+// the two write paths (see review warning #10).
+import { rejectUnsafeWebhookUrl } from "../utils/urlSafety";
 import {
   uuidParamSchema,
   MerchantUpdateRequestSchema,
@@ -26,6 +31,10 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
   try {
     const data = registerSchema.parse(req.body);
 
+    // SEC-002 fix: validate the webhook URL before storing it so a merchant
+    // cannot register an SSRF endpoint (localhost, private IP, metadata).
+    if (!(await rejectUnsafeWebhookUrl(data.webhookUrl, res))) return;
+
     const existingMerchant = await prisma.merchant.findUnique({
       where: { email: data.email },
     });
@@ -38,13 +47,40 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
     const apiKey = `vp_${randomUUID().replace(/-/g, "")}`;
     const apiKeyHash = hashApiKey(apiKey);
 
+    // SEC-003: production defaults new merchants to `pending` so API keys
+    // cannot be used until an operator activates them. Dev/test and explicit
+    // MERCHANT_REGISTRATION_AUTO_ACTIVATE=true keep the old auto-active path
+    // for local e2e. Auth middleware only accepts status: 'active'.
+    const autoActivate =
+      process.env.MERCHANT_REGISTRATION_AUTO_ACTIVATE === "true" ||
+      process.env.NODE_ENV === "test" ||
+      process.env.NODE_ENV === "development";
+    const status = autoActivate ? "active" : "pending";
+
+    // Optional shared registration token (invite-only signup).
+    const requiredToken = process.env.MERCHANT_REGISTRATION_TOKEN?.trim();
+    if (requiredToken) {
+      const provided =
+        (req.headers["x-registration-token"] as string | undefined)?.trim() ||
+        (typeof req.body?.registrationToken === "string"
+          ? req.body.registrationToken.trim()
+          : "");
+      if (provided !== requiredToken) {
+        res.status(403).json({
+          error: "Registration token required or invalid",
+          code: "MERCHANT_REGISTRATION_FORBIDDEN",
+        });
+        return;
+      }
+    }
+
     const merchant = await prisma.merchant.create({
       data: {
         businessName: data.businessName,
         email: data.email,
         webhookUrl: data.webhookUrl,
         apiKeyHash,
-        status: "active",
+        status,
       },
     });
 
@@ -54,6 +90,12 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
       email: merchant.email,
       apiKey,
       status: merchant.status,
+      ...(status === "pending"
+        ? {
+            message:
+              "Merchant registered pending activation. API calls will return 401 until status is active.",
+          }
+        : {}),
     });
   } catch (error) {
     next(error);
@@ -250,6 +292,9 @@ export const updateMerchant = async (req: AuthenticatedRequest, res: Response, n
       res.status(400).json({ error: "No fields to update" });
       return;
     }
+
+    // SEC-002 fix: validate a new webhook URL before persisting it.
+    if (!(await rejectUnsafeWebhookUrl(data.webhookUrl, res))) return;
 
     const merchant = await prisma.merchant.update({
       where: { id },

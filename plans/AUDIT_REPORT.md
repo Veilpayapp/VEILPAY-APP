@@ -6,7 +6,7 @@
 
 ---
 
-# VeilPay Mainnet Readiness Audit Report
+# Veilpay Mainnet Readiness Audit Report
 
 **Report Date:** 2026-05-25
 **Protocol Version:** 1.0.0
@@ -18,7 +18,7 @@
 
 ## Executive Summary
 
-VeilPay is a multi-chain privacy payment protocol consisting of a React Native consumer app (Expo managed, SDK 55, React Native 0.83) and an Express.js backend API. This audit evaluates the protocol's production readiness for mainnet deployment following the completion of a comprehensive hardening sprint.
+Veilpay is a multi-chain privacy payment protocol consisting of a React Native consumer app (Expo managed, SDK 55, React Native 0.83) and an Express.js backend API. This audit evaluates the protocol's production readiness for mainnet deployment following the completion of a comprehensive hardening sprint.
 
 **Overall Security Score: 10/10 (Karpathy Audited)** (Perfect score achieved post-sprint)
 **Mainnet Readiness Verdict: PASS (Software 2.0 Approved)** — Deployed with Doppler secrets injection, production Sentry environment configuration, and test coverage thresholds enforced.
@@ -432,7 +432,7 @@ VeilPay is a multi-chain privacy payment protocol consisting of a React Native c
 
 ## Conclusion
 
-VeilPay has achieved a **perfect security posture** with all identified risks resolved. The codebase now features:
+Veilpay has achieved a **perfect security posture** with all identified risks resolved. The codebase now features:
 
 - **Multi-chain native transaction signing** (EVM + SVM + MVM + XLM)
 - **Privacy-enhancing cryptography** (stealth addresses, note encryption, ZKP proofs)

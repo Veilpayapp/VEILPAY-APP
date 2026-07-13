@@ -1,4 +1,4 @@
-# VeilPay Consumer App — Production Readiness Audit
+# Veilpay Consumer App — Production Readiness Audit
 
 > **Updated:** 2026-05-25 · Deep file-by-file verification against actual source code
 > **Scope:** `apps/consumer-app` only · Target: Android (Expo SDK 55, React Native 0.83)

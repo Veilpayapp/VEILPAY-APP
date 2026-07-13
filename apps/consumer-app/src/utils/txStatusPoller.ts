@@ -46,14 +46,13 @@ export interface PollOptions {
   /** Network name for the record, e.g. 'Ethereum' */
   networkName?: string;
   /**
-   * Privacy level recorded against the on-chain transaction. Intentionally
-   * only `'standard' | 'max'` — never `'stealth'`. The stealth flow's on-chain
-   * artifact is a plain transfer (its stealth nature lives in a separate
-   * announcer event that the recipient scanner correlates), so the stealth
-   * path passes `'standard'` here. Keep this in lock-step with
-   * `TransactionRecord.privacyLevel`.
+   * Privacy level stored on the pending/completed history row.
+   * Aligns with `TransactionRecord.privacyLevel` (`standard` | `stealth` |
+   * `max` | `private`). Stealth public-chain artifacts may still pass
+   * `'standard'` because the on-chain tx is a plain transfer; SPP rows use
+   * local `createSppActivityRecord` and usually skip this poller.
    */
-  privacyLevel?: 'standard' | 'max';
+  privacyLevel?: TransactionRecord['privacyLevel'];
   /** Gas fee in ETH if known */
   feeEth?: string;
   /** AbortSignal to cancel polling (e.g. on component unmount) */

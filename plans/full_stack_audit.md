@@ -1,4 +1,4 @@
-# VeilPay — Complete Full-Stack Development Audit
+# Veilpay — Complete Full-Stack Development Audit
 
 > **Date:** 2026-05-25 · **Scope:** UI/UX, Frontend, Backend, Database, DevOps, Code Quality  
 > **Method:** File-by-file source verification against actual codebase on disk
@@ -25,7 +25,7 @@
 
 ### Design System: "The Sovereign Minimalist"
 
-**Verified in** [design-tokens.ts](file:///d:/VeilPay/apps/consumer-app/src/styles/design-tokens.ts)
+**Verified in** [design-tokens.ts](file:///d:/Veilpay/apps/consumer-app/src/styles/design-tokens.ts)
 
 | Token Category | Implementation | Quality |
 |---|---|---|
@@ -115,7 +115,7 @@
 
 ## 2. 📱 Frontend Architecture — 8.0/10
 
-### Navigation ([AppNavigator.tsx](file:///d:/VeilPay/apps/consumer-app/src/navigation/AppNavigator.tsx))
+### Navigation ([AppNavigator.tsx](file:///d:/Veilpay/apps/consumer-app/src/navigation/AppNavigator.tsx))
 
 | Feature | Status | Evidence |
 |---|---|---|
@@ -126,7 +126,7 @@
 | Screen view analytics | ✅ | `trackScreenView()` on state change |
 | Typed screen props | ✅ | `ScreenProps<K>` generic utility type |
 
-### State Management ([walletStore.ts](file:///d:/VeilPay/apps/consumer-app/src/stores/walletStore.ts) — 17KB)
+### State Management ([walletStore.ts](file:///d:/Veilpay/apps/consumer-app/src/stores/walletStore.ts) — 17KB)
 
 | Feature | Status | Evidence |
 |---|---|---|
@@ -150,7 +150,7 @@
 | `usePushNotifications` | Push token registration | ✅ |
 | `useTransakQuote` | Fiat ramp quotes with cache | ✅ |
 
-### App Bootstrap ([App.tsx](file:///d:/VeilPay/apps/consumer-app/App.tsx) — 526 lines)
+### App Bootstrap ([App.tsx](file:///d:/Veilpay/apps/consumer-app/App.tsx) — 526 lines)
 
 | Feature | Status | Evidence |
 |---|---|---|
@@ -179,7 +179,7 @@
 
 ## 3. 🖥️ Backend Architecture — 8.5/10
 
-### Express Server ([index.ts](file:///d:/VeilPay/apps/backend/src/index.ts) — 90 lines)
+### Express Server ([index.ts](file:///d:/Veilpay/apps/backend/src/index.ts) — 90 lines)
 
 | Layer | Implementation | Quality |
 |---|---|---|
@@ -227,7 +227,7 @@
 
 ## 4. 🗄️ Database Design — 8.0/10
 
-### Prisma Schema ([schema.prisma](file:///d:/VeilPay/apps/backend/prisma/schema.prisma) — 169 lines)
+### Prisma Schema ([schema.prisma](file:///d:/Veilpay/apps/backend/prisma/schema.prisma) — 169 lines)
 
 **Models (6):**
 
@@ -392,7 +392,7 @@ Testing             ████████▌
 
 ## Conclusion
 
-VeilPay is a **well-engineered, production-approaching codebase** with a distinctive design language and solid security posture. The "Sovereign Minimalist" design system creates a premium, cohesive experience across all screens, further enhanced by Phase 6.2 performance improvements (FlashList, Reanimated). Phase 6.3 introduced advanced privacy features (ZK-proofs, stealth addresses, encryption), though they currently utilize mock cryptographic keys that must be wired to real directory services in upcoming phases.
+Veilpay is a **well-engineered, production-approaching codebase** with a distinctive design language and solid security posture. The "Sovereign Minimalist" design system creates a premium, cohesive experience across all screens, further enhanced by Phase 6.2 performance improvements (FlashList, Reanimated). Phase 6.3 introduced advanced privacy features (ZK-proofs, stealth addresses, encryption), though they currently utilize mock cryptographic keys that must be wired to real directory services in upcoming phases.
 
 **Overall: 8.7/10** — Ready for a controlled mainnet launch with all cryptographic stubs replaced and major architectural tech debt resolved.
 

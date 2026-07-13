@@ -1,6 +1,6 @@
 # @veilpay/auditor
 
-Planning-only production-readiness audit pipeline for the VeilPay workspace.
+Planning-only production-readiness audit pipeline for the Veilpay workspace.
 
 This package implements the four-pass auditor described in
 `.kiro/specs/production-readiness-audit/design.md`:

@@ -173,7 +173,7 @@ function TokenAssetsListComponent({
       {hasPrivacy ? (
         <>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>[ PRIVACY ]</Text>
+            <Text style={styles.sectionTitle}>Privacy</Text>
           </View>
           <View style={styles.list}>
             {privacyAssets!.map((item) => {
@@ -224,7 +224,7 @@ function TokenAssetsListComponent({
                           </Text>
                           <View style={styles.shieldedTag}>
                             <Icon name="private" size={10} color={colors.accent} />
-                            <Text style={styles.shieldedTagText}>SHIELDED</Text>
+                            <Text style={styles.shieldedTagText}>PRIVATE</Text>
                           </View>
                         </View>
                       </View>
@@ -240,7 +240,7 @@ function TokenAssetsListComponent({
       {assets.length > 0 ? (
         <>
           <View style={[styles.sectionHeader, hasPrivacy && styles.sectionHeaderSpaced]}>
-            <Text style={styles.sectionTitle}>[ ASSETS ]</Text>
+            <Text style={styles.sectionTitle}>Assets</Text>
           </View>
 
           <View style={styles.list}>

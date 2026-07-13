@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useTransactionStore } from '../stores/transactionStore';
+import { useTransactionStore, type OnrampOrderRecord, type OnrampOrderStatus } from '../stores/transactionStore';
 import { getOnrampConfig } from '../utils/onramp';
 import { captureError } from '../utils/sentry';
 import type { FiatGatewayProvider } from '../utils/fiatGateway';
@@ -19,6 +19,11 @@ export interface OnrampQuoteRequest {
 export interface OnrampSession {
   url: string;
   orderId: string;
+  /**
+   * SEC-005: opaque signed token required to poll order status. Pass this to
+   * `checkOrderStatus` instead of the raw order UUID.
+   */
+  statusToken: string;
 }
 
 export const useOnramp = () => {
@@ -70,8 +75,9 @@ export const useOnramp = () => {
 
       const data = await response.json();
       const orderId = typeof data.orderId === 'string' ? data.orderId : '';
+      const statusToken = typeof data.statusToken === 'string' ? data.statusToken : '';
 
-      if (!orderId) {
+      if (!orderId || !statusToken) {
         throw new Error('Failed to create Onramp order');
       }
 
@@ -80,6 +86,7 @@ export const useOnramp = () => {
         provider: (params.provider || 'onramp_money') as FiatGatewayProvider,
         id: orderId,
         orderId,
+        statusToken,
         walletAddress: params.walletAddress,
         userAddress: params.walletAddress,
         flow: params.flow,
@@ -94,6 +101,7 @@ export const useOnramp = () => {
       return {
         url: data.url as string,
         orderId,
+        statusToken,
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
@@ -107,24 +115,56 @@ export const useOnramp = () => {
 
   /**
    * Polls the backend for the status of a specific order.
+   *
+   * SEC-005: `statusToken` is the opaque signed token issued by
+   * `POST /api/v1/onramp/url` — NOT the raw order UUID. The backend verifies
+   * the token's HMAC before returning a minimized status payload.
    */
-  const checkOrderStatus = useCallback(async (internalOrderId: string) => {
+  const checkOrderStatus = useCallback(async (statusToken: string) => {
     if (!BACKEND_URL) return null;
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/onramp/status/${internalOrderId}`);
+      const response = await fetch(`${BACKEND_URL}/api/v1/onramp/status/${statusToken}`);
       if (!response.ok) return null;
-      
+
       const order = await response.json();
-      const normalizedOrderId = typeof order.orderId === 'string' && order.orderId.length > 0 ? order.orderId : internalOrderId;
-      
-      // Sync local state if changed
+      const normalizedOrderId =
+        typeof order.orderId === 'string' && order.orderId.length > 0
+          ? order.orderId
+          : (typeof order.id === 'string' ? order.id : statusToken);
+
+      // SEC-005: the backend's minimized status payload omits creation-time
+      // fields (`userAddress`, `flow`, `chainKey`, `fiatCurrency`,
+      // `cryptoToken`, `provider`, `statusToken`, `walletAddress`) on
+      // purpose — see onrampController.getOnrampStatus. setLatestOnrampOrder
+      // replaces the whole record, so we spread the existing record first
+      // and override only the poll-authoritative fields. That avoids a
+      // minimized backend response silently overwriting creation-time
+      // values like flow ('sell' would otherwise downgrade to 'buy' if the
+      // payload omits flow — see review suggestion #11) or wiping the
+      // signed `statusToken` we already have polarized on disk.
+      const current = useTransactionStore.getState().latestOnrampOrder;
+
       setLatestOnrampOrder({
-        ...order,
-        provider: order.provider || 'onramp_money',
-        id: order.id ?? normalizedOrderId,
+        ...(current as OnrampOrderRecord | null),
+        // Poll-authoritative fields: poll response is the source of truth.
+        provider:
+          order.provider === 'transak' || order.provider === 'onramp_money'
+            ? (order.provider as FiatGatewayProvider)
+            : (current?.provider ?? ('onramp_money' as FiatGatewayProvider)),
+        id: typeof order.id === 'string' && order.id.length > 0 ? order.id : normalizedOrderId,
         orderId: normalizedOrderId,
-        walletAddress: order.walletAddress ?? order.userAddress,
+        statusToken, // preserve the token across polls; backend never returns it
+        walletAddress: current?.walletAddress ?? '',
+        userAddress: current?.userAddress ?? current?.walletAddress ?? '',
+        flow: current?.flow ?? 'buy',
+        status: typeof order.status === 'string' ? (order.status as OnrampOrderStatus) : 'pending',
+        fiatAmount: order.fiatAmount ?? current?.fiatAmount ?? '0',
+        fiatCurrency: order.fiatCurrency ?? current?.fiatCurrency ?? '',
+        cryptoToken: order.cryptoToken ?? current?.cryptoToken ?? '',
+        chainKey: order.chainKey ?? current?.chainKey ?? '',
+        cryptoAmount: order.cryptoAmount ?? current?.cryptoAmount,
+        txHash: order.txHash ?? current?.txHash,
         updatedAt: Date.now(),
       });
 

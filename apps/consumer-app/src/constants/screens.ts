@@ -39,10 +39,6 @@ export const SCREENS = {
   SETTINGS: 'Settings',
   ADD_CUSTOM_NETWORK: 'AddCustomNetwork',
 
-  // Priority 4b: Stellar Private Payments (testnet self-custody)
-  STELLAR_SPP: 'StellarSpp',
-
-
   // Priority 5: Fiat On/Off Ramps
   DEPOSIT_CRYPTO: 'DepositCrypto',
   WITHDRAW_FIAT: 'WithdrawFiat',
@@ -50,6 +46,9 @@ export const SCREENS = {
   ONRAMP_WIDGET: 'OnrampWidget',
   ONRAMP_AMOUNT: 'OnrampAmount',
   ONRAMP_QUOTES: 'OnrampQuotes',
+
+  // Priority 6: First-party web (privacy / terms / docs) — in-app WebView
+  IN_APP_BROWSER: 'InAppBrowser',
 } as const;
 
 /**
@@ -85,7 +84,6 @@ export const SCREEN_TITLES: Record<ScreenName, string> = {
   [SCREENS.TOKEN_DETAIL]: 'Token Detail',
   [SCREENS.SETTINGS]: 'Settings',
   [SCREENS.ADD_CUSTOM_NETWORK]: 'Add Network',
-  [SCREENS.STELLAR_SPP]: 'Private XLM status',
   [SCREENS.DEPOSIT_CRYPTO]: 'Deposit',
 
   [SCREENS.WITHDRAW_FIAT]: 'Withdraw',
@@ -93,6 +91,7 @@ export const SCREEN_TITLES: Record<ScreenName, string> = {
   [SCREENS.ONRAMP_WIDGET]: 'Onramp',
   [SCREENS.ONRAMP_AMOUNT]: 'Buy Crypto',
   [SCREENS.ONRAMP_QUOTES]: 'Compare Providers',
+  [SCREENS.IN_APP_BROWSER]: 'Browser',
 } as const;
 
 /**

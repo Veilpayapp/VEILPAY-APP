@@ -21,6 +21,8 @@ export type SppNativeOpResult = {
   encryptionPublicKeyHex?: string;
   membershipBlindingHex?: string;
   leafHex?: string;
+  /** DATA-001: balance in stroops (decimal string) after pool_balance */
+  balanceStroops?: string;
 };
 
 export type SppNativeModule = {
@@ -42,6 +44,14 @@ export type SppNativeModule = {
   /** JSON session config → bind PrivatePool (pool-ops). */
   poolOpen?(configJson: string): Promise<SppNativeOpResult> | SppNativeOpResult;
   poolClose?(): Promise<SppNativeOpResult> | SppNativeOpResult;
+  /** Absolute writable app data dir for SQLite + circuits (no file://). */
+  appDataDir?(): string;
+  /** Copy bundled circuit assets into app data when missing. */
+  ensureCircuitAssets?(): Promise<SppNativeOpResult> | SppNativeOpResult;
+  /** DATA-001: sync notes from chain. */
+  poolSync?(): Promise<SppNativeOpResult> | SppNativeOpResult;
+  /** DATA-001: private balance (stroops) after sync. */
+  poolBalance?(): Promise<SppNativeOpResult> | SppNativeOpResult;
 };
 
 const notReady = (op: string): SppNativeOpResult => ({
@@ -87,6 +97,9 @@ const JsStub: SppNativeModule = {
   }),
   poolOpen: () => notReady('pool_open'),
   poolClose: () => ({ ok: true, op: 'pool_close', message: 'js-stub no-op' }),
+  poolSync: () => notReady('pool_sync'),
+  poolBalance: () => notReady('pool_balance'),
+  ensureCircuitAssets: () => notReady('ensure_circuit_assets'),
 };
 
 function tryLoadExpoNative(): SppNativeModule | null {
@@ -106,6 +119,10 @@ function tryLoadExpoNative(): SppNativeModule | null {
         poolReadiness?(): SppNativeOpResult;
         poolOpen?(configJson: string): SppNativeOpResult;
         poolClose?(): SppNativeOpResult;
+        poolSync?(): SppNativeOpResult;
+        poolBalance?(): SppNativeOpResult;
+        appDataDir?(): string;
+        ensureCircuitAssets?(): SppNativeOpResult;
       };
     };
     const native = mod.getSppNativeExpoModule?.();
@@ -151,6 +168,31 @@ function tryLoadExpoNative(): SppNativeModule | null {
         },
       poolClose: () =>
         native.poolClose?.() ?? { ok: true, op: 'pool_close', message: 'no-op' },
+      poolSync: () =>
+        native.poolSync?.() ?? {
+          ok: false,
+          code: 'SPP_OPS_NOT_READY',
+          op: 'pool_sync',
+          message: 'poolSync not exposed by native module',
+        },
+      poolBalance: () =>
+        native.poolBalance?.() ?? {
+          ok: false,
+          code: 'SPP_OPS_NOT_READY',
+          op: 'pool_balance',
+          message: 'poolBalance not exposed by native module',
+        },
+      ensureCircuitAssets: () =>
+        native.ensureCircuitAssets?.() ?? {
+          ok: false,
+          code: 'SPP_CIRCUITS_NOT_BUNDLED',
+          op: 'ensure_circuit_assets',
+          message: 'ensureCircuitAssets not exposed by native module',
+        },
+      appDataDir: () => {
+        const d = native.appDataDir?.();
+        return typeof d === 'string' ? d : '';
+      },
     };
   } catch {
     return null;
@@ -184,51 +226,153 @@ export function sppNativeCapabilities(): SppNativeCapabilities {
   return backend.capabilities();
 }
 
+function normalizeResult(value: unknown, fallbackOp: string): SppNativeOpResult {
+  if (!value || typeof value !== 'object') {
+    return {
+      ok: false,
+      code: 'SPP_NATIVE_BAD_RESULT',
+      op: fallbackOp,
+      message: 'Native returned a malformed result',
+    };
+  }
+
+  const r = value as Record<string, unknown>;
+  if (typeof r.ok !== 'boolean') {
+    return {
+      ok: false,
+      code: 'SPP_NATIVE_BAD_RESULT',
+      op: fallbackOp,
+      message: 'Native result missing boolean ok',
+    };
+  }
+
+  return {
+    ok: r.ok,
+    code: typeof r.code === 'string' ? r.code : undefined,
+    op: typeof r.op === 'string' ? r.op : fallbackOp,
+    message: typeof r.message === 'string' ? r.message : undefined,
+    txHash: typeof r.txHash === 'string' ? r.txHash : undefined,
+    leafDecimal:
+      typeof r.leafDecimal === 'string' || r.leafDecimal === null
+        ? r.leafDecimal
+        : undefined,
+    notePublicKeyHex:
+      typeof r.notePublicKeyHex === 'string' ? r.notePublicKeyHex : undefined,
+    encryptionPublicKeyHex:
+      typeof r.encryptionPublicKeyHex === 'string'
+        ? r.encryptionPublicKeyHex
+        : undefined,
+    membershipBlindingHex:
+      typeof r.membershipBlindingHex === 'string'
+        ? r.membershipBlindingHex
+        : undefined,
+    leafHex: typeof r.leafHex === 'string' ? r.leafHex : undefined,
+    balanceStroops:
+      typeof r.balanceStroops === 'string'
+        ? r.balanceStroops
+        : typeof r.balanceStroops === 'number'
+          ? String(r.balanceStroops)
+          : undefined,
+  };
+}
+
+function exceptionResult(error: unknown, fallbackOp: string): SppNativeOpResult {
+  const message =
+    error instanceof Error && error.message
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : 'Native SPP operation threw before returning a result';
+  return {
+    ok: false,
+    code: 'SPP_NATIVE_EXCEPTION',
+    op: fallbackOp,
+    message,
+  };
+}
+
 async function asResult(
   value: SppNativeOpResult | Promise<SppNativeOpResult> | undefined,
   fallbackOp: string
 ): Promise<SppNativeOpResult> {
-  if (!value) return notReady(fallbackOp);
-  return Promise.resolve(value);
+  try {
+    if (!value) return notReady(fallbackOp);
+    return normalizeResult(await Promise.resolve(value), fallbackOp);
+  } catch (e) {
+    return exceptionResult(e, fallbackOp);
+  }
+}
+
+async function callNative(
+  op: string,
+  invoke: () => SppNativeOpResult | Promise<SppNativeOpResult> | undefined
+): Promise<SppNativeOpResult> {
+  try {
+    return asResult(invoke(), op);
+  } catch (e) {
+    return exceptionResult(e, op);
+  }
 }
 
 export async function sppNativeDeposit(amount: string): Promise<SppNativeOpResult> {
-  return asResult(backend.deposit?.(amount), 'deposit');
+  return callNative('deposit', () => backend.deposit?.(amount));
 }
 
 export async function sppNativeTransfer(
   amount: string,
   recipient: string
 ): Promise<SppNativeOpResult> {
-  return asResult(backend.transfer?.(amount, recipient), 'transfer');
+  return callNative('transfer', () => backend.transfer?.(amount, recipient));
 }
 
 export async function sppNativeWithdraw(
   amount: string,
   to?: string
 ): Promise<SppNativeOpResult> {
-  return asResult(backend.withdraw?.(amount, to), 'withdraw');
+  return callNative('withdraw', () => backend.withdraw?.(amount, to));
 }
 
 export async function sppNativeEnsureAsp(): Promise<SppNativeOpResult> {
-  return asResult(backend.ensureAsp?.(), 'ensure_asp');
+  return callNative('ensure_asp', () => backend.ensureAsp?.());
 }
 
 export async function sppNativeDeriveKeys(
   sigHex: string,
   network: string
 ): Promise<SppNativeOpResult> {
-  return asResult(backend.deriveKeys?.(sigHex, network), 'derive_keys');
+  return callNative('derive_keys', () => backend.deriveKeys?.(sigHex, network));
 }
 
 export async function sppNativePoolReadiness(): Promise<SppNativeOpResult> {
-  return asResult(backend.poolReadiness?.(), 'pool_readiness');
+  return callNative('pool_readiness', () => backend.poolReadiness?.());
 }
 
 export async function sppNativePoolOpen(configJson: string): Promise<SppNativeOpResult> {
-  return asResult(backend.poolOpen?.(configJson), 'pool_open');
+  return callNative('pool_open', () => backend.poolOpen?.(configJson));
 }
 
 export async function sppNativePoolClose(): Promise<SppNativeOpResult> {
-  return asResult(backend.poolClose?.(), 'pool_close');
+  return callNative('pool_close', () => backend.poolClose?.());
+}
+
+export async function sppNativePoolSync(): Promise<SppNativeOpResult> {
+  return callNative('pool_sync', () => backend.poolSync?.());
+}
+
+export async function sppNativePoolBalance(): Promise<SppNativeOpResult> {
+  return callNative('pool_balance', () => backend.poolBalance?.());
+}
+
+export async function sppNativeEnsureCircuitAssets(): Promise<SppNativeOpResult> {
+  return callNative('ensure_circuit_assets', () => backend.ensureCircuitAssets?.());
+}
+
+/** Absolute writable app data dir for native SQLite/circuits, or empty if unknown. */
+export function sppNativeAppDataDir(): string {
+  try {
+    const d = backend.appDataDir?.();
+    return typeof d === 'string' ? d.trim() : '';
+  } catch {
+    return '';
+  }
 }

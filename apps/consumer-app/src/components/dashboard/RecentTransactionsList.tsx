@@ -15,6 +15,7 @@ interface RecentTransactionsListProps {
   onSeeAll: () => void;
   onTransactionPress: (tx: TransactionRecord) => void;
   onSend: () => void;
+  privateMode?: boolean;
 }
 
 function RecentTransactionsListComponent({
@@ -23,6 +24,7 @@ function RecentTransactionsListComponent({
   onSeeAll,
   onTransactionPress,
   onSend,
+  privateMode = false,
 }: RecentTransactionsListProps) {
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
@@ -30,14 +32,14 @@ function RecentTransactionsListComponent({
   return (
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>[ ACTIVITY_LOG ]</Text>
+        <Text style={styles.sectionTitle}>Activity</Text>
         <PressableOpacity
           onPress={onSeeAll}
           accessibilityRole="button"
           accessibilityLabel="See all transactions"
           accessibilityHint="Opens full transaction history"
         >
-          <Text style={styles.seeAll}>[ ALL ]</Text>
+          <Text style={styles.seeAll}>See all</Text>
         </PressableOpacity>
       </View>
 
@@ -60,9 +62,15 @@ function RecentTransactionsListComponent({
         </View>
       ) : transactions.length === 0 ? (
         <View style={styles.emptyLedger}>
-          <Text style={styles.emptyLedgerArt}>[ / / / / / / / / ]</Text>
-          <Text style={styles.emptyLedgerTitle}>NO TX DATA</Text>
-          <Text style={styles.emptyLedgerSub}>AWAITING_STATE_CHANGE...</Text>
+          <Text style={styles.emptyLedgerArt}>—</Text>
+          <Text style={styles.emptyLedgerTitle}>
+            {privateMode ? 'No private activity yet' : 'No transactions yet'}
+          </Text>
+          <Text style={styles.emptyLedgerSub}>
+            {privateMode
+              ? 'Shield or send pXLM to get started.'
+              : 'Your recent payments will appear here.'}
+          </Text>
         </View>
       ) : (
         transactions.slice(0, 5).map((tx) => (

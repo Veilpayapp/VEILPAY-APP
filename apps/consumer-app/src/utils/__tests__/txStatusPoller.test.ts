@@ -141,7 +141,7 @@ describe('txStatusPoller utility tests', () => {
     // re-throws every non-terminal/infrastructure error (5xx, network blip, parse
     // fault). The poller must treat each throw as retryable, never as a failure.
     (waitForTransaction as jest.Mock)
-      .mockRejectedValueOnce(new Error('HTTP error 500')) // Horizon/Aptos 5xx
+      .mockRejectedValueOnce(new Error('HTTP error 500')) // Horizon 5xx
       .mockRejectedValueOnce(new Error('Network request failed')) // Solana blip
       .mockResolvedValueOnce({ status: 'confirmed', gasUsed: '0.002' });
 

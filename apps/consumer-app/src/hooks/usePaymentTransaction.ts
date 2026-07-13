@@ -14,7 +14,7 @@
 //
 // Privacy branches:
 //
-//   `'standard'`  → existing direct token transfer (EVM / SVM / MVM / XLM).
+//   `'standard'`  → existing direct token transfer (EVM / SVM / XLM).
 //                   Never touches `StealthAnnouncer`, never enters the pool.
 //
 //   `'stealth'`   → derive a one-time stealth address with the dual-key
@@ -61,12 +61,14 @@
 //     failure or as a placeholder proof submission.
 import 'react-native-get-random-values';
 import { useState, useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 import { ethers } from 'ethers';
 import { parseEther } from 'viem';
 import { Buffer } from 'buffer';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 import { useWalletStore } from '../stores/walletStore';
+import { useTransactionStore } from '../stores/transactionStore';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useToast } from '../components/Toast';
 import {
@@ -103,6 +105,10 @@ import {
   STEALTH_ANNOUNCER_ADDRESS,
   VEIL_POOL_ADDRESS,
 } from '../constants/contracts';
+import {
+  isMaxPrivacyWithdrawReady,
+  isSppPoolOpsReady,
+} from '../hooks/usePrivacyOptions';
 import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
 import type { PrivacyLevel } from '../stores/settingsStore';
@@ -113,6 +119,8 @@ import {
   transfer as sppTransfer,
   withdraw as sppWithdraw,
   SppClientError,
+  createSppActivityRecord,
+  getSppConfigForChain,
   isSppEnabledForChain,
 } from '../utils/stellarSpp';
 
@@ -288,12 +296,38 @@ export function usePaymentTransaction({
       }
     };
 
-    refreshGasEstimate();
-    const intervalId = setInterval(refreshGasEstimate, 15000);
+    // PERF-001: only poll while the app is foregrounded. Background timers
+    // burn battery and RPC quota without user benefit.
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const startPolling = () => {
+      if (intervalId != null) return;
+      refreshGasEstimate();
+      intervalId = setInterval(refreshGasEstimate, 15000);
+    };
+    const stopPolling = () => {
+      if (intervalId != null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+
+    if (AppState.currentState === 'active') {
+      startPolling();
+    }
+
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    });
 
     return () => {
       isCancelled = true;
-      clearInterval(intervalId);
+      stopPolling();
+      sub.remove();
     };
   }, [
     activeNetworkKey,
@@ -401,6 +435,24 @@ export function usePaymentTransaction({
       return;
     }
 
+    // DATA-002: the max-privacy withdraw path is not wired end-to-end in
+    // this build. The PrivacyLevelScreen already disables the option, but
+    // this guard prevents a saved `max` default or a deep link from
+    // reaching the `runMaxFlow` "not yet implemented" throw, which would
+    // let the user pick a commitment and start proving before failing.
+    if (privacyLevel === 'max' && !isMaxPrivacyWithdrawReady()) {
+      trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_VALIDATION_FAILED, {
+        reason: 'max_withdraw_not_ready',
+        privacy_level: privacyLevel,
+      });
+      toast.show(
+        'Max-privacy withdraw is not available in this build. Use Standard or Stealth instead.',
+        'error'
+      );
+      setTxStatus('failed');
+      return;
+    }
+
     if (privacyLevel === 'private' && !isSppEnabledForChain(activeNetworkKey)) {
       trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_VALIDATION_FAILED, {
         reason: 'spp_not_enabled',
@@ -409,6 +461,21 @@ export function usePaymentTransaction({
       toast.show(
         'Private XLM is only available on Stellar Testnet until audit gates pass.',
         'error'
+      );
+      setTxStatus('failed');
+      return;
+    }
+
+    // SPP-001 / Phase 2: hard-disable private ops without native poolOps
+    // (not only toast after prove). Public Standard still works.
+    if (privacyLevel === 'private' && !isSppPoolOpsReady()) {
+      trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_VALIDATION_FAILED, {
+        reason: 'spp_pool_ops_not_ready',
+        privacy_level: privacyLevel,
+      });
+      toast.show(
+        'Private payments aren’t ready on this build yet. Public XLM still works — pick Standard, or install a pool-ops preview APK.',
+        'info'
       );
       setTxStatus('failed');
       return;
@@ -471,7 +538,7 @@ export function usePaymentTransaction({
         switch (error.code) {
           case 'INSUFFICIENT_FUNDS': {
             // Name the actual native asset for the selected network rather
-            // than hardcoding ETH — a Solana/Aptos/Stellar/BNB send should
+            // than hardcoding ETH — a Solana/Stellar/BNB send should
             // not tell the user to "add more ETH".
             const fundsSymbol = selectedNetwork?.symbol || token || 'funds';
             toast.show(
@@ -621,7 +688,7 @@ export function usePaymentTransaction({
      *
      * Stealth path is EVM-only: the announcer contract is on Sepolia and
      * the dual-key engine emits SEC1-compressed pubkeys keyed off
-     * secp256k1. SVM/MVM/XLM are rejected upstream by the privacy-level
+     * secp256k1. SVM/XLM are rejected upstream by the privacy-level
      * UI, but we double-check here.
      */
     async function runStealthFlow(): Promise<void> {
@@ -979,6 +1046,30 @@ export function usePaymentTransaction({
             stellarAddress: recipient.trim(),
           });
         }
+
+        // Always persist private activity even if the screen unmounted during
+        // the long prove window — otherwise private balance updates but
+        // Activity stays "No private activity yet".
+        useTransactionStore.getState().addTransaction(
+          createSppActivityRecord({
+            op,
+            txHash: result.txHash,
+            ownerAddress: address,
+            recipient: op === 'shield' ? undefined : recipient.trim() || address,
+            amount,
+            chainKey: activeNetworkKey,
+            poolId: getSppConfigForChain(activeNetworkKey)?.poolId,
+          })
+        );
+
+        // Public activity lag fix: shield spends public XLM on-chain; force a
+        // silent history refresh so Standard/wallet activity picks up the
+        // outbound (and unshield inbound) without waiting for pull-to-refresh.
+        // Private history remains local-only by design (session activity).
+        void useTransactionStore
+          .getState()
+          .refreshTransactions({ silent: true })
+          .catch(() => undefined);
 
         if (!isMountedRef.current) return;
 

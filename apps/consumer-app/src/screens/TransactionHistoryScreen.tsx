@@ -13,6 +13,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useStyles, typography } from '../styles/design-tokens';
 import { useWalletStore } from '../stores/walletStore';
 import { useTransactionStore } from '../stores/transactionStore';
+import { useSettingsStore } from '../stores/settingsStore';
+import {
+  getPrivacyAssetById,
+  canActivatePrivacyAsset,
+} from '../constants/privacyAssets';
+import { filterTransactionsForPrivacyMode } from '../utils/transactionPrivacyFilter';
 import { SCREENS } from '../constants/screens';
 import { SovereignCard } from "../components/SovereignCard";
 import { SovereignButton } from "../components/SovereignButton";
@@ -98,6 +104,9 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     refreshTransactions,
     loadMoreTransactions,
   } = useTransactionStore();
+  const selectedPrivacyAssetId = useSettingsStore((s) => s.selectedPrivacyAssetId);
+  const privacyAsset = getPrivacyAssetById(selectedPrivacyAssetId);
+  const privacyMode = !!privacyAsset && canActivatePrivacyAsset(privacyAsset);
   const toast = useToast();
 
   useEffect(() => {
@@ -124,11 +133,24 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     toast.show(transactionsError, 'error');
   }, [transactionsError, toast.show]);
 
-  // Filter transactions based on selected filter
+  // Privacy mode first (private pool only), then sent/received chips.
   const filteredTransactions = useMemo(() => {
-    if (filter === 'all') return transactions;
-    return transactions.filter((tx: import('../types/transactions').TransactionRecord) => tx.type === filter);
-  }, [filter, transactions]);
+    const privacyScoped = filterTransactionsForPrivacyMode(transactions, {
+      privacyMode,
+      privacyChainKey: privacyAsset?.chainKey ?? activeChain?.key,
+      publicChainKey: activeChain?.key,
+    });
+    if (filter === 'all') return privacyScoped;
+    return privacyScoped.filter(
+      (tx: import('../types/transactions').TransactionRecord) => tx.type === filter
+    );
+  }, [
+    activeChain?.key,
+    filter,
+    privacyAsset?.chainKey,
+    privacyMode,
+    transactions,
+  ]);
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
@@ -200,6 +222,10 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     const isSent = item.type === 'sent';
     const amountColor = isSent ? colors.error : colors.success;
     const amountPrefix = isSent ? '-' : '+';
+    const isPrivate = item.privacyLevel === 'max' || item.privacyLevel === 'private';
+    const isPrivatePoolTx = item.isPrivatePoolTx === true || item.sppOp !== undefined;
+    const title = item.displayTitle || (isSent ? 'Sent' : 'Received');
+    const subtitle = item.displaySubtitle || formatTime(item.timestamp);
 
     return (
       <PressableOpacity
@@ -215,11 +241,11 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
             {/* Left side - Type icon and info */}
             <View style={styles.transactionLeft}>
           <View style={[styles.typeIcon, { backgroundColor: isSent ? colors.errorBg : colors.successBg }]}>
-          <Icon name={isSent ? 'send' : 'receive'} size={16} color={colors.textPrimary} />
+          <Icon name={isPrivatePoolTx ? 'private-lock' : isSent ? 'send' : 'receive'} size={16} color={colors.textPrimary} />
               </View>
               <View style={styles.transactionInfo}>
-                <Text style={styles.transactionType}>{isSent ? 'Sent' : 'Received'}</Text>
-                <Text style={styles.transactionTime}>{formatTime(item.timestamp)}</Text>
+                <Text style={styles.transactionType}>{title}</Text>
+                <Text style={styles.transactionTime}>{subtitle}</Text>
               </View>
             </View>
 
@@ -234,7 +260,7 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
                     <Text style={styles.pendingText}>Pending</Text>
                   </View>
                 )}
-                {item.privacyLevel === 'max' && (
+                {isPrivate && (
                   <View style={styles.privacyBadge}>
                     <Icon name="private" size={12} color={colors.accent} />
                     <Text style={styles.privacyText}>Private</Text>
@@ -274,19 +300,27 @@ export function TransactionHistoryScreen({ navigation }: TransactionHistoryScree
     return (
       <EmptyState
         icon={<Icon name="inbox" size={48} color={colors.textTertiary} />}
-        title="No transactions yet"
+        title={privacyMode ? 'No private activity yet' : 'No transactions yet'}
         description={
-          filter === 'all'
-            ? 'Your transaction history will appear here once you send or receive funds.'
-            : `No ${filter} transactions found for this wallet.`
+          privacyMode
+            ? filter === 'all'
+              ? 'Shield, transfer, or unshield pXLM to see private activity here.'
+              : `No ${filter} private activity for this wallet.`
+            : filter === 'all'
+              ? 'Your transaction history will appear here once you send or receive funds.'
+              : `No ${filter} transactions found for this wallet.`
         }
-        actionLabel="Send payment"
-        onAction={() => {
-          trackEvent(ANALYTICS_EVENTS.TRANSACTION_HISTORY_EMPTY_SEND_PAYMENT_PRESSED, {
-            filter,
-          });
-          navigation.navigate(SCREENS.SEND_PAYMENT, {});
-        }}
+        actionLabel={privacyMode ? undefined : 'Send payment'}
+        onAction={
+          privacyMode
+            ? undefined
+            : () => {
+                trackEvent(ANALYTICS_EVENTS.TRANSACTION_HISTORY_EMPTY_SEND_PAYMENT_PRESSED, {
+                  filter,
+                });
+                navigation.navigate(SCREENS.SEND_PAYMENT, {});
+              }
+        }
       />
     );
   };

@@ -120,13 +120,21 @@ pub mod veil_pool {
     }
 }
 
-fn verify_proof(proof: &[u8], _nullifier: [u8; 32]) -> bool {
-    // SC-C1 fix: Fail-closed stub matching EVM pattern.
-    // Must return false until a real Groth16 verifier is integrated.
-    // ADDED FOR TESTING: allow a specific dummy proof
-    if proof == &[1, 2, 3, 4] {
-        return true;
-    }
+/// Verifies a withdrawal's zero-knowledge proof.
+///
+/// SECURITY (SC-C1 / SEC-007): hard fail-closed stub. This MUST return `false`
+/// for every input until a real Groth16 (BN254) verifier is integrated, mirroring
+/// the verifier already live on EVM (`Groth16Verifier.sol`). Because it always
+/// returns `false`, `withdraw` is intentionally non-functional — the pool accepts
+/// deposits but cannot release funds until the verifier lands.
+///
+/// Do NOT reintroduce any bypass (e.g. accepting a fixed dummy proof or gating the
+/// bypass behind a Cargo feature): a build that accepts a forged proof lets anyone
+/// drain the pool. The previous `[1, 2, 3, 4]` test backdoor was removed for exactly
+/// this reason.
+fn verify_proof(_proof: &[u8], _nullifier: [u8; 32]) -> bool {
+    // TODO(SEC-007): integrate a groth16-solana verifier with an embedded verifying
+    // key and structured public inputs (root, nullifier, recipient, amount).
     false
 }
 

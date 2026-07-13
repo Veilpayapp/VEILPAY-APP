@@ -257,52 +257,16 @@ describe("veil_pool", () => {
     assert.equal(poolState.paused, false);
   });
 
+  // SEC-007: verify_proof is a hard fail-closed stub — no proof is accepted until a
+  // real Groth16 verifier is integrated. Withdraw must revert with InvalidProof and
+  // move no funds. (The old `[1, 2, 3, 4]` dummy-proof backdoor was removed.)
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  it("Can withdraw", async () => {
+  it("Withdraw fails closed (InvalidProof) until a real verifier is integrated", async () => {
     const nullifier = Array.from(crypto.randomBytes(32));
-    // Provide proof [1, 2, 3, 4] to bypass verify_proof stub for testing purposes
     const proof = Buffer.from([1, 2, 3, 4]);
-    
-    const preBalance = await provider.connection.getTokenAccountBalance(recipientTokenAccount);
-    
-    await program.methods
-      .withdraw(nullifier, proof, amount)
-      .accounts({
-        pool,
-        poolTokenAccount,
-        mint,
-        recipient: recipient.publicKey,
-        recipientTokenAccount,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .rpc();
-      
-    const postBalance = await provider.connection.getTokenAccountBalance(recipientTokenAccount);
-    
-    assert.equal(
-      Number(postBalance.value.amount) - Number(preBalance.value.amount),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      amount.toNumber()
-    );
-  });
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  it("Cannot withdraw with spent nullifier", async () => {
-    const nullifier = Array.from(crypto.randomBytes(32));
-    const proof = Buffer.from([1, 2, 3, 4]);
-    
-    await program.methods
-      .withdraw(nullifier, proof, amount)
-      .accounts({
-        pool,
-        poolTokenAccount,
-        mint,
-        recipient: recipient.publicKey,
-        recipientTokenAccount,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .rpc();
-      
+    const preBalance = await provider.connection.getTokenAccountBalance(recipientTokenAccount);
+
     try {
       await program.methods
         .withdraw(nullifier, proof, amount)
@@ -315,12 +279,50 @@ describe("veil_pool", () => {
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .rpc();
-      assert.fail("Should have failed");
+      assert.fail("Should have failed closed");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      assert.include(e.toString(), "NullifierSpent");
+      assert.include(e.toString(), "InvalidProof");
     }
+
+    // No funds released.
+    const postBalance = await provider.connection.getTokenAccountBalance(recipientTokenAccount);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    assert.equal(postBalance.value.amount, preBalance.value.amount);
+  });
+
+  // A rejected withdraw must not record its nullifier (verify_proof rejects before the
+  // nullifier is inserted). On-chain double-spend rejection is re-tested once withdraw
+  // is functional under the real verifier (SEC-007).
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  it("Fail-closed withdraw records no nullifier", async () => {
+    const nullifier = Array.from(crypto.randomBytes(32));
+    const proof = Buffer.from([1, 2, 3, 4]);
+
+    try {
+      await program.methods
+        .withdraw(nullifier, proof, amount)
+        .accounts({
+          pool,
+          poolTokenAccount,
+          mint,
+          recipient: recipient.publicKey,
+          recipientTokenAccount,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .rpc();
+      assert.fail("Should have failed closed");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      assert.include(e.toString(), "InvalidProof");
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const poolState = await program.account.pool.fetch(pool);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    assert.equal(poolState.nullifiersSpent.spent.length, 0);
   });
   
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -335,6 +337,8 @@ describe("veil_pool", () => {
       .rpc();
 
     const nullifier = Array.from(crypto.randomBytes(32));
+    // The pause guard runs before verify_proof, so this reverts with PoolPaused
+    // regardless of the proof value.
     const proof = Buffer.from([1, 2, 3, 4]);
     try {
       await program.methods

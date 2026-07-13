@@ -28,6 +28,10 @@ error InvalidProof();
 error NullifierAlreadySpent();
 error TreeFull();
 
+// SEC-013: withdrawal amount exceeds the pool's configured per-withdraw cap.
+// Part of the relayer's `Interface.parseError` decoder surface.
+error AmountExceedsMax();
+
 // Temporary marker until tasks 3.3 / 3.4 land. Provides a clean ABI surface
 // for the relayer client and the mobile app to integrate against, instead of
 // reverting with no data and confusing downstream error-decoders.
@@ -89,6 +93,15 @@ contract VeilPool is ReentrancyGuard, Pausable, Ownable {
     /// Withdraw fee in basis points. Configurable at construction; immutable
     /// thereafter so the deploy-time value is auditable from the bytecode.
     uint256 public immutable WITHDRAW_FEE_BPS;
+
+    /// SEC-013: hard ceiling on the `amount` of any single withdrawal, in the
+    /// token's smallest unit. Immutable so the deploy-time value is auditable
+    /// from the bytecode, mirroring `WITHDRAW_FEE_BPS`. A value of `0` is the
+    /// explicit "no cap" sentinel — the check is skipped and withdrawals of any
+    /// size are permitted (the pre-SEC-013 behavior). Any non-zero value bounds
+    /// the blast radius of a verifier/proof bug (see SEC-007): even a forged
+    /// proof can drain at most `MAX_WITHDRAW_AMOUNT` per nullifier.
+    uint256 public immutable MAX_WITHDRAW_AMOUNT;
 
     /// Groth16 verifier — invoked by `withdraw` against the canonical
     /// `[merkleRoot, nullifierHash, recipient, amount]` public-input layout.
@@ -171,12 +184,15 @@ contract VeilPool is ReentrancyGuard, Pausable, Ownable {
      *                         the circomlib Poseidon used in the circuit).
      * @param _feeRecipient    Address that collects the per-withdraw bps fee.
      * @param _withdrawFeeBps  Fee in basis points, capped at `BPS_DENOMINATOR`.
+     * @param _maxWithdrawAmount  Per-withdraw amount ceiling (SEC-013), in the
+     *                            token's smallest unit. `0` disables the cap.
      */
     constructor(
         IGroth16Verifier _verifier,
         IPoseidonHasher _hasher,
         address _feeRecipient,
-        uint256 _withdrawFeeBps
+        uint256 _withdrawFeeBps,
+        uint256 _maxWithdrawAmount
     ) Ownable(msg.sender) {
         if (address(_verifier) == address(0)) revert InvalidVerifier();
         if (address(_hasher) == address(0)) revert InvalidHasher();
@@ -187,6 +203,7 @@ contract VeilPool is ReentrancyGuard, Pausable, Ownable {
         hasher = _hasher;
         feeRecipient = _feeRecipient;
         WITHDRAW_FEE_BPS = _withdrawFeeBps;
+        MAX_WITHDRAW_AMOUNT = _maxWithdrawAmount;
 
         // Pre-compute the all-zero subtree roots for every level and seed
         // `filledSubtrees` so the first insertion's right siblings are the
@@ -289,6 +306,15 @@ contract VeilPool is ReentrancyGuard, Pausable, Ownable {
         // 2. Reject already-spent nullifiers up-front to short-circuit the
         //    verifier call (which is the most expensive step in this method).
         if (nullifierSpent[nullifierHash]) revert NullifierAlreadySpent();
+
+        // 2b. SEC-013: enforce the per-withdraw amount ceiling before the
+        //     expensive proof verification. `amount` is a bound public input,
+        //     so this gate holds regardless of proof validity and bounds the
+        //     blast radius of any verifier/proof bug (SEC-007). Skipped when
+        //     the cap is the `0` sentinel (unlimited).
+        if (MAX_WITHDRAW_AMOUNT != 0 && amount > MAX_WITHDRAW_AMOUNT) {
+            revert AmountExceedsMax();
+        }
 
         // 3. Build the public-input array in canonical order and verify.
         //    The order here is load-bearing — it must match the circuit's

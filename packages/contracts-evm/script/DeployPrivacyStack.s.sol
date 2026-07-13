@@ -94,6 +94,8 @@ contract DeployPrivacyStack is Script {
         uint256 deployerPk     = vm.envUint("DEPLOYER_PK");
         address poseidonHasher = vm.envAddress("POSEIDON_HASHER");
         uint256 feeBps         = vm.envOr("WITHDRAW_FEE_BPS", DEFAULT_WITHDRAW_FEE_BPS);
+        // SEC-013: optional per-withdraw amount cap; 0 = unlimited.
+        uint256 maxWithdraw    = vm.envOr("MAX_WITHDRAW_AMOUNT", uint256(0));
 
         require(feeRecipient   != address(0), "FEE_RECIPIENT not set or zero");
         require(deployerPk     != 0,          "DEPLOYER_PK not set or zero");
@@ -104,6 +106,7 @@ contract DeployPrivacyStack is Script {
         console.log("  feeRecipient:   ", feeRecipient);
         console.log("  poseidonHasher: ", poseidonHasher);
         console.log("  feeBps:         ", feeBps);
+        console.log("  maxWithdraw:    ", maxWithdraw);
 
         // ---------------------------------------------------------------- //
         //  Broadcast in the canonical order. If any constructor reverts,   //
@@ -119,7 +122,8 @@ contract DeployPrivacyStack is Script {
             IGroth16Verifier(address(verifier)),
             IPoseidonHasher(poseidonHasher),
             feeRecipient,
-            feeBps
+            feeBps,
+            maxWithdraw
         );
         StealthAnnouncer announcer = new StealthAnnouncer();
 

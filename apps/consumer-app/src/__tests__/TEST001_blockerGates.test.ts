@@ -2,6 +2,8 @@
  * TEST-001 — consumer gates for former blockers / dogfood bar.
  */
 
+import fs from 'fs';
+import path from 'path';
 import { EVM_MAX_PRIVACY_WITHDRAW_READY } from '../constants/contracts';
 import {
   getPrivacyOptionsForChain,
@@ -67,5 +69,22 @@ describe('TEST-001 blocker gates (consumer)', () => {
       poolOpsReady: true,
     });
     expect(opts.find((o) => o.id === 'private')?.enabled).toBe(false);
+  });
+
+  it('SEC-003 residual: SSL pin init fail-closed in release (source gate)', () => {
+    const security = fs.readFileSync(
+      path.join(__dirname, '..', 'utils', 'security.ts'),
+      'utf8'
+    );
+    // Empty pins throw outside __DEV__; pin-init errors rethrow outside __DEV__.
+    expect(security).toMatch(/EXPO_PUBLIC_SSL_PINS/);
+    expect(security).toMatch(/Configure production SPKI hashes/);
+    expect(security).toMatch(/if \(__DEV__\)/);
+    expect(security).toMatch(/throw error/);
+  });
+
+  it('SEC-008/011: mainnet privacy remains process-gated (max flag false)', () => {
+    // Ceremony/audit are operator gates; product must not flip max ready until then.
+    expect(EVM_MAX_PRIVACY_WITHDRAW_READY).toBe(false);
   });
 });

@@ -9,7 +9,7 @@
 const mockSetBalance = jest.fn();
 const mockSetLoadingBalance = jest.fn();
 const mockFetchNativeBalance = jest.fn();
-const mockFetchERC20Balances = jest.fn();
+const mockFetchTokenBalancesForChain = jest.fn();
 const mockGetTokenMarketQuote = jest.fn();
 const mockGetFiatExchangeRate = jest.fn();
 
@@ -41,7 +41,8 @@ jest.mock('../../stores/settingsStore', () => ({
 
 jest.mock('../../utils/balanceFetcher', () => ({
   fetchNativeBalance: (...args: unknown[]) => mockFetchNativeBalance(...args),
-  fetchERC20Balances: (...args: unknown[]) => mockFetchERC20Balances(...args),
+  fetchTokenBalancesForChain: (...args: unknown[]) =>
+    mockFetchTokenBalancesForChain(...args),
 }));
 
 jest.mock('../../utils/marketData', () => ({
@@ -72,7 +73,7 @@ describe('useBalance', () => {
       lastUpdated: Date.now(),
       source: 'rpc',
     });
-    mockFetchERC20Balances.mockResolvedValue([]);
+    mockFetchTokenBalancesForChain.mockResolvedValue([]);
     mockGetTokenMarketQuote.mockResolvedValue({ price: 2000, source: 'mock', isStale: false });
     mockGetFiatExchangeRate.mockResolvedValue(1);
   });

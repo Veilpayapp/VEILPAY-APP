@@ -74,6 +74,11 @@ process.env = {
   // The allowlist must include the contract address used in generated
   // request bodies; `ALLOWLISTED_POOL` (below) is reused by the generator.
   RELAYER_VEILPOOL_ALLOWLIST: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  // Clear host Doppler/shell pollution that would short-circuit the handler
+  // (SEC-006 shared secret, SEC-013 amount cap) before simulation runs.
+  RELAYER_SHARED_SECRET: '',
+  RELAYER_MAX_WITHDRAW_AMOUNT: '',
+  RELAYER_ALLOW_UNAUTHENTICATED: 'true',
 };
 
 const ALLOWLISTED_POOL = '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
@@ -167,6 +172,17 @@ afterAll(() => {
 beforeEach(() => {
   contractMock.withdraw.mockReset();
   contractMock.withdraw.staticCall.mockReset();
+  // SEC-006 circuit breaker trips after ~20 consecutive simulation failures;
+  // property tests run 30 iterations so we must clear state between runs.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { __test } = require('../../utils/relayerQuota') as {
+      __test: { reset: () => void };
+    };
+    __test.reset();
+  } catch {
+    // ignore if module shape changes
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -298,6 +314,15 @@ describe('Property 16 — relayer maps on-chain reverts to HTTP 422', () => {
             // rejections don't leak across runs.
             contractMock.withdraw.mockReset();
             contractMock.withdraw.staticCall.mockReset();
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-var-requires
+              const { __test } = require('../../utils/relayerQuota') as {
+                __test: { reset: () => void };
+              };
+              __test.reset();
+            } catch {
+              /* ignore */
+            }
 
             // Build the rejection shape exactly as ethers v6 surfaces
             // it. The controller's `extractRevertData` probes `.data`

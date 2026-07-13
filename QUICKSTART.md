@@ -54,23 +54,25 @@ apps/
 packages/
 ├── shared/         # Shared types
 ├── contracts-evm/  # Solidity
-├── contracts-solana/ # Anchor
-└── contracts-aptos/  # Move
+└── contracts-solana/ # Anchor
 ```
 
 ## Current Status
 
-✅ **Phase 1 Complete**
-- Consumer app with blockchain integration
-- Backend API skeleton
-- Indexer service skeleton
-- Database schema
-- Docker infrastructure
+For the authoritative, maintained breakdown of what is implemented, gated, and
+planned, see [Current status](docs/getting-started/current-status.md).
 
-📋 **Next: Phase 2**
-- Backend authentication
-- Webhook dispatcher
-- EVM event subscription
-- Stealth address scanner
+**Implemented**
+- Consumer wallet with multi-chain flows (EVM, Solana, Stellar)
+- Backend API with authentication, rate limiting, and typed validation
+- Webhook dispatcher (queue, worker, delivery, idempotent expiry events)
+- Indexer with chain event parsing and payment-confirmation detection
+- Redis-backed infrastructure and BullMQ jobs; Docker infrastructure
 
-See [ROADMAP.md](plans/ROADMAP.md) for full details.
+**Gated / not production-live**
+- Stellar SPP is testnet-only and fail-closed on mainnet pending audit and
+  operational gates
+- Solana/EVM privacy-pool contracts are scaffolding; proof verification is
+  intentionally fail-closed pending verifier work
+
+See [ROADMAP.md](plans/ROADMAP.md) for planned tracks.

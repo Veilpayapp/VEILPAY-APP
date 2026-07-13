@@ -1,6 +1,13 @@
 # Veilpay - Multi-Chain Privacy Payment Protocol
 
-A privacy-focused payment protocol supporting multiple blockchains (EVM, Solana, Aptos) with stealth addresses and zero-knowledge proofs.
+A privacy-focused, self-custody payment protocol for EVM, Solana, and Stellar.
+Stealth-address primitives and encrypted notes ship today; zero-knowledge private
+payments are delivered through the Stellar Private Payments (SPP) track, which is
+**testnet-only and fail-closed on mainnet** until audit and operational gates are met.
+
+> **Status:** See [Current status](docs/getting-started/current-status.md) for the
+> authoritative breakdown of what is implemented, gated, and planned. Do not treat
+> roadmap items as production-live.
 
 ## Quick Start
 
@@ -54,8 +61,7 @@ veilpay/
 ├── packages/
 │   ├── shared/           # Shared types and utilities
 │   ├── contracts-evm/    # Solidity contracts (Foundry)
-│   ├── contracts-solana/ # Anchor programs
-│   └── contracts-aptos/  # Move modules
+│   └── contracts-solana/ # Anchor programs
 ├── plans/                # Project documentation
 └── docker-compose.yml    # Local infrastructure
 ```
@@ -63,12 +69,16 @@ veilpay/
 ## Key Features
 
 ### Consumer App
-- Multi-chain wallet (EVM, Solana, Aptos)
-- Privacy-first design
-- Stealth addresses for all transactions
-- Zero-knowledge proof option (MAX privacy)
-- Real-time balance tracking
-- Transaction history
+- Multi-chain, self-custody wallet (EVM, Solana, Stellar)
+- Send, receive, real-time balances, and transaction history
+- Stealth-address primitives and encrypted notes
+- Fiat on-ramp/off-ramp and WalletConnect v2
+
+> Zero-knowledge private payments are provided by the Stellar Private Payments
+> (SPP) track — testnet-only and fail-closed on mainnet. The Solana/EVM
+> privacy-pool contracts are scaffolding and are **not** production-live (their
+> proof verification is intentionally fail-closed pending verifier work). See
+> [Current status](docs/getting-started/current-status.md).
 
 ### Backend API
 - Merchant registration
@@ -110,9 +120,10 @@ Anvil (EVM testnet) is included in Docker Compose:
 
 ## Documentation
 
+- [Current status](docs/getting-started/current-status.md) — implemented vs. gated vs. planned
+- [Documentation home](docs/README.md)
 - [Roadmap & Future Work](plans/ROADMAP.md)
-- [Consumer App Phase 1 Plan](plans/veilpay-consumer-phase1.md)
-- [Coordinated Fix Plan](plans/veilpay-coordinated-fix-plan.md)
+- [Security policy](SECURITY.md)
 
 ## License
 

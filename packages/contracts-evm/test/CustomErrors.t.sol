@@ -142,7 +142,8 @@ contract CustomErrorsTest is Test {
             IGroth16Verifier(address(verifier)),
             IPoseidonHasher(address(hasher)),
             feeRecipient,
-            0 // 0 bps so the recipient leg always succeeds for any positive amount
+            0, // 0 bps so the recipient leg always succeeds for any positive amount
+            0 // 0 = no max-withdraw cap (SEC-013)
         );
 
         announcer = new StealthAnnouncer();

@@ -18,16 +18,19 @@ contract DeployPool is Script {
         feeRecipient = vm.envAddress("FEE_RECIPIENT");
         address poseidonHasher = vm.envOr("POSEIDON_HASHER", address(0));
         uint256 feeBps = vm.envOr("WITHDRAW_FEE_BPS", uint256(0));
-        
+        // SEC-013: optional per-withdraw amount cap; 0 = unlimited.
+        uint256 maxWithdraw = vm.envOr("MAX_WITHDRAW_AMOUNT", uint256(0));
+
         vm.startBroadcast(deployerPrivateKey);
-        
-        VeilPool pool = new VeilPool(IGroth16Verifier(verifierAddress), IPoseidonHasher(poseidonHasher), feeRecipient, feeBps);
-        
+
+        VeilPool pool = new VeilPool(IGroth16Verifier(verifierAddress), IPoseidonHasher(poseidonHasher), feeRecipient, feeBps, maxWithdraw);
+
         vm.stopBroadcast();
-        
+
         console.log("VeilPool deployed at:", address(pool));
         console.log("Verifier:", verifierAddress);
         console.log("Fee Recipient:", feeRecipient);
+        console.log("Max withdraw (0=unlimited):", maxWithdraw);
         
         return address(pool);
     }

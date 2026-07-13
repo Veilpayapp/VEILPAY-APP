@@ -21,16 +21,18 @@ contract DeployAll is Script {
         address feeRecipient = vm.envOr("FEE_RECIPIENT", vm.addr(deployerPrivateKey));
         address poseidonHasher = vm.envOr("POSEIDON_HASHER", address(0));
         uint256 feeBps = vm.envOr("WITHDRAW_FEE_BPS", uint256(0));
-        
+        // SEC-013: optional per-withdraw amount cap; 0 = unlimited.
+        uint256 maxWithdraw = vm.envOr("MAX_WITHDRAW_AMOUNT", uint256(0));
+
         vm.startBroadcast(deployerPrivateKey);
-        
+
         Groth16Verifier verifier = new Groth16Verifier();
         console.log("Groth16Verifier deployed at:", address(verifier));
-        
+
         VeilRegistry registry = new VeilRegistry();
         console.log("VeilRegistry deployed at:", address(registry));
-        
-        VeilPool pool = new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(poseidonHasher), feeRecipient, feeBps);
+
+        VeilPool pool = new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(poseidonHasher), feeRecipient, feeBps, maxWithdraw);
         console.log("VeilPool deployed at:", address(pool));
         
         vm.stopBroadcast();

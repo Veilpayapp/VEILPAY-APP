@@ -64,6 +64,27 @@ export const RELAYER_KEY_CONFIGURED: boolean =
   process.env.RELAYER_PRIVATE_KEY.trim() !== "";
 
 /**
+ * SEC-013: optional relayer-side ceiling on the withdraw `amount`, in the
+ * token's smallest unit. Defense-in-depth in front of the pool's own
+ * `MAX_WITHDRAW_AMOUNT` — an over-cap request is rejected with HTTP 400
+ * before any signer construction, simulation, or gas spend.
+ *
+ * Source: `RELAYER_MAX_WITHDRAW_AMOUNT` env var, a base-10 positive integer.
+ * Unset / empty / non-positive / unparseable ⇒ `null` (no relayer cap), which
+ * preserves the pre-SEC-013 behavior. This is a coarse cross-token ceiling by
+ * design; the authoritative per-token cap lives on-chain in `VeilPool`.
+ */
+export const RELAYER_MAX_WITHDRAW_AMOUNT: bigint | null = (() => {
+  const raw = (process.env.RELAYER_MAX_WITHDRAW_AMOUNT ?? "").trim();
+  if (raw === "" || !/^[1-9][0-9]*$/.test(raw)) return null;
+  try {
+    return BigInt(raw);
+  } catch {
+    return null;
+  }
+})();
+
+/**
  * Per-request timeout for the on-chain simulate + broadcast path.
  *
  * Validates: Requirements 6.5, 8.5.
@@ -95,6 +116,7 @@ export const VEILPOOL_ABI = [
   "error InvalidProof()",
   "error NullifierAlreadySpent()",
   "error TreeFull()",
+  "error AmountExceedsMax()",
 ] as const;
 
 const VEILPOOL_INTERFACE = new ethers.Interface(VEILPOOL_ABI as readonly string[]);
@@ -270,6 +292,20 @@ export async function handleWithdraw(
 
   if (!RELAYER_VEILPOOL_ALLOWLIST.has(body.contractAddress.toLowerCase())) {
     res.status(400).json({ error: "contract not allowlisted" });
+    return;
+  }
+
+  // SEC-013: reject over-cap withdrawals before any signer / simulation / gas
+  // spend. `body.amount` is schema-validated as a positive base-10 integer, so
+  // BigInt() cannot throw here. `null` cap ⇒ check skipped.
+  if (
+    RELAYER_MAX_WITHDRAW_AMOUNT !== null &&
+    BigInt(body.amount) > RELAYER_MAX_WITHDRAW_AMOUNT
+  ) {
+    res.status(400).json({
+      error: "amount exceeds relayer withdraw cap",
+      code: "AMOUNT_EXCEEDS_CAP",
+    });
     return;
   }
 

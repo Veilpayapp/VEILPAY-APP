@@ -3,7 +3,7 @@ pragma solidity ^0.8.25;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {VeilPool, InvalidFeeRecipient, InvalidFeeBps, InvalidVerifier, InvalidHasher} from "../src/VeilPool.sol";
+import {VeilPool, InvalidFeeRecipient, InvalidFeeBps, InvalidVerifier, InvalidHasher, AmountExceedsMax} from "../src/VeilPool.sol";
 import {ToggleableVerifier, MockPoseidonHasher, MockERC20} from "./CustomErrors.t.sol";
 import {IGroth16Verifier} from "../src/IGroth16Verifier.sol";
 import {IPoseidonHasher} from "../src/IPoseidonHasher.sol";
@@ -28,7 +28,8 @@ contract VeilPoolTest is Test {
             IGroth16Verifier(address(verifier)),
             IPoseidonHasher(address(hasher)),
             feeRecipient,
-            WITHDRAW_FEE_BPS
+            WITHDRAW_FEE_BPS,
+            0 // 0 = no max-withdraw cap (SEC-013); covered explicitly below
         );
 
         token.mint(address(this), 1_000_000);
@@ -63,6 +64,43 @@ contract VeilPoolTest is Test {
 
         assertEq(token.balanceOf(feeRecipient) - feeRecipientBefore, expectedFee);
         assertEq(token.balanceOf(recipient) - recipientBefore, expectedPayout);
+    }
+
+    /// SEC-013: `MAX_WITHDRAW_AMOUNT == 0` is the unlimited sentinel. The pool
+    /// built in `setUp` uses it, so the 10_000 withdraw in
+    /// `testDepositAndWithdraw` already exercises the uncapped path.
+    function testMaxWithdrawZeroIsUnlimited() public view {
+        assertEq(pool.MAX_WITHDRAW_AMOUNT(), 0);
+    }
+
+    /// SEC-013: a pool built with a non-zero cap rejects any withdraw whose
+    /// `amount` exceeds the ceiling — before proof verification, so the gate
+    /// holds even with a passing verifier — and permits a withdraw exactly at
+    /// the ceiling.
+    function testWithdrawRespectsMaxWithdrawCap() public {
+        uint256 cap = 5_000;
+        VeilPool capped = new VeilPool(
+            IGroth16Verifier(address(verifier)),
+            IPoseidonHasher(address(hasher)),
+            feeRecipient,
+            WITHDRAW_FEE_BPS,
+            cap
+        );
+        assertEq(capped.MAX_WITHDRAW_AMOUNT(), cap);
+
+        token.approve(address(capped), type(uint256).max);
+        capped.deposit(keccak256("c"), address(token), 10_000);
+        bytes32 root = capped.roots(capped.currentRootIndex());
+        bytes memory proof = new bytes(256);
+
+        // Above the cap: reverts with AmountExceedsMax even though the shared
+        // verifier mock is set to pass (setUp calls verifier.setOk(true)).
+        vm.expectRevert(AmountExceedsMax.selector);
+        capped.withdraw(keccak256("n1"), proof, root, recipient, address(token), cap + 1);
+
+        // Exactly at the cap: succeeds and marks the nullifier spent.
+        capped.withdraw(keccak256("n2"), proof, root, recipient, address(token), cap);
+        assertEq(capped.nullifierSpent(keccak256("n2")), true);
     }
 
     function testDepositRevertsWhenPaused() public {
@@ -101,16 +139,16 @@ contract VeilPoolTest is Test {
 
     function testConstructorReverts() public {
         vm.expectRevert(InvalidVerifier.selector);
-        new VeilPool(IGroth16Verifier(address(0)), IPoseidonHasher(address(hasher)), feeRecipient, WITHDRAW_FEE_BPS);
+        new VeilPool(IGroth16Verifier(address(0)), IPoseidonHasher(address(hasher)), feeRecipient, WITHDRAW_FEE_BPS, 0);
 
         vm.expectRevert(InvalidHasher.selector);
-        new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(address(0)), feeRecipient, WITHDRAW_FEE_BPS);
+        new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(address(0)), feeRecipient, WITHDRAW_FEE_BPS, 0);
 
         vm.expectRevert(InvalidFeeRecipient.selector);
-        new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(address(hasher)), address(0), WITHDRAW_FEE_BPS);
+        new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(address(hasher)), address(0), WITHDRAW_FEE_BPS, 0);
 
         vm.expectRevert(InvalidFeeBps.selector);
-        new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(address(hasher)), feeRecipient, 10_001);
+        new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(address(hasher)), feeRecipient, 10_001, 0);
     }
 
     function testUnpause() public {

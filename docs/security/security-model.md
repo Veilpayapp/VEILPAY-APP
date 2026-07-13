@@ -19,3 +19,7 @@ Veilpay is designed around explicit trust boundaries.
 ## Chain boundary
 
 The underlying chain is the source of transaction finality. The app tracks confirmation through chain-specific status polling rather than assuming a single client-side screen is authoritative.
+
+## Privacy / ZK boundary
+
+Zero-knowledge pools and circuits introduce an additional trust surface: ceremony integrity (SEC-008) and independent review (SEC-011). Until those gates pass, mainnet privacy features stay fail-closed or explicitly labeled testnet. See [Ceremony and external audit gates](ceremony-and-audit-gates.md).

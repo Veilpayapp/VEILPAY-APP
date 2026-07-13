@@ -1,5 +1,0 @@
-﻿TargetExisted=False
-TargetRemoved=False
-LeftoverCount=1
-LEFTOVERS:
-C:\Users\vahi1\AppData\Roaming\Kilo-Code

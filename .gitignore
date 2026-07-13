@@ -5,13 +5,18 @@ node_modules/
 # Build outputs
 dist/
 build/
+build-artifacts/
 *.tsbuildinfo
+*.apk
+*.aab
 
-# Environment files
+# Environment files / secrets backups
 .env
 .env.local
 .env.*.local
 !.env.example
+env_backup/
+env_backup.zip
 
 # IDE
 .idea/
@@ -21,15 +26,35 @@ build/
 
 # Agents / Local Tools
 .agents/anthropics-skills/
+.local/
+.kilo/
+.kilocode/
+.kiro/
+.continue/
+.agent/
+.audit-evidence/
 
 # OS
 .DS_Store
 Thumbs.db
+$null
+nul
 
-# Logs
+# Logs & one-off dump files (never commit)
 *.log
 npm-debug.log*
 pnpm-debug.log*
+eslint-*.txt
+lint-errors.txt
+kilo_result.txt
+tmp_*.diff
+react-doctor-report*.json
+figma-dump.json
+veilpay-docs.zip
+
+# Local media scratch (not product assets)
+New logo/
+Spp screenshots/
 
 # Testing
 coverage/
@@ -57,4 +82,3 @@ target/
 # Local blockchain data
 anvil-data/
 solana-test-validator/
-nul

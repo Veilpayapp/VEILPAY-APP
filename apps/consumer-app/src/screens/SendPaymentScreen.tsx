@@ -40,6 +40,7 @@ import {
   privacyAssetToPaymentToken,
 } from '../constants/privacyAssets';
 import { getLocalPrivateBalance } from '../utils/stellarSpp';
+import { useSecureScreen } from '../hooks/useSecureScreen';
 
 type SendPaymentScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SendPayment'>;
 type SendPaymentScreenRoute = RouteProp<RootStackParamList, 'SendPayment'>;
@@ -51,6 +52,7 @@ interface SendPaymentScreenProps {
 }
 
 export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps) {
+  useSecureScreen('SendPayment');
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = useStyles(themeStyles);
@@ -503,6 +505,8 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
       amount: finalCryptoAmount,
       memo: memo.trim(),
       token: selectedToken.symbol,
+      tokenAddress: selectedToken.address,
+      tokenDecimals: selectedToken.decimals,
       preferredPrivacyLevel: preferPrivate ? 'private' : undefined,
     });
   };

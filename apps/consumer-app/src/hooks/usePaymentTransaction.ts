@@ -77,6 +77,7 @@ import {
 } from '../utils/secureSigner';
 import { signAndSendSolanaTransaction } from '../utils/solanaSigner';
 import { signAndSendStellarTransaction } from '../utils/stellarSigner';
+import { resolvePublicTokenMeta } from '../constants/publicTokenCatalog';
 import { validateAddress } from '../utils/validation';
 import {
   TransactionError,
@@ -652,12 +653,25 @@ export function usePaymentTransaction({
           undefined
         );
       } else if (activeChain?.type === 'xlm') {
+        // Native XLM or classic asset (e.g. Circle USDC): issuer in tokenAddress.
+        const code =
+          token && token.toUpperCase() !== 'XLM' && token.toUpperCase() !== 'PXLM'
+            ? token.toUpperCase()
+            : undefined;
+        const issuer =
+          code &&
+          (tokenAddress ||
+            resolvePublicTokenMeta(activeNetworkKey, code)?.address ||
+            undefined);
         result = await signAndSendStellarTransaction(
           {
             to: recipient,
             value: parsedAmount.toString(),
             // Stellar only supports short text memos.
             data: memo ? memo.slice(0, 28) : undefined,
+            tokenAddress: issuer || undefined,
+            tokenDecimals,
+            tokenCode: code,
           },
           activeNetworkKey,
           undefined

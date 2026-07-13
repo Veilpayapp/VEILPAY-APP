@@ -11,8 +11,11 @@ export interface PaymentToken {
   usdPrice: number;
   chainTypes: ChainTypeKey[];
   icon?: string;
+  /** EVM contract, Solana mint, or Stellar classic **issuer** G… key. */
   address?: string;
   decimals?: number;
+  /** Optional secondary line (e.g. truncated Stellar issuer). */
+  subtitle?: string;
   /**
    * When true, this row is a privacy-pool asset (e.g. Private XLM / SPP),
    * not a transparent chain token. Home balance/actions adapt when selected.

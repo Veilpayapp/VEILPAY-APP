@@ -20,8 +20,10 @@ import { Icon } from '../components/Icon';
 import Toast, { useToast } from '../components/Toast';
 import { setClipboardString } from '../utils/clipboard';
 import { SecurityWarningModal } from '../components/SecurityWarningModal';
+import { useSecureScreen } from '../hooks/useSecureScreen';
 
 export function BackupWalletScreen({ navigation }: any) {
+  useSecureScreen('BackupWallet');
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const toast = useToast();

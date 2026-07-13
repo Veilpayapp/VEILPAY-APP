@@ -117,6 +117,9 @@ export type RootStackParamList = {
     amount: string;
     memo?: string;
     token: string;
+    /** Stellar classic asset issuer / EVM ERC-20 contract when non-native. */
+    tokenAddress?: string;
+    tokenDecimals?: number;
     /** Pre-select when known (e.g. home privacy mode / pXLM token). */
     preferredPrivacyLevel?: "standard" | "stealth" | "max" | "private";
   };
@@ -125,6 +128,8 @@ export type RootStackParamList = {
     amount: string;
     memo?: string;
     token: string;
+    tokenAddress?: string;
+    tokenDecimals?: number;
     privacyLevel: "standard" | "stealth" | "max" | "private";
     /** SPP op when privacyLevel is private (default transfer). */
     sppOp?: "shield" | "transfer" | "unshield";

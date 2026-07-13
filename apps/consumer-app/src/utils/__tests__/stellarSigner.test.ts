@@ -1,6 +1,8 @@
 import {
   signAndSendStellarTransaction,
   computeStellarMinReserveXlm,
+  establishStellarTrustline,
+  formatStellarIssuerShort,
 } from '../stellarSigner';
 import { getStoredMnemonic, TransactionError } from '../transactions';
 
@@ -13,34 +15,68 @@ jest.mock('../transactions', () => ({
   NETWORKS: { stellar: { symbol: 'XLM', chainId: 'public' } }
 }));
 
-jest.mock('stellar-sdk', () => ({
-  Keypair: {
-    fromRawEd25519Seed: jest.fn().mockReturnValue({ publicKey: () => 'PUBKEY', secret: () => 'SECRET' })
-  },
-  Server: class {
-    loadAccount = jest.fn().mockResolvedValue({ 
-      sequence: '1',
-      balances: [{ asset_type: 'native', balance: '10.0' }]
-    });
-    submitTransaction = jest.fn().mockResolvedValue({ hash: 'txHash' });
-  },
-  Account: class {
-    constructor() {}
-  },
-  TransactionBuilder: class {
-    constructor() {}
-    addOperation() { return this; }
-    setTimeout() { return this; }
-    addMemo() { return this; }
-    build() { return { sign: jest.fn(), toXDR: jest.fn().mockReturnValue('mock-xdr') }; }
-  },
-  Operation: {
-    payment: jest.fn(),
-    createAccount: jest.fn()
-  },
-  Asset: { native: jest.fn() },
-  Networks: { PUBLIC: 'PUBLIC' }
-}));
+jest.mock('stellar-sdk', () => {
+  class AssetMock {
+    code: string;
+    issuer: string;
+    constructor(code?: string, issuer?: string) {
+      this.code = code || 'XLM';
+      this.issuer = issuer || '';
+    }
+    static native() {
+      return new AssetMock();
+    }
+    isNative() {
+      return !this.issuer;
+    }
+    getCode() {
+      return this.code;
+    }
+    getIssuer() {
+      return this.issuer;
+    }
+  }
+  return {
+    Keypair: {
+      fromRawEd25519Seed: jest.fn().mockReturnValue({
+        publicKey: () => 'PUBKEY',
+        secret: () => 'SECRET',
+      }),
+    },
+    Server: class {
+      loadAccount = jest.fn().mockResolvedValue({
+        sequence: '1',
+        balances: [{ asset_type: 'native', balance: '10.0' }],
+      });
+      submitTransaction = jest.fn().mockResolvedValue({ hash: 'txHash' });
+    },
+    Account: class {
+      constructor() {}
+    },
+    TransactionBuilder: class {
+      constructor() {}
+      addOperation() {
+        return this;
+      }
+      setTimeout() {
+        return this;
+      }
+      addMemo() {
+        return this;
+      }
+      build() {
+        return { sign: jest.fn(), toXDR: jest.fn().mockReturnValue('mock-xdr') };
+      }
+    },
+    Operation: {
+      payment: jest.fn(),
+      createAccount: jest.fn(),
+      changeTrust: jest.fn(),
+    },
+    Asset: AssetMock,
+    Networks: { PUBLIC: 'PUBLIC', TESTNET: 'TESTNET' },
+  };
+});
 
 jest.mock('@scure/bip39', () => ({
   mnemonicToSeed: jest.fn().mockResolvedValue(new Uint8Array(64))
@@ -154,5 +190,101 @@ describe('stellarSigner', () => {
     const res = await signAndSendStellarTransaction({ to: VALID_STELLAR_ADDRESS, value: '1' } as any, 'stellar');
     expect(res.hash).toBe('txHash');
     expect(res.chainId).toBe(1);
+  });
+
+  it('sends USDC when tokenCode + tokenAddress (issuer) are set', async () => {
+    const { Operation } = require('stellar-sdk');
+    (getStoredMnemonic as jest.Mock).mockResolvedValue(['test', 'seed']);
+    const issuer = 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN';
+
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/accounts/')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              sequence: '1',
+              subentry_count: 1,
+              balances: [
+                { asset_type: 'native', balance: '5.0' },
+                {
+                  asset_type: 'credit_alphanum4',
+                  asset_code: 'USDC',
+                  asset_issuer: issuer,
+                  balance: '50.0',
+                },
+              ],
+            }),
+        });
+      }
+      if (url.includes('/transactions')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ hash: 'usdc-tx' }),
+        });
+      }
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    const res = await signAndSendStellarTransaction(
+      {
+        to: VALID_STELLAR_ADDRESS,
+        value: '10',
+        tokenAddress: issuer,
+        tokenCode: 'USDC',
+      } as any,
+      'stellar'
+    );
+    expect(res.hash).toBe('usdc-tx');
+    expect(Operation.payment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        destination: VALID_STELLAR_ADDRESS,
+        amount: '10',
+      })
+    );
+    const assetArg = (Operation.payment as jest.Mock).mock.calls[0][0].asset;
+    expect(assetArg.isNative()).toBe(false);
+    expect(assetArg.getCode()).toBe('USDC');
+    expect(assetArg.getIssuer()).toBe(issuer);
+  });
+
+  it('establishStellarTrustline submits changeTrust', async () => {
+    const { Operation } = require('stellar-sdk');
+    (getStoredMnemonic as jest.Mock).mockResolvedValue(['test', 'seed']);
+    const issuer = 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN';
+
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('/accounts/')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              sequence: '1',
+              subentry_count: 0,
+              balances: [{ asset_type: 'native', balance: '10.0' }],
+            }),
+        });
+      }
+      if (url.includes('/transactions')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ hash: 'trust-tx' }),
+        });
+      }
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    const res = await establishStellarTrustline({
+      chainKey: 'stellar',
+      assetCode: 'USDC',
+      assetIssuer: issuer,
+    });
+    expect(res.hash).toBe('trust-tx');
+    expect(Operation.changeTrust).toHaveBeenCalled();
+  });
+
+  it('formatStellarIssuerShort truncates G addresses', () => {
+    const issuer = 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN';
+    expect(formatStellarIssuerShort(issuer)).toMatch(/^GA5Z…KZVN$/);
   });
 });

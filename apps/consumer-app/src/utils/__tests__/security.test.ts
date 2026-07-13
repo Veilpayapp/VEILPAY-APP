@@ -78,21 +78,52 @@ describe('Security Module', () => {
   });
 
   describe('initializePinning', () => {
-    it('initializes SSL pinning', async () => {
+    const REAL_PIN = 'kO0lZ7q2bYy1r3jVn8pWc5tX9dQ2fH4uL6mN8oP0aB4=';
+
+    it('initializes SSL pinning when real pins are configured', async () => {
+      process.env.EXPO_PUBLIC_SSL_PINS = JSON.stringify({ 'api.veilpay.app': [REAL_PIN] });
       const reactNativeSslPinning = require('react-native-ssl-public-key-pinning');
       reactNativeSslPinning.initializeSslPinning = jest.fn().mockResolvedValue(true);
       await expect(initializePinning()).resolves.not.toThrow();
       expect(reactNativeSslPinning.initializeSslPinning).toHaveBeenCalled();
+      delete process.env.EXPO_PUBLIC_SSL_PINS;
     });
 
-    it('catches and logs errors during initialization', async () => {
+    it('does NOT enable pinning when no real pins are configured in __DEV__', async () => {
+      delete process.env.EXPO_PUBLIC_SSL_PINS;
+      const reactNativeSslPinning = require('react-native-ssl-public-key-pinning');
+      reactNativeSslPinning.initializeSslPinning = jest.fn().mockResolvedValue(true);
+      // Jest/RN tests run with __DEV__ === true → warn and continue, no throw.
+      await expect(initializePinning()).resolves.not.toThrow();
+      expect(reactNativeSslPinning.initializeSslPinning).not.toHaveBeenCalled();
+    });
+
+    it('ignores placeholder (dummy) pins in __DEV__', async () => {
+      process.env.EXPO_PUBLIC_SSL_PINS = JSON.stringify({
+        'api.veilpay.app': ['AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='],
+      });
+      const reactNativeSslPinning = require('react-native-ssl-public-key-pinning');
+      reactNativeSslPinning.initializeSslPinning = jest.fn().mockResolvedValue(true);
+      await expect(initializePinning()).resolves.not.toThrow();
+      expect(reactNativeSslPinning.initializeSslPinning).not.toHaveBeenCalled();
+      delete process.env.EXPO_PUBLIC_SSL_PINS;
+    });
+
+    it('in __DEV__, logs and continues if pin init throws (dev fail-open)', async () => {
+      process.env.EXPO_PUBLIC_SSL_PINS = JSON.stringify({ 'api.veilpay.app': [REAL_PIN] });
       const reactNativeSslPinning = require('react-native-ssl-public-key-pinning');
       reactNativeSslPinning.initializeSslPinning = jest.fn().mockRejectedValue(new Error('Pinning error'));
       const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      // Jest/RN runs with __DEV__ === true → warn, do not throw.
       await expect(initializePinning()).resolves.not.toThrow();
       expect(consoleWarnSpy).toHaveBeenCalled();
       consoleWarnSpy.mockRestore();
+      delete process.env.EXPO_PUBLIC_SSL_PINS;
     });
+
+    // Production (non-__DEV__) rethrows when pins are configured but init fails.
+    // That path is not exercised under Jest's __DEV__=true; covered by the
+    // fail-closed source branch and release boot smoke.
   });
 
   // ─── Device Security ─────────────────────────────────────────────────────────

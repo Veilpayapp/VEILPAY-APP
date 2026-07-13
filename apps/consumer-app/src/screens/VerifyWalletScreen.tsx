@@ -24,6 +24,7 @@ import { SovereignButton } from "../components/SovereignButton";
 import Toast, { useToast } from '../components/Toast';
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { storeMnemonic, clearStoredMnemonic } from '../utils/transactions';
+import { useSecureScreen } from '../hooks/useSecureScreen';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
@@ -38,6 +39,7 @@ interface VerifyWalletScreenProps {
 }
 
 export function VerifyWalletScreen({ navigation, route }: VerifyWalletScreenProps) {
+  useSecureScreen('VerifyWallet');
   const { seedWords, derivedAddress } = route.params;
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);

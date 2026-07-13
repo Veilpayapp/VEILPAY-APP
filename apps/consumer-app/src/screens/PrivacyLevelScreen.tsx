@@ -41,10 +41,18 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const { defaultPrivacyLevel, setPrivacyLevel } = useSettingsStore();
-  const { options, clamp, isEnabled } = usePrivacyOptions();
   const toast = useToast();
 
   const preferredFromRoute = route?.params?.preferredPrivacyLevel;
+  const recipient = route?.params?.recipient || '';
+  const amount = route?.params?.amount || '';
+  const memo = route?.params?.memo || '';
+  const token = route?.params?.token || 'ETH';
+  const tokenAddress = route?.params?.tokenAddress;
+  const tokenDecimals = route?.params?.tokenDecimals;
+
+  // Token-aware: USDC (etc.) cannot use SPP Private — options clamp accordingly.
+  const { options, clamp, isEnabled } = usePrivacyOptions(token);
 
   const initialLevel = useMemo<PrivacyLevel>(
     () => clamp(preferredFromRoute ?? defaultPrivacyLevel),
@@ -55,11 +63,6 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
   const selectedLevel: PrivacyLevel = isEnabled(levelSelection)
     ? levelSelection
     : clamp(levelSelection);
-
-  const recipient = route?.params?.recipient || '';
-  const amount = route?.params?.amount || '';
-  const memo = route?.params?.memo || '';
-  const token = route?.params?.token || 'ETH';
 
   useEffect(() => {
     // When chain options change (user switched network mid-flow), re-clamp.
@@ -108,6 +111,8 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
       amount,
       memo,
       token,
+      tokenAddress,
+      tokenDecimals,
       privacyLevel: selectedLevel,
     });
   };
@@ -170,10 +175,16 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
                       <View
                         style={[styles.optionIconBox, selected && styles.optionIconBoxActive]}
                       >
+                        {/*
+                          Icon chip uses bgPrimary when selected. Pair with textPrimary
+                          (white-on-black in dark, dark-on-ivory in light). Never use
+                          textOnPrimary here — in dark theme it is near-black and made
+                          private-lock invisible on the dark chip.
+                        */}
                         <Icon
                           name={option.iconName}
                           size={24}
-                          color={selected ? colors.textOnPrimary : colors.textPrimary}
+                          color={colors.textPrimary}
                         />
                       </View>
                       <View style={styles.optionHeaderText}>
@@ -200,7 +211,8 @@ export function PrivacyLevelScreen({ navigation, route }: PrivacyLevelScreenProp
                       </View>
                       {selected && (
                         <View style={styles.checkmarkBox}>
-                          <Icon name="success" size={20} color={colors.textPrimary} />
+                          {/* Dark check on light selected card */}
+                          <Icon name="success" size={20} color={colors.bgPrimary} />
                         </View>
                       )}
                     </View>

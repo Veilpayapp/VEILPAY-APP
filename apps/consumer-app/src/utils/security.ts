@@ -20,6 +20,7 @@ const SCREENS_WITH_ANTI_SCREENSHOT = [
   'ExportPrivateKey',
   'CreateWallet',
   'ImportWallet',
+  'VerifyWallet',
   'WalletConnect',
   'SendPayment',
   'BackupShardRestore'
@@ -27,35 +28,87 @@ const SCREENS_WITH_ANTI_SCREENSHOT = [
 
 // ─── Certificate Pinning ─────────────────────────────────────────────────────
 
-export async function initializePinning() {
+/**
+ * A public-key hash is considered a usable pin only if it is a real,
+ * non-placeholder SPKI sha256/base64 value. The historical dummy value was a
+ * run of 'A' characters ("AAAA…="), which both provides a false sense of
+ * security and can silently break connectivity if enforced. We reject any such
+ * placeholder so pinning is only ever enabled with genuine pins.
+ */
+function isRealPin(hash: string): boolean {
+  if (typeof hash !== 'string') return false;
+  const trimmed = hash.trim();
+  if (trimmed.length < 40) return false; // sha256/base64 is 44 chars
+  // Reject an all-same-character placeholder like "AAAA…=".
+  const body = trimmed.replace(/=+$/, '');
+  return !/^(.)\1+$/.test(body);
+}
+
+/**
+ * Reads pinning configuration from the environment at bundle time.
+ * Format: EXPO_PUBLIC_SSL_PINS = '{"api.veilpay.app":["<spki-sha256-base64>"]}'
+ * Returns a validated map containing only real (non-placeholder) pins.
+ */
+export function getConfiguredPins(): Record<string, string[]> {
+  const raw = process.env.EXPO_PUBLIC_SSL_PINS as string | undefined;
+  if (!raw) return {};
+  let parsed: unknown;
   try {
-    await initializeSslPinning({
-      'api.binance.com': {
-        includeSubdomains: true,
-        publicKeyHashes: ['AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='],
-      },
-      'stream.binance.com': {
-        includeSubdomains: true,
-        publicKeyHashes: ['AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='],
-      },
-      'api.coincap.io': {
-        includeSubdomains: true,
-        publicKeyHashes: ['AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='],
-      },
-      // NOTE: The mobile client no longer calls Alchemy directly — all RPC
-      // traffic flows through the VeilPay backend proxy. Pin the backend
-      // domain instead once real SPKI hashes are available.
-      'veilpay-backend.com': {
-        includeSubdomains: true,
-        publicKeyHashes: ['AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='],
-      }
-    });
-    // SECURITY TODO: All publicKeyHashes above are dummy placeholders.
-    // Replace with real SPKI hashes (sha256/base64) before production rollout,
-    // and add the actual backend API domain (e.g. api.veilpay.app).
-    console.log('[Security] SSL Pinning initialized with dummy hashes');
+    parsed = JSON.parse(raw);
+  } catch {
+    console.warn('[Security] EXPO_PUBLIC_SSL_PINS is not valid JSON — pinning disabled.');
+    return {};
+  }
+  if (!parsed || typeof parsed !== 'object') return {};
+
+  const result: Record<string, string[]> = {};
+  for (const [host, hashes] of Object.entries(parsed as Record<string, unknown>)) {
+    if (!Array.isArray(hashes)) continue;
+    const realHashes = hashes.filter((h): h is string => typeof h === 'string' && isRealPin(h));
+    if (realHashes.length > 0) {
+      result[host] = realHashes;
+    }
+  }
+  return result;
+}
+
+export async function initializePinning() {
+  const pins = getConfiguredPins();
+
+  if (Object.keys(pins).length === 0) {
+    // No real pins configured. Do NOT enable pinning with placeholder hashes —
+    // that gives a false sense of security and can break TLS.
+    // Release builds fail hard so a misconfigured binary cannot ship fail-open.
+    const msg =
+      '[Security] SSL pinning is disabled: no real pins in EXPO_PUBLIC_SSL_PINS.';
+    if (__DEV__) {
+      console.warn(msg);
+      return;
+    }
+    throw new Error(
+      `${msg} Configure production SPKI hashes (EXPO_PUBLIC_SSL_PINS) before release.`
+    );
+  }
+
+  try {
+    const domains: Record<string, { includeSubdomains: boolean; publicKeyHashes: string[] }> = {};
+    for (const [host, hashes] of Object.entries(pins)) {
+      domains[host] = { includeSubdomains: true, publicKeyHashes: hashes };
+    }
+    await initializeSslPinning(domains);
+    console.log(`[Security] SSL pinning enabled for ${Object.keys(domains).length} domain(s).`);
   } catch (error) {
-    console.warn('[Security] SSL Pinning initialization failed:', error);
+    // Release builds must not continue with pins configured-but-not-applied
+    // (fail-open MitM window). Dev may continue so local tooling still boots.
+    const msg = '[Security] SSL Pinning initialization failed';
+    if (__DEV__) {
+      console.warn(msg + ':', error);
+      return;
+    }
+    console.error(msg + ':', error);
+    throw error instanceof Error
+      ? error
+      : new Error(`${msg}: ${String(error)}`);
   }
 }
 
@@ -731,7 +784,7 @@ export function getSecurityAuditChecklist(): Array<{
       code: 'AUD-008',
       category: 'network',
       description: 'All RPC endpoints use HTTPS with pinned certificates',
-      currentStatus: 'implemented',
+      currentStatus: 'partial',
       recommendedDepth: 'review',
       severity: 'high',
     },
@@ -771,7 +824,7 @@ export function getSecurityAuditChecklist(): Array<{
       code: 'AUD-013',
       category: 'infrastructure',
       description: 'Certificate pinning for all API calls (AWS/Gateway native SSL)',
-      currentStatus: 'implemented',
+      currentStatus: 'partial',
       recommendedDepth: 'pen_test',
       severity: 'high',
     },

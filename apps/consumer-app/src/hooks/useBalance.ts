@@ -11,7 +11,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWalletStore } from '../stores/walletStore';
-import { fetchNativeBalance, fetchERC20Balances, type BalanceResult, type TokenBalance } from '../utils/balanceFetcher';
+import {
+  fetchNativeBalance,
+  fetchTokenBalancesForChain,
+  type BalanceResult,
+  type TokenBalance,
+} from '../utils/balanceFetcher';
 import { getTokenMarketQuote } from '../utils/marketData';
 import { getFiatExchangeRate } from '../utils/priceFeed';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -91,7 +96,7 @@ export function useBalance(autoRefresh: boolean = true): UseBalanceResult {
       // Fetch native balance and token balances in parallel
       const [native, tokens, fiatRate] = await Promise.all([
         fetchNativeBalance(address, chainKey),
-        activeChain.type === 'evm' ? fetchERC20Balances(address, chainKey) : Promise.resolve([]),
+        fetchTokenBalancesForChain(address, chainKey),
         getFiatExchangeRate(nativeCurrency || 'USD'),
       ]);
 
@@ -180,18 +185,28 @@ export function useTokenBalances(chainKey?: string): {
   error: string | null;
   refresh: () => Promise<void>;
 } {
-  const { address, activeChain } = useWalletStore();
+  const { address, activeChain, allChains } = useWalletStore();
   const [tokens, setTokens] = useState<TokenBalance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const targetChain = chainKey || activeChain?.key;
-  const chainType = activeChain?.type;
 
   const refresh = useCallback(async () => {
-    // Clear balances whenever inputs are missing or the chain isn't EVM
-    // (ERC20 balances only apply to EVM chains).
-    if (!address || !targetChain || chainType !== 'evm') {
+    if (!address || !targetChain) {
+      setTokens([]);
+      return;
+    }
+
+    // Resolve type for the *target* chain (not only activeChain) so the token
+    // selector can load Stellar USDC / Solana SPL while browsing another key.
+    const chains =
+      typeof allChains === 'function' ? allChains() : [];
+    const cfg =
+      chains.find((c) => c.key === targetChain) ||
+      (activeChain?.key === targetChain ? activeChain : null);
+    const chainType = cfg?.type || activeChain?.type;
+    if (!chainType || (chainType !== 'evm' && chainType !== 'svm' && chainType !== 'xlm')) {
       setTokens([]);
       return;
     }
@@ -200,7 +215,7 @@ export function useTokenBalances(chainKey?: string): {
     setError(null);
 
     try {
-      const fetchedTokens = await fetchERC20Balances(address, targetChain);
+      const fetchedTokens = await fetchTokenBalancesForChain(address, targetChain);
       setTokens(fetchedTokens);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch token balances';
@@ -209,7 +224,7 @@ export function useTokenBalances(chainKey?: string): {
     } finally {
       setIsLoading(false);
     }
-  }, [address, targetChain, chainType]);
+  }, [address, activeChain, allChains, targetChain]);
   useEffect(() => {
     refresh();
   }, [refresh]);

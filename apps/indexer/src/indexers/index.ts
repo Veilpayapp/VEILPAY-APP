@@ -189,15 +189,6 @@ export class SolanaIndexer {
   }
 }
 
-export class AptosIndexer {
-  private chainKey = "aptos";
-
-  indexNewBlocks(): IndexedEvent[] {
-    console.warn(`[${this.chainKey}] Aptos indexing not yet implemented`);
-    return [];
-  }
-}
-
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export async function runIndexers() {
   const evmChains = ["sepolia"];
@@ -209,16 +200,9 @@ export async function runIndexers() {
     }
   }
 
-  // Solana / Aptos indexers are currently no-op stubs that return
-  // synchronously. `await` on a non-Promise is harmless at runtime but
-  // the rule rightly flags it; call them directly instead.
+  // Solana indexer is currently a no-op stub that returns synchronously.
   if (config.indexSolana) {
     const solanaIndexer = new SolanaIndexer();
     solanaIndexer.indexNewBlocks();
-  }
-
-  if (config.indexAptos) {
-    const aptosIndexer = new AptosIndexer();
-    aptosIndexer.indexNewBlocks();
   }
 }

@@ -1,7 +1,6 @@
 import {
   addressSchema,
   solanaAddressSchema,
-  aptosAddressSchema,
   txHashSchema,
   solanaTxHashSchema,
   tokenAmountSchema,
@@ -63,22 +62,6 @@ describe('solanaAddressSchema', () => {
 
   it('rejects empty string', () => {
     expect(() => solanaAddressSchema.parse('')).toThrow();
-  });
-});
-
-// ─── aptosAddressSchema ────────────────────────────────────────────────────────
-
-describe('aptosAddressSchema', () => {
-  it('accepts valid Aptos address (0x + 64 hex chars)', () => {
-    expect(() => aptosAddressSchema.parse('0x' + 'a'.repeat(64))).not.toThrow();
-  });
-
-  it('rejects Aptos address too short', () => {
-    expect(() => aptosAddressSchema.parse('0x' + 'a'.repeat(32))).toThrow();
-  });
-
-  it('rejects Aptos address without 0x prefix', () => {
-    expect(() => aptosAddressSchema.parse('a'.repeat(64))).toThrow();
   });
 });
 

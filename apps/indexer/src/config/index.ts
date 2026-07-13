@@ -9,7 +9,6 @@ const envSchema = z.object({
   REDIS_URL: z.string().default("redis://localhost:6379"),
   WEBHOOK_SIGNING_SECRET: z.string().min(16).default(DEV_WEBHOOK_SECRET),
   INDEX_SOLANA: z.string().optional(),
-  INDEX_APTOS: z.string().optional(),
 });
 
 const env = envSchema.parse(process.env);
@@ -32,5 +31,4 @@ export const config = {
   redisUrl: env.REDIS_URL,
   webhookSigningSecret: env.WEBHOOK_SIGNING_SECRET,
   indexSolana: env.INDEX_SOLANA === "true",
-  indexAptos: env.INDEX_APTOS === "true",
 };

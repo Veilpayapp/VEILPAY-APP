@@ -50,5 +50,13 @@ describe("chains.ts", () => {
       expect(mainnet?.spp).toBeUndefined();
     });
   });
+
+  describe("Aptos removed", () => {
+    it("does not include aptos or mvm chain types", () => {
+      expect(getChainByKey("aptos")).toBeUndefined();
+      expect(SUPPORTED_CHAINS.every((c) => c.key !== "aptos")).toBe(true);
+      expect(SUPPORTED_CHAINS.every((c) => (c.type as string) !== "mvm")).toBe(true);
+    });
+  });
 });
 

@@ -51,6 +51,8 @@
 - [Security model](security/security-model.md)
 - [Secrets and keys](security/secrets-and-keys.md)
 - [API hardening](security/api-hardening.md)
+- [Webhook security](security/webhook-security.md)
+- [Ceremony and external audit gates (SEC-008 / SEC-011)](security/ceremony-and-audit-gates.md)
 - [Production checklist](security/production-checklist.md)
 
 ## Roadmap

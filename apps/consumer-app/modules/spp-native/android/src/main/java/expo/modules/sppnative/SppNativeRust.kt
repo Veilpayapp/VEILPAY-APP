@@ -1,5 +1,7 @@
 package expo.modules.sppnative
 
+import android.content.Context
+
 /**
  * Optional JNI entry to `libspp_native.so` (packages/spp-native).
  *
@@ -42,6 +44,9 @@ internal object SppNativeRust {
   /** Bitmask: bit0=ping, bit1=poolOps, bit2=aspLeaf */
   @JvmStatic external fun nativeCapabilities(): Int
 
+  /** Initialize Android platform verifier support required by rustls HTTPS clients. */
+  @JvmStatic external fun nativeInitPlatform(context: Context): String
+
   @JvmStatic external fun nativeDeposit(amount: String): String
 
   @JvmStatic external fun nativeTransfer(amount: String, recipient: String): String
@@ -60,4 +65,10 @@ internal object SppNativeRust {
   @JvmStatic external fun nativePoolOpen(configJson: String): String
 
   @JvmStatic external fun nativePoolClose(): String
+
+  /** DATA-001: sync notes from chain into native store */
+  @JvmStatic external fun nativePoolSync(): String
+
+  /** DATA-001: private balance in stroops (JSON) */
+  @JvmStatic external fun nativePoolBalance(): String
 }

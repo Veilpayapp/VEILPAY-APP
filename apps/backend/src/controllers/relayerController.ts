@@ -5,6 +5,14 @@ import {
   WithdrawRequestSchema,
   type WithdrawRequest,
 } from "../schemas/withdrawRequest";
+import {
+  checkRelayerQuotas,
+  isRelayerCircuitOpen,
+  markNullifierSpent,
+  noteRelayerFailure,
+  noteRelayerSuccess,
+  RELAYER_MIN_BALANCE_WEI,
+} from "../utils/relayerQuota";
 
 /**
  * Module-load-time allowlist of permitted VeilPool contract addresses.
@@ -265,6 +273,26 @@ export async function handleWithdraw(
     return;
   }
 
+  // SEC-006: circuit breaker + per-nullifier / recipient / IP quotas.
+  if (isRelayerCircuitOpen()) {
+    res.status(503).json({
+      error: "Relayer temporarily unavailable",
+      code: "RELAYER_CIRCUIT_OPEN",
+    });
+    return;
+  }
+
+  const clientIp = req.ip || req.socket.remoteAddress || "unknown";
+  const quota = await checkRelayerQuotas({
+    nullifierHash: body.nullifierHash,
+    recipient: body.recipient,
+    clientIp,
+  });
+  if (!quota.ok) {
+    res.status(quota.status).json({ error: quota.error, code: quota.code });
+    return;
+  }
+
   let signer: ethers.Wallet;
   try {
     signer = buildSigner();
@@ -275,14 +303,31 @@ export async function handleWithdraw(
     return;
   }
 
+  // Balance floor: refuse sponsorship when the operator wallet is low.
+  try {
+    const bal = await signer.provider!.getBalance(signer.address);
+    if (bal < RELAYER_MIN_BALANCE_WEI) {
+      res.status(503).json({
+        error: "Relayer balance below operator threshold",
+        code: "RELAYER_BALANCE_LOW",
+      });
+      return;
+    }
+  } catch {
+    // If balance probe fails, continue — simulation still protects gas spend.
+  }
+
   try {
     const { hash } = await withTimeout(
       simulateThenBroadcast(body, signer),
       RELAYER_TIMEOUT_MS
     );
+    await markNullifierSpent(body.nullifierHash);
+    noteRelayerSuccess();
     res.status(200).json({ success: true, txHash: hash });
     return;
   } catch (err) {
+    noteRelayerFailure();
     if (err instanceof TimeoutError) {
       res.status(504).json({ success: false, error: "relayer broadcast timeout" });
       return;

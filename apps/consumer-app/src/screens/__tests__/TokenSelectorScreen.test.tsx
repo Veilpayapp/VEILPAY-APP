@@ -68,7 +68,7 @@ describe('TokenSelectorScreen', () => {
     );
     expect(getByText('SELECT TOKEN')).toBeTruthy();
     await waitFor(() => {
-      expect(getByText('[ PRIVACY ]')).toBeTruthy();
+      expect(getByText('Privacy')).toBeTruthy();
       expect(getByText('pXLM')).toBeTruthy();
     });
   });

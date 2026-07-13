@@ -91,8 +91,12 @@ export function Toast({
   const handleDismissRef = useRef(handleDismiss);
   handleDismissRef.current = handleDismiss;
 
+  // Re-run when `message` changes so rapid successive toasts (select → ready → recover)
+  // actually re-show instead of leaving a dismissed/invisible first toast.
   useEffect(() => {
     if (visible) {
+      translateY.setValue(100);
+      opacity.setValue(0);
       Animated.parallel([
         Animated.spring(translateY, {
           toValue: 0,
@@ -116,7 +120,7 @@ export function Toast({
       translateY.setValue(100);
       opacity.setValue(0);
     }
-  }, [visible, duration, translateY, opacity]);
+  }, [visible, message, duration, translateY, opacity]);
 
   if (!visible) return null;
 
@@ -159,10 +163,12 @@ export function Toast({
 const themeStyles = (colors: Colors) => StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 24,
-    left: 24,
-    right: 24,
-    zIndex: 1000,
+    // Sit above BottomNavBar (~72px + safe area); previously bottom:24 hid every toast.
+    bottom: 100,
+    left: 20,
+    right: 20,
+    zIndex: 99999,
+    elevation: 48,
   },
   touchable: {
     width: '100%',
@@ -221,9 +227,14 @@ export function useToast(): UseToastReturn {
   const [type, setType] = useState<ToastType>('info');
 
   const show = useCallback((msg: string, toastType: ToastType = 'info') => {
-    setMessage(msg);
-    setType(toastType);
-    setVisible(true);
+    // Force a visibility edge so the Toast effect always restarts (even same msg).
+    setVisible(false);
+    // RN-safe defer so hide commits before show (rapid multi-toast path).
+    setTimeout(() => {
+      setMessage(msg);
+      setType(toastType);
+      setVisible(true);
+    }, 30);
   }, []);
 
   const hide = useCallback(() => {

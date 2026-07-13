@@ -1,5 +1,11 @@
 # Production Readiness Audit Report
 
+> [!WARNING]
+> **SUPERSEDED for ship decisions (2026-07-13)**  
+> Current verdict lives in **[REMASTER_AUDIT_2026-07-13.md](./REMASTER_AUDIT_2026-07-13.md)**  
+> (dogfood **PASS** ~76/100; mainnet **NOT READY** ~58/100).  
+> Historical content below is preserved for reference only — do not use “10/10” language from older audits.
+
 Generated 2026-06-05T12:25:38.050Z for workspace SHA `a050036a6bb1a5bd70507c8f91f4df1888b372cf`.
 This report consolidates the planning-only production-readiness audit and links to [Security_Findings_List](#security_findings_list), [Code_Quality_Findings_List](#code_quality_findings_list), [Spec_Coherence_Report](#spec_coherence_report), [Frontend_Polish_Plan](#frontend_polish_plan), [Network_Icon Replacement Plan](#network_icon_replacement_plan).
 
@@ -256,7 +262,7 @@ _No cross-app duplicate clusters detected._
 
 ### production-readiness-audit
 
-This spec defines the planning and discovery work for a full end-to-end production-readiness audit of VeilPay. The audit covers `apps/backend`, `apps/consumer-app`, `apps/frontend`, `apps/indexer`, shared `packages/*`, on-chain integrations, webhooks, auth boundaries, error handling, observability, test coverage, and build/deploy. It also refreshes every existing plan document under `d:\Veilpay\plans\`, regenerates Graphify outputs, replaces the chain network icon set with brand-official assets, and produces a security vulnerability list with severity and remediation owners.
+This spec defines the planning and discovery work for a full end-to-end production-readiness audit of Veilpay. The audit covers `apps/backend`, `apps/consumer-app`, `apps/frontend`, `apps/indexer`, shared `packages/*`, on-chain integrations, webhooks, auth boundaries, error handling, observability, test coverage, and build/deploy. It also refreshes every existing plan document under `d:\Veilpay\plans\`, regenerates Graphify outputs, replaces the chain network icon set with brand-official assets, and produces a security vulnerability list with severity and remediation owners.
 
 **Implementation gaps:**
 
@@ -274,7 +280,7 @@ This spec defines the planning and discovery work for a full end-to-end producti
 
 ### veilpay-privacy-stack
 
-VeilPay is a privacy-first crypto payment application built on a four-layer privacy stack: ZK circuits (Layer 2), EVM smart contracts (Layer 1), a gas-sponsoring relayer backend (Layer 3), and a React Native mobile app (Layer 4). The scaffolding for all four layers exists but critical pieces are missing or broken, making the end-to-end privacy payment flow non-functional. This feature completes the full privacy stack so that users can make shielded deposits, generate valid ZK membership proofs, withdraw via a relayer, and scan for incoming stealth payments — all without leaking on-chain identity. For this spec, the synthesizer additionally inspected design.md (inspected) and tasks.md (inspected) alongside requirements.md; the comparison is a textual heuristic and reviewers should treat it as a starting point rather than proof of coverage.
+Veilpay is a privacy-first crypto payment application built on a four-layer privacy stack: ZK circuits (Layer 2), EVM smart contracts (Layer 1), a gas-sponsoring relayer backend (Layer 3), and a React Native mobile app (Layer 4). The scaffolding for all four layers exists but critical pieces are missing or broken, making the end-to-end privacy payment flow non-functional. This feature completes the full privacy stack so that users can make shielded deposits, generate valid ZK membership proofs, withdraw via a relayer, and scan for incoming stealth payments — all without leaking on-chain identity. For this spec, the synthesizer additionally inspected design.md (inspected) and tasks.md (inspected) alongside requirements.md; the comparison is a textual heuristic and reviewers should treat it as a starting point rather than proof of coverage.
 
 _Compares `requirements.md`, `design.md`, and `tasks.md` against current implementation._
 
@@ -296,7 +302,7 @@ _Compares `requirements.md`, `design.md`, and `tasks.md` against current impleme
 
 ### veilpay-privacy-stack (cross-check)
 
-VeilPay is a privacy-first crypto payment application built on a four-layer privacy stack: ZK circuits (Layer 2), EVM smart contracts (Layer 1), a gas-sponsoring relayer backend (Layer 3), and a React Native mobile app (Layer 4). The scaffolding for all four layers exists but critical pieces are missing or broken, making the end-to-end privacy payment flow non-functional. This feature completes the full privacy stack so that users can make shielded deposits, generate valid ZK membership proofs, withdraw via a relayer, and scan for incoming stealth payments — all without leaking on-chain identity. For this spec, the synthesizer additionally inspected design.md (inspected) and tasks.md (inspected) alongside requirements.md; the comparison is a textual heuristic and reviewers should treat it as a starting point rather than proof of coverage.
+Veilpay is a privacy-first crypto payment application built on a four-layer privacy stack: ZK circuits (Layer 2), EVM smart contracts (Layer 1), a gas-sponsoring relayer backend (Layer 3), and a React Native mobile app (Layer 4). The scaffolding for all four layers exists but critical pieces are missing or broken, making the end-to-end privacy payment flow non-functional. This feature completes the full privacy stack so that users can make shielded deposits, generate valid ZK membership proofs, withdraw via a relayer, and scan for incoming stealth payments — all without leaking on-chain identity. For this spec, the synthesizer additionally inspected design.md (inspected) and tasks.md (inspected) alongside requirements.md; the comparison is a textual heuristic and reviewers should treat it as a starting point rather than proof of coverage.
 
 _Compares `requirements.md`, `design.md`, and `tasks.md` against current implementation._
 

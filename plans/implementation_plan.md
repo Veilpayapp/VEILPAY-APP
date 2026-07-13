@@ -1,4 +1,4 @@
-# 🚀 VeilPay Hardening & Vibe Coding Implementation Plan
+# 🚀 Veilpay Hardening & Vibe Coding Implementation Plan
 
 The user has selected to knock out all 6 remaining "sneaky" technical debt and feature items. This is a non-trivial amount of work, but fundamentally beautiful. We're going to build this out from scratch, ensuring the abstraction layers make sense and the UX is perfectly minimal. 
 

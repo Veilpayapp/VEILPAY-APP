@@ -1,8 +1,8 @@
 /**
- * Private XLM diagnostics (Settings).
+ * Private XLM status (Settings).
  *
  * Product send path is the main Send Payment screen (shield / transfer / unshield).
- * This hub is for bridge status, checklist, and dogfood — not the primary UX.
+ * This hub is for account readiness, private balance, and recovery actions.
  *
  * Locked: app-only, native prove (no product WebView), testnet-first.
  */
@@ -16,6 +16,7 @@ import {
   StatusBar,
   TextInput,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -28,7 +29,6 @@ import { SovereignButton } from '../components/SovereignButton';
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import Toast, { useToast } from '../components/Toast';
 import { useWalletStore } from '../stores/walletStore';
-import type { RootStackParamList } from '../navigation/AppNavigator';
 import {
   deposit,
   getLocalPrivateBalance,
@@ -45,9 +45,36 @@ import {
 import type { SppNoteRecord } from '../stores/sppNoteStore';
 import { getSppAccount } from '../stores/sppAccountStore';
 
+/**
+ * DATA-001 / SPP-001: Shielded balances are stored on THIS DEVICE ONLY —
+ * until chain-backed note recovery ships, reinstalling the app, clearing
+ * state, or losing the device can make shielded funds inaccessible even
+ * though the pool still holds them.
+ *
+ * The exact wording MUST stay aligned between the always-visible banner
+ * and the shield-action confirmation dialog. Keep both referencing these
+ * constants — see review suggestion #12.
+ *
+ * This screen is NOT registered in AppNavigator (any build). Product path
+ * is background ASP + pXLM selection / Send. File kept for unit tests and
+ * rare manual mounts only.
+ */
+const SHIELD_FUND_LOSS_WARNING_TITLE = '⚠ TESTNET ONLY — DO NOT SHIELD REAL FUNDS';
+const SHIELD_FUND_LOSS_WARNING_BODY =
+  'Your private balance is stored on this device. If you reinstall the ' +
+  'app, clear app data, switch devices, or lose your phone, you may not ' +
+  'be able to recover shielded funds — even with your seed phrase. ' +
+  'Recovery from chain is not available in this build. Only shield ' +
+  'testnet XLM you can afford to lose.';
+const SHIELD_CONFIRM_TITLE = 'Shield funds — read first';
+const SHIELD_CONFIRM_BODY =
+  'Shielded XLM is tracked on THIS DEVICE ONLY. Recovery from your ' +
+  'seed phrase is NOT available in this build. If you lose access to ' +
+  'this device or clear app data, you may not be able to unshield ' +
+  'these funds. Only shield testnet XLM you can afford to lose.';
 
-type Nav = NativeStackNavigationProp<RootStackParamList, 'StellarSpp'>;
-type Route = RouteProp<RootStackParamList, 'StellarSpp'>;
+type Nav = NativeStackNavigationProp<Record<string, object | undefined>>;
+type Route = RouteProp<Record<string, object | undefined>, string>;
 
 interface Props {
   navigation: Nav;
@@ -78,6 +105,7 @@ export function StellarSppScreen({ navigation }: Props) {
   const [prep, setPrep] = useState<SppPrepChecklist | null>(null);
   const [aspBusy, setAspBusy] = useState(false);
   const [aspDetail, setAspDetail] = useState<string | null>(null);
+  const proveReady = Boolean(prep?.readyForProve);
   /** One auto insert attempt per mount when leaf is ready (avoid effect loops). */
   const aspAutoAttempted = useRef(false);
 
@@ -103,8 +131,8 @@ export function StellarSppScreen({ navigation }: Props) {
       if (acc?.aspLeafDecimal) {
         setAspDetail(
           acc.aspInserted
-            ? `Leaf registered${acc.aspInsertTxHash ? ` · ${acc.aspInsertTxHash.slice(0, 12)}…` : ''}`
-            : `Leaf ready · ${acc.aspLeafDecimal.slice(0, 18)}…`
+            ? `Account registered${acc.aspInsertTxHash ? ` · ${acc.aspInsertTxHash.slice(0, 12)}…` : ''}`
+            : 'Account ready to register'
         );
       } else {
         setAspDetail(null);
@@ -118,7 +146,7 @@ export function StellarSppScreen({ navigation }: Props) {
     void refreshNotes();
   }, [refreshNotes]);
 
-  // Auto-complete ASP insert once when leaf is ready but not on-chain (OTA path).
+  // Auto-complete account membership registration once the local leaf is ready.
   useEffect(() => {
     if (!enabled || !chainKey || !address || !prep) return;
     if (!prep.hasAspLeaf || prep.aspInserted) return;
@@ -131,7 +159,7 @@ export function StellarSppScreen({ navigation }: Props) {
         const ready = await ensureSppAccountReady(chainKey, address);
         if (cancelled) return;
         if (ready.aspReady) {
-          toast.show('ASP membership registered', 'success');
+          toast.show('Private account registered', 'success');
           await refreshNotes();
         }
       } catch {
@@ -156,7 +184,7 @@ export function StellarSppScreen({ navigation }: Props) {
       // Full ensure: re-derive if needed, then insert_leaf.
       const ready = await ensureSppAccountReady(chainKey, address);
       if (ready.aspReady) {
-        toast.show(ready.message || 'ASP membership ready', 'success');
+        toast.show(ready.message || 'Private account ready', 'success');
         await refreshNotes();
         return;
       }
@@ -167,17 +195,17 @@ export function StellarSppScreen({ navigation }: Props) {
           ready.account.aspLeafDecimal
         );
         toast.show(
-          `ASP registered · ${inserted.txHash.slice(0, 10)}…`,
+          `Private account registered · ${inserted.txHash.slice(0, 10)}…`,
           'success'
         );
         await refreshNotes();
         return;
       }
-      toast.show(ready.message || 'Could not complete ASP setup', 'info');
+      toast.show(ready.message || 'Could not complete private account setup', 'info');
       await refreshNotes();
     } catch (e) {
       const err = e as Error;
-      toast.show(err.message || 'ASP register failed', 'error');
+      toast.show(err.message || 'Private account registration failed', 'error');
     } finally {
       setAspBusy(false);
     }
@@ -192,6 +220,30 @@ export function StellarSppScreen({ navigation }: Props) {
       toast.show('Private XLM is only available on Stellar Testnet for now', 'error');
       return;
     }
+    if (!proveReady) {
+      const blocker = prep?.blockers[0];
+      toast.show(blocker || 'Private payments are still getting ready', 'info');
+      await refreshNotes();
+      return;
+    }
+
+    // DATA-001: confirm shield actions so the user acknowledges that the
+    // shielded balance is device-bound and not recoverable from seed alone.
+    if (op === 'deposit') {
+      const confirmed = await new Promise<boolean>((resolve) => {
+        Alert.alert(
+          SHIELD_CONFIRM_TITLE,
+          SHIELD_CONFIRM_BODY,
+          [
+            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'I understand, shield', style: 'destructive', onPress: () => resolve(true) },
+          ],
+          { cancelable: true }
+        );
+      });
+      if (!confirmed) return;
+    }
+
     setBusy(true);
     try {
       if (op === 'deposit') {
@@ -211,11 +263,11 @@ export function StellarSppScreen({ navigation }: Props) {
       const code = 'code' in err ? (err as SppClientError).code : undefined;
       if (code === 'SPP_OPS_NOT_READY') {
         toast.show(
-          'Shield prove is not linked in this build yet (poolOps). ASP setup still works — use Register ASP above.',
+          'Private transfers are not available in this app version yet. Account setup is still available.',
           'info'
         );
       } else if (code === 'SPP_ASP_SIM_FAILED' || code === 'SPP_ASP_SUBMIT_FAILED') {
-        toast.show(err.message || 'ASP register failed — check testnet funds and try again', 'error');
+        toast.show(err.message || 'Private account registration failed — check testnet funds and try again', 'error');
       } else {
         toast.show(err.message || `${op} failed`, 'error');
       }
@@ -237,20 +289,32 @@ export function StellarSppScreen({ navigation }: Props) {
         <SovereignCard style={styles.card}>
           <Text style={styles.cardTitle}>How to use Private XLM</Text>
           <Text style={styles.body}>
-            Open Token Selector or Home → [ PRIVACY ] → select pXLM. That turns on
-            private mode and finishes setup automatically. Then use Shield / Transfer
-            / Unshield on Home — same Send screen as public payments. This page is
-            diagnostics only.
+            Open Token Selector or Home → Privacy → select pXLM. That turns on
+            private mode and finishes setup automatically. Then use Shield, Transfer,
+            or Unshield from Home — the same Send screen as public payments.
           </Text>
+        </SovereignCard>
+
+        {/*
+          DATA-001 / SPP-001 safety banner.
+          pXLM shielded balances are tracked by SecureStore note records on
+          THIS DEVICE ONLY. There is no chain-backed recovery scanner yet, so
+          reinstalling the app, clearing app state, or losing the device can
+          make shielded funds inaccessible even though the pool still holds
+          them. Until deterministic note recovery ships, this surface is
+          testnet-only and users MUST NOT shield real funds.
+        */}
+        <SovereignCard style={StyleSheet.flatten([styles.card, styles.warningCard])}>
+          <Text style={styles.warningTitle}>{SHIELD_FUND_LOSS_WARNING_TITLE}</Text>
+          <Text style={styles.warningBody}>{SHIELD_FUND_LOSS_WARNING_BODY}</Text>
         </SovereignCard>
 
         {!enabled ? (
           <SovereignCard style={styles.card}>
             <Text style={styles.cardTitle}>Testnet only</Text>
             <Text style={styles.body}>
-              Shielded Stellar payments are enabled on Stellar Testnet. Mainnet stays
-              fail-closed until audit and ceremony gates. Switch network to Stellar
-              Testnet, then return here.
+              Shielded Stellar payments are available on Stellar Testnet in this
+              preview. Switch network to Stellar Testnet, then return here.
             </Text>
           </SovereignCard>
         ) : (
@@ -261,48 +325,34 @@ export function StellarSppScreen({ navigation }: Props) {
                 {refreshing ? '…' : privateBalance} XLM
               </Text>
               <Text style={styles.caption}>
-                Local notes only until native sync is wired. Notes are device-bound
-                secrets — back up your wallet seed.
+                Your private balance is tracked on this device. Back up your wallet
+                seed before changing phones or reinstalling the app.
               </Text>
-              {status.config ? (
-                <Text style={styles.mono} numberOfLines={1}>
-                  Pool {status.config.poolId.slice(0, 8)}…{status.config.poolId.slice(-6)}
-                </Text>
-              ) : null}
             </SovereignCard>
 
             <SovereignCard style={styles.card}>
-              <Text style={styles.cardTitle}>Native bridge</Text>
+              <Text style={styles.cardTitle}>Private payments</Text>
               <Text style={styles.body}>
-                version: {status.version}
-                {'\n'}
-                ping: {status.ping}
-                {'\n'}
-                poolOps: {status.native.poolOps ? 'ready' : 'not ready'} · backend:{' '}
-                {status.native.backend}
+                {status.native.poolOps
+                  ? 'Ready for shielded transfers on this device.'
+                  : 'Account setup is available. Shielded transfers unlock in the next app update.'}
               </Text>
               <Text style={styles.caption}>
-                Same Rust sdk/pool path as the spp CLI. Product WebView is out of scope.
+                Private payment proofs are created locally and never fall back to a public send.
               </Text>
             </SovereignCard>
 
             {prep ? (
               <SovereignCard style={styles.card}>
-                <Text style={styles.cardTitle}>Ready checklist</Text>
+                <Text style={styles.cardTitle}>Setup status</Text>
                 <Text style={styles.body}>
-                  chain: {prep.chainEnabled ? 'ok' : 'no'}
+                  Network: {prep.chainEnabled ? 'Ready' : 'Switch to Stellar Testnet'}
                   {'\n'}
-                  native ping: {prep.nativePing ? 'ok' : 'no'}
+                  Device keys: {prep.keysSigned ? 'Ready' : 'Action needed'}
                   {'\n'}
-                  keys signed: {prep.keysSigned ? 'ok' : 'no'}
+                  Account membership: {prep.aspInserted ? 'Registered' : prep.hasAspLeaf ? 'Ready to register' : 'Preparing'}
                   {'\n'}
-                  ASP leaf: {prep.hasAspLeaf ? 'ok' : 'pending native'}
-                  {'\n'}
-                  ASP inserted: {prep.aspInserted ? 'ok' : 'no'}
-                  {'\n'}
-                  pool ops: {prep.poolOps ? 'ok' : 'not linked'}
-                  {'\n'}
-                  prove-ready: {prep.readyForProve ? 'yes' : 'no'}
+                  Private transfers: {prep.readyForProve ? 'Ready' : 'Waiting for setup'}
                 </Text>
                 {aspDetail ? (
                   <Text style={styles.mono} selectable numberOfLines={2}>
@@ -311,35 +361,31 @@ export function StellarSppScreen({ navigation }: Props) {
                 ) : null}
                 {prep.blockers.length > 0 ? (
                   <Text style={styles.caption}>
-                    Blockers:{'\n'}
+                    Still needed:{'\n'}
                     {prep.blockers.map((b) => `· ${b}`).join('\n')}
                   </Text>
                 ) : null}
                 {!prep.aspInserted && prep.keysSigned ? (
                   <View style={styles.actions}>
                     <SovereignButton
-                      title={aspBusy ? 'Registering ASP…' : 'Register ASP membership'}
+                      title={aspBusy ? 'Registering account…' : 'Register private account'}
                       onPress={() => void runAspRegister()}
                       disabled={aspBusy || busy}
-                      accessibilityLabel="Register ASP membership on chain"
+                      accessibilityLabel="Register private account on chain"
                     />
                   </View>
                 ) : null}
                 {prep.aspInserted && !prep.poolOps ? (
                   <Text style={styles.caption}>
-                    ASP is on-chain. This build is OTA-safe (poolOps off). Next native
-                    preview APK with CAP_POOL_OPS enables Shield / Transfer / Unshield
-                    prove+submit. Until then ops fail closed — never public fallback.
+                     Account membership is registered. Shield, Transfer, and Unshield
+                     will unlock in the next app update. Until then, private payments
+                     stay safely disabled and never send publicly.
                   </Text>
                 ) : null}
                 {prep.aspInserted && prep.poolOps ? (
                   <Text style={styles.caption}>
-                    ASP + poolOps ready. Shield / Transfer / Unshield use native prove.
-                  </Text>
-                ) : null}
-                {prep.asp.cliHint && !prep.aspInserted ? (
-                  <Text style={styles.mono} selectable>
-                    {prep.asp.cliHint}
+                    Private payments are ready. Shield, Transfer, and Unshield create
+                    proofs locally on this device.
                   </Text>
                 ) : null}
               </SovereignCard>
@@ -355,9 +401,9 @@ export function StellarSppScreen({ navigation }: Props) {
                 keyboardType="decimal-pad"
                 placeholder="1.0"
                 placeholderTextColor={colors.textTertiary}
-                accessibilityLabel="SPP amount"
+                accessibilityLabel="Private payment amount"
               />
-              <Text style={styles.cardTitle}>Recipient (transfer / optional withdraw)</Text>
+              <Text style={styles.cardTitle}>Recipient</Text>
               <TextInput
                 style={styles.input}
                 value={recipient}
@@ -366,38 +412,43 @@ export function StellarSppScreen({ navigation }: Props) {
                 autoCorrect={false}
                 placeholder="G… or leave blank to unshield to self"
                 placeholderTextColor={colors.textTertiary}
-                accessibilityLabel="SPP recipient"
+                accessibilityLabel="Private payment recipient"
               />
 
               <View style={styles.actions}>
                 <SovereignButton
-                  title="Shield (deposit)"
+                  title="Shield"
                   onPress={() => void runOp('deposit')}
-                  disabled={busy}
+                  disabled={busy || !proveReady}
                   accessibilityLabel="Shield deposit into private pool"
                 />
                 <SovereignButton
                   title="Private transfer"
                   variant="secondary"
                   onPress={() => void runOp('transfer')}
-                  disabled={busy}
+                  disabled={busy || !proveReady}
                   accessibilityLabel="Private transfer"
                 />
                 <SovereignButton
-                  title="Unshield (withdraw)"
+                  title="Unshield"
                   variant="outline"
                   onPress={() => void runOp('withdraw')}
-                  disabled={busy}
+                  disabled={busy || !proveReady}
                   accessibilityLabel="Unshield withdraw"
                 />
               </View>
+              {!proveReady ? (
+                <Text style={styles.caption}>
+                  Shield, Transfer, and Unshield unlock after setup is complete.
+                </Text>
+              ) : null}
               {busy ? <ActivityIndicator color={colors.accent} style={styles.spinner} /> : null}
             </SovereignCard>
 
             <SovereignCard style={styles.card}>
-              <Text style={styles.cardTitle}>Local notes ({notes.length})</Text>
+              <Text style={styles.cardTitle}>Private records ({notes.length})</Text>
               {notes.length === 0 ? (
-                <Text style={styles.caption}>No local notes yet.</Text>
+                <Text style={styles.caption}>No private records yet.</Text>
               ) : (
                 notes.map((n) => (
                   <Text key={n.id} style={styles.noteRow}>
@@ -407,7 +458,7 @@ export function StellarSppScreen({ navigation }: Props) {
                 ))
               )}
               <SovereignButton
-                title="Refresh notes"
+                title="Refresh records"
                 variant="outline"
                 onPress={() => void refreshNotes()}
                 disabled={refreshing}
@@ -434,11 +485,31 @@ const themeStyles = (colors: {
   bgContainer: string;
   outlineVariant: string;
   accent: string;
+  warning?: string;
+  warningBg?: string;
 }) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.surfaceScreen,
+    },
+    warningCard: {
+      borderColor: colors.warning ?? '#f59e0b',
+      borderWidth: 1,
+      backgroundColor: colors.warningBg ?? 'rgba(245, 158, 11, 0.08)',
+    },
+    warningTitle: {
+      fontFamily: typography.fontFamily.bodyBold,
+      fontSize: typography.fontSize.small,
+      color: colors.warning ?? '#f59e0b',
+      marginBottom: 8,
+      letterSpacing: 0.5,
+    },
+    warningBody: {
+      fontFamily: typography.fontFamily.body,
+      fontSize: typography.fontSize.small,
+      color: colors.textMuted,
+      lineHeight: 20,
     },
     header: {
       flexDirection: 'row',

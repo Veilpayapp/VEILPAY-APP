@@ -209,6 +209,7 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
         navigation.navigate(SCREENS.ONRAMP_WIDGET, {
           url: session.url,
           orderId: session.orderId,
+          statusToken: session.statusToken,
           title: flow === 'buy' ? `Buy via ${getProviderName(provider)}` : `Sell via ${getProviderName(provider)}`,
         });
       }

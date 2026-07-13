@@ -9,10 +9,31 @@
 
 import { useMemo } from 'react';
 import type { IconName } from '../components/Icon';
-import { isPrivacyStackConfigured, SEPOLIA_CHAIN_ID } from '../constants/contracts';
+import {
+  EVM_MAX_PRIVACY_WITHDRAW_READY,
+  isPrivacyStackConfigured,
+  SEPOLIA_CHAIN_ID,
+} from '../constants/contracts';
 import { isSppEnabledForChain } from '../constants/spp';
 import type { PrivacyLevel } from '../stores/settingsStore';
 import { useActiveChain } from '../stores/walletStore';
+import { sppNativeCapabilities } from '../utils/stellarSpp/sppNativeBridge';
+
+export function isMaxPrivacyWithdrawReady(): boolean {
+  return EVM_MAX_PRIVACY_WITHDRAW_READY;
+}
+
+/**
+ * SPP-001 / Phase 2: private shield/transfer/unshield require native poolOps.
+ * Chain enablement alone is not enough (derive/ASP-only APKs must hard-disable).
+ */
+export function isSppPoolOpsReady(): boolean {
+  try {
+    return sppNativeCapabilities().poolOps === true;
+  } catch {
+    return false;
+  }
+}
 
 export interface PrivacyOptionDef {
   id: PrivacyLevel;
@@ -31,19 +52,45 @@ export interface PrivacyOptionDef {
 const STEALTH_DESCRIPTION =
   'One-time stealth address. The recipient discovers the payment via an announcement event; on-chain it looks like a transfer to a fresh address.';
 
+export type PrivacyOptionsContext = {
+  /**
+   * When set, overrides the live native capability probe (tests / SSR).
+   * Default: read `sppNativeCapabilities().poolOps`.
+   */
+  poolOpsReady?: boolean;
+};
+
 /**
  * Build selectable privacy rows for the active wallet chain.
  */
 export function getPrivacyOptionsForChain(
   chainKey: string | null | undefined,
-  chainId: number | string | null | undefined
+  chainId: number | string | null | undefined,
+  ctx: PrivacyOptionsContext = {}
 ): PrivacyOptionDef[] {
   const isSepolia = chainId === SEPOLIA_CHAIN_ID;
   const evmPrivacyOk = isSepolia && isPrivacyStackConfigured();
-  const sppOk = isSppEnabledForChain(chainKey);
+  // DATA-002: the max-privacy deposit path is gated on the withdraw being
+  // wired end-to-end. Until `EVM_MAX_PRIVACY_WITHDRAW_READY` is true, the
+  // max option is disabled even when the rest of the privacy stack is
+  // configured, so users cannot lock funds they can never recover from the app.
+  const maxEnabled = evmPrivacyOk && EVM_MAX_PRIVACY_WITHDRAW_READY;
+  const sppChainOk = isSppEnabledForChain(chainKey);
+  const poolOpsReady =
+    ctx.poolOpsReady !== undefined ? ctx.poolOpsReady : isSppPoolOpsReady();
+  // SPP-001: chain allowlist AND native poolOps — derive-only builds cannot shield.
+  const sppOk = sppChainOk && poolOpsReady;
   const isStellar = chainKey === 'stellar' || chainKey === 'stellar-testnet';
 
   if (isStellar) {
+    let privateDisabledReason: string | undefined;
+    if (!sppChainOk) {
+      privateDisabledReason = 'Private XLM is not available on mainnet yet';
+    } else if (!poolOpsReady) {
+      privateDisabledReason =
+        'Private XLM needs a pool-ops build. Public XLM still works — use Standard, or install the full preview APK.';
+    }
+
     return [
       {
         id: 'standard',
@@ -61,21 +108,18 @@ export function getPrivacyOptionsForChain(
       {
         id: 'private',
         title: 'PRIVATE',
-        subtitle: 'Shielded SPP transfer',
+        subtitle: 'Private transfer',
         iconName: 'private-lock',
         features: [
-          'Stellar privacy pool (BN254 Groth16)',
-          'Private amount and counterparty',
-          'Self-custody notes on this device',
-          'Prove time ~10s on desktop (device varies)',
+          'Hide amount and counterparty',
+          'Self-custody on this device',
+          'Takes a few seconds to prepare',
         ],
         recommended: sppOk,
         enabled: sppOk,
-        disabledReason: sppOk
-          ? undefined
-          : 'Private XLM is not available on mainnet until audit and ceremony',
+        disabledReason: privateDisabledReason,
         description:
-          'Uses Stellar Private Payments (SPP). Recipient is a G… address registered in the public key book, or note keys out of band.',
+          'Send privately. Recipient uses a standard Stellar address.',
       },
     ];
   }
@@ -125,13 +169,14 @@ export function getPrivacyOptionsForChain(
         'Untraceable deposits',
         'Mathematical guarantees',
       ],
-      recommended: evmPrivacyOk,
-      enabled: evmPrivacyOk,
-      disabledReason: evmPrivacyOk
-        ? undefined
-        : isSepolia
+      recommended: maxEnabled,
+      enabled: maxEnabled,
+      disabledReason: !evmPrivacyOk
+        ? isSepolia
           ? 'Privacy pool not yet configured for this build'
-          : 'Privacy pool not available on this network',
+          : 'Privacy pool not available on this network'
+        : // Privacy stack is configured but the withdraw path is not wired yet.
+          'Max-privacy withdraw is not available in this build. Deposits would be locked until a future update adds Merkle path + nullifierHash + relayer withdraw.',
     },
   ];
 }
@@ -139,9 +184,10 @@ export function getPrivacyOptionsForChain(
 export function isPrivacyLevelEnabled(
   level: PrivacyLevel,
   chainKey: string | null | undefined,
-  chainId: number | string | null | undefined
+  chainId: number | string | null | undefined,
+  ctx: PrivacyOptionsContext = {}
 ): boolean {
-  const opt = getPrivacyOptionsForChain(chainKey, chainId).find((o) => o.id === level);
+  const opt = getPrivacyOptionsForChain(chainKey, chainId, ctx).find((o) => o.id === level);
   return opt?.enabled ?? level === 'standard';
 }
 
@@ -151,14 +197,31 @@ export function isPrivacyLevelEnabled(
 export function clampPrivacyLevel(
   preferred: PrivacyLevel,
   chainKey: string | null | undefined,
-  chainId: number | string | null | undefined
+  chainId: number | string | null | undefined,
+  ctx: PrivacyOptionsContext = {}
 ): PrivacyLevel {
-  if (isPrivacyLevelEnabled(preferred, chainKey, chainId)) {
+  if (isPrivacyLevelEnabled(preferred, chainKey, chainId, ctx)) {
     return preferred;
   }
-  // Prefer recommended private on SPP testnet when default was max/stealth.
-  if (isSppEnabledForChain(chainKey) && (preferred === 'max' || preferred === 'stealth')) {
+  // Prefer private on SPP testnet when poolOps is ready (max/stealth defaults).
+  if (
+    (preferred === 'max' || preferred === 'stealth') &&
+    isPrivacyLevelEnabled('private', chainKey, chainId, ctx)
+  ) {
     return 'private';
+  }
+  // Saved `private` without poolOps (or mainnet) → public Standard.
+  if (preferred === 'private') {
+    return 'standard';
+  }
+  // DATA-002: a `max` default that is no longer enabled (withdraw not wired)
+  // falls back to `stealth` if the stealth stack is configured, otherwise
+  // `standard`. This prevents a saved `max` default from blocking a send.
+  if (preferred === 'max') {
+    const isSepolia = chainId === SEPOLIA_CHAIN_ID;
+    if (isSepolia && isPrivacyStackConfigured()) {
+      return 'stealth';
+    }
   }
   return 'standard';
 }
@@ -168,18 +231,23 @@ export function usePrivacyOptions(): {
   chainKey: string | null;
   clamp: (level: PrivacyLevel) => PrivacyLevel;
   isEnabled: (level: PrivacyLevel) => boolean;
+  poolOpsReady: boolean;
 } {
   const activeChain = useActiveChain();
   const chainKey = activeChain?.key ?? null;
   const chainId = activeChain?.id ?? null;
+  // Re-read on each render so a late-loaded native module can flip private on.
+  const poolOpsReady = isSppPoolOpsReady();
 
   return useMemo(() => {
-    const options = getPrivacyOptionsForChain(chainKey, chainId);
+    const ctx: PrivacyOptionsContext = { poolOpsReady };
+    const options = getPrivacyOptionsForChain(chainKey, chainId, ctx);
     return {
       options,
       chainKey,
-      clamp: (level: PrivacyLevel) => clampPrivacyLevel(level, chainKey, chainId),
-      isEnabled: (level: PrivacyLevel) => isPrivacyLevelEnabled(level, chainKey, chainId),
+      poolOpsReady,
+      clamp: (level: PrivacyLevel) => clampPrivacyLevel(level, chainKey, chainId, ctx),
+      isEnabled: (level: PrivacyLevel) => isPrivacyLevelEnabled(level, chainKey, chainId, ctx),
     };
-  }, [chainKey, chainId]);
+  }, [chainKey, chainId, poolOpsReady]);
 }

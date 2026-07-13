@@ -184,10 +184,6 @@ const screenTransitions: Record<string, NativeStackNavigationOptions> = {
   AddCustomNetwork: {
     ...transitionPresets.none,
   },
-
-  StellarSpp: {
-    ...transitionPresets.push,
-  },
   
   // Fiat Gateway Flow
   DepositCrypto: {
@@ -211,6 +207,10 @@ const screenTransitions: Record<string, NativeStackNavigationOptions> = {
   },
   
   OnrampQuotes: {
+    ...transitionPresets.none,
+  },
+
+  InAppBrowser: {
     ...transitionPresets.none,
   },
 };

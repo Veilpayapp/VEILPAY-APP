@@ -100,6 +100,12 @@ const ALLOWED_RPC_METHODS: ReadonlySet<string> = new Set([
   'getMinimumBalanceForRentExemption', 'getRecentPerformanceSamples',
 ]);
 
+/** SEC-004: hard caps on batch size, eth_getLogs range, and response body. */
+const MAX_BATCH_SIZE = 10;
+const MAX_ETH_GETLOGS_BLOCK_RANGE = 2_000;
+const MAX_ETH_GETLOGS_ADDRESSES = 20;
+const MAX_RESPONSE_BYTES = 1_500_000; // ~1.5 MB
+
 function extractMethods(body: unknown): string[] {
   if (Array.isArray(body)) {
     return body
@@ -124,8 +130,97 @@ function checkMethodAllowlist(body: unknown): { allowed: boolean; disallowed?: s
   return disallowed.length > 0 ? { allowed: false, disallowed } : { allowed: true };
 }
 
+function parseBlockTag(tag: unknown): number | null {
+  if (typeof tag !== 'string') return null;
+  if (tag === 'latest' || tag === 'pending' || tag === 'earliest' || tag === 'safe' || tag === 'finalized') {
+    return null; // non-numeric tags — range check skipped for that bound
+  }
+  if (!/^0x[0-9a-fA-F]+$/.test(tag)) return null;
+  try {
+    return parseInt(tag, 16);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * SEC-004 complexity guard: batch length, eth_getLogs block range + address count.
+ */
+function checkRequestComplexity(body: unknown): { ok: boolean; error?: string; code?: string } {
+  if (Array.isArray(body)) {
+    if (body.length > MAX_BATCH_SIZE) {
+      return {
+        ok: false,
+        error: `JSON-RPC batch exceeds max size of ${MAX_BATCH_SIZE}`,
+        code: 'RPC_BATCH_TOO_LARGE',
+      };
+    }
+    for (const item of body) {
+      const check = checkSingleCallComplexity(item);
+      if (!check.ok) return check;
+    }
+    return { ok: true };
+  }
+  return checkSingleCallComplexity(body);
+}
+
+function checkSingleCallComplexity(call: unknown): { ok: boolean; error?: string; code?: string } {
+  if (!call || typeof call !== 'object' || !('method' in call)) return { ok: true };
+  const method = (call as { method?: unknown }).method;
+  const params = (call as { params?: unknown }).params;
+
+  if (method === 'eth_getLogs' && Array.isArray(params) && params[0] && typeof params[0] === 'object') {
+    const filter = params[0] as { fromBlock?: unknown; toBlock?: unknown; address?: unknown };
+    const from = parseBlockTag(filter.fromBlock);
+    const to = parseBlockTag(filter.toBlock);
+    if (from !== null && to !== null && to - from > MAX_ETH_GETLOGS_BLOCK_RANGE) {
+      return {
+        ok: false,
+        error: `eth_getLogs block range exceeds max of ${MAX_ETH_GETLOGS_BLOCK_RANGE}`,
+        code: 'RPC_LOGS_RANGE_TOO_LARGE',
+      };
+    }
+    if (Array.isArray(filter.address) && filter.address.length > MAX_ETH_GETLOGS_ADDRESSES) {
+      return {
+        ok: false,
+        error: `eth_getLogs address filter exceeds max of ${MAX_ETH_GETLOGS_ADDRESSES}`,
+        code: 'RPC_LOGS_TOO_MANY_ADDRESSES',
+      };
+    }
+  }
+  return { ok: true };
+}
+
+function truncateResponseBody(body: unknown): { body: unknown; truncated: boolean } {
+  try {
+    const raw = typeof body === 'string' ? body : JSON.stringify(body);
+    if (raw.length <= MAX_RESPONSE_BYTES) {
+      return { body, truncated: false };
+    }
+    return {
+      body: {
+        error: 'Upstream RPC response exceeded size limit',
+        code: 'RPC_RESPONSE_TOO_LARGE',
+        maxBytes: MAX_RESPONSE_BYTES,
+      },
+      truncated: true,
+    };
+  } catch {
+    return { body, truncated: false };
+  }
+}
+
 // Exported for unit testing of the allowlist logic.
-export const __test = { checkMethodAllowlist, extractMethods, redactUrl, isChainSupported: (k: string): boolean => !!getRpcUrl(k) };
+export const __test = {
+  checkMethodAllowlist,
+  extractMethods,
+  redactUrl,
+  isChainSupported: (k: string): boolean => !!getRpcUrl(k),
+  checkRequestComplexity,
+  MAX_BATCH_SIZE,
+  MAX_ETH_GETLOGS_BLOCK_RANGE,
+  MAX_RESPONSE_BYTES,
+};
 
 // ─── Safe upstream fetch (S3 redaction, S4 timeout, S5 non-JSON, B7 headers) ──
 
@@ -238,6 +333,15 @@ router.post('/:chainKey', asyncRoute(async (req: Request, res: Response) => {
     });
   }
 
+  // SEC-004: complexity caps (batch size, eth_getLogs range/addresses).
+  const complexity = checkRequestComplexity(req.body);
+  if (!complexity.ok) {
+    return res.status(400).json({
+      error: complexity.error,
+      code: complexity.code,
+    });
+  }
+
   try {
     const result = await fetchUpstream(
       targetUrl,
@@ -249,10 +353,15 @@ router.post('/:chainKey', asyncRoute(async (req: Request, res: Response) => {
       chainKey
     );
 
-    if (typeof result.body === 'string') {
-      return res.status(result.status).type(result.contentType || 'text/plain').send(result.body);
+    const { body: safeBody, truncated } = truncateResponseBody(result.body);
+    if (truncated) {
+      return res.status(502).json(safeBody);
     }
-    return res.status(result.status).json(result.body);
+
+    if (typeof safeBody === 'string') {
+      return res.status(result.status).type(result.contentType || 'text/plain').send(safeBody);
+    }
+    return res.status(result.status).json(safeBody);
   } catch (error) {
     return handleUpstreamError(error, chainKey, res);
   }

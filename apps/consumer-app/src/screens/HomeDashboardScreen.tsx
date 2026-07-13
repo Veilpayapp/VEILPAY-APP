@@ -20,7 +20,6 @@ import { SovereignCard } from "../components/SovereignCard";
 import { SovereignButton } from "../components/SovereignButton";
 import Toast, { useToast } from "../components/Toast";
 import { themeStyles } from "./styles/HomeDashboardScreen.styles";
-import { Logo } from "../components/Logo";
 import { BottomNavBar } from "../components/BottomNavBar";
 import { Icon } from "../components/Icon";
 import { BalanceSkeleton, TransactionSkeleton } from "../components/Skeleton";
@@ -29,7 +28,10 @@ import { TokenAssetsList } from "../components/dashboard/TokenAssetsList";
 import { DashboardHeader } from "../components/dashboard/DashboardHeader";
 import { FiatGatewayCard } from "../components/dashboard/FiatGatewayCard";
 import { TransactionItem } from '../components/TransactionItem';
-import { DashboardBalanceCard } from '../components/home/DashboardBalanceCard';
+import {
+  DashboardBalanceCard,
+  type PrivacyReadyStatus,
+} from '../components/home/DashboardBalanceCard';
 import { DashboardQuickActions } from '../components/home/DashboardQuickActions';
 import { EmptyState } from "../components/EmptyState";
 import { NetworkSelectorModal } from "../components/NetworkSelectorModal";
@@ -49,7 +51,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { MotiView } from "moti";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { RouteProp } from "@react-navigation/native";
+import { useFocusEffect, type RouteProp } from "@react-navigation/native";
 import type { RootStackParamList } from "../navigation/AppNavigator";
 import { useShallow } from "zustand/react/shallow";
 import { useSettingsStore } from "../stores/settingsStore";
@@ -59,6 +61,7 @@ import {
   canActivatePrivacyAsset,
 } from "../constants/privacyAssets";
 import { getLocalPrivateBalance } from "../utils/stellarSpp";
+import { filterTransactionsForPrivacyMode } from "../utils/transactionPrivacyFilter";
 import type { PrivacyAssetListItem } from "../components/dashboard/TokenAssetsList";
 
 const TRANSAK_OUTCOME_TTL_MS = 24 * 60 * 60 * 1000;
@@ -126,6 +129,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
 
   const {
     address,
+    addresses,
     activeChain,
     setActiveChain,
     balance,
@@ -133,12 +137,21 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
   } = useWalletStore(
     useShallow((state) => ({
       address: state.address,
+      addresses: state.addresses,
       activeChain: state.activeChain,
       setActiveChain: state.setActiveChain,
       balance: state.balance,
       balanceUsd: state.balanceUsd,
     }))
   );
+
+  /** Stellar G… for SPP — never use EVM `address` after a chain switch race. */
+  const stellarOwnerAddress = useMemo(() => {
+    const fromMap = addresses?.xlm;
+    if (typeof fromMap === 'string' && /^G[A-Z2-7]{55}$/.test(fromMap)) return fromMap;
+    if (typeof address === 'string' && /^G[A-Z2-7]{55}$/.test(address)) return address;
+    return null;
+  }, [address, addresses]);
 
   const {
     transactions,
@@ -176,6 +189,19 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
 
   const [privateBalance, setPrivateBalance] = useState('0');
   const [privateBalanceLoading, setPrivateBalanceLoading] = useState(false);
+  /** Soft private readiness for balance card (no protocol jargon). */
+  const [privacyReadyStatus, setPrivacyReadyStatus] =
+    useState<PrivacyReadyStatus>(null);
+  /** On-card recovery / setup line (visible even if toast is missed). */
+  const [privacyStatusDetail, setPrivacyStatusDetail] = useState<string | null>(null);
+  /** Tracks last amount we showed so we can soft-update without skeleton thrash. */
+  const privateBalanceRef = useRef('0');
+  privateBalanceRef.current = privateBalance;
+  const toast = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+  const lastTxFocusRefreshAtRef = useRef(0);
+  const privateRefreshInFlightRef = useRef(false);
 
   const privacyAsset = useMemo(
     () => getPrivacyAssetById(selectedPrivacyAssetId),
@@ -201,23 +227,243 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
   const { getQuote: getMarketQuote, refresh: refreshMarketData } = useMarketData([activeMarketSymbol]);
   const marketQuote = getMarketQuote(activeMarketSymbol);
 
-  const refreshPrivateBalance = useCallback(async () => {
-    if (!privacyMode || !privacyAsset || !address) {
-      setPrivateBalance('0');
+  /**
+   * Private balance refresh.
+   * - lightOnly / focus / Settings→Home: SecureStore + last-known only (never native).
+   * - forceRecover: pull-to-refresh, pXLM select.
+   * - First enter: one smart recover (session-gated).
+   */
+  const refreshPrivateBalance = useCallback(
+    async (opts?: {
+      announce?: boolean;
+      forceRecover?: boolean;
+      /** Never open native pool — focus / remount safe. */
+      lightOnly?: boolean;
+    }) => {
+      if (!privacyMode || !privacyAsset || !stellarOwnerAddress) {
+        setPrivateBalance('0');
+        setPrivateBalanceLoading(false);
+        return;
+      }
+      if (privateRefreshInFlightRef.current && !opts?.forceRecover) {
+        return;
+      }
+
+      const announce = opts?.announce === true;
+      const forceRecover = opts?.forceRecover === true;
+      const lightOnly = opts?.lightOnly === true;
+      const chainKey = privacyAsset.chainKey;
+      const owner = stellarOwnerAddress;
+
+      privateRefreshInFlightRef.current = true;
+      try {
+        const {
+          readLocalPrivateBalanceLight,
+          refreshPrivateBalanceSmart,
+          getLastKnownPrivateAmount,
+          setLastKnownPrivateAmount,
+          hasRecoveredThisSession,
+        } = await import('../utils/stellarSpp');
+
+        // Restore last-known immediately so Settings→Home never skeleton-loops at 0.
+        const cached = getLastKnownPrivateAmount(chainKey, owner);
+        if (cached && Number.parseFloat(cached) > 0) {
+          setPrivateBalance(cached);
+        }
+
+        const local = await readLocalPrivateBalanceLight(chainKey, owner);
+        const localAmt = local.amount || cached || '0';
+        if (Number.parseFloat(localAmt) > 0) {
+          setPrivateBalance(localAmt);
+          setLastKnownPrivateAmount(chainKey, owner, localAmt);
+        }
+
+        if (lightOnly) {
+          setPrivateBalance(localAmt);
+          setPrivateBalanceLoading(false);
+          return;
+        }
+
+        // Already recovered this session and not forced → local only.
+        if (!forceRecover && hasRecoveredThisSession(chainKey, owner)) {
+          setPrivateBalance(localAmt);
+          setPrivateBalanceLoading(false);
+          return;
+        }
+
+        const hadDisplay =
+          Number.parseFloat(privateBalanceRef.current || '0') > 0 ||
+          Number.parseFloat(localAmt) > 0;
+        // Skeleton only on first paint with nothing to show.
+        if (!hadDisplay && forceRecover) {
+          setPrivateBalanceLoading(true);
+        } else if (!hadDisplay && !hasRecoveredThisSession(chainKey, owner)) {
+          setPrivateBalanceLoading(true);
+        }
+
+        const result = await refreshPrivateBalanceSmart(chainKey, owner, {
+          force: forceRecover,
+        });
+        const amt = result.amount || result.nativeAmount || localAmt || '0';
+        const amtNum = Number.parseFloat(amt);
+        setPrivateBalance(amt);
+        setLastKnownPrivateAmount(chainKey, owner, amt);
+
+        if (result.recovered) {
+          if (amtNum > 0) {
+            const isRestoreMsg =
+              /recover|restor|chain/i.test(result.message || '') && forceRecover;
+            if (isRestoreMsg) {
+              setPrivacyStatusDetail(`Restored ${amt} pXLM`);
+            }
+            if (announce && isRestoreMsg) {
+              toastRef.current.show(`Private balance restored: ${amt} pXLM`, 'success');
+            }
+          } else if (announce && forceRecover) {
+            setPrivacyStatusDetail(
+              result.message || 'Synced — no pXLM found for this seed yet'
+            );
+            toastRef.current.show(
+              result.message ||
+                'Synced private pool — no pXLM found for this seed yet',
+              'info'
+            );
+          }
+          return;
+        }
+
+        const isLinkFail =
+          /UnsatisfiedLinkError|JNI_SYMBOL_MISSING|No implementation found|outdated/i.test(
+            result.message || ''
+          );
+        setPrivacyStatusDetail(
+          isLinkFail
+            ? 'Private sync needs an updated app build'
+            : result.message || 'Could not restore private balance'
+        );
+        if (announce && !isLinkFail) {
+          toastRef.current.show(
+            result.message || 'Could not restore private balance',
+            'error'
+          );
+        }
+      } catch (e) {
+        try {
+          const { amount } = await getLocalPrivateBalance(
+            privacyAsset.chainKey,
+            stellarOwnerAddress
+          );
+          setPrivateBalance(amount);
+        } catch {
+          /* keep previous */
+        }
+        const msg =
+          e instanceof Error ? e.message : 'Private balance refresh failed';
+        setPrivacyStatusDetail(msg);
+        if (announce) toastRef.current.show(msg, 'error');
+      } finally {
+        privateRefreshInFlightRef.current = false;
+        setPrivateBalanceLoading(false);
+      }
+    },
+    [stellarOwnerAddress, privacyAsset, privacyMode]
+  );
+
+  // Private mode mount / remount: prefer cache + light path; one smart recover per session max.
+  useEffect(() => {
+    if (!privacyMode || !privacyAsset || !stellarOwnerAddress) {
       return;
     }
-    setPrivateBalanceLoading(true);
-    try {
-      const { amount } = await getLocalPrivateBalance(privacyAsset.chainKey, address);
-      setPrivateBalance(amount);
-    } finally {
-      setPrivateBalanceLoading(false);
-    }
-  }, [address, privacyAsset, privacyMode]);
+    let cancelled = false;
+    void (async () => {
+      const {
+        hasRecoveredThisSession,
+        getLastKnownPrivateAmount,
+      } = await import('../utils/stellarSpp');
+      if (cancelled) return;
+      const cached = getLastKnownPrivateAmount(
+        privacyAsset.chainKey,
+        stellarOwnerAddress
+      );
+      if (cached && Number.parseFloat(cached) > 0) {
+        setPrivateBalance(cached);
+      }
+      // Settings → Home remount must not re-open native pool.
+      if (hasRecoveredThisSession(privacyAsset.chainKey, stellarOwnerAddress)) {
+        await refreshPrivateBalance({ lightOnly: true, announce: false });
+        return;
+      }
+      await refreshPrivateBalance({ forceRecover: false, announce: true });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [privacyMode, privacyAsset?.id, stellarOwnerAddress, refreshPrivateBalance]);
 
+  // Focus: light private balance only + debounced silent history (no skeleton spam).
+  useFocusEffect(
+    useCallback(() => {
+      if (privacyMode) {
+        void refreshPrivateBalance({ lightOnly: true, announce: false });
+      }
+      if (address && activeChain?.key) {
+        const now = Date.now();
+        // Debounce: don't re-hit Horizon/indexers on every Settings bounce.
+        if (now - lastTxFocusRefreshAtRef.current > 45_000) {
+          lastTxFocusRefreshAtRef.current = now;
+          void refreshTransactions({ silent: true });
+        }
+      }
+    }, [
+      address,
+      activeChain?.key,
+      privacyMode,
+      refreshPrivateBalance,
+      refreshTransactions,
+    ])
+  );
+
+  // Quiet readiness probe for private mode.
+  // Sticky ready: once ASP is ready, do not flip back to "Setting up…" on re-probe races.
+  const [privacyReadyTick, setPrivacyReadyTick] = useState(0);
   useEffect(() => {
-    void refreshPrivateBalance();
-  }, [refreshPrivateBalance]);
+    if (!privacyMode || !privacyAsset || !stellarOwnerAddress) {
+      setPrivacyReadyStatus(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { sppNativeCapabilities } = await import('../utils/stellarSpp');
+        const { getSppAccount } = await import('../stores/sppAccountStore');
+        const caps = sppNativeCapabilities();
+        if (!caps.poolOps) {
+          if (!cancelled) setPrivacyReadyStatus('unavailable');
+          return;
+        }
+        const account = await getSppAccount(
+          privacyAsset.chainKey,
+          stellarOwnerAddress
+        ).catch(() => null);
+        if (cancelled) return;
+        if (account?.aspInserted) {
+          setPrivacyReadyStatus('ready');
+        } else {
+          // Do not downgrade an already-ready card (select path set ready before store catch-up).
+          setPrivacyReadyStatus((prev) =>
+            prev === 'ready' ? 'ready' : 'setting_up'
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setPrivacyReadyStatus((prev) => (prev === 'ready' ? 'ready' : null));
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [stellarOwnerAddress, privacyAsset, privacyMode, privacyReadyTick]);
 
   // If user left the pool's chain, clear privacy home mode (keep selection only when chain matches).
   useEffect(() => {
@@ -227,8 +473,6 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
       setSelectedPrivacyAssetId(null);
     }
   }, [activeChain?.key, selectedPrivacyAssetId, setSelectedPrivacyAssetId]);
-
-  const toast = useToast();
 
   // Scroll Engine for CRED-style Parallax Physics
   const scrollY = useSharedValue(0);
@@ -249,35 +493,44 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
     };
   });
 
-  // Clear + re-fetch transactions when wallet/chain changes
+  // Clear + re-fetch transactions when wallet/chain changes (not on every focus).
   useEffect(() => {
     if (!address || !activeChain) {
       return;
     }
     // Clear stale transactions from the previous chain before fetching new ones
     useTransactionStore.getState().clearTransactions();
-    refreshTransactions();
+    lastTxFocusRefreshAtRef.current = Date.now();
+    void refreshTransactions({ silent: false });
     // react-doctor-disable-next-line react-doctor/exhaustive-deps -- key on activeChain.key (stable primitive), NOT the activeChain object. The object identity is unstable across store rehydration, so depending on it clears + refetches transactions every render → visible reload loop. The chain key is the real dependency.
   }, [address, activeChain?.key, refreshTransactions]);
 
-  // Pull to refresh
+  // Pull to refresh — force full private recover (user intent) without toast spam.
   const onRefresh = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     setRefreshing(true);
     try {
-      // Silent balance refresh: the RefreshControl spinner already signals
-      // activity, so don't also flash the balance-card skeleton.
+      lastTxFocusRefreshAtRef.current = Date.now();
+      // Silent public balance: RefreshControl spinner already signals activity.
       await Promise.all([
         refreshMarketData(),
         refreshBalance({ silent: true }),
-        refreshTransactions(),
-        refreshPrivateBalance(),
+        refreshTransactions({ silent: true }),
+        privacyMode
+          ? refreshPrivateBalance({ forceRecover: true, announce: false })
+          : Promise.resolve(),
       ]);
     } catch (error) {
       console.warn("Failed to refresh:", error);
     }
     setRefreshing(false);
-  }, [refreshBalance, refreshTransactions, refreshMarketData, refreshPrivateBalance]);
+  }, [
+    refreshBalance,
+    refreshTransactions,
+    refreshMarketData,
+    refreshPrivateBalance,
+    privacyMode,
+  ]);
 
   // NOTE: This must be a real <RefreshControl> element, NOT a custom wrapper
   // component. On Android, ScrollView.render() does
@@ -351,30 +604,98 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
         }
       }
       setSelectedPrivacyAssetId(id);
+      setPrivacyStatusDetail(null);
       toast.show(`${asset.name} selected`, 'success');
 
-      // Privacy setup is part of selecting the token — not a Settings detour.
-      if (asset.protocol === 'spp' && address) {
+      // Privacy setup + chain note recovery (DATA-001) when selecting pXLM.
+      // Always use multi-chain Stellar G… — active `address` can still be 0x… after setActiveChain.
+      if (asset.protocol === 'spp') {
+        const owner =
+          (typeof addresses?.xlm === 'string' && /^G[A-Z2-7]{55}$/.test(addresses.xlm)
+            ? addresses.xlm
+            : null) ||
+          (typeof address === 'string' && /^G[A-Z2-7]{55}$/.test(address) ? address : null);
+
+        if (!owner) {
+          setPrivacyStatusDetail('Stellar address not ready — re-select pXLM');
+          toast.show('Stellar address not ready yet — wait a moment and re-select pXLM', 'error');
+          return;
+        }
+
+        setPrivacyReadyStatus('setting_up');
+        setPrivacyStatusDetail('Setting up private keys…');
+
         void import('../utils/stellarSpp')
-          .then(({ ensureSppAccountReady }) =>
-            ensureSppAccountReady(asset.chainKey, address).then((result) => {
-              if (result.aspReady) {
-                toast.show('Private XLM ready', 'success');
-              } else if (result.hasLeaf) {
-                toast.show(
-                  result.message || 'Privacy keys ready — register ASP if needed',
-                  'info'
-                );
-              }
-              return result;
-            })
-          )
-          .catch(() => {
-            /* non-blocking; shield path retries */
+          .then(async ({ ensureSppAccountReady, refreshPrivateBalanceSmart }) => {
+            const result = await ensureSppAccountReady(asset.chainKey, owner);
+            // Subtle on-card confirmation (user-visible even if toast is occluded).
+            if (result.aspReady) {
+              setPrivacyReadyStatus('ready');
+              setPrivacyStatusDetail('Private XLM ready — restoring balance…');
+              toast.show('Private XLM ready', 'success');
+            } else if (result.hasLeaf) {
+              setPrivacyReadyStatus('setting_up');
+              setPrivacyStatusDetail(result.message || 'Registering ASP membership…');
+              toast.show(
+                result.message || 'Privacy keys ready — register ASP if needed',
+                'info'
+              );
+            } else {
+              setPrivacyReadyStatus('setting_up');
+              setPrivacyStatusDetail(result.message || 'Preparing private keys…');
+              toast.show(result.message || 'Preparing private keys…', 'info');
+            }
+            setPrivacyReadyTick((t) => t + 1);
+
+            // One coordinated full recover on select (not every focus).
+            const { setLastKnownPrivateAmount } = await import('../utils/stellarSpp');
+            const recovery = await refreshPrivateBalanceSmart(asset.chainKey, owner, {
+              force: true,
+            });
+            const amt = recovery.amount || recovery.nativeAmount || '0';
+            const amtNum = parseFloat(amt);
+            setLastKnownPrivateAmount(asset.chainKey, owner, amt);
+            if (recovery.recovered && amtNum > 0) {
+              setPrivateBalance(amt);
+              setPrivacyReadyStatus('ready');
+              setPrivacyStatusDetail(`Restored ${amt} pXLM`);
+              toast.show(`Private balance restored: ${amt} pXLM`, 'success');
+            } else if (recovery.recovered) {
+              setPrivateBalance(amt);
+              setPrivacyStatusDetail(
+                recovery.message || 'Synced — no pXLM found for this seed yet'
+              );
+              toast.show(
+                recovery.message ||
+                  'Synced private pool — no pXLM found for this seed yet',
+                'info'
+              );
+            } else {
+              setPrivacyStatusDetail(
+                recovery.message || 'Could not restore private balance'
+              );
+              toast.show(
+                recovery.message || 'Could not restore private balance',
+                'error'
+              );
+            }
+            return recovery;
+          })
+          .catch((e) => {
+            const msg = e instanceof Error ? e.message : 'Private setup failed';
+            setPrivacyStatusDetail(msg);
+            toast.show(msg, 'error');
           });
       }
     },
-    [activeChain?.key, address, setActiveChain, setSelectedPrivacyAssetId, toast]
+    [
+      activeChain?.key,
+      address,
+      addresses,
+      setActiveChain,
+      setSelectedPrivacyAssetId,
+      toast,
+    ]
   );
 
   const handleExitPrivacyMode = useCallback(() => {
@@ -510,7 +831,15 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
       : '0.00';
   const displayBalance = privacyMode ? privateFiat : publicDisplayBalance;
   const displayCrypto = privacyMode ? privateBalance || '0' : publicDisplayCrypto;
-  const displayTransactions = transactions.length > 0 ? transactions : [];
+  const displayTransactions = useMemo(
+    () =>
+      filterTransactionsForPrivacyMode(transactions, {
+        privacyMode,
+        privacyChainKey: privacyAsset?.chainKey,
+        publicChainKey: activeChain?.key,
+      }),
+    [activeChain?.key, privacyAsset?.chainKey, privacyMode, transactions]
+  );
   const visibleTransakOrder = latestTransakOrder?.walletAddress === address ? latestTransakOrder : null;
   const visibleOnrampOrder = isFiatGatewayOrderForAddress(latestOnrampOrder, address) ? latestOnrampOrder : null;
 
@@ -525,7 +854,8 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
   }, [clearLatestTransakOrder, visibleTransakOrder]);
 
   useEffect(() => {
-    if (!visibleOnrampOrder?.orderId) {
+    // SEC-005: poll status with the opaque signed token, not the raw order UUID.
+    if (!visibleOnrampOrder?.statusToken) {
       return;
     }
 
@@ -534,7 +864,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
     }
 
     const syncOrderStatus = async () => {
-      await checkOrderStatus(visibleOnrampOrder.orderId as string);
+      await checkOrderStatus(visibleOnrampOrder.statusToken as string);
     };
 
     void syncOrderStatus();
@@ -543,7 +873,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
     return () => {
       clearInterval(intervalId);
     };
-  }, [checkOrderStatus, visibleOnrampOrder?.orderId, visibleOnrampOrder?.status]);
+  }, [checkOrderStatus, visibleOnrampOrder?.statusToken, visibleOnrampOrder?.status]);
 
   const transakOrderMeta = visibleTransakOrder
     ? (() => {
@@ -652,13 +982,13 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
                     <View style={styles.chainSelectorContent}>
                       <View style={styles.chainSelectorLeft}>
                         <Text style={styles.chainLabel}>
-                          [ {privacyMode ? privacyAsset?.symbol || 'pXLM' : activeChain?.symbol || 'ETH'} •{' '}
-                          {activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'}
-                          {privacyMode ? ' • PRIVATE' : ''} ]
+                          {privacyMode
+                            ? `[ ${privacyAsset?.symbol || 'pXLM'} · ${activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'} ]`
+                            : `[ ${activeChain?.symbol || 'ETH'} · ${activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'} ]`}
                         </Text>
                         <Text style={styles.chainName}>
                           {privacyMode
-                            ? (privacyAsset?.name || 'PRIVATE XLM').toUpperCase()
+                            ? (privacyAsset?.name || 'Private XLM').toUpperCase()
                             : activeChain?.name?.toUpperCase() || 'ETHEREUM'}
                         </Text>
                       </View>
@@ -690,7 +1020,8 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
                 marketQuote={marketQuote}
                 privacyMode={privacyMode}
                 cryptoSymbol={privacyMode ? privacyAsset?.symbol : activeChain?.symbol}
-                privacyFeatures={privacyMode ? privacyAsset?.features : undefined}
+                privacyReadyStatus={privacyMode ? privacyReadyStatus : null}
+                privacyStatusDetail={privacyMode ? privacyStatusDetail : null}
               />
             </Animated.View>
           </MotiView>
@@ -773,6 +1104,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
               onSeeAll={() => navigation.navigate(SCREENS.TRANSACTION_HISTORY)}
               onTransactionPress={(item) => navigation.navigate(SCREENS.TRANSACTION_DETAILS, { transaction: item })}
               onSend={handleSend}
+              privateMode={privacyMode}
             />
           </MotiView>
 
@@ -818,11 +1150,12 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
         }}
       />
 
-      {/* Toast Notification */}
+      {/* Toast above bottom nav (zIndex/elevation set in Toast styles). */}
       <Toast
         visible={toast.visible}
         message={toast.message}
         type={toast.type}
+        duration={4500}
         onDismiss={toast.hide}
       />
     </SafeAreaView>

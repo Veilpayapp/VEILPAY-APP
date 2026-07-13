@@ -13,7 +13,7 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 [features]
 default = ["derive-keys"]
 # Enable when building libspp_native.so for Android (cargo-ndk). Pulls in jni.
-android-jni = ["dep:jni"]
+android-jni = ["dep:jni", "dep:jni22"]
 # Poseidon2 key derive + ASP leaf (matches SPP CLI / sdk/prover).
 derive-keys = []
 # Link stellar-private-payments-sdk (sdk/pool) for real prove/submit.
@@ -25,6 +25,9 @@ pool-ops = ["dep:stellar-private-payments-sdk", "dep:parking_lot", "dep:reqwest"
 
 [dependencies]
 jni = { version = "0.21", optional = true, default-features = false }
+# rustls-platform-verifier 0.7 uses jni 0.22 on Android. Keep the existing JNI
+# bridge on 0.21 and use this renamed dependency only for verifier init.
+jni22 = { package = "jni", version = "0.22.4", optional = true, default-features = false }
 # Key derive / ASP leaf (aligned with packages/vendor/spp sdk/prover)
 ark-bn254 = { version = "0.6.0", default-features = false, features = ["curve"] }
 ark-ff = { version = "0.6.0", default-features = false }
@@ -43,6 +46,11 @@ parking_lot = { version = "0.12", optional = true }
 stellar-private-payments-sdk = { path = "../vendor/spp/sdk/pool", optional = true }
 # Pull rustls TLS for HTTPS Soroban RPC (sdk/stellar depends on reqwest sans TLS).
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"], optional = true }
+
+[target.'cfg(target_os = "android")'.dependencies]
+# Direct Android init is required before rustls-platform-verifier can verify HTTPS
+# Soroban RPC certificates through the Android platform trust manager.
+rustls-platform-verifier = "0.7.0"
 
 [profile.release]
 lto = true

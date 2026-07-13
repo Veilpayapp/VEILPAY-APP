@@ -1,4 +1,4 @@
-# VeilPay End-to-End Smoke Test
+# Veilpay End-to-End Smoke Test
 
 > Feature: `veilpay-privacy-stack`, Task 11.3
 

@@ -1,24 +1,24 @@
-# VeilPay Merchant Dashboard - End-to-End Build Specification
+# Veilpay Merchant Dashboard - End-to-End Build Specification
 
-This document outlines the architecture, phases, and API integrations required to build the **VeilPay Merchant Dashboard**. This dashboard serves as the self-service portal for merchants to manage their privacy-preserving payment infrastructure, view analytics, and configure developer settings (like Webhooks and API Keys).
+This document outlines the architecture, phases, and API integrations required to build the **Veilpay Merchant Dashboard**. This dashboard serves as the self-service portal for merchants to manage their privacy-preserving payment infrastructure, view analytics, and configure developer settings (like Webhooks and API Keys).
 
 ---
 
 ## 1. Architecture & Tech Stack Recommendations
 
-We recommend a modern, fast, and secure stack that aligns with the rest of the VeilPay ecosystem:
+We recommend a modern, fast, and secure stack that aligns with the rest of the Veilpay ecosystem:
 
 - **Framework**: [Next.js](https://nextjs.org/) (App Router recommended for server components and SEO).
 - **Styling**: Tailwind CSS with custom utility components built from scratch to achieve the exact "sovereign minimalist" aesthetic. Avoid heavy component libraries.
 - **State Management & Data Fetching**: [TanStack Query (React Query)](https://tanstack.com/query/latest) for caching, pagination, and invalidation of API responses.
 - **Form Handling**: `react-hook-form` + `zod` for robust client-side validation.
-- **Authentication Strategy**: The backend utilizes a stateless HMAC Signature + API Key mechanism, but is now equipped with **distributed Redis sessions**. The Next.js frontend should manage the login state by exchanging credentials for a session cookie, securely acting as the middle-tier to sign requests to the VeilPay Core API.
+- **Authentication Strategy**: The backend utilizes a stateless HMAC Signature + API Key mechanism, but is now equipped with **distributed Redis sessions**. The Next.js frontend should manage the login state by exchanging credentials for a session cookie, securely acting as the middle-tier to sign requests to the Veilpay Core API.
 
 ---
 
 ## 2. API Integration Surface
 
-The VeilPay core backend already supports all the necessary endpoints for the dashboard.
+The Veilpay core backend already supports all the necessary endpoints for the dashboard.
 
 **Base URL**: `https://veilpay-backend.com/api/v1` (or local `http://localhost:3001/api/v1`)
 **Auth Headers Required**: `x-api-key`, `x-signature`, `x-timestamp`
@@ -78,7 +78,7 @@ The VeilPay core backend already supports all the necessary endpoints for the da
   - Implement a **"Retry"** action (`POST /webhook/:id/retry`) allowing merchants to manually push a failed event back to their server once their downtime is resolved.
 
 ### Phase 5: Business Features Expansion (Future)
-**Goal:** Integrate upcoming VeilPay protocol upgrades.
+**Goal:** Integrate upcoming Veilpay protocol upgrades.
 - **Fiat On-Ramps:** UI to configure Stripe/MoonPay integrations for invoices.
 - **Recurring Payments:** UI to manage active crypto subscriptions (Superfluid EVM / Solana Token Streams).
 - **KYC Tiers:** UI to upload verification documents to unlock higher payment limits.

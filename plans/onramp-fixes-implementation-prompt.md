@@ -1,6 +1,6 @@
-# VeilPay On-Ramp: Complete Implementation Prompt
+# Veilpay On-Ramp: Complete Implementation Prompt
 
-> **Purpose:** This document is a self-contained implementation prompt that covers every bug, gap, and improvement needed in the VeilPay crypto on-ramp flow. An engineer (human or AI) should be able to read this document alone and implement every fix without additional context.
+> **Purpose:** This document is a self-contained implementation prompt that covers every bug, gap, and improvement needed in the Veilpay crypto on-ramp flow. An engineer (human or AI) should be able to read this document alone and implement every fix without additional context.
 
 ---
 

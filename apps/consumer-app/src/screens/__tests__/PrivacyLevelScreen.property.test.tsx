@@ -4,14 +4,22 @@
 //
 // Property 19 (see design.md §Correctness Properties):
 //   For any `(chainId, configured)` pair, the `PrivacyLevelScreen`'s
-//   `'stealth'` and `'max'` rows MUST be rendered with
+//   `'stealth'` row MUST be rendered with
 //   `accessibilityState.disabled === true` whenever
 //   `chainId !== SEPOLIA_CHAIN_ID (11155111)` OR
 //   `isPrivacyStackConfigured() === false`. The `'standard'` row is
 //   universally selectable regardless of network.
 //
 //   Equivalently: `supported = (chainId === 11155111) && configured`,
-//   and for `level ∈ {'stealth', 'max'}`, `disabled === !supported`.
+//   and for `'stealth'`, `disabled === !supported`.
+//
+// DATA-002 amendment: the `'max'` row is ALWAYS disabled until
+// `EVM_MAX_PRIVACY_WITHDRAW_READY` flips to `true` (deposit-time Merkle
+// path + nullifierHash + relayer withdraw wired end-to-end). Until then,
+// exposing max deposits would let users lock funds they can never recover
+// from the app. So `max.disabled === true` for ALL `(chainId, configured)`
+// pairs in this build. When the withdraw path ships, restore the
+// `disabled === !supported` assertion for max and remove this amendment.
 //
 // Why a property test
 // -------------------
@@ -66,6 +74,20 @@ jest.mock('../../constants/contracts', () => ({
   GROTH16_VERIFIER_ADDRESS: '0x0000000000000000000000000000000000000000',
   SEPOLIA_CHAIN_ID: 11155111,
   isPrivacyStackConfigured: () => mockIsPrivacyStackConfigured(),
+  // DATA-002: the max-privacy withdraw path is not wired end-to-end, so the
+  // flag is false in this build. The `max` row must always be disabled.
+  EVM_MAX_PRIVACY_WITHDRAW_READY: false,
+}));
+
+// SPP-001: usePrivacyOptions probes poolOps; keep stub so screen mount is hermetic.
+jest.mock('../../utils/stellarSpp/sppNativeBridge', () => ({
+  __esModule: true,
+  sppNativeCapabilities: () => ({
+    backend: 'stub',
+    poolOps: false,
+    aspLeaf: false,
+    version: 'test',
+  }),
 }));
 
 const mockSetPrivacyLevel = jest.fn();
@@ -213,8 +235,10 @@ describe('PrivacyLevelScreen — Property 19: network gating', () => {
 
           // Property 19, branch (a) — stealth disabled iff !supported.
           expect(!!stealthRow.props.accessibilityState?.disabled).toBe(!supported);
-          // Property 19, branch (b) — max disabled iff !supported.
-          expect(!!maxRow.props.accessibilityState?.disabled).toBe(!supported);
+          // DATA-002: max is ALWAYS disabled until EVM_MAX_PRIVACY_WITHDRAW_READY
+          // flips true. Asserting disabled === true for every (chainId, configured)
+          // pair keeps this build from offering max deposits that would lock funds.
+          expect(!!maxRow.props.accessibilityState?.disabled).toBe(true);
           // Invariant — standard is universally selectable; the gate must
           // never collateral-damage the always-available row.
           expect(!!standardRow.props.accessibilityState?.disabled).toBe(false);

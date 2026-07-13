@@ -1,6 +1,6 @@
 # spp-native
 
-Phase 0/1 native FFI shell for VeilPay Stellar Private Payments (SPP).
+Phase 0/1 native FFI shell for Veilpay Stellar Private Payments (SPP).
 
 ## Purpose
 

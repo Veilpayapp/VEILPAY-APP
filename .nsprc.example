@@ -1,0 +1,12 @@
+{
+  "_comment": "Allowlist for the CI dependency-audit gate (better-npm-audit). Each entry suppresses a known-vulnerability advisory with a documented rationale and expiry date. Rename this file to `.nsprc` (without the .example suffix) and edit the entries to acknowledge advisories we explicitly accept. Make sure the rationale stays accurate and the expiry is renewed before it lapses.",
+  "_schema": "https://docs.npmjs.com/about-npm-audit-report",
+  "examples": {
+    "GHSA-xxxx-yyyy-zzzz": {
+      "active": true,
+      "reason": "Transitive dev dependency only used in test fixtures. Impact limited to CI, not production. Will be removed when example dep X is dropped.",
+      "expiry": "2026-12-31",
+      "_comment": "Set active=false once a fix has shipped upstream OR once the dependent package is removed; remove this example before merging."
+    }
+  }
+}

@@ -11,6 +11,7 @@ export {
 export {
   getSppStatus,
   getLocalPrivateBalance,
+  recoverSppNotesFromChain,
   deposit,
   transfer,
   withdraw,
@@ -19,7 +20,19 @@ export {
   withExplorer,
   type AspMembershipStatus,
   type SppPrepChecklist,
+  type SppNoteRecoveryResult,
 } from './sppClient';
+
+export {
+  recoverSppNotesCoordinated,
+  refreshPrivateBalanceSmart,
+  readLocalPrivateBalanceLight,
+  hasRecoveredThisSession,
+  getLastKnownPrivateAmount,
+  setLastKnownPrivateAmount,
+  resetSppRecoverySession,
+  type CoordinatedRecoverOptions,
+} from './sppRecoveryCoordinator';
 
 export {
   SPP_KEY_DERIVATION_MESSAGE,
@@ -44,6 +57,8 @@ export {
   sppNativePoolReadiness,
   sppNativePoolOpen,
   sppNativePoolClose,
+  sppNativePoolSync,
+  sppNativePoolBalance,
   type SppNativeOpResult,
   type SppNativeModule,
 } from './sppNativeBridge';
@@ -64,6 +79,14 @@ export {
   type SppLifecycleResult,
   type SppLifecycleStep,
 } from './sppLifecycle';
+
+export {
+  createSppActivityRecord,
+  getSppActivityTitle,
+  getSppActivitySubtitle,
+  isSppActivityRecord,
+  type CreateSppActivityRecordParams,
+} from './sppActivity';
 
 export {
   SppClientError,

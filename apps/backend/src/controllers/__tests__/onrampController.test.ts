@@ -1,11 +1,13 @@
 import type { Request, Response, NextFunction } from 'express';
-import { getOnrampQuotes, createOnrampUrl } from '../onrampController';
+import { getOnrampQuotes, createOnrampUrl, getOnrampStatus } from '../onrampController';
+import { createStatusToken } from '../../utils/onrampStatusToken';
 
 // Mock prisma and provider services
 jest.mock('../../lib/prisma', () => ({
   prisma: {
     fiatOrder: {
       create: jest.fn().mockResolvedValue({ id: 'test-order-id' }),
+      findFirst: jest.fn(),
     },
   },
 }));
@@ -37,6 +39,10 @@ const mockFetch = jest.fn();
 
 function mockRequest(query?: Record<string, string>, body?: Record<string, unknown>): Partial<Request> {
   return { query: query ?? {}, body: body ?? {}, params: {} } as Partial<Request>;
+}
+
+function mockRequestWithParams(params: Record<string, string>): Partial<Request> {
+  return { params, query: {}, body: {} } as Partial<Request>;
 }
 
 function mockResponse(): { res: Partial<Response>; statusFn: jest.Mock; jsonFn: jest.Mock } {
@@ -210,5 +216,129 @@ describe('createOnrampUrl', () => {
         ]),
       }),
     );
+  });
+
+  it('SEC-005: returns a statusToken alongside url and orderId on success', async () => {
+    const { res, jsonFn } = mockResponse();
+    await createOnrampUrl(
+      mockRequest(undefined, {
+        userAddress: '0x1234567890abcdef1234567890abcdef12345678',
+        fiatAmount: '100',
+        fiatCurrency: 'USD',
+        cryptoToken: 'ETH',
+        chainKey: 'ethereum',
+        flow: 'buy',
+      }) as Request,
+      res as Response,
+      noop,
+    );
+    expect(jsonFn).toHaveBeenCalled();
+    const body = jsonFn.mock.calls[0][0];
+    expect(body.orderId).toBe('test-order-id');
+    expect(typeof body.statusToken).toBe('string');
+    expect(body.statusToken.length).toBeGreaterThan(0);
+    // Token must contain the separator between orderId and signature.
+    expect(body.statusToken).toContain('.');
+  });
+});
+
+describe('getOnrampStatus (SEC-005: signed token + minimized response)', () => {
+  const { prisma } = require('../../lib/prisma') as { prisma: any };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  function makeOrder(overrides: Record<string, unknown> = {}) {
+    return {
+      id: 'order-uuid-123',
+      orderId: 'order-uuid-123',
+      provider: 'onramp_money',
+      status: 'processing',
+      flow: 'buy',
+      fiatAmount: '100',
+      fiatCurrency: 'USD',
+      cryptoToken: 'ETH',
+      cryptoAmount: '0.04',
+      chainKey: 'ethereum',
+      txHash: null,
+      userAddress: '0xsecretwalletaddress',
+      ...overrides,
+    };
+  }
+
+  it('rejects a request without a valid token signature (401)', async () => {
+    const { res, statusFn, jsonFn } = mockResponse();
+    // A raw order UUID without a signature — the old attack vector.
+    await getOnrampStatus(
+      mockRequestWithParams({ id: 'order-uuid-123' }) as Request,
+      res as Response,
+      noop,
+    );
+    expect(statusFn).toHaveBeenCalledWith(401);
+    expect(jsonFn).toHaveBeenCalledWith({ error: 'Invalid or expired status token' });
+    expect(prisma.fiatOrder.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('rejects a tampered signature (401)', async () => {
+    const { res, statusFn } = mockResponse();
+    // Real token for one order, but we tamper the signature.
+    const token = createStatusToken('order-uuid-123');
+    const [orderId, sig] = token.split('.');
+    const tampered = `${orderId}.deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef`;
+    await getOnrampStatus(
+      mockRequestWithParams({ id: tampered }) as Request,
+      res as Response,
+      noop,
+    );
+    expect(statusFn).toHaveBeenCalledWith(401);
+    expect(prisma.fiatOrder.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('returns a minimized status for a valid token (no userAddress)', async () => {
+    const order = makeOrder();
+    prisma.fiatOrder.findFirst.mockResolvedValue(order);
+
+    const { res, jsonFn } = mockResponse();
+    const token = createStatusToken('order-uuid-123');
+
+    await getOnrampStatus(
+      mockRequestWithParams({ id: token }) as Request,
+      res as Response,
+      noop,
+    );
+
+    expect(prisma.fiatOrder.findFirst).toHaveBeenCalledWith({
+      where: { OR: [{ id: 'order-uuid-123' }, { orderId: 'order-uuid-123' }] },
+    });
+    const body = jsonFn.mock.calls[0][0];
+    // Fields the consumer-app needs:
+    expect(body.id).toBe('order-uuid-123');
+    expect(body.orderId).toBe('order-uuid-123');
+    expect(body.status).toBe('processing');
+    expect(body.flow).toBe('buy');
+    expect(body.fiatAmount).toBe('100');
+    expect(body.fiatCurrency).toBe('USD');
+    expect(body.cryptoToken).toBe('ETH');
+    expect(body.cryptoAmount).toBe('0.04');
+    expect(body.chainKey).toBe('ethereum');
+    // SEC-005: userAddress MUST NOT be in the response.
+    expect(body).not.toHaveProperty('userAddress');
+    expect(body).not.toHaveProperty('walletAddress');
+  });
+
+  it('returns 404 when the order does not exist', async () => {
+    prisma.fiatOrder.findFirst.mockResolvedValue(null);
+    const { res, statusFn, jsonFn } = mockResponse();
+    const token = createStatusToken('nonexistent-order');
+
+    await getOnrampStatus(
+      mockRequestWithParams({ id: token }) as Request,
+      res as Response,
+      noop,
+    );
+
+    expect(statusFn).toHaveBeenCalledWith(404);
+    expect(jsonFn).toHaveBeenCalledWith({ error: 'Order not found' });
   });
 });

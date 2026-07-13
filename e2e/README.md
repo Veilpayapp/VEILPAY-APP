@@ -1,4 +1,4 @@
-# VeilPay E2E
+# Veilpay E2E
 
 Maestro scaffold for the consumer app.
 

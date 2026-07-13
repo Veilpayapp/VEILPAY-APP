@@ -1,18 +1,35 @@
-import type { Request, Response, NextFunction } from "express";
+import type { Response, NextFunction } from "express";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import type { AuthenticatedRequest } from "../middleware/auth";
 import { prisma } from "../lib/prisma";
-import { enqueueWebhook } from "../jobs/webhookQueue";
+import { confirmInvoicePayment } from "../services/paymentProcessor";
+import { verifyPaymentTxOnChain } from "../services/paymentTxVerifier";
 import {
   PaymentListQuerySchema,
   PaymentListResponseSchema,
   uuidParamSchema,
 } from "../types";
 
+/**
+ * SEC-001: `/api/v1/payment/confirm` is auth-gated (see `routes/payment.ts`).
+ * The caller's `merchantId` is taken from the HMAC-signed auth context — NOT
+ * from the request body — and the invoice must belong to that merchant and be
+ * `pending`.
+ *
+ * SEC-001 residual (Phase 1): before committing payment state, the claimed
+ * `txHash` is verified on-chain (EVM via viem, non-EVM via Goldrush address
+ * history) so a compromised merchant key cannot mark an invoice paid for a
+ * transaction that never landed. The indexer path remains authoritative for
+ * automated matching; this gate hardens the HTTP confirm surface.
+ *
+ * The `merchantId` field is intentionally absent from this schema so a caller
+ * cannot confirm a payment against another merchant's invoice. Zod strips
+ * unknown keys by default, so legacy clients that still send `merchantId`
+ * are silently ignored rather than rejected.
+ */
 const PaymentConfirmBodySchema = z.object({
   invoiceId: z.string().uuid(),
-  merchantId: z.string().uuid(),
   chainKey: z.string().trim().min(1).max(50),
   txHash: z.string().trim().min(1).max(128).regex(/^(0x[0-9a-fA-F]{64}|[A-Za-z0-9]{32,128})$/),
   fromAddress: z.string().trim().min(1).max(100),
@@ -23,49 +40,89 @@ const PaymentConfirmBodySchema = z.object({
   blockNumber: z.union([z.string(), z.number()]).optional(),
 });
 
-export const confirmPayment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const confirmPayment = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const body = PaymentConfirmBodySchema.parse(req.body);
+    const merchantId = req.merchantId as string;
 
-    const payment = await prisma.payment.create({
-      data: {
-        invoiceId: body.invoiceId,
-        merchantId: body.merchantId,
-        chainKey: body.chainKey,
+    if (!merchantId) {
+      // Defensive — authMiddleware + requireAuth should already have rejected
+      // unauthenticated callers at the route layer. Keep this so a misrouted
+      // request can never fall through to a state-mutating write.
+      res.status(401).json({ error: "Authentication required" });
+      return;
+    }
+
+    // Validate the invoice before touching payment state. We use 404 for
+    // both "not found" and "belongs to another merchant" so the endpoint
+    // does not leak which invoices exist for other merchants.
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: body.invoiceId },
+    });
+
+    if (!invoice || invoice.merchantId !== merchantId) {
+      res.status(404).json({ error: "Invoice not found" });
+      return;
+    }
+    if (invoice.status !== "pending") {
+      res.status(409).json({ error: `Invoice is ${invoice.status}, not pending` });
+      return;
+    }
+    if (invoice.chainKey !== body.chainKey) {
+      res.status(400).json({ error: "chainKey does not match invoice" });
+      return;
+    }
+
+    // SEC-001 residual: never trust caller-reported chain facts alone.
+    const verified = await verifyPaymentTxOnChain(
+      {
+        id: invoice.id,
+        chainKey: invoice.chainKey,
+        tokenSymbol: invoice.tokenSymbol,
+        amount: invoice.amount,
+        paymentAddress: invoice.paymentAddress,
+      },
+      {
         txHash: body.txHash,
         fromAddress: body.fromAddress,
         toAddress: body.toAddress,
         amount: body.amount,
         tokenSymbol: body.tokenSymbol,
-        privacyLevel: body.privacyLevel,
-        status: "confirmed",
         blockNumber: body.blockNumber ? parseInt(String(body.blockNumber), 10) : undefined,
-      },
-    });
+      }
+    );
 
-    const invoice = await prisma.invoice.update({
-      where: { id: body.invoiceId },
-      data: {
-        status: "paid",
-        paidAt: new Date(),
-        paymentTxHash: body.txHash,
-      },
-    });
+    if (!verified.ok) {
+      res.status(verified.status).json({ error: verified.error });
+      return;
+    }
 
-    await enqueueWebhook({
-      eventType: "payment.received",
-      merchantId: body.merchantId,
-      invoiceId: body.invoiceId,
-      chainKey: body.chainKey,
-      tokenSymbol: body.tokenSymbol,
-      amount: body.amount,
-      privacyLevel: body.privacyLevel,
-      timestamp: Date.now(),
-    });
+    const outcome = await confirmInvoicePayment(
+      {
+        id: invoice.id,
+        merchantId: invoice.merchantId,
+        chainKey: invoice.chainKey,
+        tokenSymbol: invoice.tokenSymbol,
+        amount: invoice.amount,
+        privacyLevel: invoice.privacyLevel,
+      },
+      verified.tx
+    );
+
+    if (outcome.kind === "idempotent") {
+      res.status(200).json({
+        success: true,
+        paymentId: outcome.paymentId,
+        invoiceId: invoice.id,
+        status: "confirmed",
+        idempotent: true,
+      });
+      return;
+    }
 
     res.status(201).json({
       success: true,
-      paymentId: payment.id,
+      paymentId: outcome.paymentId,
       invoiceId: invoice.id,
       status: "confirmed",
     });

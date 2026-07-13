@@ -331,6 +331,10 @@ export const useWalletStore = create<WalletState>()(
       },
 
       setActiveChain: (chain: ChainConfig) => {
+        // Aptos (mvm) is fully removed — never re-select it.
+        if ((chain.type as string) === 'mvm' || chain.key === 'aptos') {
+          chain = SUPPORTED_CHAINS[0];
+        }
         const addresses = get().addresses;
         const newAddress = addresses[chain.type] || null;
         
@@ -360,6 +364,9 @@ export const useWalletStore = create<WalletState>()(
       },
 
       addCustomChain: (chain: ChainConfig): void => {
+        if ((chain.type as string) === 'mvm' || chain.key === 'aptos') {
+          return; // Aptos removed — ignore legacy/custom aptos entries
+        }
         set((state: WalletState) => ({
           customChains: [...state.customChains.filter((c) => c.key !== chain.key), chain],
         }));
@@ -482,7 +489,7 @@ export const useWalletStore = create<WalletState>()(
             scope: 'wallet-store',
           });
         }
-        // Drop Aptos if a pre-removal build left it as the active chain.
+        // Legacy: purge Aptos (mvm) if an older build left it selected.
         if (state) {
           const activeType = state.activeChain?.type as string | undefined;
           if (activeType === 'mvm' || state.activeChain?.key === 'aptos') {
@@ -498,7 +505,7 @@ export const useWalletStore = create<WalletState>()(
           delete state.latestTransakOrder;
         }
         if (version < 3) {
-          // Aptos (mvm) removed from the app — migrate any stored selection away.
+          // Aptos fully removed — strip mvm/aptos from persisted wallet state.
           const active = state.activeChain as { type?: string; key?: string } | null | undefined;
           if (active?.type === 'mvm' || active?.key === 'aptos') {
             state.activeChain = SUPPORTED_CHAINS[0];
@@ -512,6 +519,21 @@ export const useWalletStore = create<WalletState>()(
           const custom = state.customChains as Array<{ type?: string; key?: string }> | undefined;
           if (Array.isArray(custom)) {
             state.customChains = custom.filter((c) => c?.type !== 'mvm' && c?.key !== 'aptos');
+          }
+          // Drop cached Aptos addresses from top-level + per-account maps.
+          const stripMvm = (map: Record<string, string | null> | undefined) => {
+            if (!map || typeof map !== 'object') return map;
+            const next = { ...map };
+            delete next.mvm;
+            delete next.aptos;
+            return next;
+          };
+          state.addresses = stripMvm(state.addresses as Record<string, string | null> | undefined);
+          const accounts = state.accounts as Array<{ addresses?: Record<string, string | null> }> | undefined;
+          if (Array.isArray(accounts)) {
+            state.accounts = accounts.map((a) =>
+              a?.addresses ? { ...a, addresses: stripMvm(a.addresses) } : a
+            );
           }
         }
         return state as Partial<WalletState>;

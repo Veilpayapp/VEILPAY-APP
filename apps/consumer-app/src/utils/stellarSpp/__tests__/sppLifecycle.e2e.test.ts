@@ -44,6 +44,15 @@ jest.mock('../sppOnboard', () => {
   };
 });
 
+jest.mock('../sppCircuits', () => ({
+  getCircuitsReadiness: jest.fn(async () => ({
+    dir: '/mock/spp/circuits',
+    ready: true,
+    missing: [],
+    message: 'mock circuits ready',
+  })),
+}));
+
 // Real pool_open needs mnemonic + circuits; unit E2E only tests note lifecycle.
 jest.mock('../sppPoolSession', () => ({
   ensurePoolSession: jest.fn(async () => ({
@@ -95,12 +104,43 @@ describe('SPP lifecycle E2E (mock poolOps)', () => {
 
   it('deposit records a local note and increases private balance', async () => {
     const before = await getLocalPrivateBalance('stellar-testnet', OWNER);
-    const start = Number(before.amount);
+    const start = before.amount;
     const res = await deposit('stellar-testnet', OWNER, '1.25');
     expect(res.txHash).toMatch(/^mock-dep-/);
     expect(res.explorerUrl).toContain(res.txHash);
     const after = await getLocalPrivateBalance('stellar-testnet', OWNER);
-    expect(Number(after.amount)).toBeCloseTo(start + 1.25, 5);
+    expect(start).toBe('0');
+    expect(after.amount).toBe('1.25');
+  });
+
+  it('fails transfer before native submit when local notes are insufficient', async () => {
+    await expect(
+      import('../index').then(({ transfer }) =>
+        transfer('stellar-testnet', OWNER, '2', {
+          kind: 'address',
+          stellarAddress: RECIPIENT,
+        })
+      )
+    ).rejects.toMatchObject({ code: 'SPP_LOCAL_NOTES_INSUFFICIENT' });
+
+    const balance = await getLocalPrivateBalance('stellar-testnet', OWNER);
+    expect(balance.amount).toBe('0');
+  });
+
+  it('creates exact change after a partial private transfer', async () => {
+    await deposit('stellar-testnet', OWNER, '1');
+    const { transfer } = await import('../index');
+
+    const res = await transfer('stellar-testnet', OWNER, '0.4', {
+      kind: 'address',
+      stellarAddress: RECIPIENT,
+    });
+
+    expect(res.txHash).toMatch(/^mock-xfer-/);
+    const balance = await getLocalPrivateBalance('stellar-testnet', OWNER);
+    expect(balance.amount).toBe('0.6');
+    expect(balance.notes).toHaveLength(1);
+    expect(balance.notes[0].id).toContain('chg-');
   });
 
   it('shield → transfer → unshield full cycle', async () => {

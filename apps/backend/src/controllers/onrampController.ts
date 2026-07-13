@@ -5,6 +5,7 @@ import { OnrampService } from '../lib/onramp';
 import { MoonPayService } from '../lib/moonpay';
 import { logger } from '../lib/logger';
 import { z, ZodError } from 'zod';
+import { createStatusToken, verifyStatusToken, InvalidStatusTokenError } from '../utils/onrampStatusToken';
 
 /**
  * Maximum age of an Onramp.money webhook event before we reject it as a
@@ -182,7 +183,14 @@ export const createOnrampUrl = async (req: Request, res: Response, _next: NextFu
       },
     });
 
-    res.json({ url, orderId: order.id });
+    res.json({
+      url,
+      orderId: order.id,
+      // SEC-005: opaque signed token the consumer-app must present to poll
+      // status. Keeps the raw order UUID out of status-poll URLs/logs and
+      // prevents anyone without the token from reading order details.
+      statusToken: createStatusToken(order.id),
+    });
   } catch (error) {
     if (error instanceof ZodError) {
       const messages = error.issues.map(i => `${i.path.join('.')}: ${i.message}`);
@@ -520,10 +528,25 @@ export const handleOnrampWebhook = async (
 
 export const getOnrampStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { id } = req.params;
-    
+    const { id: token } = req.params;
+
+    // SEC-005 fix: require a signed opaque status token instead of the raw
+    // order UUID. The token is issued once from `POST /api/v1/onramp/url` and
+    // verifies an HMAC over the order ID so an attacker who only has the UUID
+    // cannot read order details.
+    let orderId: string;
+    try {
+      orderId = verifyStatusToken(token);
+    } catch (e) {
+      if (e instanceof InvalidStatusTokenError) {
+        res.status(401).json({ error: 'Invalid or expired status token' });
+        return;
+      }
+      throw e;
+    }
+
     const order = await prisma.fiatOrder.findFirst({
-      where: { OR: [{ id }, { orderId: id }] },
+      where: { OR: [{ id: orderId }, { orderId }] },
     });
 
     if (!order) {
@@ -531,7 +554,24 @@ export const getOnrampStatus = async (req: Request, res: Response, next: NextFun
       return;
     }
 
-    res.json(order);
+    // SEC-005 fix: return only the fields the consumer-app needs to render
+    // status. `userAddress` is intentionally omitted — the consumer-app
+    // already knows the wallet address it submitted at order creation, and
+    // exposing it by order ID lets anyone with the token harvest addresses
+    // tied to fiat purchases.
+    res.json({
+      id: order.id,
+      orderId: order.orderId,
+      provider: order.provider,
+      status: order.status,
+      flow: order.flow,
+      fiatAmount: order.fiatAmount,
+      fiatCurrency: order.fiatCurrency,
+      cryptoToken: order.cryptoToken,
+      cryptoAmount: order.cryptoAmount,
+      chainKey: order.chainKey,
+      txHash: order.txHash,
+    });
   } catch (error) {
     next(error);
   }

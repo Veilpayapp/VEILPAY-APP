@@ -1,7 +1,11 @@
 import { Linking } from 'react-native';
+import {
+  validateAddress as validateAddressCanonical,
+  type SupportedChainType,
+} from './validation';
 
 /** Chains that can appear in payment / WC deep links. */
-export type WalletChainType = 'evm' | 'svm' | 'xlm';
+export type WalletChainType = SupportedChainType;
 
 export type DeepLinkParams = {
   action: 'send' | 'receive' | 'approve' | 'reject' | 'walletconnect' | 'transactions';
@@ -23,19 +27,9 @@ const ACTIONS: DeepLinkParams['action'][] = [
   'transactions',
 ];
 
-// M2 fix: validate incoming address parameters to prevent injection.
-// EVM: 0x + 40 hex. Solana: base58 32-44. Stellar: G + 55 base32 (Crockford).
-const ADDRESS_PATTERNS: Record<WalletChainType | 'unknown', RegExp> = {
-  evm: /^0x[0-9a-fA-F]{40}$/,
-  svm: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/,
-  xlm: /^G[A-Z2-7]{55}$/,
-  unknown:
-    /^(0x[0-9a-fA-F]{40}|[1-9A-HJ-NP-Za-km-z]{32,44}|G[A-Z2-7]{55})$/,
-};
-
+/** Single source of truth: `utils/validation.ts` (same rules as wallet store / send). */
 function validateAddress(address: string, chainType?: WalletChainType): boolean {
-  const pattern = chainType ? ADDRESS_PATTERNS[chainType] : ADDRESS_PATTERNS.unknown;
-  return pattern.test(address);
+  return validateAddressCanonical(address, chainType);
 }
 
 function parseQueryParams(queryString: string): Record<string, string> {

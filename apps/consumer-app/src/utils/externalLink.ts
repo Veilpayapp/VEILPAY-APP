@@ -3,6 +3,7 @@ import { Linking } from "react-native";
 // CA-C1 fix: URL allowlist to prevent phishing via deep links
 const ALLOWED_HOSTS: string[] = [
   "veilpay.app",
+  "veilpayapp.com",
   "app.uniswap.org",
   "explorer.solana.com",
   "etherscan.io",
@@ -10,8 +11,8 @@ const ALLOWED_HOSTS: string[] = [
   "arbiscan.io",
   "optimistic.etherscan.io",
   "basescan.org",
-
   "sepolia.etherscan.io",
+  "stellar.expert",
 ];
 
 const ALLOWED_SCHEMES: string[] = ["https", "http"];

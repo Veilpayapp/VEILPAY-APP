@@ -52,6 +52,9 @@ export function TransactionDetailsScreen({ navigation, route }: TransactionDetai
   const isSent = transaction.type === "sent";
   const amountColor = isSent ? colors.error : colors.success;
   const amountPrefix = isSent ? "-" : "+";
+  const isPrivate = transaction.privacyLevel === "max" || transaction.privacyLevel === "private";
+  const transactionTitle = transaction.displayTitle || (isSent ? "SENT" : "RECEIVED");
+  const explorerLabel = transaction.explorerLabel || "EXPLORER";
 
   useEffect(() => {
     trackEvent(ANALYTICS_EVENTS.TRANSACTION_DETAILS_VIEWED, {
@@ -214,8 +217,9 @@ export function TransactionDetailsScreen({ navigation, route }: TransactionDetai
         {/* Massive Dynamic Hero Section */}
         <Animated.View entering={FadeInDown.duration(400).delay(100)} style={styles.heroSection}>
           <View style={styles.heroWatermarkContainer}>
-            <Icon name={isSent ? "send" : "receive"} size={240} color={colors.accent} style={styles.heroWatermark} />
+            <Icon name={transaction.isPrivatePoolTx ? "private-lock" : isSent ? "send" : "receive"} size={240} color={colors.accent} style={styles.heroWatermark} />
           </View>
+          <Text style={styles.heroTitle}>{transactionTitle}</Text>
           <Text style={styles.heroPrefix}>{amountPrefix}</Text>
           <Text style={[styles.heroAmount, { color: amountColor }]} adjustsFontSizeToFit numberOfLines={1}>
             {transaction.amount}
@@ -276,7 +280,7 @@ export function TransactionDetailsScreen({ navigation, route }: TransactionDetai
                 </PressableOpacity>
                 <PressableOpacity style={styles.ledgerToggleBtnOutline} onPress={handleViewOnExplorer}>
                   <Icon name="link" size={12} color={colors.accent} />
-                  <Text style={styles.ledgerToggleTextOutline}>EXPLORER</Text>
+                  <Text style={styles.ledgerToggleTextOutline}>{explorerLabel.toUpperCase()}</Text>
                 </PressableOpacity>
               </View>
             </View>
@@ -284,14 +288,20 @@ export function TransactionDetailsScreen({ navigation, route }: TransactionDetai
         </View>
 
         {/* Privacy Notice */}
-        {transaction.privacyLevel === "max" && (
+        {isPrivate && (
           <Animated.View entering={FadeInDown.duration(400).delay(550)} style={styles.privacyNoticeContainer}>
             <View style={styles.privacyHazardTape} />
             <View style={styles.privacyContent}>
               <Icon name="private-lock" size={24} color={colors.success} />
               <View style={styles.privacyTextGroup}>
-                <Text style={styles.privacyTitle}>MAX PRIVACY ACTIVE</Text>
-                <Text style={styles.privacyText}>Stealth addresses used. Recipient identity protected.</Text>
+                <Text style={styles.privacyTitle}>
+                  {transaction.privacyLevel === "private" ? "PRIVATE XLM ACTIVE" : "MAX PRIVACY ACTIVE"}
+                </Text>
+                <Text style={styles.privacyText}>
+                  {transaction.privacyLevel === "private"
+                    ? transaction.displaySubtitle || "SPP pool proof transaction. Explorer shows Soroban proof data, not a public payment row."
+                    : "Stealth addresses used. Recipient identity protected."}
+                </Text>
               </View>
             </View>
           </Animated.View>
@@ -356,6 +366,14 @@ const themeStyles = (colors: Colors) => StyleSheet.create({
     marginTop: 20,
     marginBottom: 40,
     paddingVertical: 20,
+  },
+  heroTitle: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 13,
+    color: colors.accent,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    marginBottom: 8,
   },
   heroWatermarkContainer: {
     position: 'absolute',

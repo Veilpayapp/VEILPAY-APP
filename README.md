@@ -1,4 +1,4 @@
-# VeilPay - Multi-Chain Privacy Payment Protocol
+# Veilpay - Multi-Chain Privacy Payment Protocol
 
 A privacy-focused payment protocol supporting multiple blockchains (EVM, Solana, Aptos) with stealth addresses and zero-knowledge proofs.
 

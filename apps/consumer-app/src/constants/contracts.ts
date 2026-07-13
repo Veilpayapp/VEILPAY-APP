@@ -89,3 +89,27 @@ export function isPrivacyStackConfigured(): boolean {
     GROTH16_VERIFIER_ADDRESS,
   ].every(isAddr);
 }
+
+/**
+ * DATA-002 release gate: whether the EVM max-privacy WITHDRAW path is wired
+ * end-to-end in this build.
+ *
+ * The deposit half of the max-privacy flow has always worked — the app
+ * generates a commitment, calls `VeilPool.deposit`, and stores a
+ * `CommitmentRecord` in SecureStore. The WITHDRAW half is NOT yet wired:
+ * `CommitmentRecord` does not carry the Merkle path (`pathElements`,
+ * `pathIndices`) or the precomputed `nullifierHash`, and `usePaymentTransaction`
+ * throws `"not yet implemented"` when the user tries to spend a max deposit.
+ *
+ * Exposing the deposit path while withdraw is unavailable lets users lock
+ * funds they can never recover from the app. This flag MUST stay `false` until:
+ *   - deposit-time Merkle path capture lands in `CommitmentRecord`;
+ *   - Poseidon `nullifierHash` derivation ships in the prover;
+ *   - the relayer withdraw request round-trips on testnet;
+ *   - a deposit → app restart → prove → relayer withdraw → mark-spent e2e
+ *     test passes.
+ *
+ * Flip to `true` only after that e2e gate passes, and keep the test in the
+ * P1/TEST-001 suite so a regression re-disables the path.
+ */
+export const EVM_MAX_PRIVACY_WITHDRAW_READY = false;

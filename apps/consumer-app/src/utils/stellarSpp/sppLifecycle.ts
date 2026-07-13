@@ -6,6 +6,7 @@
  */
 
 import { deposit, transfer, withdraw, getLocalPrivateBalance } from './sppClient';
+import { formatStroops, parsePositiveStroops } from './sppAmount';
 import type { SppTransferRecipient, SppTxResult } from './types';
 import { SppClientError } from './types';
 
@@ -66,7 +67,7 @@ export async function runShieldTransferUnshield(
         }
       : planLifecycleAmounts(shieldAmount, transferAmount);
 
-  if (Number(planned.unshield) <= 0) {
+  if (parsePositiveStroops(planned.unshield) <= 0n) {
     throw new SppClientError(
       'Lifecycle needs residual after transfer (transfer must be < shield).',
       'SPP_NO_RESIDUAL_FOR_UNSHIELD'
@@ -104,16 +105,15 @@ export function planLifecycleAmounts(shieldAmount: string, transferAmount: strin
   transfer: string;
   unshield: string;
 } {
-  const s = Number(shieldAmount);
-  const t = Number(transferAmount);
-  if (!(s > 0) || !(t > 0) || t > s) {
+  const s = parsePositiveStroops(shieldAmount);
+  const t = parsePositiveStroops(transferAmount);
+  if (t > s) {
     throw new SppClientError(
       'Need shield > 0, transfer > 0, and transfer ≤ shield',
       'SPP_INVALID_AMOUNT'
     );
   }
-  // Keep 7-decimal display-ish string
-  const residual = (s - t).toFixed(7).replace(/\.?0+$/, '') || '0';
+  const residual = formatStroops(s - t);
   return {
     shield: shieldAmount,
     transfer: transferAmount,

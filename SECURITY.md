@@ -225,7 +225,7 @@ control we apply. These advisories are tracked in
 - **Exposure:** None at runtime. `circomlibjs` is consumed only at
   circuit-compilation time (`packages/circuits/compile.sh`), not by any
   signing path in the apps. The `@ethersproject/signing-key` is not
-  invoked from VeilPay code.
+  invoked from Veilpay code.
 - **Compensating controls:** none required — the vulnerable code path
   is not reachable from any deployed binary.
 - **Re-evaluation trigger:** when `circomlibjs` upgrades its `ethers`

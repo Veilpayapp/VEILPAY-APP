@@ -1,11 +1,11 @@
-# VeilPay — Stellar Private Payments (SPP) Integration Plan
+# Veilpay — Stellar Private Payments (SPP) Integration Plan
 
 > **Status:** Draft v1 — grounded against the *actual* repo (Expo RN + Express), not the
 > Next.js-shaped `veilpay-privacy-upgrade-v2.md`.
 > **Scope of THIS plan:** Stellar SPP only, as the first Tier‑1 native‑privacy chain.
 > Monero / Zcash / Midnight are deferred to sibling plans that reuse this scaffolding.
 > **Decisions locked (2026-07-09, updated):**
-> 1. Vendor `NethermindEth/stellar-private-payments` as a git submodule; thin VeilPay adapter on top.
+> 1. Vendor `NethermindEth/stellar-private-payments` as a git submodule; thin Veilpay adapter on top.
 > 2. **Testnet product first.** Mainnet code path fail-closed until audit + ceremony + ops gates.
 > 3. **Consumer app only** — self-custody shield / private transfer / unshield. **No merchant** in this plan (future plans only). Demo day = two app accounts, not a merchant flow.
 > 4. **Native mobile integration** — wrap Rust `sdk/pool` (same as `spp` CLI) via JSI/Nitro/Uniffi. **Do not ship a product WebView** of `sdk/web`.

@@ -12,10 +12,11 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio",
+    "db:studio": "prisma db studio",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "webhook-url-audit": "tsx scripts/audit-webhook-urls.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.12.0",

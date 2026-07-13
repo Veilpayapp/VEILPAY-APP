@@ -60,6 +60,21 @@ describe('chainIndexer', () => {
         expect.objectContaining({ txHash: 'hash1' })
       );
     });
+
+    it('PERF-002: bounds pending invoice query with take + orderBy + expiry filter', async () => {
+      (prisma.invoice.findMany as jest.Mock).mockResolvedValue([]);
+      await sweepPendingInvoices();
+      expect(prisma.invoice.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 200,
+          orderBy: [{ expiresAt: 'asc' }, { createdAt: 'asc' }],
+          where: expect.objectContaining({
+            status: 'pending',
+            expiresAt: expect.objectContaining({ gt: expect.any(Date) }),
+          }),
+        })
+      );
+    });
   });
 
   describe('start/stop', () => {

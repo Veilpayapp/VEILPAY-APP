@@ -11,6 +11,9 @@ import type { MarketQuote } from '../../utils/marketData';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { formatFiat } from '../../utils/formatters';
 
+/** Soft readiness for private mode — shown only when not fully ready. */
+export type PrivacyReadyStatus = 'ready' | 'setting_up' | 'unavailable' | null;
+
 interface DashboardBalanceCardProps {
   isLoadingBalance: boolean;
   balanceVisible: boolean;
@@ -20,14 +23,24 @@ interface DashboardBalanceCardProps {
   activeChain: ChainConfig | null;
   marketQuote: MarketQuote | undefined;
   /**
-   * When true, Home is in privacy-pool mode (e.g. Private XLM / SPP).
-   * Same card chrome; labels + badge emphasize shielded balance.
+   * When true, Home is in privacy-pool mode (e.g. Private XLM).
+   * Same card chrome; labels emphasize private balance without protocol jargon.
    */
   privacyMode?: boolean;
   /** Crypto ticker for the second line (default: active chain symbol). */
   cryptoSymbol?: string;
-  /** Optional feature lines under the balance in privacy mode. */
+  /**
+   * @deprecated Feature bullets were removed from the premium home card.
+   * Kept optional so callers can stop passing without a breaking type error.
+   */
   privacyFeatures?: string[];
+  /**
+   * Optional private-mode readiness chip on the balance card.
+   * `ready` → subtle "Private XLM ready"; setting_up / unavailable → status line.
+   */
+  privacyReadyStatus?: PrivacyReadyStatus;
+  /** Optional recovery / status detail under the crypto amount (e.g. restore result). */
+  privacyStatusDetail?: string | null;
 }
 
 export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
@@ -40,21 +53,44 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
   marketQuote,
   privacyMode = false,
   cryptoSymbol,
-  privacyFeatures,
+  privacyReadyStatus = null,
+  privacyStatusDetail = null,
 }) => {
   const styles = useStyles(themeStyles);
   const theme = useTheme();
   const { colors } = theme;
-  
-  // Use user's preferred currency setting
+
   const { nativeCurrency } = useSettingsStore();
 
-  const showSkeleton = isLoadingBalance && (!marketQuote || displayBalance === '0.00');
-  
+  // Skeleton only when loading AND we have no usable numbers yet.
+  // Never skeleton in private mode once we have a crypto amount or ready status —
+  // Settings→Home remounts were flashing a permanent loading card.
+  const cryptoEmpty =
+    !displayCrypto ||
+    displayCrypto === '0' ||
+    displayCrypto === '0.0' ||
+    displayCrypto === '0.00' ||
+    displayCrypto === '0.000';
+  const showSkeleton =
+    isLoadingBalance &&
+    cryptoEmpty &&
+    (!marketQuote || displayBalance === '0.00') &&
+    !(privacyMode && (privacyReadyStatus === 'ready' || privacyStatusDetail));
+
   const formattedBalance = formatFiat(Number(displayBalance), nativeCurrency || 'USD');
   const symbol = cryptoSymbol || activeChain?.symbol || 'ETH';
-  const balanceLabel = privacyMode ? '[ PRIVATE_BALANCE ]' : '[ LEDGER_BALANCE ]';
-  const badgeText = privacyMode ? 'SHIELDED' : 'PRIVATE';
+  const balanceLabel = privacyMode ? 'Private balance' : 'Total balance';
+  // Quiet private marker — not "Shielded" (protocol-y).
+  const badgeText = privacyMode ? 'Private' : 'Wallet';
+
+  const statusLine =
+    privacyMode && privacyReadyStatus === 'setting_up'
+      ? 'Setting up…'
+      : privacyMode && privacyReadyStatus === 'unavailable'
+        ? 'Private sends unavailable'
+        : privacyMode && privacyReadyStatus === 'ready'
+          ? 'Private XLM ready'
+          : null;
 
   return (
     <View style={styles.balanceCardWrapper}>
@@ -78,15 +114,18 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
                         : `Total balance: ${formattedBalance}`
                     }
                   >
-                    {balanceVisible
-                      ? formattedBalance
-                      : '••••••••••••••••••'}
+                    {balanceVisible ? formattedBalance : '••••••••••••••••••'}
                   </Text>
                   <Text style={styles.balanceCrypto}>
                     {balanceVisible
                       ? `${displayCrypto} ${symbol}`
                       : '••••••••••••'}
                   </Text>
+                  {privacyMode && privacyStatusDetail ? (
+                    <Text style={styles.privacyDetail} numberOfLines={2}>
+                      {privacyStatusDetail}
+                    </Text>
+                  ) : null}
                 </View>
                 <View style={styles.balanceRight}>
                   <PressableOpacity
@@ -107,7 +146,7 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
                     />
                   </PressableOpacity>
                   <Animated.View
-                    key={privacyMode ? 'badge-shielded' : 'badge-private'}
+                    key={privacyMode ? 'badge-private' : 'badge-wallet'}
                     entering={FadeIn.duration(200)}
                     style={[styles.privacyBadge, privacyMode && styles.privacyBadgeActive]}
                   >
@@ -119,31 +158,39 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
             </>
           )}
 
-          {/* Price indicator */}
+          {/* Price row — same shape public / private; no custody jargon */}
           {!showSkeleton && marketQuote && (
             <View style={styles.priceRow}>
               <Text style={styles.priceLabel}>
-                {privacyMode ? `${symbol} (quote ${activeChain?.symbol || 'XLM'})` : symbol}
+                {symbol}
                 {' '}@ {formatFiat(marketQuote.price, nativeCurrency || 'USD')}
               </Text>
-              <Text style={styles.priceSource}>
-                {privacyMode
-                  ? 'local notes · device'
-                  : `${marketQuote.source} • ${marketQuote.isStale ? 'stale' : 'live'}`}
+              <Text
+                style={[
+                  styles.priceSource,
+                  statusLine ? styles.statusMuted : null,
+                ]}
+                accessibilityLabel={statusLine || undefined}
+              >
+                {statusLine
+                  ? statusLine
+                  : marketQuote.isStale
+                    ? 'Price may be delayed'
+                    : 'Live price'}
               </Text>
             </View>
           )}
 
-          {/* Change indicator (public) or feature chips (privacy) */}
-          {!showSkeleton && privacyMode && privacyFeatures && privacyFeatures.length > 0 ? (
-            <View style={styles.featureList}>
-              {privacyFeatures.slice(0, 3).map((line) => (
-                <Text key={line} style={styles.featureLine}>
-                  · {line}
-                </Text>
-              ))}
+          {/* Status-only fallback when no market quote (private mode) */}
+          {!showSkeleton && !marketQuote && statusLine ? (
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}> </Text>
+              <Text style={[styles.priceSource, styles.statusMuted]}>{statusLine}</Text>
             </View>
-          ) : !showSkeleton ? (
+          ) : null}
+
+          {/* Public: 24h change. Private: no feature bullets (actions carry meaning). */}
+          {!showSkeleton && !privacyMode ? (
             <View style={styles.changeRow}>
               {marketQuote?.change24h !== null && marketQuote?.change24h !== undefined ? (
                 <>
@@ -172,124 +219,126 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
       </SovereignCard>
     </View>
   );
-}
+};
 
-const themeStyles = (colors: Colors) => StyleSheet.create({
-  balanceCardWrapper: {
-    paddingHorizontal: 24,
-    marginBottom: 24,
-  },
-  balanceContent: {
-    padding: 20,
-  },
-  balanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  balanceLabel: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textMuted,
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  balanceAmount: {
-    fontFamily: 'JetBrainsMono_400Regular',
-    fontSize: 36,
-    color: colors.textPrimary,
-    fontWeight: 'bold',
-    letterSpacing: -1,
-  },
-  balanceCrypto: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 14,
-    color: colors.textMuted,
-    marginTop: 4,
-  },
-  balanceRight: {
-    alignItems: 'flex-end',
-    gap: 12,
-  },
-  visibilityBtn: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  privacyBadge: {
-    backgroundColor: colors.bgPrimary,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  privacyBadgeActive: {
-    backgroundColor: colors.accentContainer,
-  },
-  privacyBadgeText: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 10,
-    color: colors.accent,
-    letterSpacing: 0.5,
-    fontWeight: 'bold',
-  },
-  featureList: {
-    gap: 4,
-    marginTop: 4,
-  },
-  featureLine: {
-    fontFamily: typography.fontFamily.body,
-    fontSize: 12,
-    color: colors.textMuted,
-    lineHeight: 18,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  priceLabel: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  priceSource: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 10,
-    color: colors.textTertiary,
-  },
-  changeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  changePositive: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.success,
-  },
-  changeNegative: {
-    color: colors.error,
-  },
-  changePlaceholder: {
-    fontFamily: typography.fontFamily.body,
-    fontSize: 12,
-    color: colors.textTertiary,
-  },
-  changeLabel: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textTertiary,
-  },
-  balanceSkeletonWrap: {
-    alignItems: 'center',
-    paddingVertical: 8,
-    marginBottom: 10,
-  },
-});
+const themeStyles = (colors: Colors) =>
+  StyleSheet.create({
+    balanceCardWrapper: {
+      paddingHorizontal: 24,
+      marginBottom: 24,
+    },
+    balanceContent: {
+      padding: 20,
+    },
+    balanceRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 16,
+    },
+    balanceLabel: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 12,
+      color: colors.textMuted,
+      letterSpacing: 1,
+      marginBottom: 4,
+    },
+    balanceAmount: {
+      fontFamily: 'JetBrainsMono_400Regular',
+      fontSize: 36,
+      color: colors.textPrimary,
+      fontWeight: 'bold',
+      letterSpacing: -1,
+    },
+    balanceCrypto: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 14,
+      color: colors.textMuted,
+      marginTop: 4,
+    },
+    privacyDetail: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 11,
+      color: colors.accent,
+      marginTop: 6,
+      maxWidth: 220,
+      lineHeight: 15,
+    },
+    balanceRight: {
+      alignItems: 'flex-end',
+      gap: 12,
+    },
+    visibilityBtn: {
+      width: 44,
+      height: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    privacyBadge: {
+      backgroundColor: colors.bgPrimary,
+      borderWidth: 1,
+      borderColor: colors.accent,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    privacyBadgeActive: {
+      backgroundColor: colors.accentContainer,
+    },
+    privacyBadgeText: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 10,
+      color: colors.accent,
+      letterSpacing: 0.5,
+      fontWeight: 'bold',
+    },
+    priceRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    priceLabel: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 12,
+      color: colors.textMuted,
+    },
+    priceSource: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 10,
+      color: colors.textTertiary,
+    },
+    statusMuted: {
+      color: colors.textMuted,
+    },
+    changeRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    changePositive: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 12,
+      color: colors.success,
+    },
+    changeNegative: {
+      color: colors.error,
+    },
+    changePlaceholder: {
+      fontFamily: typography.fontFamily.body,
+      fontSize: 12,
+      color: colors.textTertiary,
+    },
+    changeLabel: {
+      fontFamily: typography.fontFamily.mono,
+      fontSize: 12,
+      color: colors.textTertiary,
+    },
+    balanceSkeletonWrap: {
+      alignItems: 'center',
+      paddingVertical: 8,
+      marginBottom: 10,
+    },
+  });

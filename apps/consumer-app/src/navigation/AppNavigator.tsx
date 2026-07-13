@@ -38,7 +38,7 @@ import { OnrampWidgetScreen } from "../screens/OnrampWidgetScreen";
 import { OnrampAmountScreen } from "../screens/OnrampAmountScreen";
 import { OnrampQuotesScreen } from "../screens/OnrampQuotesScreen";
 import { AddCustomNetworkScreen } from "../screens/AddCustomNetworkScreen";
-import { StellarSppScreen } from "../screens/StellarSppScreen";
+import { InAppBrowserScreen } from "../screens/InAppBrowserScreen";
 import type { TransactionRecord } from "../types/transactions";
 
 import type { PaymentToken } from "../types/tokens";
@@ -138,7 +138,7 @@ export type RootStackParamList = {
   [SCREENS.TOKEN_DETAIL]: { tokenSymbol: string; chainKey: string; };
   [SCREENS.SETTINGS]: undefined;
   [SCREENS.ADD_CUSTOM_NETWORK]: undefined;
-  [SCREENS.STELLAR_SPP]: undefined;
+
   [SCREENS.DEPOSIT_CRYPTO]: undefined;
 
   [SCREENS.WITHDRAW_FIAT]: undefined;
@@ -162,6 +162,8 @@ export type RootStackParamList = {
     url: string;
     title?: string;
     orderId: string;
+    /** SEC-005: opaque signed token for polling `/api/v1/onramp/status/:token`. */
+    statusToken: string;
   };
   [SCREENS.ONRAMP_AMOUNT]: {
     flow: 'buy' | 'sell';
@@ -172,6 +174,11 @@ export type RootStackParamList = {
     fiatCurrency: string;
     cryptoToken: string;
     chainKey: string;
+  };
+  /** First-party Privacy / Terms / Docs (in-app WebView, not system browser). */
+  [SCREENS.IN_APP_BROWSER]: {
+    url: string;
+    title: string;
   };
   [SCREENS.SET_PASSWORD]: undefined;
   [SCREENS.BIOMETRIC_SETUP]: undefined;
@@ -415,11 +422,10 @@ export function AppNavigator({ initialRouteName = SCREENS.ONBOARDING }: AppNavig
       component={AddCustomNetworkScreen}
       options={getScreenTransition(SCREENS.ADD_CUSTOM_NETWORK)}
     />
-        <Stack.Screen
-          name={SCREENS.STELLAR_SPP}
-          component={StellarSppScreen}
-          options={getScreenTransition(SCREENS.STELLAR_SPP)}
-        />
+        {/* SPP-001 / UX-001: StellarSpp diagnostic hub is intentionally NOT
+            registered in any build (preview, production, or local release).
+            ASP + recovery run in the background via useSppBackgroundSetup;
+            users interact only through pXLM selection / Send privacy flow. */}
 
         {/* Priority 6: Fiat On/Off Ramps */}
 
@@ -452,6 +458,11 @@ export function AppNavigator({ initialRouteName = SCREENS.ONBOARDING }: AppNavig
           name={SCREENS.ONRAMP_QUOTES}
           component={OnrampQuotesScreen}
           options={getScreenTransition(SCREENS.ONRAMP_QUOTES)}
+        />
+        <Stack.Screen
+          name={SCREENS.IN_APP_BROWSER}
+          component={InAppBrowserScreen}
+          options={{ ...getScreenTransition(SCREENS.IN_APP_BROWSER), animation: 'slide_from_bottom' }}
         />
         <Stack.Screen
           name={SCREENS.SET_PASSWORD}

@@ -5,7 +5,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-veil_pool = "VeilPoo11111111111111111111111111111111111"
+veil_pool = "5rP5zFGQiXNPiPpDZ8kfu7TArWp7U9wsHSHx5k58KuXL"
 
 [registry]
 url = "https://api.apr.dev"

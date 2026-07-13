@@ -17,14 +17,15 @@
 
 ## Can we merge into main **right now**?
 
-### Short answer: **NO — not yet.**
+### Short answer (updated after cleanup commits): **YES — local FF-ready; do not push without review**
 
-Reasons:
+As of tip **`bdd9f3d`** on `harden/consumer-a1-and-spp-phase0`:
 
-1. **Working tree is dirty** (~120 modified + ~36 valuable untracked product files). Merge would either drop work or dump junk.
-2. **Hardening/SPP work is not committed** (Phases 1–4 live only on disk / staged junk-rm).
-3. **`docs-site` has 1 commit not in `harden`** — merge order must fold docs (or accept loss of that commit).
-4. No green **full** CI run on a clean freeze SHA of the combined result.
+1. ~~Working tree dirty with product uncommitted~~ → **product committed** (`df47537`, `622a1ea`).
+2. ~~docs-site separate~~ → **merged** (`bdd9f3d`, conflicts resolved keeping harden reframes).
+3. `main` is **ancestor** of harden → **`git merge --ff-only` from main works**.
+4. Focused Jest green (backend 65, consumer 23). Full monorepo CI still recommended on PR.
+5. Only dirty path left: local `graphify-out/GRAPH_REPORT.md` (optional regen; not required for app).
 
 ### What *is* true
 

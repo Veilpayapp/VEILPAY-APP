@@ -204,7 +204,16 @@ export interface WalletState {
   isLoadingBalance: boolean;
   isProving: boolean;
 
-  connect: (address: string, chainType: ChainType, chainKey?: string) => Promise<void>;
+  /**
+   * Connect an address. Optional `preDerivedAddresses` skips SecureStore re-read
+   * + multi-chain re-derive (import/restore hot path already did that work).
+   */
+  connect: (
+    address: string,
+    chainType: ChainType,
+    chainKey?: string,
+    preDerivedAddresses?: Partial<Record<ChainType, string>>
+  ) => Promise<void>;
   disconnect: () => void;
   clearWallet: () => void;
   setIsProving: (isProving: boolean) => void;
@@ -241,7 +250,12 @@ export const useWalletStore = create<WalletState>()(
       isLoadingBalance: false,
       customChains: [],
 
-      connect: async (address: string, chainType: ChainType, chainKey?: string) => {
+      connect: async (
+        address: string,
+        chainType: ChainType,
+        chainKey?: string,
+        preDerivedAddresses?: Partial<Record<ChainType, string>>
+      ) => {
         set({ isConnecting: true });
         try {
           const normalizedAddress = normalizeAddress(address, chainType);
@@ -270,21 +284,42 @@ export const useWalletStore = create<WalletState>()(
             accounts = [{ id: '0', name: 'Account 1', index: 0 }];
             activeAccountId = '0';
           }
-          
-          try {
-            const mnemonic = await getStoredMnemonic();
-            if (mnemonic) {
-              const activeAccount = accounts.find(a => a.id === activeAccountId) || accounts[0];
-              if (activeAccount.addresses) {
-                allAddresses = activeAccount.addresses;
-              } else {
-                const derived = await deriveAddressesForAllChains(mnemonic, activeAccount.index);
-                allAddresses = { ...derived };
-                accounts = accounts.map(a => a.id === activeAccount.id ? { ...a, addresses: derived } : a);
+
+          const activeAccount = accounts.find(a => a.id === activeAccountId) || accounts[0];
+
+          // Import/restore may pass addresses already derived from the seed so we
+          // do not re-read SecureStore and re-run multi-chain HD on the same tap.
+          if (preDerivedAddresses && Object.keys(preDerivedAddresses).length > 0) {
+            const merged: Record<string, string | null> = { ...allAddresses };
+            for (const [k, v] of Object.entries(preDerivedAddresses)) {
+              if (typeof v === 'string' && v.length > 0) {
+                const ct = k as ChainType;
+                merged[k] = ct === 'evm' ? (normalizeAddress(v, 'evm') || v.toLowerCase()) : v;
               }
             }
-          } catch (e) {
-            console.warn('[walletStore] Multi-chain derivation failed, using single address', e);
+            // Prefer the connect address for the active chain type.
+            merged[chainType] = normalizedAddress;
+            allAddresses = merged;
+            accounts = accounts.map(a =>
+              a.id === activeAccount.id ? { ...a, addresses: allAddresses } : a
+            );
+          } else {
+            try {
+              const mnemonic = await getStoredMnemonic();
+              if (mnemonic) {
+                if (activeAccount.addresses) {
+                  allAddresses = activeAccount.addresses;
+                } else {
+                  const derived = await deriveAddressesForAllChains(mnemonic, activeAccount.index);
+                  allAddresses = { ...derived };
+                  accounts = accounts.map(a =>
+                    a.id === activeAccount.id ? { ...a, addresses: derived } : a
+                  );
+                }
+              }
+            } catch (e) {
+              console.warn('[walletStore] Multi-chain derivation failed, using single address', e);
+            }
           }
 
           useTransactionStore.getState().clearTransactions();

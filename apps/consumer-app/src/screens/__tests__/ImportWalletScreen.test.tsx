@@ -40,11 +40,18 @@ jest.mock('react-native-reanimated', () => {
 });
 
 const mockValidateMnemonic = jest.fn().mockResolvedValue(true);
-const mockDeriveAddress = jest.fn().mockResolvedValue('0xDerived1234567890abcdef1234567890abcdef12');
+const mockDeriveAll = jest.fn().mockResolvedValue({
+  evm: '0xDerived1234567890abcdef1234567890abcdef12',
+  svm: 'So11111111111111111111111111111111111111112',
+  xlm: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF',
+});
 
 jest.mock('../../utils/bip39', () => ({
   validateMnemonic: (...args: any[]) => mockValidateMnemonic(...args),
-  deriveAddressFromMnemonic: (...args: any[]) => mockDeriveAddress(...args),
+}));
+
+jest.mock('../../utils/multiChainDerivation', () => ({
+  deriveAddressesForAllChains: (...args: any[]) => mockDeriveAll(...args),
 }));
 
 jest.mock('../../utils/transactions', () => ({
@@ -111,7 +118,11 @@ describe('ImportWalletScreen', () => {
     jest.clearAllMocks();
     mockConnect.mockResolvedValue(undefined);
     mockValidateMnemonic.mockResolvedValue(true);
-    mockDeriveAddress.mockResolvedValue('0xDerived1234567890abcdef1234567890abcdef12');
+    mockDeriveAll.mockResolvedValue({
+      evm: '0xDerived1234567890abcdef1234567890abcdef12',
+      svm: 'So11111111111111111111111111111111111111112',
+      xlm: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF',
+    });
   });
 
   it('renders the header and initial 12-word grid', () => {
@@ -188,7 +199,18 @@ describe('ImportWalletScreen', () => {
     fireEvent.press(getByTestId('btn-IMPORT WALLET'));
     await waitFor(() => {
       expect(storeMnemonic).toHaveBeenCalledWith(VALID_12_WORDS);
-      expect(mockConnect).toHaveBeenCalledWith('0xDerived1234567890abcdef1234567890abcdef12', 'evm');
+      expect(mockDeriveAll).toHaveBeenCalledWith(VALID_12_WORDS, 0);
+      // Pre-derived multi-chain addresses avoid a second SecureStore + HD pass.
+      expect(mockConnect).toHaveBeenCalledWith(
+        '0xDerived1234567890abcdef1234567890abcdef12',
+        'evm',
+        undefined,
+        expect.objectContaining({
+          evm: '0xDerived1234567890abcdef1234567890abcdef12',
+          svm: expect.any(String),
+          xlm: expect.any(String),
+        })
+      );
       expect(mockReset).toHaveBeenCalled();
     });
   });

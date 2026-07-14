@@ -63,6 +63,25 @@ describe('walletStore', () => {
     expect(disconnectedState.chainType).toBeNull();
   });
 
+  it('connect with preDerivedAddresses skips re-derivation and stores multi-chain set', async () => {
+    const address = '0x1111111111111111111111111111111111111111';
+    const pre = {
+      evm: address,
+      svm: 'So11111111111111111111111111111111111111112',
+      xlm: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF',
+    };
+
+    await useWalletStore.getState().connect(address, 'evm', undefined, pre);
+
+    const state = useWalletStore.getState();
+    expect(state.isConnected).toBe(true);
+    expect(state.address).toBe(address);
+    expect(state.addresses.evm).toBe(address);
+    expect(state.addresses.svm).toBe(pre.svm);
+    expect(state.addresses.xlm).toBe(pre.xlm);
+    expect(state.accounts[0]?.addresses?.svm).toBe(pre.svm);
+  });
+
   it('updates active chain', () => {
     const polygonChain = SUPPORTED_CHAINS.find((chain: { key: string }) => chain.key === 'polygon');
     if (!polygonChain) {

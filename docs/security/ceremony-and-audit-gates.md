@@ -44,6 +44,36 @@ Related product gates live in [Mainnet privacy gates](../roadmap/mainnet-privacy
 - [ ] Production build fails closed if VK / zkey asset mismatch is detected (where tooling allows).
 - [ ] Incident plan if a ceremony or key is later found compromised (pause pools, rotate contracts).
 
+### Current VK / verifier inventory (pre-ceremony)
+
+> **Status: OPEN — dogfood / testnet artifacts only.**  
+> SHA-256 values below bind *what is in the tree today*. They are **not** evidence of a multi-party ceremony. Do not treat this section as SEC-008 pass.
+
+| Artifact | Path | SHA-256 (file contents) |
+|----------|------|-------------------------|
+| Circuit verifying key (JSON) | `packages/circuits/build/verification_key.json` | `1cc1ec8969740c03dda0793bccd8b8e73cfa9f2ae8d819cf62c7706ee4482663` |
+| Proving key (final zkey) | `packages/circuits/build/withdraw_final.zkey` | `3b67ef3099e9fe39b22c927befe2ddc788fffd8d71a3023c82a489f69ed53b99` |
+| EVM Groth16 verifier | `packages/contracts-evm/src/Groth16Verifier.sol` | `72f7c6c78e2a909436224df3d71ebfadfdeeca7c93abea6fc6b3c1a24816e863` |
+| Solana embedded VK | `packages/contracts-solana/programs/veil_pool/src/verifying_key.rs` | `4b1fe73df4c0e4945f348f5d59f1a9ef3794b338c05f5d63eb8100dbe5f8f1bd` |
+| Inventory as of commit | `main` @ `977ff01` | Recompute hashes after any circuit or verifier change |
+
+**After a real ceremony:** replace or append a new inventory row set, link transcript(s), and fill the [Sign-off](#sign-off) table. Keep historical rows.
+
+### Operator runbook (to close SEC-008)
+
+1. Freeze circuit sources under `packages/circuits/` (tag or commit SHA).
+2. Run Powers of Tau + circuit-specific contribution with public transcripts; archive under company vault **and** link from this doc / release notes.
+3. Export final VK / zkey; recompute SHA-256; regenerate EVM verifier + Solana `verifying_key.rs` from the same VK.
+4. Confirm dogfood/testnet deployments still use labeled keys until sign-off.
+5. Protocol owner signs SEC-008 row in the sign-off table with evidence paths.
+
+### Incident plan (ceremony / key compromise)
+
+1. Pause or disable privacy withdraw surfaces (relayer, pool contracts, app flags).
+2. Treat current proving/verifying keys as untrusted; do not process new private deposits until re-ceremony or transparent replacement is deployed.
+3. Communicate residual risk for notes already in-pool; prefer withdraw-to-safe windows only if still sound under the threat model.
+4. Rotate contracts / verifiers only after a new SEC-008 ceremony (or accepted transparent setup) and SEC-011 delta review.
+
 ---
 
 ## SEC-011 — External audit
@@ -78,6 +108,25 @@ Related product gates live in [Mainnet privacy gates](../roadmap/mainnet-privacy
 - [ ] All Critical/High findings closed or accepted with written residual.
 - [ ] Public summary published before “mainnet privacy” marketing.
 - [ ] Version pins: audited commit SHAs listed next to release tags.
+
+### Operator runbook (to close SEC-011)
+
+1. Freeze privacy scope (circuits, EVM privacy stack, Solana pool if multi-leaf, relayer withdraw, note UX). Write SOW under `plans/` or vault.
+2. Engage named firm / public program; freeze scope for the engagement window.
+3. Track findings → remediations in a ticket/PR list; Critical/High must close or have written residual risk + owner.
+4. Publish a public summary (what was in/out of scope, residual risks) **before** any “audited mainnet privacy” marketing.
+5. Pin audited commit SHAs next to release tags; security owner signs SEC-011 in the sign-off table.
+
+### Suggested engagement scope (copy into SOW)
+
+| Surface | Repo paths |
+|---------|------------|
+| Withdraw circuit + setup assumptions | `packages/circuits/` |
+| EVM privacy | `packages/contracts-evm/src/` (`VeilPool`, verifier, caps) |
+| Solana pool (multi-leaf only when enabled) | `packages/contracts-solana/programs/veil_pool/` |
+| Relayer / withdraw API | `apps/backend/src/controllers/relayerController.ts`, `middleware/relayerAuth.ts`, quotas |
+| Consumer note / privacy UX | `apps/consumer-app/src/` privacy + backup paths |
+| Stellar SPP (if claiming mainnet SPP) | vendor/native SPP + app fail-closed gates |
 
 ---
 

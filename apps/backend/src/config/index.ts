@@ -35,6 +35,11 @@ const envSchema = z.object({
   ALCHEMY_API_KEY: z.string().default(''),
   INFURA_API_KEY: z.string().default(''),
   GOLDRUSH_API_KEY: z.string().default(''),
+  // SEC-001: hard cap on upstream RPC calls per UTC day before the proxy fails
+  // closed. Bounds provider-credit spend from abuse of the unauthenticated
+  // proxy. Consumed in utils/rpcBudget.ts (read there via process.env so the
+  // breaker has no import cycle with config).
+  RPC_DAILY_BUDGET: z.coerce.number().int().positive().default(200_000),
   SENTRY_DSN: z.string().default(''),
   RELAYER_PRIVATE_KEY: z.string().optional(),
   // EVM receipt confirmation floor for pay/confirm (0 = accept in the same block).

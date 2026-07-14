@@ -16,8 +16,9 @@ import { SovereignCard } from "../components/SovereignCard";
 import { SovereignButton } from "../components/SovereignButton";
 import Toast, { useToast } from '../components/Toast';
 import { ScreenBackButton } from '../components/ScreenBackButton';
-import { validateMnemonic, deriveAddressFromMnemonic } from '../utils/bip39';
+import { validateMnemonic } from '../utils/bip39';
 import { clearStoredMnemonic, storeMnemonic } from '../utils/transactions';
+import { deriveAddressesForAllChains } from '../utils/multiChainDerivation';
 import { useSecureScreen } from '../hooks/useSecureScreen';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -151,7 +152,11 @@ export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {
     let mnemonicStored = false;
 
     try {
-      // Validate the mnemonic phrase using BIP-39
+      // Hot path (industry-standard restore):
+      // 1) BIP-39 validate once at commit (live UI validation is UX-only)
+      // 2) SecureStore write once
+      // 3) Multi-chain HD derive once
+      // 4) connect with pre-derived addresses (no SecureStore re-read / re-derive)
       const mnemonicWords = words.slice(0, wordCount);
       const isValidMnemonic = await validateMnemonic(mnemonicWords);
 
@@ -160,13 +165,11 @@ export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {
         return;
       }
 
-      // Store the mnemonic securely for transaction signing
       await storeMnemonic(mnemonicWords);
       mnemonicStored = true;
 
-      // Derive the Ethereum address from the mnemonic
-      const address = await deriveAddressFromMnemonic(mnemonicWords);
-      await connect(address, 'evm');
+      const addresses = await deriveAddressesForAllChains(mnemonicWords, 0);
+      await connect(addresses.evm, 'evm', undefined, addresses);
       navigation.reset({ index: 0, routes: [{ name: SCREENS.SET_PASSWORD as any }] });
     } catch (error) {
       if (mnemonicStored) {

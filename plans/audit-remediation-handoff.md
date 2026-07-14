@@ -63,10 +63,10 @@ pnpm --filter @veilpay/indexer lint          # clean
 - **RB-03** *(ops)* — Release build has real `EXPO_PUBLIC_SSL_PINS` (app throws in release without).
 - **SEC-004** *(ops)* — Relayer secret set / `RELAYER_ALLOW_UNAUTHENTICATED` NOT true. `apps/backend/src/middleware/relayerAuth.ts`.
 
-### P1 (8)
+### P1 (7 remaining)
 - **UX-002** *(code)* — Wire 1–2 Maestro flows (onboarding + send) into CI. `e2e/` scaffold exists, selectors unfinished.
 - **PROD-001** *(product)* — Merchant dashboard MVP **or** explicit "API-only" GTM doc (no `apps/frontend` in repo).
-- **ARCH-004** *(code, small)* — Align Prisma `PrivacyLevel {standard,max}` (`apps/backend/prisma/schema.prisma:169`) with app levels (stealth/private). Needs a migration — care required.
+- ~~**ARCH-004** *(code, small)* — Align Prisma `PrivacyLevel` with app levels~~ ✅ **DONE**. Enum + all zod/OpenAPI validators widened `standard|max` → `standard|stealth|max|private` (matches `settingsStore.ts`). Additive migration `20260714010000_privacy_level_stealth_private` (`ALTER TYPE ADD VALUE`, no data backfill). Backend is passthrough (stores/echoes, never branches), so no privacy behavior activates. **Migration not yet applied to any DB** — no DB reachable here; `prisma migrate deploy` on next deploy.
 - **ARCH-002** *(arch)* — Split workers from API process / multi-replica (`railway.json` numReplicas:1; `apps/backend/src/index.ts` co-hosts workers).
 - **ARCH-003** *(ops)* — Single indexer owner doc (dual path: `apps/backend/src/jobs/chainIndexer.ts` + `apps/indexer`).
 - **REL-004** *(ops)* — Document RPO/RTO + backup drill.

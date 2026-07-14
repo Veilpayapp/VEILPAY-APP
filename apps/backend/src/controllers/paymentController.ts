@@ -11,6 +11,7 @@ import { verifyPaymentTxOnChain } from "../services/paymentTxVerifier";
 import {
   PaymentListQuerySchema,
   PaymentListResponseSchema,
+  PrivacyLevel,
   uuidParamSchema,
 } from "../types";
 
@@ -39,7 +40,7 @@ const PaymentConfirmBodySchema = z.object({
   toAddress: z.string().trim().min(1).max(100),
   amount: z.string().trim().min(1).max(50).regex(/^\d+(\.\d{1,18})?$/),
   tokenSymbol: z.string().trim().min(1).max(20),
-  privacyLevel: z.enum(["standard", "max"]).default("standard"),
+  privacyLevel: PrivacyLevel.default("standard"),
   blockNumber: z.union([z.string(), z.number()]).optional(),
 });
 

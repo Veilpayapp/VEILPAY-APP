@@ -10,7 +10,11 @@ export type InvoiceStatus = z.infer<typeof InvoiceStatus>;
 export const ChainType = z.enum(["evm", "svm", "xlm"]);
 export type ChainType = z.infer<typeof ChainType>;
 
-export const PrivacyLevel = z.enum(["standard", "max"]);
+// ARCH-004: mirror the consumer app's canonical PrivacyLevel
+// (settingsStore.ts: standard | stealth | max | private). The backend stores
+// and echoes the value without branching on it, so widening the accepted set
+// keeps the API from rejecting a stealth/private payment once the app sends one.
+export const PrivacyLevel = z.enum(["standard", "stealth", "max", "private"]);
 export type PrivacyLevel = z.infer<typeof PrivacyLevel>;
 
 export const MerchantSchema = z.object({

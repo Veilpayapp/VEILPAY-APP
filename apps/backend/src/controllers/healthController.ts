@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
-import { config } from "../config";
-import IORedis from "ioredis";
+import { getRedisClient } from "../lib/redis";
 
 async function checkDatabase(): Promise<boolean> {
   try {
@@ -12,14 +11,14 @@ async function checkDatabase(): Promise<boolean> {
   }
 }
 
+// PERF-001: reuse the shared, lazily-connected Redis singleton instead of
+// opening (and, on the error path, leaking) a fresh IORedis connection on
+// every health probe. The singleton connects on first ping and is reused.
 async function checkRedis(): Promise<boolean> {
   try {
-    const url = config.redisPassword
-      ? `redis://:${config.redisPassword}@${config.redisUrl.replace("redis://", "")}`
-      : config.redisUrl;
-    const client = new IORedis(url);
+    const client = getRedisClient();
+    if (!client) return false;
     const pong = await client.ping();
-    await client.quit();
     return pong === "PONG";
   } catch {
     return false;

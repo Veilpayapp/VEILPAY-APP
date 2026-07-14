@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authMiddleware, requireAuth } from "../middleware/auth";
+import { registrationRateLimiter } from "../middleware/rateLimiter";
 import { asyncHandler } from "../utils/asyncHandler";
 import {
   registerMerchant,
@@ -11,7 +12,9 @@ import {
 
 const router: Router = Router();
 
-router.post("/register", asyncHandler(registerMerchant));
+// SEC-002: throttle the unauthenticated registration endpoint to bound
+// email-enumeration and create-spam before the handler runs.
+router.post("/register", registrationRateLimiter, asyncHandler(registerMerchant));
 router.post("/keys/publish", authMiddleware, requireAuth, asyncHandler(publishKey));
 router.get("/:id", authMiddleware, requireAuth, asyncHandler(getMerchant));
 router.get("/:id/stats", authMiddleware, requireAuth, asyncHandler(getMerchantStats));

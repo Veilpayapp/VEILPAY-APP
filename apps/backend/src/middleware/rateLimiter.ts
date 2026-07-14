@@ -167,6 +167,23 @@ export const authRateLimiter = rateLimit({
   },
 });
 
+// SEC-002: merchant registration is unauthenticated and returns a distinct
+// 409 on duplicate email, which is an account-enumeration oracle. Full
+// non-enumeration requires an async email-verification flow; until then this
+// IP-anchored limiter bounds enumeration throughput (and abuse of the
+// unauthenticated create path generally). Low ceiling: registration is rare.
+export const registrationRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('merchant_registration'),
+  message: {
+    error: "Too many registration attempts, please try again later.",
+    code: "REGISTRATION_RATE_LIMIT",
+  },
+});
+
 export const webhookRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 500,

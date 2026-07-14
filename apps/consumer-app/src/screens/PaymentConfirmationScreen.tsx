@@ -167,12 +167,14 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
   // `switch (privacyLevel)` path that fans out to direct transfer,
   // stealth-announce, or relayer-broadcast withdraw.
   //
-  // TODO(task 11.x): the `'max'` branch needs a `sourceCommitmentHash`
-  // selected from the user's saved deposits to look up the
-  // `CommitmentRecord` in SecureStore. There is no UI yet to pick a
+  // Deferred (task 11.x, gated off): the `'max'` branch needs a
+  // `sourceCommitmentHash` selected from the user's saved deposits to look
+  // up the `CommitmentRecord` in SecureStore. There is no UI yet to pick a
   // commitment from the local list, and the `CommitmentRecord` type
   // does not yet stash the deposit-time Merkle path needed by the
-  // prover. Until the deposit screen and commitment picker land,
+  // prover. The `'max'` option is hard-disabled in the UI (DATA-002) and
+  // fail-fast-guarded in the hook, so this branch is unreachable in release.
+  // Until the deposit screen and commitment picker land,
   // `sourceCommitmentHash` is left undefined; the dispatcher then
   // surfaces a "Deposit first to use max privacy" toast rather than
   // attempting to prove against missing inputs.

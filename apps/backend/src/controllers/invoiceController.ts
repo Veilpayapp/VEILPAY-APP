@@ -162,6 +162,16 @@ export const getInvoiceStatus = async (req: AuthenticatedRequest, res: Response,
   try {
     const { id } = uuidParamSchema.parse(req.params);
 
+    // SEC-003: this endpoint is intentionally UNAUTHENTICATED (see
+    // routes/invoice.ts — no authMiddleware/requireAuth, rate-limited only) so a
+    // payer can poll an invoice by id without the merchant's API key, and it does
+    // NOT perform an ownership check. Anyone who knows an invoice id can read this
+    // response. Therefore both the `select` below and the object handed to
+    // `InvoiceStatusResponseSchema.parse` must stay minimal and non-sensitive:
+    // status/paidAt/expiresAt only. Do NOT add paymentAddress, paymentTxHash,
+    // memo, amount, merchantId, or any merchant-private field here, and do NOT
+    // spread `...invoice`. The invoiceController field-leak regression test locks
+    // this projection; widening it will (correctly) fail that test.
     const invoice = await prisma.invoice.findUnique({
       where: { id },
       select: {

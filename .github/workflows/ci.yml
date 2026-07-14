@@ -86,23 +86,19 @@ jobs:
       - name: Test consumer app
         run: pnpm --filter consumer-app test -- --coverage --passWithNoTests --coverageThreshold='{"global":{"lines":60,"functions":60,"branches":50,"statements":60}}'
 
-      # Security scanning — DEV-001 fix. Two layers:
+      # Security scanning — DEV-001.
       #
-      # 1. `better-npm-audit` is the GATING check. `pnpm audit --audit-level=high`
-      #    was tried first but `pnpm audit` does NOT honour the `better-npm-audit`
-      #    allowlist (`.nsprc` / `package.json#audit`) — it only takes
-      #    `--ignore=<id>` flags per call, with no centralised config file.
-      #    A `pnpm audit` step on top of the gating one would re-fail on
-      #    advisories we have explicitly accepted via `.nsprc` below. Use
-      #    ONLY `better-npm-audit` here, and document accepted advisories
-      #    in `.nsprc` with rationale + expiry.
+      # This monorepo is pnpm-only (pnpm-lock.yaml). `better-npm-audit` shells
+      # out to `npm audit`, which requires package-lock.json and fails with
+      # ENOLOCK here. Gate with `pnpm audit` instead, and pin/force-upgrade
+      # known high/critical transitive issues via root package.json#pnpm.overrides.
       #
-      # 2. Renaming `.nsprc.example` to `.nsprc` is the escape hatch: add
-      #    `{ "GHSA-xxxx-yyyy-zzzz": { "active": true, "reason": "...", "expiry": "2026-12-31" } }`
-      #    for each accepted advisory. Without an `.nsprc` entry, CI fails
-      #    on the next introduction of a known-flagship advisory.
-      - name: Audit dependencies (fail on high/critical, allowlist-aware)
-        run: npx better-npm-audit audit --level=high
+      # Optional escape hatch: pass advisory IDs to ignore when a fix is not
+      # yet available, e.g. `pnpm audit --audit-level=high --ignore 123456`.
+      # Document any permanent ignore in `.nsprc.example` (or a future `.nsprc`
+      # consumer script) with rationale + expiry — do not silently drop the gate.
+      - name: Audit dependencies (fail on high/critical)
+        run: pnpm audit --audit-level=high
 
   contracts:
     runs-on: ubuntu-latest

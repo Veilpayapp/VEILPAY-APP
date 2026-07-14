@@ -216,6 +216,52 @@ describe('invoiceController', () => {
 
       expect(res.status).toHaveBeenCalledWith(404);
     });
+
+    // SEC-003: the status endpoint is unauthenticated and has no ownership
+    // check (routes/invoice.ts), so its response must never carry merchant-
+    // private fields. This locks the controller's hand-picked projection:
+    // even if a future change widens the prisma `select` to return sensitive
+    // columns, the endpoint must forward ONLY the safe status fields. If
+    // someone adds a sensitive key to the response literal (or spreads
+    // `...invoice`), this test fails.
+    it('SEC-003: never leaks merchant-private fields even if the record carries them', async () => {
+      req.params = { id: '00000000-0000-0000-0000-000000000000' };
+      // Simulate a future select-widening: the record now includes fields a
+      // payer must not see.
+      (prisma.invoice.findUnique as jest.Mock).mockResolvedValue({
+        id: '00000000-0000-0000-0000-000000000000',
+        status: 'pending',
+        paidAt: null,
+        expiresAt: new Date(),
+        // sensitive fields that must NOT reach the public response:
+        merchantId: 'merchant-1',
+        paymentAddress: '0xabc0000000000000000000000000000000000000',
+        paymentTxHash: '0xdeadbeef',
+        memo: 'private note',
+        amount: '1.0',
+        tokenSymbol: 'ETH',
+        chainKey: 'ethereum',
+      });
+
+      await getInvoiceStatus(req as any, res as any, next);
+
+      expect(res.json).toHaveBeenCalledTimes(1);
+      const payload = (res.json as jest.Mock).mock.calls[0][0];
+      expect(Object.keys(payload).sort()).toEqual(
+        ['expiresAt', 'invoiceId', 'paidAt', 'status'].sort()
+      );
+      for (const leaked of [
+        'merchantId',
+        'paymentAddress',
+        'paymentTxHash',
+        'memo',
+        'amount',
+        'tokenSymbol',
+        'chainKey',
+      ]) {
+        expect(payload).not.toHaveProperty(leaked);
+      }
+    });
   });
 
   describe('getInvoiceDetails', () => {

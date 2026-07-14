@@ -662,7 +662,11 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                   <Logo variant="icon" size="small" />
                 </View>
               </View>
-              <View style={styles.balanceRow}>
+              <View
+                style={styles.balanceRow}
+                accessible
+                accessibilityLabel={`Available balance ${selectedToken.balance} ${selectedToken.symbol}`}
+              >
                 <Text style={styles.balanceLabel}>Available Balance</Text>
                 <Text style={styles.balanceAmount}>≈ {selectedToken.balance} {selectedToken.symbol}</Text>
               </View>
@@ -734,6 +738,8 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                       autoCorrect={false}
                       multiline
                       numberOfLines={2}
+                      accessibilityLabel="Recipient address"
+                      accessibilityHint={recipientPlaceholder}
                     />
                     <View style={styles.inputActions}>
                       <PressableOpacity
@@ -777,7 +783,11 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
             {/* Amount Input */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>AMOUNT</Text>
-              <PressableOpacity onPress={toggleInputCurrency}>
+              <PressableOpacity
+                onPress={toggleInputCurrency}
+                accessibilityRole="button"
+                accessibilityLabel={`Switch amount entry to ${isUsdInput ? selectedToken.symbol : (nativeCurrency || 'USD')}`}
+              >
                 <Text style={{ fontFamily: typography.fontFamily.mono, fontSize: 12, color: colors.accent, fontWeight: 'bold' }}>
                   SWAP TO {isUsdInput ? selectedToken.symbol : (nativeCurrency || 'USD')}
                 </Text>
@@ -794,11 +804,14 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                   placeholder="0.00"
                   placeholderTextColor={colors.textFaint}
                   keyboardType="decimal-pad"
+                  accessibilityLabel="Payment amount"
+                  accessibilityHint={`Amount to send in ${isUsdInput ? (nativeCurrency || 'USD') : selectedToken.symbol}`}
                 />
                 <PressableOpacity
                   onPress={handleSelectToken}
                   style={styles.tokenSelector}
                   accessibilityRole="button"
+                  accessibilityLabel={`Selected token ${selectedToken.symbol}. Change token`}
                 >
                   <Text style={styles.tokenSymbol}>{isUsdInput ? (nativeCurrency || 'USD') : selectedToken.symbol}</Text>
                   {!isUsdInput && <Icon name={'chevron-down'} size={14} color={colors.textMuted} />}
@@ -829,6 +842,13 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                     selectedPercent === percent && styles.quickAmountCardActive,
                   ]}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    percent === 'MAX'
+                      ? 'Use maximum available amount'
+                      : `Use ${percent} of balance`
+                  }
+                  accessibilityState={{ selected: selectedPercent === percent }}
                 >
                   <Text
                     style={[
@@ -853,6 +873,7 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                     onChangeText={setMemo}
                     placeholder="Add a note for this transaction"
                     placeholderTextColor={colors.textFaint}
+                    accessibilityLabel="Payment memo, optional"
                   />
                 </SovereignCard>
               </>

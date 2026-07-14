@@ -44,21 +44,26 @@
 //                   poolOps. Until the native bridge is ready, surfaces
 //                   SPP_OPS_NOT_READY with a clear toast (no silent public send).
 //
-// Implementation notes / TODOs:
+// Deferred integration notes (both privacy paths below are gated OFF in
+// shipping builds — see the pre-flight guards in `handleConfirmSend`; this
+// is intentional dead code, not unfinished work leaking into release):
 //   * `'stealth'` reads only one key from the directory today — the
 //     consumer-app `directory.fetchRecipientPublicKey` returns a single
-//     viewing-key hex. The new dual-key engine wants both viewing pub *and*
+//     viewing-key hex. The dual-key engine wants both viewing pub *and*
 //     spending pub. As an interim bridge we feed the same key into both
-//     slots and flag this with a TODO so the directory extension to a
-//     dual-key meta-address (out of scope for task 9.2) lands in one place.
+//     slots; the directory extension to a dual-key meta-address is deferred
+//     (out of scope for task 9.2) so it can land in one place. The stealth
+//     path only runs when `isPrivacyStackConfigured()` is true, which it is
+//     not on the undeployed pool this build ships against.
 //   * `'max'` requires `pathElements`, `pathIndices`, and `nullifierHash`
 //     to feed the prover. `CommitmentRecord` does not yet carry the path
-//     data nor a precomputed `nullifierHash`. Until task 11.x lands the
-//     deposit-time path-stash and the on-chain reconstruction fallback,
-//     `'max'` throws a clear "not yet implemented" error after loading
-//     the record. The dispatcher *shape* is what task 9.2 establishes —
-//     the missing inputs surface as a typed error rather than as a silent
-//     failure or as a placeholder proof submission.
+//     data nor a precomputed `nullifierHash`, and the deposit-time path
+//     stash / on-chain reconstruction is deferred to tasks 11.x. Until
+//     then `'max'` throws a clear "not yet implemented" error after loading
+//     the record. This path is also hard-gated by `isMaxPrivacyWithdrawReady()`
+//     (DATA-002 = false), so it is unreachable in release. The dispatcher
+//     *shape* is what task 9.2 establishes — the missing inputs surface as a
+//     typed error rather than as a silent failure or a placeholder proof.
 import 'react-native-get-random-values';
 import { useState, useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
@@ -715,12 +720,14 @@ export function usePaymentTransaction({
 
       setTxStatus('stealth_deriving');
 
-      // TODO(directory): the directory currently exposes a single viewing
-      // key per merchant. The dual-key stealth engine wants both viewing
-      // *and* spending public keys. Until the directory is extended to
-      // serve a meta-address, we feed the same key into both slots so
-      // the engine still produces a derivable address. The recipient's
-      // scanner will recover correctly only after the directory upgrade.
+      // Deferred (directory dual-key upgrade): the directory currently
+      // exposes a single viewing key per merchant. The dual-key stealth
+      // engine wants both viewing *and* spending public keys. Until the
+      // directory is extended to serve a meta-address, we feed the same key
+      // into both slots so the engine still produces a derivable address.
+      // The recipient's scanner will recover correctly only after that
+      // upgrade — which is why the stealth path stays gated off (see the
+      // `isPrivacyStackConfigured()` pre-flight guard) in shipping builds.
       const recipientPubKey = await fetchRecipientPublicKey(
         recipient,
         chainType
@@ -906,14 +913,15 @@ export function usePaymentTransaction({
 
       setTxStatus('proving');
 
-      // TODO(scanning): reconstruct the Merkle path
+      // Deferred (tasks 11.x, gated off): reconstruct the Merkle path
       // (`pathElements`, `pathIndices`) from chain — either by extending
       // `CommitmentRecord` to stash the deposit-time path or by reading
       // the leaf set via an indexer call. Same for `nullifierHash`,
-      // which needs Poseidon(record.nullifier). These are tracked in
-      // tasks 11.x. Until then we throw a clear "not yet implemented"
-      // error so the dispatcher's shape is what task 9.2 ships and the
-      // missing pieces are visible to integration.
+      // which needs Poseidon(record.nullifier). This branch is only
+      // reachable when `isMaxPrivacyWithdrawReady()` is true; it is false
+      // (DATA-002) in shipping builds, so the throw below cannot fire in
+      // release. The typed error keeps the dispatcher's shape honest for
+      // integration until tasks 11.x wire the missing inputs.
       const recordWithPath = record as typeof record & {
         pathElements?: Hex[];
         pathIndices?: number[];

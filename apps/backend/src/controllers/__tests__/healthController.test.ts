@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../lib/prisma';
 import { getHealth, getReady, getLive } from '../healthController';
-import IORedis from 'ioredis';
-import { config } from '../../config';
+import { getRedisClient } from '../../lib/redis';
 
 jest.mock('../../lib/prisma', () => ({
   prisma: {
@@ -10,19 +9,17 @@ jest.mock('../../lib/prisma', () => ({
   },
 }));
 
-jest.mock('ioredis', () => {
-  return jest.fn().mockImplementation(() => ({
-    ping: jest.fn(),
-    quit: jest.fn(),
-  }));
-});
-
-jest.mock('../../config', () => ({
-  config: {
-    redisUrl: 'redis://localhost:6379',
-    redisPassword: 'password',
-  },
+// PERF-001: checkRedis now reuses the shared Redis singleton, so the test
+// stubs that accessor rather than the raw ioredis constructor.
+jest.mock('../../lib/redis', () => ({
+  getRedisClient: jest.fn(),
 }));
+
+const mockGetRedisClient = getRedisClient as jest.Mock;
+
+function stubRedis(ping: jest.Mock): void {
+  mockGetRedisClient.mockReturnValue({ ping } as unknown as ReturnType<typeof getRedisClient>);
+}
 
 describe('healthController', () => {
   let req: Partial<Request>;
@@ -40,13 +37,8 @@ describe('healthController', () => {
   describe('getHealth', () => {
     it('returns ok status when both database and redis are healthy', async () => {
       (prisma.$queryRaw as jest.Mock).mockResolvedValue([{ 1: 1 }]);
-      
-      const mockPing = jest.fn().mockResolvedValue('PONG');
-      const mockQuit = jest.fn().mockResolvedValue('OK');
-      (IORedis as unknown as jest.Mock).mockImplementation(() => ({
-        ping: mockPing,
-        quit: mockQuit,
-      }));
+
+      stubRedis(jest.fn().mockResolvedValue('PONG'));
 
       await getHealth(req as Request, res as Response);
 
@@ -62,13 +54,8 @@ describe('healthController', () => {
 
     it('returns degraded status when database is down', async () => {
       (prisma.$queryRaw as jest.Mock).mockRejectedValue(new Error('Connection failed'));
-      
-      const mockPing = jest.fn().mockResolvedValue('PONG');
-      const mockQuit = jest.fn().mockResolvedValue('OK');
-      (IORedis as unknown as jest.Mock).mockImplementation(() => ({
-        ping: mockPing,
-        quit: mockQuit,
-      }));
+
+      stubRedis(jest.fn().mockResolvedValue('PONG'));
 
       await getHealth(req as Request, res as Response);
 
@@ -84,13 +71,8 @@ describe('healthController', () => {
 
     it('returns degraded status when redis is down', async () => {
       (prisma.$queryRaw as jest.Mock).mockResolvedValue([{ 1: 1 }]);
-      
-      const mockPing = jest.fn().mockRejectedValue(new Error('Connection failed'));
-      const mockQuit = jest.fn().mockResolvedValue('OK');
-      (IORedis as unknown as jest.Mock).mockImplementation(() => ({
-        ping: mockPing,
-        quit: mockQuit,
-      }));
+
+      stubRedis(jest.fn().mockRejectedValue(new Error('Connection failed')));
 
       await getHealth(req as Request, res as Response);
 

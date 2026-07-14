@@ -49,6 +49,12 @@ jobs:
       - name: Typecheck indexer
         run: pnpm --filter @veilpay/indexer typecheck
 
+      # TEST-004: indexer ships 7 src test suites (config, indexers, websocket,
+      # queue, stealth crypto/scanner, webhook dispatcher) but CI previously ran
+      # only lint/typecheck, leaving money-path indexing logic unguarded.
+      - name: Test indexer
+        run: pnpm --filter @veilpay/indexer test
+
       - name: Lint consumer app
         run: pnpm --filter consumer-app lint
 

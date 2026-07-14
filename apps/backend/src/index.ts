@@ -69,7 +69,11 @@ if (redisClient) {
   app.use(
     session({
       store: new RedisStore({ client: redisClient, prefix: "veilpay:sess:" }),
-      secret: config.jwtSecret || "veilpay_dev_session_secret",
+      // SEC-009: no inline fallback. config.jwtSecret is a required, min-32-char
+      // value validated at boot (config/index.ts) and rejected in production if
+      // it is the dev default or a placeholder, so a hardcoded fallback here is
+      // both unreachable and a defense-in-depth hazard.
+      secret: config.jwtSecret,
       resave: false,
       saveUninitialized: false,
       cookie: {

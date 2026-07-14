@@ -16,6 +16,8 @@ interface SovereignButtonProps {
   shape?: "pill" | "rounded";
   accessibilityLabel?: string;
   accessibilityHint?: string;
+  /** Stable selector for Maestro / testing-library (UX-002). */
+  testID?: string;
   children?: React.ReactNode;
 }
 
@@ -34,6 +36,7 @@ export function SovereignButton({
   shape = "pill",
   accessibilityLabel,
   accessibilityHint,
+  testID,
   children,
 }: SovereignButtonProps) {
   const { colors } = useTheme();
@@ -92,6 +95,7 @@ export function SovereignButton({
       onPress={onPress}
       style={[styles.buttonWrapper, style]}
       disabled={disabled}
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel || title}
       accessibilityHint={accessibilityHint}

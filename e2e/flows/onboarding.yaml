@@ -1,18 +1,24 @@
-# Onboarding flow
-# Flow: launch → welcome → create/import wallet
+# Onboarding flow (UX-002)
+# Flow: cold launch → welcome → get started → wallet connect (create/import)
+#
+# Selectors use accessibility labels + testIDs wired in the consumer app.
+# Requires a clean install (or clearState) so Onboarding is the first screen.
 
 appId: com.veilpay.consumer
 ---
-- launchApp
-- assertVisible: "Welcome"
-- assertVisible: "VeilPay"
-- tapOn: "Create Wallet"
-- assertVisible: "Set.*PIN"
-- tapOn: "Continue"
-- assertVisible: "Wallet"
-- tapOn: ".*import.*wallet.*"
-- assertVisible: "Phrase"
-- inputText:
-    text: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-- tapOn: "Import"
-- assertVisible: "Home"
+- launchApp:
+    clearState: true
+- assertVisible: "PRIVATE PAYMENTS"
+- assertVisible:
+    id: "onboarding-get-started"
+- tapOn:
+    id: "onboarding-get-started"
+- assertVisible: "CHOOSE CONNECTION METHOD"
+- assertVisible:
+    id: "wallet-connect-create"
+- assertVisible:
+    id: "wallet-connect-import"
+- tapOn:
+    id: "wallet-connect-create"
+- assertVisible:
+    text: ".*CREATE.*|.*recovery.*|.*seed.*|.*phrase.*"

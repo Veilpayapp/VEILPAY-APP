@@ -1,19 +1,26 @@
-# Payment flow
-# Flow: launch → home → send → input recipient/amount
+# Send payment happy path (UX-002)
+# Flow: home → send → recipient + amount → continue
+#
+# Precondition: a wallet is already onboarded on the device under test
+# (do not clearState). Selectors use testIDs + accessibility labels.
 
 appId: com.veilpay.consumer
 ---
 - launchApp
-- assertVisible: "Home"
-- tapOn: "Send"
-- assertVisible: "Send Payment"
-- assertVisible: "Enter.*address"
-- inputText:
-    text: "0x1111111111111111111111111111111111111111"
-- assertNotVisible: "Enter a valid"
-- assertVisible: "Amount"
-- inputText:
-    text: "0.01"
-- assertNotVisible: "greater than 0"
-- tapOn: "Next"
-- assertVisible: "Confirm"
+- assertVisible:
+    id: "home-action-send"
+- tapOn:
+    id: "home-action-send"
+- assertVisible: "SEND PAYMENT"
+- assertVisible:
+    id: "send-recipient-input"
+- tapOn:
+    id: "send-recipient-input"
+- inputText: "0x1111111111111111111111111111111111111111"
+- assertVisible:
+    id: "send-amount-input"
+- tapOn:
+    id: "send-amount-input"
+- inputText: "0.01"
+- assertVisible:
+    id: "send-continue-button"

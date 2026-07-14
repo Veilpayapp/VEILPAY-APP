@@ -14,6 +14,8 @@ interface AddressBookState {
   addresses: AddressEntry[];
   addAddress: (name: string, address: string, chain: string) => void;
   removeAddress: (id: string) => void;
+  /** PRIV-002: wipe all local address-book entries (DSAR / account wipe). */
+  clearAddresses: () => void;
 }
 
 export const useAddressBookStore = create<AddressBookState>()(
@@ -50,6 +52,9 @@ export const useAddressBookStore = create<AddressBookState>()(
         set((state) => ({
           addresses: state.addresses.filter((a) => a.id !== id),
         }));
+      },
+      clearAddresses: () => {
+        set({ addresses: [] });
       },
     }),
     {

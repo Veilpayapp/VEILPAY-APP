@@ -738,6 +738,7 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                       autoCorrect={false}
                       multiline
                       numberOfLines={2}
+                      testID="send-recipient-input"
                       accessibilityLabel="Recipient address"
                       accessibilityHint={recipientPlaceholder}
                     />
@@ -804,6 +805,7 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
                   placeholder="0.00"
                   placeholderTextColor={colors.textFaint}
                   keyboardType="decimal-pad"
+                  testID="send-amount-input"
                   accessibilityLabel="Payment amount"
                   accessibilityHint={`Amount to send in ${isUsdInput ? (nativeCurrency || 'USD') : selectedToken.symbol}`}
                 />
@@ -918,6 +920,8 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
               disabled={!canContinue || isAuthenticating}
               variant={canContinue ? 'primary' : 'outline'}
               style={styles.continueButton}
+              testID="send-continue-button"
+              accessibilityLabel="Continue to payment confirmation"
             />
           </View>
         </KeyboardAvoidingView>

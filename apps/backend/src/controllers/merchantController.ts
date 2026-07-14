@@ -64,11 +64,14 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
     // Optional shared registration token (invite-only signup).
     const requiredToken = process.env.MERCHANT_REGISTRATION_TOKEN?.trim();
     if (requiredToken) {
+      const headerToken = req.headers["x-registration-token"];
+      const body = req.body as { registrationToken?: unknown } | undefined;
+      const bodyToken =
+        typeof body?.registrationToken === "string"
+          ? body.registrationToken.trim()
+          : "";
       const provided =
-        (req.headers["x-registration-token"] as string | undefined)?.trim() ||
-        (typeof req.body?.registrationToken === "string"
-          ? req.body.registrationToken.trim()
-          : "");
+        (typeof headerToken === "string" ? headerToken.trim() : "") || bodyToken;
       if (provided !== requiredToken) {
         res.status(403).json({
           error: "Registration token required or invalid",

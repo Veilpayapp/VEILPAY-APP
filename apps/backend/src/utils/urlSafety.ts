@@ -205,10 +205,11 @@ export async function assertSafeWebhookUrl(rawUrl: string): Promise<SafeWebhookU
     if (isPrivateIP(hostname)) {
       throw new UnsafeUrlError('Webhook URL points at a private/reserved IP');
     }
+    const family: 4 | 6 = isIP(hostname) === 6 ? 6 : 4;
     return {
       url: rawUrl,
       resolvedAddress: hostname,
-      family: (isIP(hostname) === 6 ? 6 : 4) as 4 | 6,
+      family,
     };
   }
 
@@ -237,10 +238,11 @@ export async function assertSafeWebhookUrl(rawUrl: string): Promise<SafeWebhookU
   // uses this IP via a custom agent `lookup` so `fetch` cannot re-resolve
   // to a different (potentially private) address at connection time.
   const first = addresses[0];
+  const family: 4 | 6 = first.family === 6 ? 6 : 4;
   return {
     url: rawUrl,
     resolvedAddress: first.address,
-    family: (first.family === 6 ? 6 : 4) as 4 | 6,
+    family,
   };
 }
 

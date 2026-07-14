@@ -350,15 +350,15 @@ async function verifyErc20Payment(
         address: expectedTokenChecksum as `0x${string}`,
         abi: ERC20_META_ABI,
         functionName: 'decimals',
-      }) as Promise<number>,
+      }),
       publicClient.readContract({
         address: expectedTokenChecksum as `0x${string}`,
         abi: ERC20_META_ABI,
         functionName: 'symbol',
-      }) as Promise<string>,
+      }),
     ]);
     decimals = Number(d);
-    symbol = s;
+    symbol = String(s);
   } catch {
     return {
       ok: false,

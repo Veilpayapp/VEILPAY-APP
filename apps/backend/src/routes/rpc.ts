@@ -1,5 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { getRpcUrl } from '../lib/rpcEndpoints';
+import {
+  consumeRpcBudget,
+  isRpcCircuitOpen,
+  noteRpcFailure,
+  recordUpstreamStatus,
+} from '../utils/rpcBudget';
 
 const router = Router();
 
@@ -246,6 +252,34 @@ function asyncRoute(fn: AsyncHandler): (req: Request, res: Response, next: NextF
   };
 }
 
+/**
+ * SEC-001 pre-flight guard. Rejects with a 503 (and returns true so the caller
+ * returns) when the upstream circuit is open, or consumes one unit of the daily
+ * budget and rejects when it is exhausted. Call immediately before dispatching
+ * an upstream request — after cheap validation, so rejected/malformed requests
+ * do not consume budget.
+ */
+async function rpcGuardRejects(res: Response): Promise<boolean> {
+  if (isRpcCircuitOpen()) {
+    res.status(503).json({
+      error: 'RPC provider temporarily unavailable (circuit open). Please retry shortly.',
+      code: 'RPC_CIRCUIT_OPEN',
+      retryAfter: 60,
+    });
+    return true;
+  }
+  const budget = await consumeRpcBudget();
+  if (!budget.ok) {
+    res.status(503).json({
+      error: 'RPC daily budget exhausted. Please try again later.',
+      code: 'RPC_BUDGET_EXHAUSTED',
+      retryAfter: 3600,
+    });
+    return true;
+  }
+  return false;
+}
+
 // ─── Routes ────────────────────────────────────────────────────────────────
 
 // JSON-RPC POST proxy — used by EVM (viem) and Solana JSON-RPC clients.
@@ -279,6 +313,9 @@ router.post('/:chainKey', asyncRoute(async (req: Request, res: Response) => {
     });
   }
 
+  // SEC-001: budget circuit-breaker — reject before touching metered upstream.
+  if (await rpcGuardRejects(res)) return;
+
   try {
     const result = await fetchUpstream(
       targetUrl,
@@ -289,6 +326,7 @@ router.post('/:chainKey', asyncRoute(async (req: Request, res: Response) => {
       },
       chainKey
     );
+    recordUpstreamStatus(result.status, chainKey);
 
     const { body: safeBody, truncated } = truncateResponseBody(result.body);
     if (truncated) {
@@ -300,6 +338,8 @@ router.post('/:chainKey', asyncRoute(async (req: Request, res: Response) => {
     }
     return res.status(result.status).json(safeBody);
   } catch (error) {
+    // Network/timeout reaching the provider counts as an upstream failure.
+    noteRpcFailure('network');
     return handleUpstreamError(error, chainKey, res);
   }
 }));
@@ -352,18 +392,24 @@ router.get('/:chainKey/*', asyncRoute(async (req: Request, res: Response) => {
     fullUrl.search = sp.toString();
   }
 
+  // SEC-001: budget circuit-breaker — reject before touching metered upstream.
+  if (await rpcGuardRejects(res)) return;
+
   try {
     const result = await fetchUpstream(
       fullUrl.toString(),
       { method: 'GET', headers: { Accept: 'application/json' } },
       chainKey
     );
+    recordUpstreamStatus(result.status, chainKey);
 
     if (typeof result.body === 'string') {
       return res.status(result.status).type(result.contentType || 'text/plain').send(result.body);
     }
     return res.status(result.status).json(result.body);
   } catch (error) {
+    // Network/timeout reaching the provider counts as an upstream failure.
+    noteRpcFailure('network');
     return handleUpstreamError(error, chainKey, res);
   }
 }));

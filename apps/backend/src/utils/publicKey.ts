@@ -157,7 +157,15 @@ function validateStellarPublicKey(value: string): PubKeyCheck {
   }
 
   const payload = decoded.subarray(0, 33);
-  const checksum = decoded[33]! | (decoded[34]! << 8);
+  const b33 = decoded[33];
+  const b34 = decoded[34];
+  if (b33 === undefined || b34 === undefined) {
+    return {
+      ok: false,
+      error: "Stellar viewingKey is truncated",
+    };
+  }
+  const checksum = b33 | (b34 << 8);
   if (crc16xmodem(payload) !== checksum) {
     return {
       ok: false,
@@ -191,7 +199,8 @@ function base32Decode(input: string): Uint8Array | null {
 function crc16xmodem(data: Uint8Array): number {
   let crc = 0x0000;
   for (let i = 0; i < data.length; i++) {
-    crc ^= data[i]! << 8;
+    const byte = data[i] ?? 0;
+    crc ^= byte << 8;
     for (let b = 0; b < 8; b++) {
       if (crc & 0x8000) crc = ((crc << 1) ^ 0x1021) & 0xffff;
       else crc = (crc << 1) & 0xffff;

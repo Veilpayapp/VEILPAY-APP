@@ -285,74 +285,66 @@ export async function waitForTransaction(
   networkKey: string = 'sepolia',
   confirmations: number = 1
 ): Promise<TransactionResult> {
-  try {
-    if (networkKey === 'stellar' || networkKey === 'stellar-testnet') {
-      const horizonUrl = networkKey === 'stellar' ? 'https://horizon.stellar.org' : 'https://horizon-testnet.stellar.org';
-      const res = await fetch(`${horizonUrl}/transactions/${txHash}`);
-      if (res.status === 404) {
-        throw new Error('Transaction not found');
-      }
-      if (!res.ok) {
-        throw new Error(`HTTP error ${res.status}`);
-      }
-      const data = await res.json();
-      if (data.successful) {
-        return {
-          hash: txHash,
-          status: 'confirmed',
-          blockNumber: data.ledger,
-          gasUsed: data.fee_charged,
-        };
-      } else {
-        return { hash: txHash, status: 'failed', error: 'Stellar transaction failed' };
-      }
+  // Contract: every genuine on-chain terminal state (confirmed or failed) is
+  // returned below. Non-terminal cases (not found, still pending, transient
+  // infra faults) throw so the poller retries within its timeout window.
+  if (networkKey === 'stellar' || networkKey === 'stellar-testnet') {
+    const horizonUrl = networkKey === 'stellar' ? 'https://horizon.stellar.org' : 'https://horizon-testnet.stellar.org';
+    const res = await fetch(`${horizonUrl}/transactions/${txHash}`);
+    if (res.status === 404) {
+      throw new Error('Transaction not found');
     }
-
-    if (networkKey === 'solana' || networkKey === 'solana-devnet') {
-      const solRpc = networkKey === 'solana' ? 'https://api.mainnet-beta.solana.com' : 'https://api.devnet.solana.com';
-      const res = await fetch(solRpc, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'getSignatureStatuses',
-          params: [[txHash], { searchTransactionHistory: true }]
-        })
-      });
-      const data = await res.json();
-      const status = data?.result?.value?.[0];
-      if (!status) throw new Error('Transaction not found');
-      if (status.err) return { hash: txHash, status: 'failed', error: JSON.stringify(status.err) };
-      if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
-        return { hash: txHash, status: 'confirmed', blockNumber: status.slot };
-      }
-      throw new Error('Still pending');
+    if (!res.ok) {
+      throw new Error(`HTTP error ${res.status}`);
     }
-
-    const receipt = await poolCall(networkKey, (p) => p.waitForTransactionReceipt({ hash: txHash as `0x${string}`, confirmations }));
-    
-    if (!receipt) {
-      return { hash: txHash, status: 'failed', error: 'Transaction not found' };
+    const data = await res.json();
+    if (data.successful) {
+      return {
+        hash: txHash,
+        status: 'confirmed',
+        blockNumber: data.ledger,
+        gasUsed: data.fee_charged,
+      };
     }
-
-    return {
-      hash: txHash,
-      status: receipt.status === 'success' ? 'confirmed' : 'failed',
-      blockNumber: Number(receipt.blockNumber),
-      gasUsed: receipt.gasUsed.toString(),
-    };
-  } catch (error: any) {
-    // Contract: every *genuine on-chain terminal state* (confirmed, or reverted/
-    // failed) is `return`ed from inside the try above. Therefore anything that
-    // reaches this catch is by definition NON-terminal — the tx is not yet found,
-    // still pending, or the lookup hit a transient infrastructure fault (5xx,
-    // network blip, JSON parse error, RPC down). All of these must be re-thrown so
-    // the poller retries within its timeout window. Swallowing them as
-    // `{ status: 'failed' }` would mark a live, likely-succeeding transaction as
-    // permanently failed on a one-off network hiccup.
-    throw error;
+    return { hash: txHash, status: 'failed', error: 'Stellar transaction failed' };
   }
+
+  if (networkKey === 'solana' || networkKey === 'solana-devnet') {
+    const solRpc = networkKey === 'solana' ? 'https://api.mainnet-beta.solana.com' : 'https://api.devnet.solana.com';
+    const res = await fetch(solRpc, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getSignatureStatuses',
+        params: [[txHash], { searchTransactionHistory: true }],
+      }),
+    });
+    const data = await res.json();
+    const status = data?.result?.value?.[0];
+    if (!status) throw new Error('Transaction not found');
+    if (status.err) return { hash: txHash, status: 'failed', error: JSON.stringify(status.err) };
+    if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
+      return { hash: txHash, status: 'confirmed', blockNumber: status.slot };
+    }
+    throw new Error('Still pending');
+  }
+
+  const receipt = await poolCall(networkKey, (p) =>
+    p.waitForTransactionReceipt({ hash: txHash as `0x${string}`, confirmations })
+  );
+
+  if (!receipt) {
+    return { hash: txHash, status: 'failed', error: 'Transaction not found' };
+  }
+
+  return {
+    hash: txHash,
+    status: receipt.status === 'success' ? 'confirmed' : 'failed',
+    blockNumber: Number(receipt.blockNumber),
+    gasUsed: receipt.gasUsed.toString(),
+  };
 }
 
 export async function getTransaction(

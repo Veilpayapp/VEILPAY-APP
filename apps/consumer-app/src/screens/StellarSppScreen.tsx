@@ -171,7 +171,7 @@ export function StellarSppScreen({ navigation }: Props) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot when leaf appears
+    // One-shot when leaf appears (deps intentionally limited).
   }, [enabled, chainKey, address, prep?.hasAspLeaf, prep?.aspInserted]);
 
   const runAspRegister = async () => {

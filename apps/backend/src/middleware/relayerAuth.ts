@@ -49,13 +49,14 @@ export function relayerCallerAuth(
     return;
   }
 
-  const provided =
-    (req.headers['x-relayer-secret'] as string | undefined)?.trim() ||
-    (req.headers['authorization'] as string | undefined)?.replace(
-      /^Bearer\s+/i,
-      ''
-    ).trim() ||
-    '';
+  const rawSecret = req.headers['x-relayer-secret'];
+  const rawAuth = req.headers['authorization'];
+  const fromSecret = typeof rawSecret === 'string' ? rawSecret.trim() : '';
+  const fromAuth =
+    typeof rawAuth === 'string'
+      ? rawAuth.replace(/^Bearer\s+/i, '').trim()
+      : '';
+  const provided = fromSecret || fromAuth;
 
   if (!provided || !secretsEqual(provided, expected)) {
     res.status(401).json({

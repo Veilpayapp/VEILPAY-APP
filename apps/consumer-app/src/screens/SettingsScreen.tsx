@@ -27,6 +27,8 @@ import { setClipboardString } from "../utils/clipboard";
 import { CurrencySelectorModal } from "../components/CurrencySelectorModal";
 import { LEGAL_URLS } from "../constants/legalUrls";
 import { clearStoredMnemonic, getStoredMnemonic } from "../utils/transactions";
+import { wipeLocalAccountData } from "../utils/accountWipe";
+import { t } from "../i18n";
 import { useBiometrics } from "../hooks/useBiometrics";
 import { useOTAUpdates } from "../hooks/useOTAUpdates";
 import { useSettingsStore } from "../stores/settingsStore";
@@ -322,6 +324,40 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
     });
   };
 
+  /** PRIV-002: full local DSAR wipe (secrets + session + history + analytics). */
+  const handleEraseAllLocalData = () => {
+    setWarningModalConfig({
+      visible: true,
+      title: t("settings.wipe.confirmTitle"),
+      message: t("settings.wipe.confirmMessage"),
+      confirmText: t("settings.wipe.confirmAction"),
+      onConfirm: async () => {
+        setWarningModalConfig((prev) => ({ ...prev, visible: false }));
+        // Sensitive ops always require biometric-or-PIN (device PIN allowed as fallback).
+        const authResult = await authenticate("account_wipe", true);
+        if (!authResult.success) {
+          toast.show(
+            authResult.cancelled ? "Authentication cancelled" : "Authentication failed",
+            "error"
+          );
+          return;
+        }
+
+        const outcome = await wipeLocalAccountData();
+        if (!outcome.ok) {
+          toast.show(t("settings.wipe.failure"), "error");
+          return;
+        }
+
+        toast.show(t("settings.wipe.success"), "success");
+        navigation.reset({
+          index: 0,
+          routes: [{ name: SCREENS.ONBOARDING }],
+        });
+      },
+    });
+  };
+
   // Settings sections data
   const walletSection: SettingsItem[] = [
     {
@@ -406,8 +442,8 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
     },
     {
       id: "delete-analytics",
-      label: "Delete analytics data",
-      description: "Erase local analytics identity (DSAR)",
+      label: t("settings.dsar.analytics"),
+      description: t("settings.dsar.analyticsDescription"),
       iconName: "info",
       type: "action",
       onPress: handleDeleteAnalyticsData,
@@ -515,6 +551,15 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
       type: "action",
       danger: true,
       onPress: handleDisconnect,
+    },
+    {
+      id: "erase-all-local",
+      label: t("settings.wipe.label"),
+      description: t("settings.wipe.description"),
+      iconName: "warning",
+      type: "action",
+      danger: true,
+      onPress: handleEraseAllLocalData,
     },
   ];
 

@@ -1,26 +1,53 @@
 # Veilpay E2E
 
-Maestro scaffold for the consumer app.
+Maestro flows for the consumer app.
 
 ## Scope
 
-- Critical onboarding and wallet setup
-- Send-payment happy path
-- Network switching and custom networks
-- Settings and deep-link entry points
+| Flow | File | CI gate |
+|------|------|---------|
+| Onboarding (cold start → wallet connect) | `flows/onboarding.yaml` | UX-002 |
+| Send payment (home → recipient/amount) | `flows/send_payment.yaml` | UX-002 |
+| Network switching | `flows/network_switching.yaml` | manual |
+| Settings | `flows/settings.yaml` | manual |
+| Custom network | `flows/custom_network.yaml` | manual |
+| Deep link | `flows/deep_link.yaml` | manual |
 
-## Assumptions
+## Selectors
 
-- The consumer app is built with the Expo package id `com.veilpay.consumer`.
-- Visible labels should follow the screen titles in `apps/consumer-app/src/constants/screens.ts`.
-- Selectors still need to be finalized against the rendered app before these flows are promoted to CI.
+Critical paths use stable `testID`s (preferred) and accessibility labels:
 
-## Run
+| testID | Screen |
+|--------|--------|
+| `onboarding-get-started` | Onboarding |
+| `onboarding-restore-vault` | Onboarding |
+| `wallet-connect-create` | Wallet connect |
+| `wallet-connect-import` | Wallet connect |
+| `home-action-send` | Home quick actions |
+| `send-recipient-input` | Send payment |
+| `send-amount-input` | Send payment |
+| `send-continue-button` | Send payment |
+
+App id: `com.veilpay.consumer` (see `apps/consumer-app/app.config.js`).
+
+## Run on device / emulator
 
 ```bash
+# Install Maestro: https://maestro.mobile.dev
+maestro test e2e/flows/onboarding.yaml
+maestro test e2e/flows/send_payment.yaml
+# or all flows:
 maestro test e2e/flows
 ```
 
-## Next wiring step
+`send_payment.yaml` assumes a wallet is already onboarded (does not `clearState`).
 
-Update each flow with the actual visible text, accessibility labels, or test ids from the consumer app screens.
+## CI
+
+```bash
+node scripts/validate-maestro-flows.mjs
+```
+
+This validates that the critical YAML flows exist and that every required `testID`
+still appears in `apps/consumer-app/src`. Full Maestro execution on an emulator is
+not part of the default GitHub Actions runner (no Android device farm wired yet).

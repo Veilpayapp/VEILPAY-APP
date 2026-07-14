@@ -139,6 +139,7 @@ export function DashboardQuickActions({
             onPress={handler}
             activeOpacity={0.9}
             style={prominent ? styles.actionBtnProminent : styles.actionBtn}
+            testID={`home-action-${label.toLowerCase()}`}
             accessibilityRole="button"
             accessibilityLabel={getQuickActionAccessibility(label).label}
             accessibilityHint={getQuickActionAccessibility(label).hint}

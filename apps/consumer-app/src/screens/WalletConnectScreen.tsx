@@ -362,6 +362,7 @@ export function WalletConnectScreen({ navigation, route }: WalletConnectScreenPr
             activeOpacity={0.9}
             onPress={() => handleInternalWallet('create')}
             style={{ marginBottom: 20 }}
+            testID="wallet-connect-create"
             accessibilityRole="button"
             accessibilityLabel="Create new wallet"
             accessibilityHint="Starts wallet creation with a new seed phrase"
@@ -383,6 +384,7 @@ export function WalletConnectScreen({ navigation, route }: WalletConnectScreenPr
             activeOpacity={0.9}
             onPress={() => handleInternalWallet('import')}
             style={{ marginBottom: 32 }}
+            testID="wallet-connect-import"
             accessibilityRole="button"
             accessibilityLabel="Import existing wallet"
             accessibilityHint="Restores a wallet using seed phrase or private key"

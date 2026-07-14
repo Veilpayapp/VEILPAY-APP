@@ -29,6 +29,8 @@
 - [Balances and assets](consumer-app/balances-and-assets.md)
 - [WalletConnect](consumer-app/walletconnect.md)
 - [Fiat ramps](consumer-app/fiat-ramps.md)
+- [Accessibility (WCAG 2.2 AA)](consumer-app/accessibility.md)
+- [DSAR / account wipe](consumer-app/dsar.md)
 
 ## Chains
 

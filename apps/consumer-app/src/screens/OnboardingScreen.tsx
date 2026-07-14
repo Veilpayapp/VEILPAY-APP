@@ -17,6 +17,7 @@ import { SovereignButton } from "../components/SovereignButton";
 import { FeatureCard } from '../components/FeatureCard';
 import { trackEvent } from '../utils/analytics';
 import { ANALYTICS_EVENTS } from '../utils/analyticsEvents';
+import { t } from '../i18n';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -57,10 +58,10 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
           </View>
 
           <View style={styles.heroSection}>
-            <Text style={styles.headline}>PRIVATE PAYMENTS,{"\n"}FULLY YOURS.</Text>
+            <Text style={styles.headline}>{t('onboarding.headline')}</Text>
 
             <View style={styles.badgeWrapper}>
-              <Text style={styles.badgeText}>SECURE THE VOID.</Text>
+              <Text style={styles.badgeText}>{t('onboarding.badge')}</Text>
             </View>
           </View>
 
@@ -77,21 +78,24 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
 
           <View style={styles.footer}>
             <SovereignButton
-              title="GET STARTED"
+              title={t('onboarding.getStarted')}
               variant="primary"
               style={{ width: '100%' }}
               onPress={handleGetStarted}
+              testID="onboarding-get-started"
+              accessibilityLabel={t('onboarding.a11y.getStarted')}
             />
 
             <PressableOpacity
               style={styles.secondaryButton}
               onPress={handleRestoreVault}
               activeOpacity={0.6}
+              testID="onboarding-restore-vault"
               accessibilityRole="button"
-              accessibilityLabel="Restore existing vault"
+              accessibilityLabel={t('onboarding.a11y.restoreVault')}
               accessibilityHint="Opens wallet restore flow"
             >
-              <Text style={styles.secondaryButtonText}>RESTORE EXISTING VAULT</Text>
+              <Text style={styles.secondaryButtonText}>{t('onboarding.restoreVault')}</Text>
             </PressableOpacity>
           </View>
         </ScrollView>

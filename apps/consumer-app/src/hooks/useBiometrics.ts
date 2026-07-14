@@ -30,7 +30,8 @@ export type BiometricContext =
   | 'backup_seed'
   | 'app_unlock'
   | 'toggle_biometrics'
-  | 'deposit';
+  | 'deposit'
+  | 'account_wipe';
 
 const PROMPT_MESSAGES: Record<BiometricContext, string> = {
   send_payment:       'Authorize this transaction with biometrics',
@@ -39,6 +40,7 @@ const PROMPT_MESSAGES: Record<BiometricContext, string> = {
   app_unlock:         'Authenticate to access VeilPay',
   toggle_biometrics:  'Confirm your identity to change biometric settings',
   deposit:            'Authenticate to proceed with deposit',
+  account_wipe:       'Authenticate to erase all local wallet data',
 };
 
 // ─── Result Types ─────────────────────────────────────────────────────────────

@@ -168,7 +168,9 @@ enum ChainType {
 
 enum PrivacyLevel {
   standard
+  stealth
   max
+  private
 }
 
 enum WebhookDeliveryStatus {

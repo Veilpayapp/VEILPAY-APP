@@ -28,11 +28,18 @@ jest.mock('../../services/paymentTxVerifier', () => ({
   verifyPaymentTxOnChain: jest.fn(),
 }));
 
-jest.mock('../../types', () => ({
-  PaymentListQuerySchema: { parse: jest.fn((val) => val) },
-  PaymentListResponseSchema: { parse: jest.fn((val) => val) },
-  uuidParamSchema: { parse: jest.fn((val) => val) },
-}));
+jest.mock('../../types', () => {
+  // PrivacyLevel is a real zod enum used to build PaymentConfirmBodySchema at
+  // module load, so it must be a genuine ZodType (not a parse() stub).
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { z } = require('zod');
+  return {
+    PaymentListQuerySchema: { parse: jest.fn((val) => val) },
+    PaymentListResponseSchema: { parse: jest.fn((val) => val) },
+    uuidParamSchema: { parse: jest.fn((val) => val) },
+    PrivacyLevel: z.enum(['standard', 'stealth', 'max', 'private']),
+  };
+});
 
 const MERCHANT_ID = '00000000-0000-0000-0000-000000000001';
 const INVOICE_ID = '00000000-0000-0000-0000-000000000000';

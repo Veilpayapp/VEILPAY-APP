@@ -1,4 +1,12 @@
-import { scanForStealthPayments, processStealthMatch, StealthScanner, startStealthScanners } from '../scanner';
+import {
+  scanForStealthPayments,
+  processStealthMatch,
+  StealthScanner,
+  startStealthScanners,
+  deriveStealthAddress,
+  computeSharedSecret,
+  stealthScannerDeps,
+} from '../scanner';
 import { prisma } from '../../lib/prisma';
 import { enqueueWebhook } from '../../queue';
 
@@ -6,9 +14,34 @@ jest.mock('../../queue', () => ({
   enqueueWebhook: jest.fn(),
 }));
 
+const baseMatch = {
+  merchantId: 'm1',
+  invoiceId: 'inv1',
+  chainKey: 'ethereum',
+  paymentAddress: '0x123',
+  stealthAddress: '0xabc',
+  ephemeralPublicKey: 'pub1',
+  viewingKey: 'view1',
+};
+
 describe('Stealth Scanner Module', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
+  });
+
+  describe('stubs', () => {
+    it('deriveStealthAddress is not implemented', () => {
+      expect(() => deriveStealthAddress('pk', 'sk')).toThrow(
+        'Not implemented - requires elliptic curve operations',
+      );
+    });
+
+    it('computeSharedSecret is not implemented', () => {
+      expect(() => computeSharedSecret('eph', 'view')).toThrow(
+        'Not implemented - requires ECDH',
+      );
+    });
   });
 
   describe('scanForStealthPayments', () => {
@@ -18,14 +51,16 @@ describe('Stealth Scanner Module', () => {
       expect(matches).toEqual([]);
     });
 
-    it('should return matches based on pending invoices', async () => {
-      (prisma.chainViewingKey.findMany as jest.Mock).mockResolvedValueOnce([{ merchantId: 'm1', chainKey: 'ethereum' }]);
+    it('should skip invoices without paymentAddress', async () => {
+      (prisma.chainViewingKey.findMany as jest.Mock).mockResolvedValueOnce([
+        { merchantId: 'm1', chainKey: 'ethereum' },
+      ]);
       (prisma.invoice.findMany as jest.Mock).mockResolvedValueOnce([
         { id: 'inv1', paymentAddress: '0x123', chainKey: 'ethereum' },
-        { id: 'inv2', paymentAddress: null, chainKey: 'ethereum' }
+        { id: 'inv2', paymentAddress: null, chainKey: 'ethereum' },
       ]);
       const matches = await scanForStealthPayments('ethereum', 0, 100);
-      // Since checkStealthMatch is a stub returning null, matches will be []
+      // checkStealthMatch is a stub returning null
       expect(matches).toEqual([]);
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(prisma.invoice.findMany).toHaveBeenCalledTimes(1);
@@ -34,37 +69,22 @@ describe('Stealth Scanner Module', () => {
 
   describe('processStealthMatch', () => {
     it('should record payment and queue webhook if not recorded', async () => {
-      const match = {
-        merchantId: 'm1',
-        invoiceId: 'inv1',
-        chainKey: 'ethereum',
-        paymentAddress: '0x123',
-        stealthAddress: '0xabc',
-        ephemeralPublicKey: 'pub1',
-        viewingKey: 'view1'
-      };
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
-      let txCb: any;
-      (prisma.$transaction as jest.Mock).mockImplementationOnce((cb) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        txCb = cb;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-        return cb(prisma);
-      });
+      (prisma.$transaction as jest.Mock).mockImplementationOnce((cb: (tx: typeof prisma) => unknown) =>
+        cb(prisma),
+      );
 
       (prisma.payment.findFirst as jest.Mock).mockResolvedValueOnce(null);
       (prisma.invoice.findUnique as jest.Mock).mockResolvedValueOnce({
         id: 'inv1',
         amount: '100',
-        tokenSymbol: 'ETH'
+        tokenSymbol: 'ETH',
       });
       (prisma.payment.create as jest.Mock).mockResolvedValueOnce({
         id: 'pay1',
-        txHash: 'stealth-1234'
+        txHash: 'stealth-1234',
       });
 
-      await processStealthMatch(match);
+      await processStealthMatch(baseMatch);
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(prisma.payment.create).toHaveBeenCalled();
@@ -74,21 +94,26 @@ describe('Stealth Scanner Module', () => {
     });
 
     it('should not process if payment already recorded', async () => {
-      const match = {
-        merchantId: 'm1',
-        invoiceId: 'inv1',
-        chainKey: 'ethereum',
-        paymentAddress: '0x123',
-        stealthAddress: '0xabc',
-        ephemeralPublicKey: 'pub1',
-        viewingKey: 'view1'
-      };
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-      (prisma.$transaction as jest.Mock).mockImplementationOnce((cb) => cb(prisma));
+      (prisma.$transaction as jest.Mock).mockImplementationOnce((cb: (tx: typeof prisma) => unknown) =>
+        cb(prisma),
+      );
       (prisma.payment.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'pay1' });
 
-      await processStealthMatch(match);
+      await processStealthMatch(baseMatch);
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(prisma.payment.create).not.toHaveBeenCalled();
+      expect(enqueueWebhook).not.toHaveBeenCalled();
+    });
+
+    it('should no-op when invoice is missing', async () => {
+      (prisma.$transaction as jest.Mock).mockImplementationOnce((cb: (tx: typeof prisma) => unknown) =>
+        cb(prisma),
+      );
+      (prisma.payment.findFirst as jest.Mock).mockResolvedValueOnce(null);
+      (prisma.invoice.findUnique as jest.Mock).mockResolvedValueOnce(null);
+
+      await processStealthMatch(baseMatch);
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(prisma.payment.create).not.toHaveBeenCalled();
@@ -97,49 +122,88 @@ describe('Stealth Scanner Module', () => {
   });
 
   describe('StealthScanner class', () => {
-    // eslint-disable-next-line @typescript-eslint/require-await
-    it('should start and stop and catch scan errors', async () => {
+    it('should start and stop and catch scan errors from interval', async () => {
       jest.useFakeTimers();
       const scanner = new StealthScanner('ethereum');
-      
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unused-vars, @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-member-access
-      const scanForStealthPaymentsMock = require('../scanner').scanForStealthPayments;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unused-vars, @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-member-access
-      const processStealthMatchMock = require('../scanner').processStealthMatch;
-      
-      // Override to throw error
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-      const originalScan = (scanner as any).scan;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/explicit-function-return-type, @typescript-eslint/require-await
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       (scanner as any).scan = async () => {
         throw new Error('Scan failed');
       };
-      
+
       scanner.start(0);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       expect((scanner as any).isRunning).toBe(true);
-      
-      // Fast-forward to trigger interval
+
       jest.advanceTimersByTime(30000);
-      
+
       scanner.stop();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       expect((scanner as any).isRunning).toBe(false);
       jest.useRealTimers();
     });
 
+    it('should ignore double start', () => {
+      const scanner = new StealthScanner('ethereum');
+      scanner.start(10);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      const firstBlock = (scanner as any).lastScannedBlock;
+      scanner.start(999);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      expect((scanner as any).lastScannedBlock).toBe(firstBlock);
+      scanner.stop();
+    });
+
     it('should scan and advance cursor', async () => {
       const scanner = new StealthScanner('ethereum');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       (scanner as any).lastScannedBlock = 100;
-      
-      // Mock prisma to return empty so scanForStealthPayments returns [] safely
+
       (prisma.chainViewingKey.findMany as jest.Mock).mockResolvedValueOnce([]);
-      
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       await (scanner as any).scan();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       expect((scanner as any).lastScannedBlock).toBe(200);
+    });
+
+    it('should process matches during scan', async () => {
+      const scanner = new StealthScanner('ethereum');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      (scanner as any).lastScannedBlock = 0;
+
+      const scanPayments = jest.fn().mockResolvedValueOnce([baseMatch]);
+      const processMatch = jest.fn().mockResolvedValueOnce(undefined);
+      stealthScannerDeps.scanPayments = scanPayments;
+      stealthScannerDeps.processMatch = processMatch;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+      await (scanner as any).scan();
+
+      expect(scanPayments).toHaveBeenCalled();
+      expect(processMatch).toHaveBeenCalledWith(baseMatch);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      expect((scanner as any).lastScannedBlock).toBe(100);
+
+      stealthScannerDeps.scanPayments = scanForStealthPayments;
+      stealthScannerDeps.processMatch = processStealthMatch;
+    });
+
+    it('should not advance cursor when scan fails', async () => {
+      const scanner = new StealthScanner('ethereum');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      (scanner as any).lastScannedBlock = 50;
+
+      stealthScannerDeps.scanPayments = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('rpc down'));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+      await (scanner as any).scan();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      expect((scanner as any).lastScannedBlock).toBe(50);
+      stealthScannerDeps.scanPayments = scanForStealthPayments;
     });
   });
 
@@ -147,15 +211,14 @@ describe('Stealth Scanner Module', () => {
     it('should start scanners for all distinct chain keys', async () => {
       (prisma.chainViewingKey.findMany as jest.Mock).mockResolvedValueOnce([
         { chainKey: 'ethereum' },
-        { chainKey: 'solana' }
+        { chainKey: 'solana' },
       ]);
       const scanners = await startStealthScanners();
       expect(scanners.size).toBe(2);
       expect(scanners.has('ethereum')).toBe(true);
       expect(scanners.has('solana')).toBe(true);
 
-      // Stop scanners to prevent test hang
-      scanners.forEach(s => s.stop());
+      scanners.forEach((s) => s.stop());
     });
   });
 });

@@ -121,6 +121,7 @@ contract CustomErrorsTest is Test {
     VeilPool internal pool;
     StealthAnnouncer internal announcer;
     ToggleableVerifier internal verifier;
+    ToggleableVerifier internal depositVerifier;
     MockPoseidonHasher internal hasher;
     MockERC20 internal token;
 
@@ -132,14 +133,18 @@ contract CustomErrorsTest is Test {
     bytes32 internal constant COMMITMENT = bytes32(uint256(0xC0FFEE));
     bytes32 internal constant NULLIFIER = bytes32(uint256(0xDEADBEEF));
     uint256 internal constant DEPOSIT_AMOUNT = 1_000;
+    bytes internal constant EMPTY_PROOF = hex"00";
 
     function setUp() public {
         verifier = new ToggleableVerifier();
+        depositVerifier = new ToggleableVerifier();
+        depositVerifier.setOk(true);
         hasher = new MockPoseidonHasher();
         token = new MockERC20();
 
         pool = new VeilPool(
             IGroth16Verifier(address(verifier)),
+            IGroth16Verifier(address(depositVerifier)),
             IPoseidonHasher(address(hasher)),
             feeRecipient,
             0, // 0 bps so the recipient leg always succeeds for any positive amount
@@ -180,7 +185,7 @@ contract CustomErrorsTest is Test {
     ///         once, then keep the verifier toggled to `false` so the proof
     ///         step is the failure we observe.
     function test_RevertWhen_InvalidProof() public {
-        pool.deposit(COMMITMENT, address(token), DEPOSIT_AMOUNT);
+        pool.deposit(COMMITMENT, address(token), DEPOSIT_AMOUNT, EMPTY_PROOF);
         bytes32 knownRoot = pool.roots(pool.currentRootIndex());
 
         // Verifier still returns false (default) — so the proof check is the
@@ -205,7 +210,7 @@ contract CustomErrorsTest is Test {
     ///         the nullifier-spent flag; the second call short-circuits on
     ///         that flag before reaching the verifier.
     function test_RevertWhen_NullifierAlreadySpent() public {
-        pool.deposit(COMMITMENT, address(token), DEPOSIT_AMOUNT);
+        pool.deposit(COMMITMENT, address(token), DEPOSIT_AMOUNT, EMPTY_PROOF);
         bytes32 knownRoot = pool.roots(pool.currentRootIndex());
 
         verifier.setOk(true);
@@ -225,7 +230,7 @@ contract CustomErrorsTest is Test {
         // first revert we'd hit is `InvalidMerkleRoot` after the in-window
         // root rotates — depositing keeps the same root structurally, but
         // we use a fresh commitment to make the intent obvious).
-        pool.deposit(keccak256("commitment-2"), address(token), DEPOSIT_AMOUNT);
+        pool.deposit(bytes32(uint256(0xC0FFEE2)), address(token), DEPOSIT_AMOUNT, EMPTY_PROOF);
         bytes32 newRoot = pool.roots(pool.currentRootIndex());
 
         vm.expectRevert(NullifierAlreadySpent.selector);

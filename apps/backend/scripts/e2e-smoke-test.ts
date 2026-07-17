@@ -146,7 +146,7 @@ const CONFIRMATION_POLL_TIMEOUT_MS = 180_000;
  * mark-spent invariant on chain after the withdraw lands).
  */
 const VEILPOOL_ABI = [
-  'function deposit(bytes32 commitment, address token, uint256 amount) returns (uint32)',
+  'function deposit(bytes32 commitment, address token, uint256 amount, bytes depositProof) returns (uint32)',
   'function withdraw(bytes32 nullifierHash, bytes proof, bytes32 merkleRoot, address recipient, address token, uint256 amount)',
   'function nullifierSpent(bytes32) view returns (bool)',
   'function feeRecipient() view returns (address)',
@@ -397,12 +397,17 @@ async function stepDeposit(args: {
   depositor: ethers.Wallet;
   poseidon: PoseidonFn;
   tree: IncrementalMerkleTree;
+  /** Optional precomputed deposit.circom proof; required against a real depositVerifier. */
+  depositProof?: string;
 }): Promise<DepositResult> {
   const { pool, token, poolAddress, tokenAddress, amount, depositor, poseidon, tree } = args;
 
   const nullifier = randomFieldElement();
   const secret = randomFieldElement();
-  const commitmentBn = poseidon.F.toObject(poseidon([nullifier, secret]));
+  // Hardened note: Poseidon(nullifier, secret, amount, token)
+  const tokenField = BigInt(tokenAddress);
+  const amountBn = BigInt(amount.toString());
+  const commitmentBn = poseidon.F.toObject(poseidon([nullifier, secret, amountBn, tokenField]));
   const commitmentHex = toBytes32Hex(commitmentBn);
 
   log('deposit', `commitment = ${commitmentHex}`);
@@ -414,7 +419,10 @@ async function stepDeposit(args: {
   await approveTx.wait();
   log('deposit', `approve tx ${approveTx.hash} confirmed`);
 
-  const tx = await pool.deposit(commitmentHex, tokenAddress, amount);
+  // depositProof must satisfy deposit.circom against [commitment, amount, token].
+  // Generate with snarkjs + deposit artifacts when the deposit ceremony is wired.
+  const depositProof = args.depositProof ?? '0x';
+  const tx = await pool.deposit(commitmentHex, tokenAddress, amount, depositProof);
   const receipt = await tx.wait();
   if (receipt === null || receipt.status !== 1) {
     throw new Error(`deposit tx ${tx.hash} did not succeed`);

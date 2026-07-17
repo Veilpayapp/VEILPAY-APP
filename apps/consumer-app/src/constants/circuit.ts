@@ -21,8 +21,8 @@
  * with a clear configuration error rather than letting `snarkjs.groth16
  * .fullProve` blow up later with an opaque 404 from a relative URL fetch.
  *
- * Public inputs: [merkleRoot, nullifierHash, recipient, amount] —
- * see design.md §Public input ordering contract.
+ * Public inputs: [merkleRoot, nullifierHash, recipient, amount, token] —
+ * see packages/circuits/docs/CIRCUIT_SECURITY.md.
  *
  * @see ../components/ZkpProver.tsx
  * @see ../hooks/usePaymentTransaction.ts

@@ -30,7 +30,7 @@ export interface CommitmentRecord {
   nullifier: Hex;
   /** 32-byte field element (random). Private. */
   secret: Hex;
-  /** Poseidon(nullifier, secret). Public; identifies the leaf. */
+  /** Poseidon(nullifier, secret, amount, token). Public; identifies the leaf. */
   commitmentHash: Hex;
   /** Position in the pool's Merkle tree at time of insertion. */
   leafIndex: number;
@@ -112,7 +112,7 @@ export async function saveCommitmentRecord(r: CommitmentRecord): Promise<void> {
  * thrown by SecureStore propagates; callers should distinguish "no
  * record" (return value `null`) from "storage failed" (thrown error).
  *
- * @param commitmentHash The Poseidon(nullifier, secret) hash that
+ * @param commitmentHash The Poseidon(nullifier, secret, amount, token) hash that
  *   identifies the deposit on-chain.
  */
 export async function loadCommitmentRecord(commitmentHash: Hex): Promise<CommitmentRecord | null> {

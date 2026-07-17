@@ -13,7 +13,8 @@ contract Groth16VerifierTest is Test {
 
     function testVerifyProofReturnsFalse() public view {
         bytes memory proof = new bytes(256);
-        bytes32[] memory publicInputs = new bytes32[](4);
+        // Wrapper expects length 5 after circuit hardening; wrong length → false.
+        bytes32[] memory publicInputs = new bytes32[](5);
 
         assertFalse(verifier.verifyProof(proof, publicInputs));
     }
@@ -22,7 +23,7 @@ contract Groth16VerifierTest is Test {
         uint256[2] memory a;
         uint256[2][2] memory b;
         uint256[2] memory c;
-        uint256[4] memory input;
+        uint256[5] memory input;
 
         assertFalse(verifier._verifyProofRaw(a, b, c, input));
     }

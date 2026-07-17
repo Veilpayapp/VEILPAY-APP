@@ -5,7 +5,7 @@
 //
 //   1. build/withdraw.wasm                 (witness generator, > 0 bytes)
 //   2. build/withdraw_final.zkey           (proving key, > 0 bytes)
-//   3. build/verification_key.json         (parses, nPublic === 4, has vk_alpha_1)
+//   3. build/verification_key.json         (parses, nPublic === 5, has vk_alpha_1)
 //   4. ../contracts-evm/src/Groth16Verifier.sol
 //        (declares `contract Groth16Verifier is IGroth16Verifier`,
 //         contains the `VEILPAY_WRAPPER_INJECTED` sentinel,
@@ -92,17 +92,15 @@ describe('compile.sh smoke test', function () {
     expect(fs.statSync(zkeyPath).size).to.be.greaterThan(0);
   });
 
-  it('produces build/verification_key.json with nPublic === 4 and a vk_alpha_1 field', function () {
+  it('produces build/verification_key.json with nPublic === 5 and a vk_alpha_1 field', function () {
     const vkPath = path.join(BUILD_DIR, 'verification_key.json');
     expect(fs.existsSync(vkPath), `${vkPath} should exist`).to.equal(true);
 
     const vk = JSON.parse(fs.readFileSync(vkPath, 'utf8'));
 
-    // Snapshot the public-signal layout: the four declared public inputs
-    // (merkleRoot, nullifierHash, recipient, amount) flow through to the
-    // verification key as `nPublic = 4`. If this drifts, every consumer
-    // (VeilPool.withdraw, the relayer, ZkpProver) silently breaks.
-    expect(vk.nPublic).to.equal(4);
+    // Snapshot the public-signal layout: five declared public inputs
+    // (merkleRoot, nullifierHash, recipient, amount, token) → nPublic = 5.
+    expect(vk.nPublic).to.equal(5);
 
     // Sanity check: snarkjs always emits `vk_alpha_1` on a real groth16 vkey.
     // Its presence is a low-cost signal that the export step actually ran.

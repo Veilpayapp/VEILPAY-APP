@@ -27,6 +27,14 @@ contract VeilPoolTest is Test {
     address private recipient = address(0xBEEF);
     uint256 private constant WITHDRAW_FEE_BPS = 300; // 3%
     bytes private constant EMPTY_PROOF = hex"00";
+    /// BN254 scalar field — public inputs (incl. nullifierHash) must be < this.
+    uint256 private constant FIELD_SIZE =
+        21888242871839275222246405745257275088548364400416034343698204186575808495617;
+
+    /// In-field stand-in for a nullifier hash (raw keccak256 can exceed r).
+    function _nullifier(bytes memory tag) internal pure returns (bytes32) {
+        return bytes32(uint256(keccak256(tag)) % FIELD_SIZE);
+    }
 
     function setUp() public {
         verifier = new ToggleableVerifier();
@@ -61,7 +69,7 @@ contract VeilPoolTest is Test {
         assertEq(token.balanceOf(address(pool)), poolBalanceBefore + depositAmount);
 
         bytes memory proof = new bytes(256);
-        bytes32 nullifier = keccak256("nullifier");
+        bytes32 nullifier = _nullifier("nullifier");
         bytes32 root = pool.roots(pool.currentRootIndex());
 
         uint256 feeRecipientBefore = token.balanceOf(feeRecipient);
@@ -102,10 +110,10 @@ contract VeilPoolTest is Test {
         bytes memory proof = new bytes(256);
 
         vm.expectRevert(AmountExceedsMax.selector);
-        capped.withdraw(keccak256("n1"), proof, root, recipient, address(token), cap + 1);
+        capped.withdraw(_nullifier("n1"), proof, root, recipient, address(token), cap + 1);
 
-        capped.withdraw(keccak256("n2"), proof, root, recipient, address(token), cap);
-        assertEq(capped.nullifierSpent(keccak256("n2")), true);
+        capped.withdraw(_nullifier("n2"), proof, root, recipient, address(token), cap);
+        assertEq(capped.nullifierSpent(_nullifier("n2")), true);
     }
 
     function testDepositRevertsZeroAmount() public {

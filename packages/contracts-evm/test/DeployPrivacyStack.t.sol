@@ -18,14 +18,13 @@ pragma solidity ^0.8.25;
  *
  * Validates Requirements:
  *
- *   5.1  — Deploy order is Groth16Verifier → VeilPool → StealthAnnouncer,
- *          and VeilPool's constructor receives the just-deployed
- *          Groth16Verifier address as `_verifier`.
+ *   5.1  — Deploy order is Groth16Verifier (withdraw) → Groth16Verifier
+ *          (deposit placeholder) → VeilPool → StealthAnnouncer, and
+ *          VeilPool receives the withdraw verifier as `_verifier`.
  *   5.2  — On success the script writes `deployments/sepolia.json` with
- *          all three addresses as 42-character `0x`-prefixed hex strings
+ *          addresses as 42-character `0x`-prefixed hex strings
  *          alongside `chainId` (= 11155111) and a `blockNumber`.
- *   5.3  — `VeilPool.verifier()` (the public immutable getter) returns
- *          the address of the deployed `Groth16Verifier`.
+ *   5.3  — `VeilPool.verifier()` returns the first deployed Groth16Verifier.
  *
  * Side effect: this test overwrites `deployments/sepolia.json`. Task 1.2
  * established that file as a build-time placeholder consumed by
@@ -109,14 +108,16 @@ contract DeployPrivacyStackTest is Test {
         // Nonce semantics: an EOA's first deploy uses its current nonce,
         // and the nonce increments AFTER the deploy. So if `nonce0` is
         // the deployer's nonce at script-entry, the deploys land at
-        //   nonce0     → Groth16Verifier
-        //   nonce0 + 1 → VeilPool
-        //   nonce0 + 2 → StealthAnnouncer
+        //   nonce0     → Groth16Verifier (withdraw)
+        //   nonce0 + 1 → Groth16Verifier (deposit placeholder)
+        //   nonce0 + 2 → VeilPool
+        //   nonce0 + 3 → StealthAnnouncer
         uint64 nonce0 = vm.getNonce(deployer);
 
-        address expectedVerifier  = vm.computeCreateAddress(deployer, nonce0);
-        address expectedPool      = vm.computeCreateAddress(deployer, nonce0 + 1);
-        address expectedAnnouncer = vm.computeCreateAddress(deployer, nonce0 + 2);
+        address expectedVerifier         = vm.computeCreateAddress(deployer, nonce0);
+        address expectedDepositVerifier  = vm.computeCreateAddress(deployer, nonce0 + 1);
+        address expectedPool             = vm.computeCreateAddress(deployer, nonce0 + 2);
+        address expectedAnnouncer        = vm.computeCreateAddress(deployer, nonce0 + 3);
 
         DeployPrivacyStack script = new DeployPrivacyStack();
         (address verifier, address pool, address announcer) = script.run();
@@ -128,21 +129,25 @@ contract DeployPrivacyStackTest is Test {
         assertTrue(announcer != address(0), "announcer address is zero");
 
         // The CREATE-derivation check is a strictly stronger statement than
-        // a nonce-count delta: it asserts not just that three contracts
-        // were deployed, but that they were deployed by `deployer` in the
-        // exact (verifier, pool, announcer) order. Anything else — even an
-        // (announcer, pool, verifier) deploy that happens to leave the
-        // nonce in the same place — would fail this check.
+        // a nonce-count delta: it asserts not just that contracts were
+        // deployed, but that they were deployed by `deployer` in order.
         assertEq(verifier,  expectedVerifier,  "verifier deployed out of order");
         assertEq(pool,      expectedPool,      "pool deployed out of order");
         assertEq(announcer, expectedAnnouncer, "announcer deployed out of order");
 
         // Defense-in-depth: the deployer's nonce should have advanced by
-        // exactly 3 — one per contract.
+        // exactly 4 — withdraw verifier, deposit verifier, pool, announcer.
         assertEq(
             uint256(vm.getNonce(deployer)),
-            uint256(nonce0) + 3,
-            "deployer nonce did not advance by exactly 3"
+            uint256(nonce0) + 4,
+            "deployer nonce did not advance by exactly 4"
+        );
+
+        assertGt(expectedDepositVerifier.code.length, 0, "deposit verifier has no runtime code");
+        assertEq(
+            address(VeilPool(pool).depositVerifier()),
+            expectedDepositVerifier,
+            "VeilPool.depositVerifier() does not point at the second Groth16Verifier"
         );
 
         // Sanity-check that each address actually has bytecode at it (a

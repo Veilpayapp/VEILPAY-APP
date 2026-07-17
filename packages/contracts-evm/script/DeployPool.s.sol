@@ -15,6 +15,7 @@ contract DeployPool is Script {
     function run() external returns (address) {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         verifierAddress = vm.envAddress("VERIFIER_ADDRESS");
+        address depositVerifierAddress = vm.envAddress("DEPOSIT_VERIFIER_ADDRESS");
         feeRecipient = vm.envAddress("FEE_RECIPIENT");
         address poseidonHasher = vm.envOr("POSEIDON_HASHER", address(0));
         uint256 feeBps = vm.envOr("WITHDRAW_FEE_BPS", uint256(0));
@@ -23,12 +24,20 @@ contract DeployPool is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
-        VeilPool pool = new VeilPool(IGroth16Verifier(verifierAddress), IPoseidonHasher(poseidonHasher), feeRecipient, feeBps, maxWithdraw);
+        VeilPool pool = new VeilPool(
+            IGroth16Verifier(verifierAddress),
+            IGroth16Verifier(depositVerifierAddress),
+            IPoseidonHasher(poseidonHasher),
+            feeRecipient,
+            feeBps,
+            maxWithdraw
+        );
 
         vm.stopBroadcast();
 
         console.log("VeilPool deployed at:", address(pool));
-        console.log("Verifier:", verifierAddress);
+        console.log("Withdraw verifier:", verifierAddress);
+        console.log("Deposit verifier:", depositVerifierAddress);
         console.log("Fee Recipient:", feeRecipient);
         console.log("Max withdraw (0=unlimited):", maxWithdraw);
         

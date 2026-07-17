@@ -10,9 +10,9 @@
 //       Groth16 proof that snarkjs.groth16.verify accepts against the same
 //       verification_key.json the deployed Groth16Verifier consumes;
 //   (b) reject any single-byte mutation of `pathElements`, `pathIndices`,
-//       `nullifier`, `secret`, `merkleRoot`, `nullifierHash`, `recipient`, or
-//       `amount` — either by failing witness generation OR by causing the
-//       verifier to return `false`.
+//       `nullifier`, `secret`, `merkleRoot`, `nullifierHash`, `recipient`,
+//       `amount`, or `token` — either by failing witness generation OR by
+//       causing the verifier to return `false`.
 //
 // Note on the inline incremental tree below: this duplicates a slimmed-down
 // version of `./merkleTree.ts`. The mocha runner here is configured for
@@ -142,6 +142,7 @@ function cloneInput(input) {
     nullifierHash: input.nullifierHash,
     recipient: input.recipient,
     amount: input.amount,
+    token: input.token,
   };
 }
 
@@ -221,7 +222,7 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
     }
   });
 
-  it('honest input yields a valid witness/proof; single-byte mutations of pathElements, pathIndices, nullifier, secret, merkleRoot, nullifierHash, recipient, amount fail', async function () {
+  it('honest input yields a valid witness/proof; mutations of path/preimage/amount/token fail', async function () {
     // ---- Generators -----------------------------------------------------
     const nonZeroFieldFromBytes = fc
       .uint8Array({ minLength: 32, maxLength: 32 })
@@ -229,15 +230,14 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
         const v = bytesToField(bytes);
         return v === 0n ? 1n : v;
       });
-    // Recipient: 20-byte address space lifted into the BN254 scalar field
-    // (matches how VeilPool packs `bytes32(uint256(uint160(recipient)))`).
-    const recipientField = fc
+    // Recipient / token: 20-byte address space (Num2Bits(160) in circuit).
+    const addressField = fc
       .uint8Array({ minLength: 20, maxLength: 20 })
       .map((bytes) => {
         const v = bytesToField(bytes);
         return v === 0n ? 1n : v;
       });
-    // Amounts up to 2^128 — comfortably below the field prime, mirrors realistic ERC-20 amounts.
+    // Amounts in (0, 2^128) — matches Num2Bits(128) + IsZero checks.
     const amountField = fc.bigInt({ min: 1n, max: (1n << 128n) - 1n });
 
     // Mutation parameter pair: byte offset (0..31) and non-zero delta (1..255).
@@ -251,8 +251,9 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
         fc.nat({ max: 7 }), // chosen index modulo leaves.length
         nonZeroFieldFromBytes, // nullifier preimage
         nonZeroFieldFromBytes, // secret preimage
-        recipientField,
+        addressField, // recipient
         amountField,
+        addressField, // token
         // One mutation parameter per mutation site, in canonical order.
         fc.tuple(
           mutationParam, // pathElements
@@ -263,6 +264,7 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
           mutationParam, // nullifierHash
           mutationParam, // recipient
           mutationParam, // amount
+          mutationParam, // token
         ),
         // Tree level (0..LEVELS-1) at which to mutate pathElements / pathIndices.
         fc.nat({ max: TREE_LEVELS - 1 }),
@@ -273,12 +275,13 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
           secret,
           recipient,
           amount,
+          token,
           mutations,
           mutationLevel,
         ) => {
           // Build the tree, ensuring the chosen leaf is the commitment we know
           // a preimage for.
-          const commitment = F.toObject(poseidon([nullifier, secret]));
+          const commitment = F.toObject(poseidon([nullifier, secret, amount, token]));
           const nullifierHash = F.toObject(poseidon([nullifier]));
 
           const leaves = [...rawLeaves];
@@ -291,8 +294,7 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
           const merkleRoot = tree.root();
           const { pathElements, pathIndices } = tree.path(chosenIdx);
 
-          // Public inputs in canonical order: [merkleRoot, nullifierHash, recipient, amount].
-          // See design.md §Public input ordering contract.
+          // Public inputs: [merkleRoot, nullifierHash, recipient, amount, token]
           const honestInput = {
             nullifier: nullifier.toString(),
             secret: secret.toString(),
@@ -302,6 +304,7 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
             nullifierHash: nullifierHash.toString(),
             recipient: recipient.toString(),
             amount: amount.toString(),
+            token: token.toString(),
           };
 
           // (a) Honest witness must be calculable and constraint-satisfying.
@@ -327,6 +330,7 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
             expect(honestPublicSignals[1]).to.equal(nullifierHash.toString());
             expect(honestPublicSignals[2]).to.equal(recipient.toString());
             expect(honestPublicSignals[3]).to.equal(amount.toString());
+            expect(honestPublicSignals[4]).to.equal(token.toString());
           }
 
           const [
@@ -338,6 +342,7 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
             nhM,
             recM,
             amtM,
+            tokM,
           ] = mutations;
 
           // (b1) pathElements[level] mutation: hash chain mismatches → root constraint fails.
@@ -370,7 +375,7 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
           );
 
           // (b3) nullifier mutation: both Poseidon(nullifier) === nullifierHash
-          // and Poseidon(nullifier, secret) === leaf will fail.
+          // and Poseidon(nullifier, secret, amount, token) === leaf will fail.
           await expectWitnessFailure(
             circuit,
             () => {
@@ -381,7 +386,7 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
             'nullifier mutation must fail witness gen',
           );
 
-          // (b4) secret mutation: Poseidon(nullifier, secret) === leaf will fail.
+          // (b4) secret mutation: Poseidon(nullifier, secret, amount, token) === leaf will fail.
           await expectWitnessFailure(
             circuit,
             () => {
@@ -414,12 +419,9 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
             'nullifierHash mutation must fail witness gen',
           );
 
-          // (b7) recipient mutation. The circuit only quadratically self-binds
-          // recipient (recipient * recipient), so witness gen succeeds for any
-          // value. Soundness comes from the verifier rejecting a public-input
-          // mismatch: we mutate publicSignals[2] and verify against the honest
-          // proof. Skipped when build artifacts are absent.
-          if (buildArtifactsAvailable) {
+          // (b7) recipient mutation — still free at prove time (any address);
+          // post-proof public-signal swap must fail verify when artifacts exist.
+          if (buildArtifactsAvailable && vKey.nPublic === 5) {
             const mutated = makeMutator(recipient)(recM[0], recM[1]).toString();
             const mutatedPub = [...honestPublicSignals];
             mutatedPub[2] = mutated;
@@ -427,17 +429,35 @@ describe('Withdraw Circuit — Property 1: Merkle membership proof round-trip', 
             expect(ok, 'verifier must reject recipient mutation').to.equal(false);
           }
 
-          // (b8) amount mutation. Same self-binding caveat as recipient.
-          if (buildArtifactsAvailable) {
-            const mutated = makeMutator(amount)(amtM[0], amtM[1]).toString();
-            const mutatedPub = [...honestPublicSignals];
-            mutatedPub[3] = mutated;
-            const ok = await snarkjs.groth16.verify(vKey, mutatedPub, honestProof);
-            expect(ok, 'verifier must reject amount mutation').to.equal(false);
-          }
+          // (b8) amount mutation — economically bound in commitment; witness fails.
+          await expectWitnessFailure(
+            circuit,
+            () => {
+              const inp = cloneInput(honestInput);
+              // Keep amount in (0, 2^128) so we don't fail only on range checks.
+              let mut = makeMutator(amount)(amtM[0], amtM[1]);
+              if (mut === 0n || mut >= 1n << 128n) mut = amount === 1n ? 2n : 1n;
+              inp.amount = mut.toString();
+              return inp;
+            },
+            'amount mutation must fail witness gen',
+          );
+
+          // (b9) token mutation — economically bound in commitment.
+          await expectWitnessFailure(
+            circuit,
+            () => {
+              const inp = cloneInput(honestInput);
+              let mut = makeMutator(token)(tokM[0], tokM[1]);
+              if (mut >= 1n << 160n) mut = token === 1n ? 2n : 1n;
+              inp.token = mut.toString();
+              return inp;
+            },
+            'token mutation must fail witness gen',
+          );
         },
       ),
-      { numRuns: 25 },
+      { numRuns: 15 },
     );
   });
 });

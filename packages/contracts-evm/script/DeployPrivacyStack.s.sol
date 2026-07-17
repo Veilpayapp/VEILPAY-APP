@@ -118,8 +118,13 @@ contract DeployPrivacyStack is Script {
         vm.startBroadcast(deployerPk);
 
         Groth16Verifier verifier = new Groth16Verifier();
+        // Deposit circuit has a different public-input layout; after
+        // `compile.sh` supports deposit.circom, deploy DepositGroth16Verifier
+        // here. Placeholder second deploy keeps the constructor arity correct.
+        Groth16Verifier depositVerifier = new Groth16Verifier();
         VeilPool pool = new VeilPool(
             IGroth16Verifier(address(verifier)),
+            IGroth16Verifier(address(depositVerifier)),
             IPoseidonHasher(poseidonHasher),
             feeRecipient,
             feeBps,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Public inputs: [merkleRoot, nullifierHash, recipient, amount] — see design.md §Public input ordering contract
+// Public inputs: [merkleRoot, nullifierHash, recipient, amount, token] — see CIRCUIT_SECURITY.md
 pragma solidity ^0.8.25;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -32,6 +32,15 @@ error TreeFull();
 // Part of the relayer's `Interface.parseError` decoder surface.
 error AmountExceedsMax();
 
+/// Public input or commitment not in the BN254 scalar field [0, r).
+error InvalidFieldElement();
+
+/// Deposit/withdraw amount must be > 0 and fit the circuit domain.
+error InvalidAmount();
+
+/// Deposit commitment must be non-zero and in-field.
+error InvalidCommitment();
+
 // Temporary marker until tasks 3.3 / 3.4 land. Provides a clean ABI surface
 // for the relayer client and the mobile app to integrate against, instead of
 // reverting with no data and confusing downstream error-decoders.
@@ -46,7 +55,10 @@ error NotImplemented();
  *
  *         Withdrawals are authorized by a Groth16 proof verified against
  *         the canonical public-input layout
- *         `[merkleRoot, nullifierHash, recipient, amount]`.
+ *         `[merkleRoot, nullifierHash, recipient, amount, token]`.
+ *         Notes are `Poseidon(nullifier, secret, amount, token)`; deposits
+ *         require a matching deposit-circuit proof so amount/token cannot
+ *         be overstated relative to the transfer.
  *
  * @dev    This task (3.2) wires up storage, errors, the constructor, and
  *         the two helpers `_insert` / `_isKnownRoot`. The public `deposit`
@@ -103,9 +115,13 @@ contract VeilPool is ReentrancyGuard, Pausable, Ownable {
     /// proof can drain at most `MAX_WITHDRAW_AMOUNT` per nullifier.
     uint256 public immutable MAX_WITHDRAW_AMOUNT;
 
-    /// Groth16 verifier — invoked by `withdraw` against the canonical
-    /// `[merkleRoot, nullifierHash, recipient, amount]` public-input layout.
+    /// Groth16 withdraw verifier — public inputs
+    /// `[merkleRoot, nullifierHash, recipient, amount, token]`.
     IGroth16Verifier public immutable verifier;
+
+    /// Groth16 deposit verifier — public inputs `[commitment, amount, token]`.
+    /// Proves the leaf opens to the transferred amount/token (economic bind).
+    IGroth16Verifier public immutable depositVerifier;
 
     /// Poseidon-2 hasher used to fold leaves up the Merkle tree on insert.
     /// MUST be byte-compatible with the circomlib Poseidon used in
@@ -179,27 +195,31 @@ contract VeilPool is ReentrancyGuard, Pausable, Ownable {
     /* ---------------------------------------------------------------------- */
 
     /**
-     * @param _verifier        Groth16 verifier contract (post-processed wrapper).
-     * @param _hasher          Poseidon-2 hasher contract (byte-compatible with
-     *                         the circomlib Poseidon used in the circuit).
-     * @param _feeRecipient    Address that collects the per-withdraw bps fee.
-     * @param _withdrawFeeBps  Fee in basis points, capped at `BPS_DENOMINATOR`.
+     * @param _verifier           Groth16 withdraw verifier (post-processed wrapper).
+     * @param _depositVerifier    Groth16 deposit verifier (`deposit.circom`).
+     * @param _hasher             Poseidon-2 hasher contract (byte-compatible with
+     *                            the circomlib Poseidon used in the circuit).
+     * @param _feeRecipient       Address that collects the per-withdraw bps fee.
+     * @param _withdrawFeeBps     Fee in basis points, capped at `BPS_DENOMINATOR`.
      * @param _maxWithdrawAmount  Per-withdraw amount ceiling (SEC-013), in the
      *                            token's smallest unit. `0` disables the cap.
      */
     constructor(
         IGroth16Verifier _verifier,
+        IGroth16Verifier _depositVerifier,
         IPoseidonHasher _hasher,
         address _feeRecipient,
         uint256 _withdrawFeeBps,
         uint256 _maxWithdrawAmount
     ) Ownable(msg.sender) {
         if (address(_verifier) == address(0)) revert InvalidVerifier();
+        if (address(_depositVerifier) == address(0)) revert InvalidVerifier();
         if (address(_hasher) == address(0)) revert InvalidHasher();
         if (_feeRecipient == address(0)) revert InvalidFeeRecipient();
         if (_withdrawFeeBps > BPS_DENOMINATOR) revert InvalidFeeBps();
 
         verifier = _verifier;
+        depositVerifier = _depositVerifier;
         hasher = _hasher;
         feeRecipient = _feeRecipient;
         WITHDRAW_FEE_BPS = _withdrawFeeBps;
@@ -242,29 +262,33 @@ contract VeilPool is ReentrancyGuard, Pausable, Ownable {
 
     /**
      * @notice Deposit `amount` of `token` and insert `commitment` into the tree.
-     * @dev    ERC-20 only — native ETH is intentionally not supported in the
-     *         privacy pool path (see design.md §VeilPool). The flow is:
+     * @dev    Requires a deposit-circuit proof that
+     *         `commitment = Poseidon(nullifier, secret, amount, token)` for
+     *         the same public (amount, token) being transferred — so a leaf
+     *         cannot claim more value (or a different asset) than deposited.
      *
-     *           1. Pull `amount` of `token` from `msg.sender` via SafeERC20,
-     *              which reverts on missing approval, transfer failure, or
-     *              non-standard return values.
-     *           2. Insert `commitment` into the incremental Merkle tree;
-     *              `_insert` reverts with `TreeFull` once `nextLeafIndex`
-     *              reaches `2 ** LEVELS` (Requirement 2.11).
-     *           3. Emit `Deposit` with the assigned leaf index and the
-     *              post-insert root, so off-chain indexers and the mobile
-     *              app can persist a `CommitmentRecord` against the same
-     *              root the on-chain pool just stamped (Requirement 2.2).
-     *
-     *         `nonReentrant` guards the external token call; `whenNotPaused`
-     *         lets the owner halt new deposits without disturbing the
-     *         already-shielded balance.
+     *         Public inputs for `depositVerifier`:
+     *         `[commitment, amount, token]` (see `deposit.circom`).
      */
     function deposit(
         bytes32 commitment,
         address token,
-        uint256 amount
+        uint256 amount,
+        bytes calldata depositProof
     ) external whenNotPaused nonReentrant returns (uint32) {
+        if (amount == 0 || amount >= (1 << 128)) revert InvalidAmount();
+        if (commitment == bytes32(0) || uint256(commitment) >= FIELD_SIZE) {
+            revert InvalidCommitment();
+        }
+
+        // Deposit proof public inputs (order is load-bearing).
+        bytes32[] memory depPub = new bytes32[](3);
+        depPub[0] = commitment;
+        depPub[1] = bytes32(amount);
+        depPub[2] = bytes32(uint256(uint160(token)));
+        if (!_allInField(depPub)) revert InvalidFieldElement();
+        if (!depositVerifier.verifyProof(depositProof, depPub)) revert InvalidProof();
+
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
         (uint32 leafIndex, bytes32 newRoot) = _insert(commitment);
@@ -277,18 +301,11 @@ contract VeilPool is ReentrancyGuard, Pausable, Ownable {
     /**
      * @notice Withdraw `amount` of `token` to `recipient`, gated by a Groth16
      *         proof against the canonical public-input layout
-     *         `[merkleRoot, nullifierHash, recipient, amount]`.
-     * @dev    Order of operations follows the CEI pattern: validate root,
-     *         check the nullifier-spent set, verify the proof, mark the
-     *         nullifier spent, and only then perform external token
-     *         transfers. The merkleRoot parameter is the version the
-     *         prover proved against and must still live inside the
-     *         pool's 30-root ring buffer at execution time.
-     *
-     *         Public inputs to the verifier are constructed in the
-     *         canonical order [merkleRoot, nullifierHash, recipient, amount].
-     *         See `IGroth16Verifier` and `withdraw.circom` for the
-     *         contract this ordering must match.
+     *         `[merkleRoot, nullifierHash, recipient, amount, token]`.
+     * @dev    Order of operations follows CEI. Public inputs must each be
+     *         strictly less than the BN254 scalar field (blocks nullifier+r
+     *         style double-spends). Amount/token are economically bound in
+     *         the circuit to the note commitment.
      */
     function withdraw(
         bytes32 nullifierHash,
@@ -307,25 +324,26 @@ contract VeilPool is ReentrancyGuard, Pausable, Ownable {
         //    verifier call (which is the most expensive step in this method).
         if (nullifierSpent[nullifierHash]) revert NullifierAlreadySpent();
 
-        // 2b. SEC-013: enforce the per-withdraw amount ceiling before the
-        //     expensive proof verification. `amount` is a bound public input,
-        //     so this gate holds regardless of proof validity and bounds the
-        //     blast radius of any verifier/proof bug (SEC-007). Skipped when
-        //     the cap is the `0` sentinel (unlimited).
+        // 2b. Domain checks matching withdraw.circom range constraints.
+        if (amount == 0 || amount >= (1 << 128)) revert InvalidAmount();
+
+        // 2c. SEC-013: enforce the per-withdraw amount ceiling before the
+        //     expensive proof verification.
         if (MAX_WITHDRAW_AMOUNT != 0 && amount > MAX_WITHDRAW_AMOUNT) {
             revert AmountExceedsMax();
         }
 
         // 3. Build the public-input array in canonical order and verify.
-        //    The order here is load-bearing — it must match the circuit's
-        //    `component main { public [merkleRoot, nullifierHash, recipient, amount] }`
-        //    declaration and the wrapper in Groth16Verifier.
-        bytes32[] memory pub = new bytes32[](4);
+        //    Order matches: component main { public [merkleRoot, nullifierHash,
+        //    recipient, amount, token] } = Withdraw(20);
+        bytes32[] memory pub = new bytes32[](5);
         pub[0] = merkleRoot;                                    // merkleRoot
         pub[1] = nullifierHash;                                 // nullifierHash
         pub[2] = bytes32(uint256(uint160(recipient)));          // recipient
         pub[3] = bytes32(amount);                               // amount
+        pub[4] = bytes32(uint256(uint160(token)));              // token
 
+        if (!_allInField(pub)) revert InvalidFieldElement();
         if (!verifier.verifyProof(proof, pub)) revert InvalidProof();
 
         // 4. Effects: mark the nullifier spent BEFORE any external call
@@ -339,16 +357,22 @@ contract VeilPool is ReentrancyGuard, Pausable, Ownable {
         uint256 payout = amount - fee;
 
         // 6. Interactions: pay the recipient, then the fee recipient.
-        //    `safeTransfer` reverts on failure, which surfaces to the
-        //    relayer as a generic transaction-failed revert (the
-        //    nullifier-spent state has already been committed to memory
-        //    and will be reverted along with the transfer).
         IERC20(token).safeTransfer(recipient, payout);
         if (fee > 0) {
             IERC20(token).safeTransfer(feeRecipient, fee);
         }
 
         emit Withdrawal(nullifierHash, recipient, token, amount, fee);
+    }
+
+    /// @dev Every public input must lie in the snark scalar field [0, r).
+    ///      Prevents congruence attacks (e.g. nullifierHash + r) where the
+    ///      pairing treats S and S+r identically but storage keys differ.
+    function _allInField(bytes32[] memory pub) internal pure returns (bool) {
+        for (uint256 i = 0; i < pub.length; i++) {
+            if (uint256(pub[i]) >= FIELD_SIZE) return false;
+        }
+        return true;
     }
 
     /* ---------------------------------------------------------------------- */

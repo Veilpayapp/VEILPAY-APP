@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-// Public inputs: [merkleRoot, nullifierHash, recipient, amount] — see design.md §Public input ordering contract
+// Public inputs: [merkleRoot, nullifierHash, recipient, amount, token] — see CIRCUIT_SECURITY.md
 /*
     Copyright 2021 0KIMS association.
 
@@ -20,7 +20,7 @@
 */
 
 pragma solidity >=0.7.0 <0.9.0;
-import {IGroth16Verifier} from "./IGroth16Verifier.sol";
+import {IGroth16Verifier} from \"./IGroth16Verifier.sol\";
 
 contract Groth16Verifier is IGroth16Verifier {
     // Scalar field size
@@ -39,26 +39,29 @@ contract Groth16Verifier is IGroth16Verifier {
     uint256 constant gammax2 = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
     uint256 constant gammay1 = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
     uint256 constant gammay2 = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
-    uint256 constant deltax1 = 21753238643920989320836034512282763754313428282362620953152305155017410648416;
-    uint256 constant deltax2 = 3424964961475262244029526019365994179005977867206852545340552682121265495139;
-    uint256 constant deltay1 = 9734666959655359069052706301047417428226807068985318256203504582844779865397;
-    uint256 constant deltay2 = 8608319909765666279880054816078169161950988265602231525270956490960797684512;
+    uint256 constant deltax1 = 2991182893934917750735854499191402906459882370926604084189766990613002221325;
+    uint256 constant deltax2 = 19196310138772585113298945493073212371058974289215462196231418591013585010406;
+    uint256 constant deltay1 = 7448551594298120195757543321328653659179482947263181441239458934945291040878;
+    uint256 constant deltay2 = 8301897311109680566306712660900932319464298567335882401302632332600698592030;
 
     
-    uint256 constant IC0x = 3921452671521912538509322383280317155841281532456796480483202249731903613339;
-    uint256 constant IC0y = 21079200027376223846199566959133426526335545695771500042465761831478160479759;
+    uint256 constant IC0x = 622294934648243081496643174209184689934604297808822526451878826371002000781;
+    uint256 constant IC0y = 16287625798457374555777440120840266077568399778198850083439543245826255802322;
     
-    uint256 constant IC1x = 16013698695245639236052330323635997660531410406134296295957539432885985555409;
-    uint256 constant IC1y = 10747255712936550750520130991019665177958729937553416246120678935913098490870;
+    uint256 constant IC1x = 19627254729670966821996072695518420200752697655388446588558175065678914147794;
+    uint256 constant IC1y = 12695768340306908121164194678032325533005092374534460376341201466101010386510;
     
-    uint256 constant IC2x = 10298404813551480995289008025151007313125933277153730810685555274964048042492;
-    uint256 constant IC2y = 18875253208622052946346937873014390155322723972091515206454422692186819100465;
+    uint256 constant IC2x = 12696644083171859185766963913813266047734178026690268226548200067892735046923;
+    uint256 constant IC2y = 16719469673122691093095113311840266849604944411696794037490941372087176161870;
     
-    uint256 constant IC3x = 12750978240481511759445725076328619415206001953762770685036968051002514518657;
-    uint256 constant IC3y = 6016041669269805232034221293189715817932486997688751148006480159820478036232;
+    uint256 constant IC3x = 15019515004492255850855462197491300254284257430989592123220751149150207856933;
+    uint256 constant IC3y = 15736601465886843982558322474797830689634355680964842733001190519970897756301;
     
-    uint256 constant IC4x = 2006799500827006797376699618418503125619771130982883086725862456187648493792;
-    uint256 constant IC4y = 7457038945763060126133063888972491233840968833662067272742172686886238745456;
+    uint256 constant IC4x = 16646170921408537145206510897615423886544811927775346948443552043365996944997;
+    uint256 constant IC4y = 7224699419981410141636191860770691406854654191629433346709142558774581331892;
+    
+    uint256 constant IC5x = 8779532869041372520382137662421319721610163569899165809432957726443252494666;
+    uint256 constant IC5y = 11488934484102480478890309626807185465480277860824540893533880670226847683448;
     
  
     // Memory data
@@ -67,10 +70,10 @@ contract Groth16Verifier is IGroth16Verifier {
 
     uint16 constant pLastMem = 896;
 
-    function _verifyProofRaw(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[4] calldata _pubSignals) public view returns (bool) {
+    function _verifyProofRaw(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[5] calldata _pubSignals) public view returns (bool) {
         assembly {
             function checkField(v) {
-                if iszero(lt(v, q)) {
+                if iszero(lt(v, r)) {
                     mstore(0, 0)
                     return(0, 0x20)
                 }
@@ -118,6 +121,8 @@ contract Groth16Verifier is IGroth16Verifier {
                 g1_mulAccC(_pVk, IC3x, IC3y, calldataload(add(pubSignals, 64)))
                 
                 g1_mulAccC(_pVk, IC4x, IC4y, calldataload(add(pubSignals, 96)))
+                
+                g1_mulAccC(_pVk, IC5x, IC5y, calldataload(add(pubSignals, 128)))
                 
 
                 // -A
@@ -193,8 +198,9 @@ contract Groth16Verifier is IGroth16Verifier {
  
     // VEILPAY_WRAPPER_INJECTED
     // ---- VeilPay Groth16Verifier wrapper (injected by compile.sh) ----
-    // Public inputs: [merkleRoot, nullifierHash, recipient, amount]
-    //   — see design.md §Public input ordering contract.
+    // Public inputs: [merkleRoot, nullifierHash, recipient, amount, token]
+    //   — see design.md §Public input ordering contract /
+    //     packages/circuits/docs/CIRCUIT_SECURITY.md
     //
     // The snarkjs-generated `verifyProof(uint[2],uint[2][2],uint[2],uint[N])`
     // is renamed `_verifyProofRaw` by the post-process step so this wrapper
@@ -204,7 +210,7 @@ contract Groth16Verifier is IGroth16Verifier {
         bytes calldata proof,
         bytes32[] calldata publicInputs
     ) external view returns (bool) {
-        if (publicInputs.length != 4) return false;
+        if (publicInputs.length != 5) return false;
         if (proof.length == 0) return false;
         try this._decodeAndVerify(proof, publicInputs) returns (bool ok) {
             return ok;
@@ -219,12 +225,13 @@ contract Groth16Verifier is IGroth16Verifier {
     ) external view returns (bool) {
         (uint256[2] memory a, uint256[2][2] memory b, uint256[2] memory c) =
             abi.decode(proof, (uint256[2], uint256[2][2], uint256[2]));
-        uint256[4] memory pub;
+        uint256[5] memory pub;
         pub[0] = uint256(publicInputs[0]); // merkleRoot
         pub[1] = uint256(publicInputs[1]); // nullifierHash
         pub[2] = uint256(publicInputs[2]); // recipient
         pub[3] = uint256(publicInputs[3]); // amount
-        return this._verifyProofRaw(a, b, c, pub);
+        pub[4] = uint256(publicInputs[4]); // token
+        return _verifyProofRaw(a, b, c, pub);
     }
 
 }

@@ -1,5 +1,10 @@
 #!/bin/bash
-# Public inputs: [merkleRoot, nullifierHash, recipient, amount] — see design.md §Public input ordering contract
+# Public inputs: [merkleRoot, nullifierHash, recipient, amount, token]
+# See packages/circuits/docs/CIRCUIT_SECURITY.md
+#
+# DEV-ONLY trusted setup: entropy strings and beacon below are NOT a production
+# ceremony. Do not deploy mainnet with these zkeys. Re-run a multi-party
+# ceremony after any circuit change.
 #
 # Hardened, atomic build pipeline for the VeilPay withdraw circuit.
 #

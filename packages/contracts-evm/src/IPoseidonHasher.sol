@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Public inputs: [merkleRoot, nullifierHash, recipient, amount] — see design.md §Public input ordering contract
+// Notes: commitment = Poseidon(nullifier, secret, amount, token) — see CIRCUIT_SECURITY.md
 pragma solidity ^0.8.25;
 
 /**
@@ -18,9 +18,9 @@ pragma solidity ^0.8.25;
  *
  * The interface is intentionally tiny — a single `poseidon(bytes32[2])` call —
  * because that is the only Poseidon arity `VeilPool._insert` needs (the leaf
- * itself is the result of `Poseidon(nullifier, secret)`, computed off-chain
- * inside the circuit; the on-chain pool only ever hashes pairs of bytes32
- * upward through the Merkle tree).
+ * itself is the result of `Poseidon(nullifier, secret, amount, token)`,
+ * computed off-chain inside the circuit; the on-chain pool only ever hashes
+ * pairs of bytes32 upward through the Merkle tree).
  *
  * Tests pass a mock implementation; the deploy script passes the deployed
  * `PoseidonT3` address. See `script/DeployPrivacyStack.s.sol` (task 3.13).

@@ -27,12 +27,26 @@ contract DeployAll is Script {
         vm.startBroadcast(deployerPrivateKey);
 
         Groth16Verifier verifier = new Groth16Verifier();
-        console.log("Groth16Verifier deployed at:", address(verifier));
+        console.log("Groth16Verifier (withdraw) deployed at:", address(verifier));
+        // Until a separate DepositVerifier artifact is generated, the same
+        // mock/toggle deployment path is used only in tests. Production must
+        // deploy a deposit.circom verifier; for stack smoke we pass the same
+        // address only if the circuit public-input layouts match (they do not —
+        // use DEPOSIT_VERIFIER_ADDRESS in DeployPool for real deploys).
+        Groth16Verifier depositVerifier = new Groth16Verifier();
+        console.log("Groth16Verifier (deposit placeholder) deployed at:", address(depositVerifier));
 
         VeilRegistry registry = new VeilRegistry();
         console.log("VeilRegistry deployed at:", address(registry));
 
-        VeilPool pool = new VeilPool(IGroth16Verifier(address(verifier)), IPoseidonHasher(poseidonHasher), feeRecipient, feeBps, maxWithdraw);
+        VeilPool pool = new VeilPool(
+            IGroth16Verifier(address(verifier)),
+            IGroth16Verifier(address(depositVerifier)),
+            IPoseidonHasher(poseidonHasher),
+            feeRecipient,
+            feeBps,
+            maxWithdraw
+        );
         console.log("VeilPool deployed at:", address(pool));
         
         vm.stopBroadcast();

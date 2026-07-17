@@ -16,7 +16,7 @@ describe('Config Module', () => {
   });
 
   function loadConfig(): { config: { nodeEnv: string; databaseUrl: string; indexSolana: boolean } } {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     return require('../index') as {
       config: { nodeEnv: string; databaseUrl: string; indexSolana: boolean };
     };

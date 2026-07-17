@@ -160,6 +160,15 @@ export async function processStealthMatch(match: StealthAddressMatch): Promise<v
   });
 }
 
+/**
+ * Injectable hooks so unit tests can stub scan/process without fighting
+ * same-module call bindings. Production uses the real implementations.
+ */
+export const stealthScannerDeps = {
+  scanPayments: scanForStealthPayments,
+  processMatch: processStealthMatch,
+};
+
 export class StealthScanner {
   private chainKey: string;
   private isRunning: boolean = false;
@@ -204,10 +213,14 @@ export class StealthScanner {
   private async scan(): Promise<void> {
     const nextBlock = this.lastScannedBlock + 100;
     try {
-      const matches = await scanForStealthPayments(this.chainKey, this.lastScannedBlock, nextBlock);
+      const matches = await stealthScannerDeps.scanPayments(
+        this.chainKey,
+        this.lastScannedBlock,
+        nextBlock,
+      );
 
       for (const match of matches) {
-        await processStealthMatch(match);
+        await stealthScannerDeps.processMatch(match);
       }
 
       // IX-H2 fix: only advance cursor on successful scan

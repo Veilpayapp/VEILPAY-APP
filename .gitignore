@@ -24,15 +24,18 @@ env_backup.zip
 *.swp
 *.swo
 
-# Agents / Local Tools
-.agents/anthropics-skills/
+# Agents / Local Tools (all per-developer; never track)
+.agent/
+.agents/
 .local/
 .kilo/
 .kilocode/
 .kiro/
 .continue/
-.agent/
 .audit-evidence/
+
+# Expo local cache
+.expo/
 
 # OS
 .DS_Store
@@ -82,3 +85,16 @@ target/
 # Local blockchain data
 anvil-data/
 solana-test-validator/
+
+# Graphify snapshot (regenerable via `graphify --update`)
+graphify-out/
+
+# Vendored Antigravity toolkit (per-machine; use submodule instead)
+packages/antigravity-utils/
+
+# Graphify one-shot import scripts (keep out of the product tree)
+graphify-ast.py
+graphify-build.py
+graphify-detect.py
+graphify-report.py
+graphify-semantic.py

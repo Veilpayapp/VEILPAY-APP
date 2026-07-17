@@ -1,8 +1,0 @@
-../auditor/src/passes/staticAnalysis/graphify.success.test.ts(73,72): error TS1127: Invalid character.
-../auditor/src/passes/staticAnalysis/graphify.success.test.ts(103,1): error TS1160: Unterminated template literal.
-../auditor/src/passes/staticAnalysis/routes.success.test.ts(48,87): error TS1127: Invalid character.
-../auditor/src/passes/staticAnalysis/routes.success.test.ts(90,1): error TS1160: Unterminated template literal.
-../../tsconfig.json(3,14): error TS6053: File 'expo/tsconfig.base' not found.
-undefined
-D:\Veilpay\packages\circuits:
- ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit

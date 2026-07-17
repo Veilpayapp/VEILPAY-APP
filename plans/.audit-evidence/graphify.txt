@@ -1,2 +1,0 @@
-error: unknown command '.'
-Run 'graphify --help' for usage.

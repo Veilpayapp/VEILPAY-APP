@@ -1,247 +1,192 @@
-# Veilpay Security Specification
+# VeilPay Security
 
-> **Status:** Active Development | **Last Updated:** 2026-05-12  
-> **Audits:** Pending (see [Security Roadmap](#security-roadmap))
+> **Status:** Active development · Last updated: 2026-07-17  
+> **External audits:** Pending (see [Ceremony & audit gates](docs/security/ceremony-and-audit-gates.md))
 
----
-
-## 1. Threat Model
-
-### 1.1 Assumed Threats
-
-| Threat | Likelihood | Impact | Mitigation |
-|--------|-----------|--------|-----------|
-| Phishing (fake dApp URLs) | High | Critical | URL verification + homoglyph detection |
-| Malware (keylogger, clipboard hijack) | Medium | Critical | FLAG_SECURE, hardware wallet support |
-| Root/Jailbreak (device compromise) | Medium | High | SafetyNet / DeviceCheck, hard refusal |
-| Screen recording (shoulder-surfing) | Medium | High | Anti-screenshot flags, auto-hide |
-| Social Engineering (seed phrase theft) | High | Critical | SSKR, anti-screenshot, biometric gates |
-| MITM (network-level) | Low | Critical | SSL pinning, cert pinning (TBD) |
-
-### 1.2 Trust Boundaries
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    USER DEVICE                          │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐│
-│  │   Biometric │  │  Secure     │  │  Hardware       ││
-│  │   Auth      │──│  Storage    │──│  Wallet         ││
-│  └─────────────┘  └─────┬───────┘  └─────────────────┘│
-│                         │                               │
-│  ┌─────────────┐  ┌──────┴──────┐                     │
-│  │   Mnemo-    │  │  Derived    │                     │
-│  │   nic       │──│  Private    │                     │
-│  │   (memory)   │  │  Key        │                     │
-│  └─────────────┘  └─────────────┘                     │
-│                        │                                │
-│                        ▼                                │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │         BLOCKCHAIN / RPC NETWORK                 │   │
-│  └─────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-```
+This document is the **security policy and threat overview** for the monorepo. Deeper product checklists live under [`docs/security/`](docs/security/).
 
 ---
 
-## 2. Security Checklist (Production Readiness)
+## 1. Reporting vulnerabilities
 
-This checklist is derived from `getSecurityAuditChecklist()` in `src/utils/security.ts`.
-
-### 2.1 Cryptography
-
-```text
-AUD-001   CRITICAL  Mnemonic generation uses cryptographically secure RNG
-AUD-005   HIGH      Shamir Secret Sharing (SSKR) implementation verified
-AUD-012   CRITICAL  Transaction signing includes chain ID replay protection (EIP-155)
-```
-
-### 2.2 Key Management
-
-```text
-AUD-002   CRITICAL  Mnemonic is never logged, serialized, or returned to the UI
-AUD-003   CRITICAL  Private keys are derived and used within a closure
-AUD-004   CRITICAL  Secure storage uses platform-specific keychain/keystore
-AUD-014   HIGH      Biometric authentication gates critical operations
-AUD-011   HIGH      Hardware wallet support (Ledger/Trezor)
-```
-
-### 2.3 UI Security
-
-```text
-AUD-006   HIGH      Anti-screenshot flags (FLAG_SECURE) on seed/private key screens
-AUD-010   MEDIUM    Homoglyph attack detection in URL verification
-```
-
-### 2.4 Network & Infrastructure
-
-```text
-AUD-008   HIGH      All RPC endpoints use HTTPS
-AUD-009   HIGH      Deep link URLs are validated against allowlists
-AUD-013   HIGH      Certificate pinning for all API calls
-```
-
-### 2.5 Device Integrity
-
-```text
-AUD-007   HIGH      SafetyNet / Play Integrity (Android) + DeviceCheck (iOS)
-```
-
----
-
-## 3. Platform-Specific Security
-
-### 3.1 Android
-
-```
-┌─────────────────────────────────────────┐
-│           ANDROID SECURITY               │
-├─────────────────────────────────────────┤
-│  FLAG_SECURE (WindowManager)            │
-│    ├── Prevents screenshots in recents  │
-│    ├── Prevents screen recording        │
-│    └── Applied via: VeilpaySecureWindow │
-│                                         │
-│  SafetyNet / Play Integrity              │
-│    ├── Verifies device integrity         │
-│    ├── Checks for root / tampering       │
-│    └── STUB: Requires native module    │
-│                                         │
-│  Certificate Pinning                      │
-│    ├── Pins to known RPC certificates   │
-│    └── STUB: Pending implementation     │
-└─────────────────────────────────────────┘
-```
-
-### 3.2 iOS
-
-```
-┌─────────────────────────────────────────┐
-│              iOS SECURITY                │
-├─────────────────────────────────────────┤
-│  Anti-Screenshot                        │
-│    ├── iOS has no public FLAG_SECURE    │
-│    ├── Alternative: UITextField.secure  │
-│    └── Best: RASP (Runtime Self-Prot)  │
-│                                         │
-│  DeviceCheck / App Attest                │
-│    ├── Verifies device integrity         │
-│    ├── Checks for jailbreak              │
-│    └── STUB: Requires native module    │
-│                                         │
-│  Keychain Access                          │
-│    ├── WHEN_UNLOCKED_THIS_DEVICE_ONLY   │
-│    └── Prevents iCloud backup of keys   │
-└─────────────────────────────────────────┘
-```
-
----
-
-## 4. Security Roadmap
-
-### Immediate (This Sprint)
-
-- [x] Anti-screenshot flags (`FLAG_SECURE`) on seed phrase screens
-- [x] Phishing-resistant URL verification with homoglyph detection
-- [x] SSKR (Shamir Secret Sharing) for seed backup
-- [x] Device security check framework (SafetyNet/DeviceCheck)
-- [x] Hardware wallet transport foundation (Ledger/Trezor)
-
-### Short-Term (Next 2 Sprints)
-
-- [ ] **Professional Audit** — Trail of Bits, OpenZeppelin, or equivalent
-- [ ] **Native SafetyNet/Play Integrity** — Android native module
-- [ ] **Native DeviceCheck/App Attest** — iOS native module
-- [ ] **Certificate Pinning** — AWS/Gateway SSL pinning
-- [ ] **Hardware Wallet BLE Integration** — Ledger Nano X / Stax
-
-### Medium-Term (Q3 2026)
-
-- [ ] **Hardware Wallet USB Integration** — Ledger Nano S/S+, Trezor
-- [ ] **RASP (Runtime Application Self-Protection)** — iOS screenshot prevention
-- [ ] **Deep Link URL Verification** — Full dApp registry with visual indicators
-- [ ] **Social Recovery** — Multi-party computation (MPC) for key recovery
-
-### Long-Term (Q4 2026+)
-
-- [ ] **Formal Verification** — Prove correctness of signing closure
-- [ ] **Bug Bounty Program** — Public disclosure program
-- [ ] **SOC 2 Compliance** — For backend infrastructure
-
----
-
-## 5. Reporting Security Issues
-
-If you discover a security vulnerability, please do NOT open a public issue. Instead:
+Do **not** open a public GitHub issue for security bugs.
 
 1. Email: `security@veilpay.app`
-2. Subject: `[SECURITY] Brief description`
-3. Include:
-   - A clear description of the vulnerability
-   - Steps to reproduce
-   - Potential impact
-   - Suggested fix (if any)
+2. Subject: `[SECURITY] <short title>`
+3. Include: description, repro steps, impact, and a suggested fix if you have one
 
-We aim to respond within 48 hours and will coordinate disclosure.
+We aim to acknowledge within **48 hours** and coordinate disclosure.
 
 ---
 
-## 6. Accepted Transitive Advisories
+## 2. What must never be committed or logged
 
-Some `pnpm audit` advisories surface against deep transitive dependencies that
-have no patched upstream version. Each entry below documents the advisory,
-the exposure path, the realistic exploit surface, and the compensating
-control we apply. These advisories are tracked in
-`plans/PRODUCTION_READINESS_AUDIT.md` and reviewed every release.
+- Mnemonics, private keys, raw signatures, session secrets
+- `.env` files with real credentials (use `.env.example` only)
+- Production Groth16 toxic waste / contributor randomness
+- User nullifier / secret note preimages
 
-### 6.1 `bigint-buffer@<=1.1.5` (CVE-2025-3194, GHSA-3gc7-fjrx-p6mg)
-
-- **Severity:** High (CVSS 7.5)
-- **Path:** `apps/consumer-app > @solana/spl-token > @solana/buffer-layout-utils > bigint-buffer`
-- **Vulnerability:** Buffer overflow in `toBigIntLE()` when input exceeds
-  the expected length. Triggers a process panic.
-- **Patched version:** None available upstream.
-- **Exposure:** Reached only when the consumer app reads SPL token mint /
-  account metadata returned by an RPC. An attacker would need to control
-  the RPC response payload (or insert a man-in-the-middle proxy that
-  rewrites valid responses).
-- **Compensating controls:**
-  - Consumer-app RPC endpoints are pinned to operator-controlled
-    providers in production (see `apps/consumer-app/src/config/chains.ts`).
-  - Token-account reads are wrapped in a try/catch that surfaces a
-    user-visible error rather than crashing the worklet.
-  - SPL token decoding is read-only; a panic does not affect signing or
-    settlement state.
-- **Re-evaluation trigger:** when `@solana/buffer-layout-utils` ships a
-  release with a patched `bigint-buffer` (or a maintained fork), bump
-  the override and remove this exception.
-
-### 6.2 `elliptic@<=6.6.1` (CVE-2025-14505, GHSA-848j-6mx2-7j84)
-
-- **Severity:** Low (CVSS 5.6)
-- **Path:** `packages/circuits > circomlibjs > ethers@5 > @ethersproject/signing-key > elliptic`
-- **Vulnerability:** ECDSA implementation produces incorrect signatures when
-  an interim `k` value has leading zeros, in pathological inputs.
-- **Patched version:** None available upstream.
-- **Exposure:** None at runtime. `circomlibjs` is consumed only at
-  circuit-compilation time (`packages/circuits/compile.sh`), not by any
-  signing path in the apps. The `@ethersproject/signing-key` is not
-  invoked from Veilpay code.
-- **Compensating controls:** none required — the vulnerable code path
-  is not reachable from any deployed binary.
-- **Re-evaluation trigger:** when `circomlibjs` upgrades its `ethers`
-  dependency to v6, the chain falls away and this exception can be
-  removed.
+App and agent rules: never print or persist secrets. See `apps/consumer-app` SecureStore usage for commitment notes.
 
 ---
 
-## 7. References
+## 3. Threat model (summary)
+
+### 3.1 Client / wallet
+
+| Threat | Impact | Mitigations |
+|--------|--------|-------------|
+| Phishing / fake app | Critical | Store listing, deep-link allowlists, URL checks |
+| Device compromise | Critical | SecureStore / Keychain, biometrics, FLAG_SECURE where available |
+| Clipboard / screen capture of seed | Critical | Anti-screenshot on sensitive screens, no seed in logs |
+| Malicious RPC | High | Operator-pinned RPCs in production; validate chain IDs |
+
+### 3.2 Backend / merchant API
+
+| Threat | Impact | Mitigations |
+|--------|--------|-------------|
+| API key abuse | High | Hashed keys, rate limits, auth middleware |
+| Webhook forgery | High | Signature + timestamp windows ([webhook security](docs/security/webhook-security.md)) |
+| Relayer drain / wrong pool | High | Contract allowlist; relayer never learns nullifier/secret |
+| Injection / SSRF | High | Zod validation, URL safety helpers |
+
+### 3.3 Privacy pool (EVM ZK)
+
+| Threat | Impact | Mitigations |
+|--------|--------|-------------|
+| Overstated withdraw amount / wrong token | Critical | Note binds `amount` + `token`: `Poseidon(nullifier, secret, amount, token)`; deposit circuit proves leaf opens to transferred value |
+| Double-spend | Critical | `nullifierSpent` mapping; nullifierHash = Poseidon(nullifier) |
+| Public-input congruence (`x + r`) | High | Pool rejects any public input ≥ BN254 scalar field `r` |
+| Forged Groth16 proofs | Critical | **Requires real multi-party ceremony** — current `compile.sh` keys are **dev-only** |
+| Stolen note (nullifier+secret) | High | Device security; any holder can set recipient (by design) |
+| Malicious ERC-20 | Medium | Prefer allowlisted tokens; fee-on-transfer unsupported |
+
+Full circuit detail: [`packages/circuits/docs/CIRCUIT_SECURITY.md`](packages/circuits/docs/CIRCUIT_SECURITY.md).
+
+Canonical commitment:
+
+```text
+commitment    = Poseidon(nullifier, secret, amount, token)
+nullifierHash = Poseidon(nullifier)
+```
+
+Withdraw public inputs (order is load-bearing for verifier + `VeilPool`):
+
+```text
+[merkleRoot, nullifierHash, recipient, amount, token]
+```
+
+Deposit public inputs:
+
+```text
+[commitment, amount, token]
+```
+
+### 3.4 Stellar Private Payments (SPP)
+
+- Testnet-oriented; **fail-closed on mainnet** until product + audit gates pass.
+- Native pool ops required for shield/transfer/unshield; derive-only builds must not expose Private mode as ready.
+
+---
+
+## 4. Production gates (must pass before “mainnet privacy”)
+
+| ID | Gate | Blocks |
+|----|------|--------|
+| **SEC-008** | Trusted setup / ceremony | Mainnet deploy of Groth16 verifiers / proving keys |
+| **SEC-011** | External security audit | Claims of “audited” / mainnet-ready privacy |
+
+Details and checklists: [`docs/security/ceremony-and-audit-gates.md`](docs/security/ceremony-and-audit-gates.md).
+
+Also:
+
+- [Production checklist](docs/security/production-checklist.md)
+- [Secrets & keys](docs/security/secrets-and-keys.md)
+- [API hardening](docs/security/api-hardening.md)
+- [Security model](docs/security/security-model.md)
+
+---
+
+## 5. Client security checklist (wallet)
+
+Derived from product audit IDs used in the consumer app:
+
+### Cryptography & keys
+
+- [x] Mnemonic generation uses CSPRNG
+- [x] Mnemonics / keys never logged or returned casually to UI layers
+- [x] Secure storage via platform keychain / keystore
+- [x] EIP-155-style chain binding for EVM signing
+- [ ] Hardware wallet (Ledger/Trezor) production path complete
+
+### UI & device
+
+- [x] Anti-screenshot on seed / private-key surfaces where platform allows
+- [x] Homoglyph / URL checks for risky links
+- [ ] Play Integrity / DeviceCheck fully wired in production builds
+
+### Network
+
+- [x] HTTPS RPC and API endpoints in production config
+- [x] Deep-link validation against allowlists
+- [ ] Certificate pinning (roadmap)
+
+---
+
+## 6. Circuit & contract build hygiene
+
+1. Compile circuits only via `packages/circuits/compile.sh` (or documented CI).
+2. After circuit changes, regenerate verifier; confirm `Groth16Verifier.sol` imports use **plain** paths:
+   `import {IGroth16Verifier} from "./IGroth16Verifier.sol";`
+   (never escaped `\"` — that fails `solc` / `forge test`).
+3. `nPublic` for withdraw must be **5**; deposit verifier is a **separate** keyset.
+4. Re-run a ceremony (or stay on labeled testnet keys) after any R1CS change.
+5. Deploy scripts must set both `verifier` and `depositVerifier`.
+
+---
+
+## 7. Accepted transitive advisories
+
+Some `pnpm audit` findings are deep transitive deps with no upstream patch. Track and re-evaluate each release.
+
+### 7.1 `bigint-buffer` (via Solana SPL token stack)
+
+- **Risk:** buffer overflow / panic on malformed RPC data.
+- **Exposure:** only when decoding SPL account data from RPC.
+- **Controls:** operator-controlled RPCs; decode paths fail closed to UI errors; no signing impact.
+
+### 7.2 `elliptic` (via circomlibjs → ethers v5 at **compile** time)
+
+- **Risk:** pathological ECDSA edge cases.
+- **Exposure:** not on mobile signing path; circuit tooling only.
+- **Controls:** none required at runtime for wallet binaries.
+
+---
+
+## 8. Roadmap (security)
+
+### Near term
+
+- [ ] Professional external audit (contracts + circuits + relayer)
+- [ ] Multi-party Groth16 ceremony + published VK hashes
+- [ ] Native Play Integrity / DeviceCheck modules
+- [ ] Certificate pinning for production APIs
+
+### Medium term
+
+- [ ] Hardware wallet production UX
+- [ ] Bug bounty program
+- [ ] Formal review of deposit + withdraw circuit pair after ceremony
+
+---
+
+## 9. References
 
 - [OWASP Mobile Security](https://owasp.org/www-project-mobile-security/)
-- [Google SafetyNet / Play Integrity](https://developer.android.com/google/playintegrity/overview)
+- [Play Integrity](https://developer.android.com/google/play/integrity)
 - [Apple DeviceCheck / App Attest](https://developer.apple.com/documentation/devicecheck)
-- [Ledger Hardware Wallets](https://www.ledger.com/)
-- [Trezor Hardware Wallets](https://trezor.io/)
+- Circom / snarkjs Groth16 trusted setup documentation
 
 ---
 
-*This document is a living specification. All security features are subject to professional audit before production deployment.*
+*Living document. No privacy feature is “mainnet ready” until SEC-008 and SEC-011 are signed off.*

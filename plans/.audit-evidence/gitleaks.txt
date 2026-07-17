@@ -1,2 +1,0 @@
-
-spawn error: spawn gitleaks ENOENT

@@ -1,3 +1,8 @@
+/**
+ * Config is evaluated at module load time from process.env.
+ * Use require() + jest.resetModules() so each test re-parses with a fresh env
+ * (dynamic import() needs --experimental-vm-modules under Jest/CJS).
+ */
 describe('Config Module', () => {
   const originalEnv = process.env;
 
@@ -10,49 +15,63 @@ describe('Config Module', () => {
     process.env = originalEnv;
   });
 
-  it('should use default values in development', async () => {
+  function loadConfig(): { config: { nodeEnv: string; databaseUrl: string; indexSolana: boolean } } {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require('../index') as {
+      config: { nodeEnv: string; databaseUrl: string; indexSolana: boolean };
+    };
+  }
+
+  it('should use default values in development', () => {
     process.env.NODE_ENV = 'development';
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { config } = await import('../index.js');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    delete process.env.DATABASE_URL;
+    delete process.env.REDIS_URL;
+    delete process.env.WEBHOOK_SIGNING_SECRET;
+
+    const { config } = loadConfig();
     expect(config.nodeEnv).toBe('development');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(config.databaseUrl).toContain('postgresql://veilpay');
   });
 
-  it('should throw if using default DB URL in production', async () => {
+  it('should throw if using default DB URL in production', () => {
     process.env.NODE_ENV = 'production';
-    // default database url
-    await expect(import('../index.js')).rejects.toThrow('DATABASE_URL must not use the development default in production');
+    delete process.env.DATABASE_URL;
+
+    expect(() => loadConfig()).toThrow(
+      'DATABASE_URL must not use the development default in production',
+    );
   });
 
-  it('should throw if using default REDIS URL in production', async () => {
+  it('should throw if using default REDIS URL in production', () => {
     process.env.NODE_ENV = 'production';
     process.env.DATABASE_URL = 'postgresql://veilpay:prod_pass@prod:5432/db';
-    // default redis url
-    await expect(import('../index.js')).rejects.toThrow('REDIS_URL must not use the localhost default in production');
+    delete process.env.REDIS_URL;
+
+    expect(() => loadConfig()).toThrow(
+      'REDIS_URL must not use the localhost default in production',
+    );
   });
 
-  it('should throw if using default WEBHOOK_SIGNING_SECRET in production', async () => {
+  it('should throw if using default WEBHOOK_SIGNING_SECRET in production', () => {
     process.env.NODE_ENV = 'production';
     process.env.DATABASE_URL = 'postgresql://veilpay:prod_pass@prod:5432/db';
     process.env.REDIS_URL = 'redis://prod:6379';
-    // default webhook secret
-    await expect(import('../index.js')).rejects.toThrow('WEBHOOK_SIGNING_SECRET must not use the development default in production');
+    delete process.env.WEBHOOK_SIGNING_SECRET;
+
+    expect(() => loadConfig()).toThrow(
+      'WEBHOOK_SIGNING_SECRET must not use the development default in production',
+    );
   });
 
-  it('should parse config successfully in production with valid envs', async () => {
+  it('should parse config successfully in production with valid envs', () => {
     process.env.NODE_ENV = 'production';
     process.env.DATABASE_URL = 'postgresql://veilpay:prod_pass@prod:5432/db';
     process.env.REDIS_URL = 'redis://prod:6379';
     process.env.WEBHOOK_SIGNING_SECRET = 'my_super_secret_webhook_key_2026';
     process.env.INDEX_SOLANA = 'true';
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { config } = await import('../index.js');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const { config } = loadConfig();
     expect(config.nodeEnv).toBe('production');
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(config.indexSolana).toBe(true);
   });
 });

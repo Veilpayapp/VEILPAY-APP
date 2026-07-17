@@ -134,9 +134,12 @@ if canon_header not in src:
 # Inject `import {IGroth16Verifier} from "./IGroth16Verifier.sol";` after the
 # pragma line, if not already present.
 if "IGroth16Verifier" not in src:
+    # Build the import with plain quotes (never write backslash-escaped paths —
+    # that produces invalid Solidity: from \"./File.sol\").
+    _import_line = 'import {IGroth16Verifier} from "' + "./IGroth16Verifier.sol" + '";\n'
     src, n = re.subn(
         r"(pragma solidity[^;]+;\n)",
-        r'\1import {IGroth16Verifier} from "./IGroth16Verifier.sol";\n',
+        r"\1" + _import_line,
         src,
         count=1,
     )

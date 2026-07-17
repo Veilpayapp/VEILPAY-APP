@@ -1,44 +1,60 @@
-# VeilPay — Multi-Chain Privacy Payment Protocol
+# VeilPay
 
-A privacy-focused, self-custody payment protocol for EVM, Solana, and Stellar.
-Stealth-address primitives and encrypted notes ship today; zero-knowledge private
-payments are delivered through the Stellar Private Payments (SPP) track, which is
-**testnet-only and fail-closed on mainnet** until audit and operational gates are met.
+Self-custody, multi-chain payments with optional privacy.
 
-> **Status:** See [`docs/getting-started/current-status.md`](docs/getting-started/current-status.md)
-> for the authoritative breakdown of what is implemented, gated, and planned. Do
-> not treat roadmap items as production-live.
+| Surface | Package | Role |
+|---------|---------|------|
+| **Mobile wallet** | `apps/consumer-app` | Send / receive, balances, privacy levels (Expo / React Native) |
+| **API** | `apps/backend` | Merchants, invoices, webhooks, relayer |
+| **Indexer** | `apps/indexer` | Chain events → payments |
+| **EVM pool + verifier** | `packages/contracts-evm` | `VeilPool`, Groth16 verifier (Foundry) |
+| **ZK circuits** | `packages/circuits` | Deposit + withdraw Circom circuits |
+| **Solana** | `packages/contracts-solana` | Anchor pool scaffolding |
+| **Stellar SPP** | `packages/spp-native` + `packages/vendor/spp` | Private XLM (testnet-gated) |
+| **Shared types** | `packages/shared` | Cross-app contracts |
+
+**Status:** product and privacy features ship with network and build gates. Authoritative “what is live” list: [`docs/getting-started/current-status.md`](docs/getting-started/current-status.md).
 
 ---
 
-## Quick Start
+## What users can do
+
+1. **Standard** — normal on-chain transfer (always available).
+2. **Stealth** (EVM) — one-time stealth address + announcement (when privacy stack is configured).
+3. **Maximum** (EVM) — ZK privacy pool deposit / withdraw (when withdraw path and contracts are ready).
+4. **Private** (Stellar) — SPP shielded XLM on testnet when native pool ops are present; fail-closed on mainnet.
+
+---
+
+## Quick start
 
 ### Prerequisites
-- Node.js 20+ (see `.nvmrc`)
-- pnpm 9+ (see `package.json#packageManager`)
-- Docker & Docker Compose
-- Foundry (for EVM contract work) — optional unless touching `packages/contracts-evm`
-- Anchor / Solana toolchain — optional unless touching `packages/contracts-solana`
 
-### One-time setup
+- Node.js 20+ (`.nvmrc`)
+- pnpm 9+ (`package.json#packageManager`)
+- Docker + Docker Compose
+- Foundry (optional, for `packages/contracts-evm`)
+- Circom + snarkjs (optional, for circuit compile)
+
+### Setup
 
 ```bash
 pnpm install
-git submodule update --init --recursive   # openzeppelin, forge-std, stellar-private-payments
+git submodule update --init --recursive
 
-cp .env.example .env                       # then fill in the values
+cp .env.example .env   # fill secrets — never commit real keys
 
-pnpm db:up                                 # PostgreSQL, Redis, Anvil
+pnpm db:up
 pnpm --filter @veilpay/backend db:generate
 pnpm --filter @veilpay/backend db:migrate
 ```
 
-### Run the services
+### Run
 
 ```bash
-pnpm backend:dev      # Express API            (http://localhost:3001)
-pnpm indexer:dev      # Blockchain event indexer
-pnpm consumer:dev     # Expo mobile wallet
+pnpm backend:dev      # API  → http://localhost:3001
+pnpm indexer:dev      # indexer
+pnpm consumer:dev     # Expo wallet
 ```
 
 ### Quality gates
@@ -47,154 +63,126 @@ pnpm consumer:dev     # Expo mobile wallet
 pnpm lint
 pnpm typecheck
 pnpm test
-pnpm build                 # backend + indexer (+ dependents)
-pnpm build:full            # everything in the workspace
+pnpm build
 ```
 
-### Ports & local services
+### EVM contracts
 
-| Service     | Port | Purpose                  |
-|-------------|------|--------------------------|
-| Backend API | 3001 | Express REST API         |
-| PostgreSQL  | 5432 | Primary database         |
-| Redis       | 6379 | BullMQ queues & cache    |
-| Anvil       | 8545 | Local EVM testnet (31337) |
-
----
-
-## Project Structure
-
-```
-veilpay/
-├── apps/
-│   ├── consumer-app/                 # React Native mobile wallet (Expo)
-│   ├── backend/                       # Express API server (authoritative API surface)
-│   └── indexer/                       # Blockchain event indexer
-├── packages/
-│   ├── shared/                        # Shared types & utilities
-│   ├── contracts-evm/                 # Solidity contracts (Foundry) — privacy-pool scaffolding
-│   ├── contracts-solana/              # Anchor programs — scaffolding
-│   ├── circuits/                      # Zero-knowledge circuits
-│   ├── spp-native/                   # Stellar Private Payments native integration
-│   ├── auditor/                       # Security audit harness
-│   └── vendor/spp/                    # Vendored NethermindEth/stellar-private-payments (submodule)
-├── docs/                              # Project documentation (+ assets/)
-├── plans/                             # Roadmap, design docs, UI_AUDIT_PLAN.md
-├── e2e/                               # End-to-end tests
-├── scripts/graphify/                  # Graphify import scripts (one-shot tooling)
-├── tsconfig/                          # Shared TS config
-├── docker-compose.yml                 # Local infrastructure
-└── railway.json                       # Backend deployment config
+```bash
+cd packages/contracts-evm
+forge test -vvv
 ```
 
-> Local-only (gitignored, per-developer): `.agent/`, `.agents/`, `.kilo/`,
-> `.kilocode/`, `.kiro/`, `.continue/`, `.audit-evidence/`, `.expo/`,
-> `graphify-out/`, `packages/antigravity-utils/`. See `.gitignore`.
+### ZK circuits
 
-> `apps/frontend/` is referenced in some legacy docs but is **not** present in the
-> workspace; the consumer-facing surface today is `apps/consumer-app`.
+```bash
+cd packages/circuits
+# needs circom + snarkjs on PATH
+bash compile.sh          # withdraw artifacts (dev ceremony only)
+pnpm test                # mocha: withdraw + deposit witnesses
+```
 
----
+Source of truth for the note model and public inputs:
 
-## Key Features
+- [`packages/circuits/withdraw.circom`](packages/circuits/withdraw.circom)
+- [`packages/circuits/deposit.circom`](packages/circuits/deposit.circom)
+- [`packages/circuits/docs/CIRCUIT_SECURITY.md`](packages/circuits/docs/CIRCUIT_SECURITY.md)
 
-### Consumer App (`apps/consumer-app`)
-- Multi-chain, self-custody wallet (EVM, Solana, Stellar)
-- Send / receive, real-time balances, transaction history
-- Stealth-address primitives and encrypted notes
-- Fiat on-ramp / off-ramp and WalletConnect v2
+```
+commitment    = Poseidon(nullifier, secret, amount, token)
+nullifierHash = Poseidon(nullifier)
+```
 
-### Backend API (`apps/backend`) — authoritative
-- Merchant registration & API-key auth
-- Invoice creation
-- Payment webhooks (queue, worker, delivery, idempotent expiry events)
-- Multi-chain support
-- Rate limiting & typed request validation
+Withdraw public inputs (order is load-bearing):
 
-### Indexer (`apps/indexer`)
-- Real-time blockchain monitoring
-- Event parsing & storage
-- Payment-confirmation detection
+`[merkleRoot, nullifierHash, recipient, amount, token]`
 
-### Privacy payments (gated)
-- Stellar Private Payments (SPP) via `packages/spp-native` + `packages/vendor/spp` —
-  **testnet-only and fail-closed on mainnet**.
-- EVM/Solana privacy-pool contracts in `packages/contracts-*` are scaffolding; their
-  proof verification is intentionally fail-closed pending verifier work.
-
-See [Current status](docs/getting-started/current-status.md) before relying on any
-privacy feature.
+> **Dev keys only:** `compile.sh` produces dogfood Groth16 keys. Do not use them for mainnet. See [`SECURITY.md`](SECURITY.md) and ceremony gates.
 
 ---
 
-## Workspace Scripts
+## Repo layout
 
-| Script              | Description                                              |
-|---------------------|----------------------------------------------------------|
-| `pnpm dev`          | Run all `dev` tasks via Turbo                            |
-| `pnpm backend:dev`  | Start backend only                                       |
-| `pnpm indexer:dev`  | Start indexer only                                       |
-| `pnpm consumer:dev` | Start Expo consumer app                                  |
-| `pnpm db:up`        | `docker-compose up -d` (PostgreSQL, Redis, Anvil)        |
-| `pnpm db:down`      | Stop Docker services                                     |
-| `pnpm db:migrate`   | Run Prisma migrations against the backend DB             |
-| `pnpm build`        | Build `backend` + `indexer` (+ dependents)               |
-| `pnpm build:full`   | Build every workspace package                            |
-| `pnpm lint`         | Turbo lint across the workspace                          |
-| `pnpm typecheck`    | Turbo typecheck across the workspace                     |
-| `pnpm test`         | Turbo test across the workspace                          |
-| `pnpm audit:prod`   | Run the auditor harness against production config        |
+```
+apps/
+  consumer-app/     # Mobile wallet (authoritative UI)
+  backend/          # Merchant + relayer API (authoritative API)
+  indexer/          # Chain indexing
+packages/
+  circuits/         # Circom deposit + withdraw
+  contracts-evm/    # VeilPool, Groth16Verifier
+  contracts-solana/ # Solana programs
+  spp-native/       # Stellar private payments native bridge
+  vendor/spp/       # Vendored SPP upstream (submodule)
+  shared/           # Shared types
+docs/               # Product & architecture docs
+plans/              # Active roadmap (ROADMAP.md, specs)
+e2e/                # Cross-service e2e
+```
 
----
-
-## Environment Variables
-
-See `.env.example`. **Required** for local dev:
-
-- `DATABASE_URL` — PostgreSQL connection string
-- `REDIS_URL` — Redis connection string
-- `JWT_SECRET` — JWT signing secret (min 32 chars)
-- `API_KEY_SALT` — salt for API key hashing
-
-**Chain RPCs:** `RPC_ETHEREUM`, `RPC_POLYGON`, `RPC_ARBITRUM` (and equivalents for
-Solana / Stellar as used by the indexer and consumer app).
-
-> Never commit secrets, private keys, mnemonics, or raw signatures. See
-> [`SECURITY.md`](SECURITY.md).
+Local-only (gitignored): `.kilo/`, `.kilocode/`, `.kiro/`, `.agent/`, `.agents/`, `graphify-out/`, `coverage/`, `node_modules/`, `build/`.
 
 ---
 
-## Submodules
+## Scripts (workspace)
 
-| Path                                              | Source                                              |
-|---------------------------------------------------|-----------------------------------------------------|
-| `packages/contracts-evm/lib/openzeppelin-contracts` | github.com/OpenZeppelin/openzeppelin-contracts    |
-| `packages/contracts-evm/lib/forge-std`             | github.com/foundry-rs/forge-std                    |
-| `packages/vendor/spp`                              | github.com/NethermindEth/stellar-private-payments  |
+| Command | Description |
+|---------|-------------|
+| `pnpm backend:dev` | Backend API |
+| `pnpm indexer:dev` | Indexer |
+| `pnpm consumer:dev` | Expo consumer app |
+| `pnpm db:up` / `db:down` | Docker Postgres, Redis, Anvil |
+| `pnpm db:migrate` | Prisma migrations |
+| `pnpm test` / `lint` / `typecheck` / `build` | Turbo quality gates |
 
-Clone with `git submodule update --init --recursive`.
+---
+
+## Environment
+
+See [`.env.example`](.env.example). Minimum for local API:
+
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | Postgres |
+| `REDIS_URL` | Redis / queues |
+| `JWT_SECRET` | Session/JWT (≥ 32 chars) |
+| `API_KEY_SALT` | Merchant API key hashing |
+
+Chain RPCs and privacy contract addresses are documented in [`docs/reference/environment-variables.md`](docs/reference/environment-variables.md).
+
+**Never** commit secrets, private keys, mnemonics, or raw signatures.
 
 ---
 
 ## Documentation
 
-- [Current status](docs/getting-started/current-status.md) — implemented vs. gated vs. planned
-- [Documentation home](docs/README.md)
-- [Roadmap & Future Work](plans/ROADMAP.md)
-- [Security policy](SECURITY.md)
-- [Quick reference](QUICKSTART.md)
+| Doc | Contents |
+|-----|----------|
+| [`docs/README.md`](docs/README.md) | Docs home |
+| [`docs/getting-started/current-status.md`](docs/getting-started/current-status.md) | Live vs gated vs planned |
+| [`docs/protocol/privacy-levels.md`](docs/protocol/privacy-levels.md) | Standard / stealth / max / private |
+| [`SECURITY.md`](SECURITY.md) | Security policy & threat model |
+| [`packages/circuits/docs/CIRCUIT_SECURITY.md`](packages/circuits/docs/CIRCUIT_SECURITY.md) | ZK note model |
+| [`docs/security/ceremony-and-audit-gates.md`](docs/security/ceremony-and-audit-gates.md) | SEC-008 / SEC-011 gates |
+| [`plans/ROADMAP.md`](plans/ROADMAP.md) | Product roadmap |
+| [`QUICKSTART.md`](QUICKSTART.md) | Short local cheat sheet |
 
 ---
 
-## Agent & Tooling Notes
+## Submodules
 
-- Architecture navigation: see [`GRAPHIFY.md`](GRAPHIFY.md). The graphify snapshot
-  lives in `graphify-out/` (gitignored; regenerate via `graphify --update`).
-  Import scripts live in `scripts/graphify/`.
-- Agent guidance: see [`AGENTS.md`](AGENTS.md).
-- Workspace package overrides and vulnerability pinning: see `pnpm.overrides` in
-  [`package.json`](package.json).
+```bash
+git submodule update --init --recursive
+```
+
+| Path | Upstream |
+|------|----------|
+| `packages/contracts-evm/lib/openzeppelin-contracts` | OpenZeppelin |
+| `packages/contracts-evm/lib/forge-std` | Foundry std |
+| `packages/vendor/spp` | Nethermind Stellar Private Payments |
+
+---
 
 ## License
 
-Private — All rights reserved.
+Private — all rights reserved.

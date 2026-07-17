@@ -1,7 +1,0 @@
-src/passes/staticAnalysis/graphify.success.test.ts(73,72): error TS1127: Invalid character.
-src/passes/staticAnalysis/graphify.success.test.ts(103,1): error TS1160: Unterminated template literal.
-src/passes/staticAnalysis/routes.success.test.ts(48,87): error TS1127: Invalid character.
-src/passes/staticAnalysis/routes.success.test.ts(90,1): error TS1160: Unterminated template literal.
-undefined
-D:\Veilpay\packages\auditor:
- ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit

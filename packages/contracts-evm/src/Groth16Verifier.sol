@@ -20,7 +20,7 @@
 */
 
 pragma solidity >=0.7.0 <0.9.0;
-import {IGroth16Verifier} from \"./IGroth16Verifier.sol\";
+import {IGroth16Verifier} from "./IGroth16Verifier.sol";
 
 contract Groth16Verifier is IGroth16Verifier {
     // Scalar field size

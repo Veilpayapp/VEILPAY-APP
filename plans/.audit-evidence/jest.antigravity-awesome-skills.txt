@@ -1,5 +1,0 @@
-'jest' is not recognized as an internal or external command,
-operable program or batch file.
-undefined
-D:\Veilpay\packages\antigravity-utils:
- ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "jest" not found

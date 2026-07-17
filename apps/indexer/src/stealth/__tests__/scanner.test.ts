@@ -122,14 +122,12 @@ describe('Stealth Scanner Module', () => {
   });
 
   describe('StealthScanner class', () => {
-    it('should start and stop and catch scan errors from interval', async () => {
+    it('should start and stop and catch scan errors from interval', () => {
       jest.useFakeTimers();
       const scanner = new StealthScanner('ethereum');
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-      (scanner as any).scan = async () => {
-        throw new Error('Scan failed');
-      };
+      (scanner as any).scan = (): Promise<void> => Promise.reject(new Error('Scan failed'));
 
       scanner.start(0);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
@@ -146,8 +144,8 @@ describe('Stealth Scanner Module', () => {
     it('should ignore double start', () => {
       const scanner = new StealthScanner('ethereum');
       scanner.start(10);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-      const firstBlock = (scanner as any).lastScannedBlock;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+      const firstBlock: number = (scanner as any).lastScannedBlock as number;
       scanner.start(999);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       expect((scanner as any).lastScannedBlock).toBe(firstBlock);

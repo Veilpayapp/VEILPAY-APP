@@ -231,7 +231,8 @@ contract Groth16Verifier is IGroth16Verifier {
         pub[2] = uint256(publicInputs[2]); // recipient
         pub[3] = uint256(publicInputs[3]); // amount
         pub[4] = uint256(publicInputs[4]); // token
-        return _verifyProofRaw(a, b, c, pub);
+        // External call so memory args encode to the raw function's calldata params.
+        return this._verifyProofRaw(a, b, c, pub);
     }
 
 }

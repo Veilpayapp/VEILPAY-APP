@@ -31,7 +31,8 @@ describe('Webhook Dispatcher', () => {
     handlers = {};
     (createWebhookWorker as jest.Mock).mockReturnValue({
       on: jest.fn((event: keyof HandlerMap, handler: HandlerMap[keyof HandlerMap]) => {
-        handlers[event] = handler as HandlerMap[typeof event];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        handlers[event] = handler;
       }),
     });
   });
@@ -239,6 +240,7 @@ describe('Webhook Dispatcher', () => {
       await new Promise((r) => setImmediate(r));
 
       // must not throw; enqueueDeadLetter may or may not be reached
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(prisma.webhookDelivery.create).toHaveBeenCalled();
     });
   });

@@ -4,13 +4,21 @@ module.exports = {
   testEnvironment: 'node',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    // Map ESM-style .js specifiers to TypeScript sources under Jest.
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: 'tsconfig.json'
-    }]
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          // Silence ts-jest TS151002 with Node16/NodeNext module settings.
+          isolatedModules: true,
+        },
+      },
+    ],
   },
   collectCoverage: true,
   coverageDirectory: 'coverage',

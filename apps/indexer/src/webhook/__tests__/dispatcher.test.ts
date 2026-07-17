@@ -7,15 +7,29 @@ jest.mock('../../queue', () => ({
   createWebhookWorker: jest.fn(),
 }));
 
-type HandlerMap = {
-  completed?: (job: { id: string }) => void;
-  failed?: (job: { id: string; attemptsMade: number; opts: { attempts?: number }; data: Record<string, unknown> } | undefined, error: Error) => void;
+type CompletedHandler = (job: { id: string }) => void;
+type FailedHandler = (
+  job:
+    | {
+        id: string;
+        attemptsMade: number;
+        opts: { attempts?: number };
+        data: Record<string, unknown>;
+      }
+    | undefined,
+  error: Error,
+) => void;
+
+/** Loose bag of worker event handlers captured from the mock Worker. */
+type HandlerBag = {
+  completed?: CompletedHandler;
+  failed?: FailedHandler;
 };
 
 describe('Webhook Dispatcher', () => {
   const originalFetch = globalThis.fetch;
   const mockFetch = jest.fn();
-  let handlers: HandlerMap;
+  let handlers: HandlerBag;
 
   beforeAll(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
@@ -30,9 +44,13 @@ describe('Webhook Dispatcher', () => {
     jest.clearAllMocks();
     handlers = {};
     (createWebhookWorker as jest.Mock).mockReturnValue({
-      on: jest.fn((event: keyof HandlerMap, handler: HandlerMap[keyof HandlerMap]) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        handlers[event] = handler;
+      // Capture handlers by event name without forcing a TS intersection on assignment.
+      on: jest.fn((event: string, handler: (...args: never[]) => void) => {
+        if (event === 'completed') {
+          handlers.completed = handler as CompletedHandler;
+        } else if (event === 'failed') {
+          handlers.failed = handler as FailedHandler;
+        }
       }),
     });
   });

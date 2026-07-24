@@ -1,4 +1,4 @@
-# VeilPay
+# Veilpay
 
 Self-custody, multi-chain payments with optional privacy.
 

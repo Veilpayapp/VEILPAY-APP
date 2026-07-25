@@ -4,10 +4,16 @@
  * These are not ERC-20-style tokens: selecting one switches the home surface
  * into a shielded balance mode (SPP Private XLM, future pools, etc.).
  *
- * Mainnet SPP stays out of this catalog until audit/ceremony (fail-closed).
+ * Mainnet SPP remains fail-closed: its row becomes selectable only when
+ * `SPP_MAINNET` was built from a valid deployment manifest + Soroban RPC.
  */
 
-import { isSppEnabledForChain, SPP_TESTNET, type SppDeploymentConfig } from './spp';
+import {
+  isSppEnabledForChain,
+  SPP_MAINNET,
+  SPP_TESTNET,
+  type SppDeploymentConfig,
+} from './spp';
 import type { PaymentToken } from '../types/tokens';
 
 /** Discriminator for non-public balances on Home / Token Selector. */
@@ -68,8 +74,8 @@ export const PRIVACY_ASSETS: PrivacyAsset[] = [
     subtitle: 'Private XLM · Mainnet',
     icon: '◈',
     features: [],
-    enabled: false,
-    disabledReason: 'Coming after audit',
+    spp: SPP_MAINNET ?? undefined,
+    enabled: true,
   },
 ];
 

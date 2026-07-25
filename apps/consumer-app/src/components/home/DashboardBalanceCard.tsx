@@ -6,6 +6,7 @@ import { SovereignCard } from '../SovereignCard';
 import { Icon } from '../Icon';
 import { BalanceSkeleton } from '../Skeleton';
 import { useTheme, useStyles, typography, type Colors } from '../../styles/design-tokens';
+import { PrivacyStatusBanner } from './PrivacyStatusBanner';
 import type { ChainConfig } from '../../stores/walletStore';
 import type { MarketQuote } from '../../utils/marketData';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -121,10 +122,12 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
                       ? `${displayCrypto} ${symbol}`
                       : '••••••••••••'}
                   </Text>
-                  {privacyMode && privacyStatusDetail ? (
-                    <Text style={styles.privacyDetail} numberOfLines={2}>
-                      {privacyStatusDetail}
-                    </Text>
+                  {privacyMode ? (
+                    <PrivacyStatusBanner
+                      readyStatus={privacyReadyStatus}
+                      statusDetail={privacyStatusDetail}
+                      privacyMode={privacyMode}
+                    />
                   ) : null}
                 </View>
                 <View style={styles.balanceRight}>

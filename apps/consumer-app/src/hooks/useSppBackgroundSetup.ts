@@ -10,7 +10,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useWalletStore } from '../stores/walletStore';
-import { isSppEnabledForChain } from '../constants/spp';
+import { isSppEnabledForChain, SPP_MAINNET } from '../constants/spp';
 
 const RETRY_COOLDOWN_MS = 60_000;
 /** Stellar testnet is the only SPP chain today — recover even if UI is on another network. */
@@ -32,6 +32,11 @@ export function useSppBackgroundSetup(): void {
       (addresses?.xlm && /^G[A-Z2-7]{55}$/.test(addresses.xlm) && addresses.xlm) ||
       (address && /^G[A-Z2-7]{55}$/.test(address) ? address : null);
     if (!stellarAddress) return;
+
+    // If the user is on mainnet Stellar but SPP_MAINNET is not configured,
+    // do NOT fall back to testnet — that would mix testnet operations with
+    // a mainnet UI and confuse the sync/register flow.
+    if (activeChainKey === 'stellar' && !SPP_MAINNET) return;
 
     const chainKey =
       activeChainKey && isSppEnabledForChain(activeChainKey)

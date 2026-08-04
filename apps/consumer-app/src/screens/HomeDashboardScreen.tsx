@@ -20,11 +20,11 @@ import {
 } from "react-native";
 import { PressableOpacity } from '../components/PressableOpacity';
 import * as Haptics from 'expo-haptics';
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useWalletStore, SUPPORTED_CHAINS } from "../stores/walletStore";
 import { useTransactionStore } from "../stores/transactionStore";
 import { SCREENS } from "../constants/screens";
-import { useTheme, useStyles, typography, bottomNavContentInset } from "../styles/design-tokens";
+import { useTheme, useStyles, typography } from "../styles/design-tokens";
 import { SovereignCard } from "../components/SovereignCard";
 import { SovereignButton } from "../components/SovereignButton";
 import Toast, { useToast } from "../components/Toast";
@@ -123,8 +123,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
   const { colors } = useTheme();
   const styles = useStyles(themeStyles);
   const [balanceVisible, setBalanceVisible] = useState(true);
-  const insets = useSafeAreaInsets();
-  const bottomScrollClearance = bottomNavContentInset(insets.bottom);
+  const bottomScrollClearance = 140;
   const [showChainSelector, setShowChainSelector] = useState(false);
   const [showFiatGateway, setShowFiatGateway] = useState(false);
   const [showCurrencySelector, setShowCurrencySelector] = useState(false);
@@ -1270,7 +1269,6 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
               onSend={handleTokenSend}
               onTokenPress={handleTokenPress}
               fiatRate={fiatRate}
-              chainKey={activeChain?.key}
               privacyAssets={privacyListItems}
               selectedPrivacyAssetId={selectedPrivacyAssetId}
               onPrivacyAssetPress={handleSelectPrivacyAsset}

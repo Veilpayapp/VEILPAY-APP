@@ -59,6 +59,7 @@ function putAccount(record: Record<string, unknown>) {
 describe('ensureSppAccountReady', () => {
   beforeEach(() => {
     mockStore.clear();
+    jest.clearAllMocks();
   });
 
   it('when leaf exists and not inserted, attempts insert (does not silent-skip)', async () => {
@@ -89,6 +90,7 @@ describe('ensureSppAccountReady', () => {
   });
 
   it('when already inserted, returns ready without claiming pending', async () => {
+    const { SPP_TESTNET } = await import('../../../constants/spp');
     putAccount({
       chainKey: 'stellar-testnet',
       ownerAddress: OWNER,
@@ -96,6 +98,10 @@ describe('ensureSppAccountReady', () => {
       aspLeafDecimal: '123',
       aspInserted: true,
       aspInsertTxHash: 'done-hash',
+      aspMembershipContractId: SPP_TESTNET.aspMembershipId,
+      keysRegistered: true,
+      keysRegisterTxHash: 'keys-hash',
+      registryContractId: SPP_TESTNET.registryId,
       updatedAt: Date.now(),
     });
 
@@ -104,5 +110,25 @@ describe('ensureSppAccountReady', () => {
     expect(result.aspReady).toBe(true);
     expect(result.hasLeaf).toBe(true);
     expect(result.message).toMatch(/ready/i);
+  });
+
+  it('fails closed when a legacy ASP flag has no deployment contract id', async () => {
+    putAccount({
+      chainKey: 'stellar-testnet',
+      ownerAddress: OWNER,
+      derivationSigHashHex: 'ab'.repeat(32),
+      aspLeafDecimal: '123',
+      aspInserted: true,
+      aspInsertTxHash: 'legacy-hash',
+      keysRegistered: false,
+      updatedAt: Date.now(),
+    });
+
+    const { ensureSppAccountReady } = await import('../sppOnboard');
+    const result = await ensureSppAccountReady('stellar-testnet', OWNER);
+
+    expect(result.aspReady).toBe(false);
+    expect(result.account.aspMembershipContractId).toBeUndefined();
+    expect(result.message).not.toBe('Private XLM ready');
   });
 });

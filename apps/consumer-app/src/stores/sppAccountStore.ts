@@ -27,6 +27,14 @@ export type SppAccountRecord = {
   aspInserted: boolean;
   /** Horizon/Soroban tx hash of insert_leaf when known. */
   aspInsertTxHash?: string;
+  /** ASP membership contract id that received the insert_leaf (redeploy gate). */
+  aspMembershipContractId?: string;
+  /** True after note+enc public keys are on the public-key registry. */
+  keysRegistered: boolean;
+  /** Tx hash of the registry register call when known. */
+  keysRegisterTxHash?: string;
+  /** Public-key registry contract id that received the keys (redeploy gate). */
+  registryContractId?: string;
   updatedAt: number;
 };
 
@@ -49,6 +57,8 @@ export async function getSppAccount(
   try {
     const parsed = JSON.parse(raw) as SppAccountRecord;
     if (!parsed || typeof parsed !== 'object') return null;
+    // Backfill records written before receive-key registration was tracked.
+    if (parsed.keysRegistered === undefined) parsed.keysRegistered = false;
     return parsed;
   } catch {
     return null;
@@ -66,7 +76,8 @@ export async function saveSppAccount(record: SppAccountRecord): Promise<void> {
 export async function markAspInserted(
   chainKey: string,
   ownerAddress: string,
-  txHash: string
+  txHash: string,
+  aspMembershipContractId?: string
 ): Promise<SppAccountRecord | null> {
   const existing = await getSppAccount(chainKey, ownerAddress);
   if (!existing) return null;
@@ -74,6 +85,60 @@ export async function markAspInserted(
     ...existing,
     aspInserted: true,
     aspInsertTxHash: txHash,
+    aspMembershipContractId: aspMembershipContractId ?? existing.aspMembershipContractId,
+    updatedAt: Date.now(),
+  };
+  await saveSppAccount(next);
+  return next;
+}
+
+export async function clearAspInserted(
+  chainKey: string,
+  ownerAddress: string
+): Promise<SppAccountRecord | null> {
+  const existing = await getSppAccount(chainKey, ownerAddress);
+  if (!existing) return null;
+  const next: SppAccountRecord = {
+    ...existing,
+    aspInserted: false,
+    aspInsertTxHash: undefined,
+    aspMembershipContractId: undefined,
+    updatedAt: Date.now(),
+  };
+  await saveSppAccount(next);
+  return next;
+}
+
+export async function markKeysRegistered(
+  chainKey: string,
+  ownerAddress: string,
+  txHash: string,
+  registryContractId?: string
+): Promise<SppAccountRecord | null> {
+  const existing = await getSppAccount(chainKey, ownerAddress);
+  if (!existing) return null;
+  const next: SppAccountRecord = {
+    ...existing,
+    keysRegistered: true,
+    keysRegisterTxHash: txHash,
+    registryContractId: registryContractId ?? existing.registryContractId,
+    updatedAt: Date.now(),
+  };
+  await saveSppAccount(next);
+  return next;
+}
+
+export async function clearKeysRegistered(
+  chainKey: string,
+  ownerAddress: string
+): Promise<SppAccountRecord | null> {
+  const existing = await getSppAccount(chainKey, ownerAddress);
+  if (!existing) return null;
+  const next: SppAccountRecord = {
+    ...existing,
+    keysRegistered: false,
+    keysRegisterTxHash: undefined,
+    registryContractId: undefined,
     updatedAt: Date.now(),
   };
   await saveSppAccount(next);

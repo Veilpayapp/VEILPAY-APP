@@ -54,6 +54,7 @@
     "@shopify/react-native-skia": "^2.4.18",
     "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.91.0",
+    "@stellar/stellar-sdk": "^14.6.1",
     "@storybook/addon-ondevice-actions": "^10.4.4",
     "@storybook/addon-ondevice-controls": "^10.4.4",
     "@storybook/react-native": "^10.4.4",
@@ -65,7 +66,7 @@
     "buffer": "^6.0.3",
     "cross-env": "^10.1.0",
     "ed25519-hd-key": "^2.0.0",
-    "expo": "~55.0.27",
+    "expo": "~55.0.28",
     "expo-application": "~55.0.16",
     "expo-camera": "~55.0.20",
     "expo-clipboard": "~55.0.14",
@@ -127,4 +128,3 @@
   },
   "private": true
 }
-

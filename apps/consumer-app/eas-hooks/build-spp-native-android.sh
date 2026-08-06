@@ -199,14 +199,23 @@ rustup target add "${RUST_TARGETS[@]}" || {
   exit 1
 }
 
-if ! command -v cargo-ndk >/dev/null 2>&1; then
-  log "Installing cargo-ndk…"
-  cargo install cargo-ndk --locked 2>/dev/null || cargo install cargo-ndk || {
-    error "Failed to install cargo-ndk"
-    exit 1
-  }
+log "Installing/verifying cargo-ndk…"
+# Use --force to handle any broken installations
+if ! cargo install cargo-ndk --locked --force 2>&1 | tee /tmp/cargo-ndk-install.log; then
+  log "ERROR: cargo-ndk installation failed"
+  tail -30 /tmp/cargo-ndk-install.log | sed 's/^/  /'
+  exit 1
 fi
-cargo-ndk --version
+
+# Verify it's actually callable
+if ! cargo ndk --version >/dev/null 2>&1; then
+  log "ERROR: cargo-ndk installed but not executable"
+  log "Checking PATH and installation:"
+  which cargo-ndk || true
+  ls -la "${CARGO_HOME:-$HOME/.cargo}/bin/cargo-ndk" 2>/dev/null || log "  cargo-ndk binary not found"
+  exit 1
+fi
+log "✓ cargo-ndk ready: $(cargo ndk --version)"
 
 # ── NDK path for cargo-ndk ───────────────────────────────────────
 resolve_ndk() {

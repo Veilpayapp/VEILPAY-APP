@@ -40,7 +40,20 @@ dependencies {
 
 String findRustlsPlatformVerifierMavenRepo() {
   def manifest = file("../../../../../packages/spp-native/Cargo.toml")
-  def cargoExe = System.getenv("CARGO") ?: "cargo"
+
+  // Resolve cargo path: use CARGO env var, or construct from CARGO_HOME, or fallback to "cargo"
+  def cargoExe = System.getenv("CARGO")
+  if (!cargoExe) {
+    def cargoHome = System.getenv("CARGO_HOME")
+    if (cargoHome) {
+      def cargoPath = new File(cargoHome, "bin/cargo")
+      if (cargoPath.exists()) {
+        cargoExe = cargoPath.absolutePath
+      }
+    }
+  }
+  cargoExe = cargoExe ?: "cargo"
+
   def metadataText = providers.exec {
     it.workingDir = manifest.parentFile
     commandLine(cargoExe, "metadata", "--format-version", "1", "--filter-platform", "aarch64-linux-android", "--manifest-path", manifest.absolutePath)

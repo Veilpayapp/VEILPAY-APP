@@ -4,7 +4,7 @@
  * Testnet IDs come from the vendored Nethermind deployment:
  *   packages/vendor/spp/deployments/testnet/deployments.json
  *
- * Mainnet remains **fail-closed** until a real deployment manifest is supplied.
+ * Mainnet remains **fail-closed** unless a valid deployment manifest is supplied.
  * Callers must use
  * {@link getSppConfigForChain} / {@link assertSppEnabled} so mainnet never
  * silently hits testnet contracts or an empty deployment.
@@ -15,10 +15,14 @@
 
 /** On-chain + RPC surface for one SPP deployment (one network). */
 export interface SppDeploymentConfig {
-  /** Chain key in the consumer app (`stellar-testnet` today). */
+  /** Chain key in the consumer app. */
   chainKey: string;
   /** Human network label for UI / logs (never secrets). */
   network: 'testnet' | 'mainnet';
+  /** Public deployment account used as the source for read-only simulations. */
+  deployer: string;
+  /** Public administrator account recorded in the deployment manifest. */
+  admin: string;
   /** Horizon HTTP API base (balance / account reads). */
   horizonUrl: string;
   /** Soroban RPC base (pool events + contract invoke). */
@@ -53,6 +57,8 @@ export interface SppDeploymentConfig {
 export const SPP_TESTNET: SppDeploymentConfig = {
   chainKey: 'stellar-testnet',
   network: 'testnet',
+  deployer: 'GDF4BXPQY5N4BEO24UIHM4NVB62MW7HDWH7SVHKLVZAMLP5IIHCFQORC',
+  admin: 'GDF4BXPQY5N4BEO24UIHM4NVB62MW7HDWH7SVHKLVZAMLP5IIHCFQORC',
   horizonUrl: 'https://horizon-testnet.stellar.org',
   sorobanRpcUrl: 'https://soroban-testnet.stellar.org',
   networkPassphrase: 'Test SDF Network ; September 2015',
@@ -74,6 +80,8 @@ export const SPP_TESTNET: SppDeploymentConfig = {
  */
 export interface SppDeploymentManifest {
   network: 'mainnet' | 'testnet';
+  deployer: string;
+  admin: string;
   asp_membership: string;
   asp_non_membership: string;
   verifier: string;
@@ -89,6 +97,7 @@ export interface SppDeploymentManifest {
 }
 
 const STELLAR_CONTRACT_ID_RE = /^C[A-Z2-7]{55}$/;
+const STELLAR_ACCOUNT_ID_RE = /^G[A-Z2-7]{55}$/;
 function isPositiveInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value > 0;
 }
@@ -101,6 +110,9 @@ export function validateSppDeploymentManifest(
   if (!manifest || typeof manifest !== 'object') return false;
   const m = manifest as Partial<SppDeploymentManifest>;
   if (m.network !== expectedNetwork) return false;
+  if (![m.deployer, m.admin].every((id) =>
+    typeof id === 'string' && STELLAR_ACCOUNT_ID_RE.test(id)
+  )) return false;
   if (![m.asp_membership, m.asp_non_membership, m.verifier, m.public_key_registry].every((id) =>
     typeof id === 'string' && STELLAR_CONTRACT_ID_RE.test(id)
   )) return false;
@@ -131,6 +143,8 @@ export function sppConfigFromMainnetManifest(
   return {
     chainKey: 'stellar',
     network: 'mainnet',
+    deployer: m.deployer,
+    admin: m.admin,
     horizonUrl: 'https://horizon.stellar.org',
     sorobanRpcUrl: options?.sorobanRpcUrl?.trim() || '',
     networkPassphrase: 'Public Global Stellar Network ; September 2015',
@@ -157,7 +171,7 @@ function readMainnetManifest(): unknown {
 }
 
 /**
- * Mainnet is null until the release environment contains a valid public
+ * Mainnet is null unless the release environment contains a valid public
  * deployment manifest and Soroban endpoint. Missing or malformed values keep
  * SPP disabled; they can never produce an executable placeholder config.
  */
@@ -170,9 +184,8 @@ export const SPP_MAINNET: SppDeploymentConfig | null = (() => {
 /**
  * Chain keys that may expose SPP UI / client entry points.
  *
- * Mainnet (`stellar`) is included ONLY when a valid public Mainnet deployment
- * manifest + Soroban RPC are present in the release environment, so the UI
- * never surfaces a private-payments entry point that has no backing contracts.
+ * Callers must still resolve the chain through `getSppConfigForChain`; Mainnet
+ * remains unavailable unless the manifest and RPC passed validation.
  */
 export const SPP_ENABLED_CHAIN_KEYS = [
   'stellar-testnet',
@@ -183,7 +196,7 @@ export type SppEnabledChainKey = (typeof SPP_ENABLED_CHAIN_KEYS)[number];
 
 /**
  * Returns SPP deployment config for a chain key, or `null` when SPP is not
- * available (mainnet, non-Stellar, or not yet configured).
+ * available (non-Stellar or not yet configured).
  */
 export function getSppConfigForChain(chainKey: string | null | undefined): SppDeploymentConfig | null {
   if (!chainKey) return null;
@@ -194,7 +207,7 @@ export function getSppConfigForChain(chainKey: string | null | undefined): SppDe
 
 /**
  * True when the active chain is allowed to use SPP product surfaces.
- * Mainnet Stellar returns false until a mainnet deployment is explicitly added.
+ * Mainnet Stellar returns false until a valid release manifest is present.
  */
 export function isSppEnabledForChain(chainKey: string | null | undefined): boolean {
   return getSppConfigForChain(chainKey) !== null;
@@ -251,7 +264,7 @@ export function getSppAllowPartialSync(config: SppDeploymentConfig): boolean {
  * Fail-closed preflight for SPP ops and UI.
  *
  * @throws Error with `code: 'SPP_NOT_ENABLED'` when the chain has no SPP config
- *   (includes mainnet by design).
+ *   (including an unconfigured Mainnet build).
  */
 export function assertSppEnabled(chainKey: string | null | undefined): SppDeploymentConfig {
   const config = getSppConfigForChain(chainKey);

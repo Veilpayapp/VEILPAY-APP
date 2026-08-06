@@ -13,7 +13,7 @@ import { useWalletStore } from '../stores/walletStore';
 import { isSppEnabledForChain, SPP_MAINNET } from '../constants/spp';
 
 const RETRY_COOLDOWN_MS = 60_000;
-/** Stellar testnet is the only SPP chain today — recover even if UI is on another network. */
+/** Preserve testnet dogfood recovery when the UI is on a non-SPP network. */
 const SPP_RECOVERY_CHAIN_KEY = 'stellar-testnet';
 
 export function useSppBackgroundSetup(): void {

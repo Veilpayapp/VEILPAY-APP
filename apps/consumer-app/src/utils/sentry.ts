@@ -2,7 +2,11 @@
  * Veilpay Sentry Stub
  * Telemetry has been physically stripped to reduce bundle size.
  * This module intercepts legacy Sentry calls and routes them to native console.
+ *
+ * SEC-009: All error context is sanitized to prevent leaking sensitive info.
  */
+
+import { sanitizeContextForSentry } from './sentrySanitizer';
 
 export function initSentry() {
   if (__DEV__) {
@@ -11,7 +15,9 @@ export function initSentry() {
 }
 
 export function captureError(error: Error, context?: Record<string, unknown>) {
-  console.error('Error:', error, 'Context:', context);
+  // SEC-009: Sanitize context before logging to remove sensitive keys
+  const sanitized = context ? sanitizeContextForSentry(context) : undefined;
+  console.error('Error:', error, 'Context:', sanitized);
 }
 
 export function withPerformanceSpan<T>(name: string, op: string, fn: () => T): T {

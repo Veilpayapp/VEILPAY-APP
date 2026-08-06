@@ -75,7 +75,10 @@ export const PRIVACY_ASSETS: PrivacyAsset[] = [
     icon: '◈',
     features: [],
     spp: SPP_MAINNET ?? undefined,
-    enabled: true,
+    enabled: SPP_MAINNET !== null,
+    disabledReason: SPP_MAINNET
+      ? undefined
+      : 'Private XLM is not configured for this Mainnet build.',
   },
 ];
 

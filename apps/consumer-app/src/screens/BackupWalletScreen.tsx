@@ -18,9 +18,9 @@ import { SovereignButton } from "../components/SovereignButton";
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { Icon } from '../components/Icon';
 import Toast, { useToast } from '../components/Toast';
-import { setClipboardString } from '../utils/clipboard';
 import { SecurityWarningModal } from '../components/SecurityWarningModal';
 import { useSecureScreen } from '../hooks/useSecureScreen';
+import { useClipboardAutoWipe } from '../hooks/useClipboardAutoWipe';
 
 export function BackupWalletScreen({ navigation }: any) {
   useSecureScreen('BackupWallet');
@@ -31,6 +31,9 @@ export function BackupWalletScreen({ navigation }: any) {
   const { biometricsEnabled } = useSettingsStore();
   const [mnemonic, setMnemonic] = useState<string[]>([]);
   const [isRevealed, setIsRevealed] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  const { copy: setClipboardWithTimer, clear: manualClear, timeRemaining: secondsRemaining } = useClipboardAutoWipe(30000);
+
   useEffect(() => {
     loadMnemonic();
     // react-doctor-disable-next-line react-doctor/exhaustive-deps -- mount-only load; loadMnemonic is defined in-component and stable for this purpose.
@@ -60,8 +63,6 @@ export function BackupWalletScreen({ navigation }: any) {
     setIsRevealed(true);
   };
 
-  const [showWarning, setShowWarning] = useState(false);
-
   const handleCopyRequest = () => {
     if (!isRevealed) return;
     setShowWarning(true);
@@ -69,15 +70,30 @@ export function BackupWalletScreen({ navigation }: any) {
 
   const handleCopyConfirm = async () => {
     setShowWarning(false);
-    await setClipboardString(mnemonic.join(' '));
-    toast.show('Phrase copied to clipboard', 'success');
+    const phrase = mnemonic.join(' ');
+    const success = await setClipboardWithTimer(phrase);
+    if (success) {
+      toast.show('Phrase copied - will clear in 30 seconds', 'success');
+    } else {
+      toast.show('Failed to copy to clipboard', 'error');
+    }
   };
 
   const handleCopyCancel = () => {
     setShowWarning(false);
   };
 
-  const handleBack = () => navigation.goBack();
+  const handleManualClear = () => {
+    manualClear();
+    toast.show('Clipboard cleared', 'success');
+  };
+
+  const handleBack = () => {
+    if (isRevealed) {
+      setIsRevealed(false);
+    }
+    navigation.goBack();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -135,20 +151,34 @@ export function BackupWalletScreen({ navigation }: any) {
               style={styles.actionButton}
             />
           ) : (
-            <View style={styles.revealedActions}>
-              <SovereignButton 
-                title="COPY TO CLIPBOARD" 
-                variant="outline" 
-                onPress={handleCopyRequest}
-                style={[styles.actionButton, { flex: 1 }]}
-              />
-              <SovereignButton 
-                title="DONE" 
-                variant="primary" 
-                onPress={handleBack}
-                style={[styles.actionButton, { flex: 0.8 }]}
-              />
-            </View>
+            <>
+              {secondsRemaining > 0 && (
+                <View style={styles.clipboardClearAlert}>
+                  <Icon name="info" size={16} color={colors.warning} />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.clipboardClearTitle}>Clipboard will clear in {secondsRemaining}s</Text>
+                    <Text style={styles.clipboardClearSubtext}>Your phrase will be automatically removed from clipboard</Text>
+                  </View>
+                  <PressableOpacity onPress={handleManualClear} style={styles.manualClearButton}>
+                    <Text style={styles.manualClearText}>Clear Now</Text>
+                  </PressableOpacity>
+                </View>
+              )}
+              <View style={styles.revealedActions}>
+                <SovereignButton
+                  title="COPY TO CLIPBOARD"
+                  variant="outline"
+                  onPress={handleCopyRequest}
+                  style={[styles.actionButton, { flex: 1 }]}
+                />
+                <SovereignButton
+                  title="DONE"
+                  variant="primary"
+                  onPress={handleBack}
+                  style={[styles.actionButton, { flex: 0.8 }]}
+                />
+              </View>
+            </>
           )}
 
           <View style={styles.infoBox}>
@@ -320,5 +350,39 @@ const themeStyles = (colors: any) => StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     lineHeight: 18,
+  },
+  clipboardClearAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.warningBg + '15',
+    borderWidth: 1,
+    borderColor: colors.warningBg + '30',
+    padding: 12,
+    borderRadius: 4,
+    marginBottom: 16,
+  },
+  clipboardClearTitle: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: colors.warning,
+    marginBottom: 4,
+  },
+  clipboardClearSubtext: {
+    fontFamily: typography.fontFamily.body,
+    fontSize: 11,
+    color: colors.textMuted,
+  },
+  manualClearButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.textTertiary,
+    borderRadius: 4,
+  },
+  manualClearText: {
+    fontFamily: typography.fontFamily.mono,
+    fontSize: 11,
+    fontWeight: 'bold',
+    color: colors.surfaceCard,
   },
 });

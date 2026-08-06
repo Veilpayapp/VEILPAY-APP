@@ -67,7 +67,7 @@ export {
   ensurePoolSession,
   closePoolSession,
   getSppCircuitsDir,
-  SPP_TESTNET_CONTRACT_CONFIG,
+  contractConfigFor,
 } from './sppPoolSession';
 
 export { getCircuitsReadiness, type CircuitsReadiness } from './sppCircuits';

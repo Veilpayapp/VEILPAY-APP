@@ -126,8 +126,9 @@ export async function prepareSppOp(
 ): Promise<SppPrepChecklist> {
   const blockers: string[] = [];
   let chainEnabled = false;
+  let config: SppDeploymentConfig | null = null;
   try {
-    requireContext(chainKey, ownerAddress);
+    config = requireContext(chainKey, ownerAddress).config;
     chainEnabled = true;
   } catch (e) {
     blockers.push(e instanceof Error ? e.message : 'Chain not enabled for SPP');
@@ -153,9 +154,9 @@ export async function prepareSppOp(
     blockers.push('Select pXLM under Privacy (Token Selector / Home) to finish privacy setup');
   } else if (!hasAspLeaf) {
     blockers.push('ASP leaf not derived yet — re-select pXLM or open Private status → Register ASP');
-  } else if (!aspInserted) {
+  } else if (!aspInserted && config) {
     blockers.push(
-      'ASP membership not on-chain yet — open Private status → Register ASP (testnet, permissionless)'
+      `ASP membership not on-chain yet — open Private status → Register ASP (${config.network}, permissionless)`
     );
   }
 
@@ -710,10 +711,10 @@ export async function ensureAspMembership(
 
 function aspCliHint(config: SppDeploymentConfig): string {
   return [
-    'Phase 0 dogfood (testnet, permissionless insert):',
+    `SPP recovery (${config.network}, permissionless insert):`,
     '1. spp onboard --account <alias> --accept --no-bootnode --no-register',
     '2. Compute leaf = poseidon2_hash2(note_pk, membership_blinding, domain=1)',
-    `3. stellar contract invoke --id ${config.aspMembershipId} --network testnet --source <alias> -- insert_leaf --leaf <decimal>`,
+    `3. stellar contract invoke --id ${config.aspMembershipId} --network ${config.network} --source <alias> -- insert_leaf --leaf <decimal>`,
     '4. Then deposit / transfer / withdraw against pool ' + config.poolId,
   ].join('\n');
 }

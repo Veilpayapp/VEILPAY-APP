@@ -53,6 +53,9 @@ nul
 .local/
 .github/
 .expo/
+.spp-debug/
+.stellar-pp/
+tmp-logs/
 
 # ── Apps not built by consumer-app EAS ────────────────────────────
 apps/backend/
@@ -61,9 +64,8 @@ apps/merchant-app/
 apps/auditor/
 
 # ── Heavy packages not needed for consumer preview/prod APK ───────
-# Full SPP submodule stays out of the archive. Poseidon2 for ASP leaf derive is
-# vendored under packages/spp-native/vendor/poseidon2 (self-contained for EAS).
-# eas-build-post-install runs cargo-ndk → modules/spp-native/.../jniLibs/*.so
+# EAS archives Git submodules as gitlinks, so the pool-ops hook sparsely fetches
+# the pinned SPP source commit on the worker instead of uploading vendor data.
 packages/vendor/
 packages/spp-native/target/
 packages/circuits/
@@ -128,6 +130,8 @@ apps/consumer-app/.maestro/
 apps/consumer-app/.turbo/
 apps/consumer-app/graphify-out/
 apps/consumer-app/storybook-static/
+apps/consumer-app/build-artifacts/
+apps/consumer-app/modules/spp-native/android/src/main/jniLibs/
 apps/consumer-app/*.log
 apps/consumer-app/tsc_*.log
 apps/consumer-app/tsc_output.txt

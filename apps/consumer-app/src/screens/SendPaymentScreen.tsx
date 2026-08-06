@@ -37,6 +37,7 @@ import type { RootStackParamList } from '../navigation/AppNavigator';
 import {
   canActivatePrivacyAsset,
   getPrivacyAssetById,
+  getPrivacyAssetsForChain,
   privacyAssetToPaymentToken,
 } from '../constants/privacyAssets';
 import { getLocalPrivateBalance } from '../utils/stellarSpp';
@@ -88,7 +89,8 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
   const privacyAssetId =
     routePrivacyAssetId ||
     selectedPrivacyAssetId ||
-    (activeChain?.key === 'stellar-testnet' ? 'spp-xlm-testnet' : null);
+    getPrivacyAssetsForChain(activeChain?.key).find(canActivatePrivacyAsset)?.id ||
+    null;
   const privacyAsset = getPrivacyAssetById(privacyAssetId);
   const isPrivacyMode =
     sendMode === 'shield' || sendMode === 'transfer' || sendMode === 'unshield';
@@ -484,7 +486,8 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
     const storePrivacyId = useSettingsStore.getState().selectedPrivacyAssetId;
     const preferPrivate =
       !!selectedToken.isPrivacyAsset ||
-      (!!storePrivacyId && activeChain?.key === 'stellar-testnet') ||
+      (!!storePrivacyId &&
+        getPrivacyAssetById(storePrivacyId)?.chainKey === activeChain?.key) ||
       !!routeForcePrivate;
 
     if (preferPrivate && selectedToken.isPrivacyAsset) {
@@ -577,7 +580,7 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
     (isPrivacyMode ||
       selectedToken.isPrivacyAsset ||
       !!routeForcePrivate ||
-      activeChain?.key === 'stellar-testnet');
+      privacyAsset.chainKey === activeChain?.key);
 
   const privateBalanceEmpty =
     (sendMode === 'transfer' || sendMode === 'unshield') &&
@@ -1226,4 +1229,3 @@ const themeStyles = (colors: any) => StyleSheet.create({
     // handled by AddressBookModal component
   },
 });
-

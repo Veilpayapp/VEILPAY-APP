@@ -18,6 +18,9 @@
       "autoIncrement": true,
       "channel": "preview",
       "environment": "preview",
+      "env": {
+        "SPP_NATIVE_POOL_OPS": "1"
+      },
       "android": {
         "buildType": "apk"
       }
@@ -26,6 +29,9 @@
       "autoIncrement": true,
       "channel": "production",
       "environment": "production",
+      "env": {
+        "SPP_NATIVE_POOL_OPS": "1"
+      },
       "android": {
         "buildType": "app-bundle"
       }

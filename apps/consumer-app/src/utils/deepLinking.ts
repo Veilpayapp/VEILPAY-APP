@@ -3,6 +3,7 @@ import {
   validateAddress as validateAddressCanonical,
   type SupportedChainType,
 } from './validation';
+import { validateDeepLinkPayment, deepLinkRateLimiter } from './deepLinkValidator';
 
 /** Chains that can appear in payment / WC deep links. */
 export type WalletChainType = SupportedChainType;
@@ -26,6 +27,9 @@ const ACTIONS: DeepLinkParams['action'][] = [
   'walletconnect',
   'transactions',
 ];
+
+/** Rate limiter for deep-link payment validation */
+export const deepLinkPaymentRateLimiter = deepLinkRateLimiter;
 
 /** Single source of truth: `utils/validation.ts` (same rules as wallet store / send). */
 function validateAddress(address: string, chainType?: WalletChainType): boolean {

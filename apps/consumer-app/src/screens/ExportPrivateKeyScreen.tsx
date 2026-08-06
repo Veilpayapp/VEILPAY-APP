@@ -1,9 +1,10 @@
 /**
  * Veilpay Export Private Key Screen
  * Allows users to securely view and export their raw private key
+ * SEC-003: Private key loaded ONLY after successful biometric authentication
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, StatusBar, Alert } from 'react-native';
 import { PressableOpacity } from '../components/PressableOpacity';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
@@ -15,6 +16,7 @@ import { getStoredMnemonic } from '../utils/transactions';
 import { mnemonicToAccount } from 'viem/accounts';
 import { Buffer } from 'buffer';
 import { useBiometrics } from '../hooks/useBiometrics';
+import { useClipboardAutoWipe } from '../hooks/useClipboardAutoWipe';
 import { SovereignCard } from "../components/SovereignCard";
 import { SovereignButton } from "../components/SovereignButton";
 import { ScreenBackButton } from '../components/ScreenBackButton';
@@ -32,29 +34,67 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
   const { isAvailable, authenticate } = useBiometrics();
   const { address, activeChain } = useWalletStore();
   const biometricsEnabled = useSettingsStore((state: any) => state.biometricsEnabled);
-  const [privateKey, setPrivateKey] = useState<string>('');
+
+  // SEC-011: Use clipboard auto-wipe hook to clear clipboard after 30 seconds
+  const {
+    copy: clipboardCopy,
+    clear: clipboardClear,
+    isClipboardActive,
+    countdownText,
+  } = useClipboardAutoWipe(30000);
+
+  // SEC-003: Use useRef instead of useState to avoid re-renders and React snapshots
+  // This prevents the private key from being captured in component snapshots or state logs
+  const privateKeyRef = useRef<string>('');
   const [isRevealed, setIsRevealed] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+
+  // SEC-003: Do NOT load private key on mount. Only load after biometric auth succeeds.
   useEffect(() => {
-    loadPrivateKey();
-    // react-doctor-disable-next-line react-doctor/exhaustive-deps -- mount-only load; loadPrivateKey is defined in-component and stable for this purpose.
+    return () => {
+      // SEC-003: Cleanup on unmount - clear sensitive data from memory
+      if (privateKeyRef.current) {
+        privateKeyRef.current = '';
+      }
+    };
   }, []);
 
-  const loadPrivateKey = async () => {
+  /**
+   * SEC-003: Load private key ONLY after successful biometric authentication.
+   * This ensures the private key is never exposed in React state before authentication,
+   * preventing DevTools inspection or state snapshots from revealing the key.
+   */
+  const loadPrivateKeyAfterAuth = async () => {
     try {
       const words = await getStoredMnemonic();
-      if (words) {
+      if (words && words.length > 0) {
         const phrase = words.join(' ');
         const account = mnemonicToAccount(phrase, { path: "m/44'/60'/0'/0/0" });
         const hdKey = account.getHdKey();
         if (hdKey.privateKey) {
-          setPrivateKey('0x' + Buffer.from(hdKey.privateKey).toString('hex'));
+          // Store in ref, not state - prevents React snapshots
+          privateKeyRef.current = '0x' + Buffer.from(hdKey.privateKey).toString('hex');
         }
+
+        // SEC-003: Clear mnemonic array after use
+        for (let i = 0; i < words.length; i++) {
+          words[i] = '';
+        }
+        words.length = 0;
       }
     } catch (error) {
       toast.show('Failed to load private key', 'error');
+      privateKeyRef.current = '';
+      throw error;
     }
   };
 
+  /**
+   * SEC-003: Handle reveal button press.
+   * Step 1: Authenticate user with biometrics/PIN
+   * Step 2: Only if auth succeeds, load the private key into memory
+   * Step 3: Show revealed UI
+   */
   const handleReveal = async () => {
     // ALWAYS require authentication to view private key (fallback to Device PIN if no biometrics)
     const result = await authenticate('export_key', true);
@@ -65,10 +105,17 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
       );
       return;
     }
-    setIsRevealed(true);
-  };
 
-  const [showWarning, setShowWarning] = useState(false);
+    // SEC-003: ONLY load key after successful authentication
+    try {
+      await loadPrivateKeyAfterAuth();
+      setIsRevealed(true);
+    } catch (error) {
+      toast.show('Failed to load private key after authentication', 'error');
+      setIsRevealed(false);
+      privateKeyRef.current = '';
+    }
+  };
 
   const handleCopyRequest = () => {
     if (!isRevealed) return;
@@ -77,15 +124,28 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
 
   const handleCopyConfirm = async () => {
     setShowWarning(false);
-    await setClipboardString(privateKey);
-    toast.show('Private key copied to clipboard', 'success');
+    if (privateKeyRef.current) {
+      // SEC-011: Use clipboard auto-wipe to clear clipboard after 30 seconds
+      await clipboardCopy(privateKeyRef.current);
+      toast.show('Private key copied to clipboard - will clear in 30s', 'success');
+    }
   };
 
   const handleCopyCancel = () => {
     setShowWarning(false);
   };
 
-  const handleBack = () => navigation.goBack();
+  /**
+   * SEC-003: Clear private key when leaving the screen.
+   * This ensures the key is not held in memory after navigation.
+   */
+  const handleBack = () => {
+    if (isRevealed) {
+      privateKeyRef.current = '';
+      setIsRevealed(false);
+    }
+    navigation.goBack();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -99,7 +159,7 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Animated.View entering={FadeInDown.duration(400).springify().damping(18).stiffness(150)} style={styles.content}>
-          
+
           {/* Warning Banner */}
           <View style={styles.warningBanner}>
             <View style={styles.warningIconContainer}>
@@ -131,32 +191,48 @@ export function ExportPrivateKeyScreen({ navigation }: any) {
               </View>
             ) : (
               <Animated.View entering={FadeIn} style={styles.revealedKeyContainer}>
-                <Text style={styles.privateKeyText}>{privateKey}</Text>
+                <Text style={styles.privateKeyText}>{privateKeyRef.current}</Text>
               </Animated.View>
             )}
           </SovereignCard>
 
           {!isRevealed ? (
-            <SovereignButton 
-              title="REVEAL PRIVATE KEY" 
-              variant="primary" 
+            <SovereignButton
+              title="REVEAL PRIVATE KEY"
+              variant="primary"
               onPress={handleReveal}
               style={styles.actionButton}
             />
           ) : (
-            <View style={styles.revealedActions}>
-              <SovereignButton 
-                title="COPY KEY" 
-                variant="outline" 
-                onPress={handleCopyRequest}
-                style={[styles.actionButton, { flex: 1 }]}
-              />
-              <SovereignButton 
-                title="DONE" 
-                variant="primary" 
-                onPress={handleBack}
-                style={[styles.actionButton, { flex: 0.8 }]}
-              />
+            <View>
+              <View style={styles.revealedActions}>
+                <SovereignButton
+                  title="COPY KEY"
+                  variant="outline"
+                  onPress={handleCopyRequest}
+                  style={[styles.actionButton, { flex: 1 }]}
+                />
+                <SovereignButton
+                  title="DONE"
+                  variant="primary"
+                  onPress={handleBack}
+                  style={[styles.actionButton, { flex: 0.8 }]}
+                />
+              </View>
+              {isClipboardActive && countdownText && (
+                <View style={styles.clipboardClearAlert}>
+                  <Icon name="info" size={16} color={colors.textMuted} />
+                  <Text style={styles.clipboardClearText}>
+                    {countdownText}
+                  </Text>
+                  <SovereignButton
+                    title="CLEAR NOW"
+                    variant="outline"
+                    onPress={clipboardClear}
+                    style={styles.clearNowButton}
+                  />
+                </View>
+              )}
             </View>
           )}
 
@@ -331,5 +407,25 @@ const themeStyles = (colors: any) => StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     lineHeight: 18,
+  },
+  clipboardClearAlert: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.warningBg + '15',
+    padding: 12,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.warningBg + '30',
+    marginTop: 12,
+    gap: 8,
+  },
+  clipboardClearText: {
+    flex: 1,
+    fontFamily: typography.fontFamily.body,
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  clearNowButton: {
+    minHeight: 32,
   },
 });

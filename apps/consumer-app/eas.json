@@ -1,14 +1,8 @@
 {
   "cli": {
-    "version": ">= 21.7.0"
+    "version": ">= 5.0.0"
   },
   "build": {
-    "base": {
-      "node": "20.11.0",
-      "android": {
-        "image": "default"
-      }
-    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
@@ -20,6 +14,7 @@
     },
     "preview": {
       "distribution": "internal",
+      "autoIncrement": true,
       "channel": "preview",
       "environment": "preview",
       "env": {
@@ -31,6 +26,7 @@
     },
     "production": {
       "distribution": "store",
+      "autoIncrement": true,
       "channel": "production",
       "environment": "production",
       "env": {

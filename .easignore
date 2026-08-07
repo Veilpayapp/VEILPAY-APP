@@ -8,7 +8,8 @@
 # Goal: exclude vendor/circuits/targets/tooling so upload stays small.
 
 # ── From root .gitignore ──────────────────────────────────────────
-node_modules/
+# Removing global node_modules/ exclusion — we include root node_modules in archive
+# for EAS local builds to use. .easignore is used instead of .gitignore for archiving.
 .pnpm-store/
 dist/
 build/

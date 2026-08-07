@@ -63,20 +63,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # DEV-001 fix: pin EAS CLI via `npx -p eas-cli@<version>` instead of
-      # `npm install -g eas-cli`. A global install bypasses the lockfile and
-      # makes the build non-reproducible. The `-p` flag pins the package;
-      # `eas` is the binary name exposed by the `eas-cli` package. Bump the
-      # pinned major version deliberately in a dedicated commit.
-      #
-      # v20 (current major) is the floor required for Expo SDK 55 — the
-      # previously pinned v13 targets SDK 49-50 and crashes on the SDK 55
-      # build profile format. Bumping to v20 keeps the build reproducible
-      # and matches consumer-app's `expo@~55.0.27`.
-      - name: EAS Build
+      - name: EAS Build (Local)
         working-directory: apps/consumer-app
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           profile="${{ github.event.inputs.profile || 'preview' }}"
-          npx -p eas-cli@20 eas build --platform android --profile "$profile" --non-interactive --no-wait
+          npx -p eas-cli@latest eas build --platform android --profile "$profile" --local --non-interactive

@@ -3,7 +3,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/'],
   transformIgnorePatterns: [
-    'node_modules/(?!(?:.*\\.pnpm/)?(?:(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|viem|@scure|@noble|@solana|uuid|jayson|ed25519-hd-key|moti|@motify|@web3icons.*))',
+    'node_modules/(?!(?:.*\\.pnpm/)?(?:(jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|viem|@scure|@noble|@noble/hashes|@solana|uuid|jayson|ed25519-hd-key|moti|@motify|@web3icons|circomlibjs.*))',
   ],
   transform: {
     '^.+\\.(js|jsx|ts|tsx|mjs)$': 'babel-jest',

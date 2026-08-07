@@ -27,7 +27,6 @@ module.exports = () => {
         backgroundColor: '#0A0A0B',
       },
       package: 'com.veilpay.consumer',
-      versionCode: 13,
       permissions: ['CAMERA', 'INTERNET', 'VIBRATE', 'POST_NOTIFICATIONS'],
     },
     web: { favicon: './assets/favicon.png' },

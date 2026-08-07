@@ -34,7 +34,8 @@
       },
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "ios": {}
     }
   }
 }

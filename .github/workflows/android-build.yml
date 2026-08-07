@@ -1,0 +1,71 @@
+name: Android Build (EAS Backup)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android-build:
+    runs-on: ubuntu-latest
+    name: Build Android APK
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: config/.nvmrc
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.0.0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Expo
+        run: pnpm --filter consumer-app exec eas --version
+
+      - name: Build Android APK (EAS local)
+        working-directory: apps/consumer-app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          pnpm exec eas build --platform android \
+            --local \
+            --output=./app-release.apk
+
+      - name: Upload APK to artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: veilpay-android-apk
+          path: apps/consumer-app/app-release.apk
+          retention-days: 30
+
+      - name: Notify build completion
+        if: always()
+        run: |
+          echo "Build status: ${{ job.status }}"
+          echo "APK available in artifacts"

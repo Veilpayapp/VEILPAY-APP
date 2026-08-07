@@ -45,6 +45,8 @@ nul
 
 # Logs & one-off dump files (never commit)
 *.log
+*.stderr.log
+*.stdout.log
 npm-debug.log*
 pnpm-debug.log*
 eslint-*.txt
@@ -54,6 +56,8 @@ tmp_*.diff
 react-doctor-report*.json
 figma-dump.json
 veilpay-docs.zip
+.spp-cli-build-*.log
+.spp-serve.*.log
 
 # Local media scratch (not product assets)
 New logo/

@@ -8,7 +8,7 @@
     <a href="docs/getting-started/current-status.md">Current Status</a> ·
     <a href="https://app.chroniclehq.com/share/08cdfd8b-39c3-4af4-ab0b-5fe773abee86/2c44d5e6-1111-4075-9299-82d00177b394/01fd3b7e-f79c-4f2a-8495-aa01d594c213">Presentation</a> ·
     <a href="docs/architecture/system-architecture.md">Architecture</a> ·
-    <a href="docs/root/SECURITY.md">Security</a>
+    <a href="SECURITY.md">Security</a>
   </p>
   <p>
     <a href="https://expo.dev/"><img src="https://img.shields.io/badge/Expo%20%2F%20React%20Native-000020?logo=expo&logoColor=white" alt="Expo and React Native"></a>

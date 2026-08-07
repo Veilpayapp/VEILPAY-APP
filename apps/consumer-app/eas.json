@@ -4,6 +4,9 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "base": {
+      "node": "20.11.0"
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
@@ -34,6 +37,13 @@
       },
       "android": {
         "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "track": "internal"
       }
     }
   }

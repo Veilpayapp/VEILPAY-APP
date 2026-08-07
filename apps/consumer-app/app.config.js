@@ -1,18 +1,26 @@
 const path = require('path');
 
-module.exports = () => {
-  // Load version.json with absolute path
-  const versionPath = path.join(__dirname, 'version.json');
-  const versionInfo = require(versionPath);
+let versionInfo = {
+  version: '1.0.2',
+  ios: { buildNumber: '13' },
+  android: { versionCode: 13 }
+};
 
-  // Load dotenv if available (for dev)
+try {
+  versionInfo = require('./version.json');
+} catch (err) {
+  console.warn('⚠️  Failed to load version.json, using fallback:', err.message);
+}
+
+module.exports = () => {
+  // Load .env if available (dev only)
   try {
     require('dotenv').config({ path: path.join(__dirname, '.env') });
-  } catch (e) {
-    // dotenv not available in EAS build
+  } catch {
+    // dotenv not installed or .env missing
   }
 
-  return {
+  const expoConfig = {
     name: 'Veilpay',
     slug: 'veilpay',
     version: versionInfo.version,
@@ -21,7 +29,7 @@ module.exports = () => {
     userInterfaceStyle: 'automatic',
     runtimeVersion: { policy: 'appVersion' },
     updates: {
-      url: 'https://u.expo.dev/b083fea1-cac0-4e6c-a07d-81ec0417cf36',
+      url: process.env.EXPO_PUBLIC_EAS_UPDATE_URL || 'https://u.expo.dev/b083fea1-cac0-4e6c-a07d-81ec0417cf36',
       enabled: true,
       checkAutomatically: 'NEVER',
       fallbackToCacheTimeout: 0,
@@ -30,7 +38,7 @@ module.exports = () => {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.veilpay.consumer',
-      buildNumber: String(versionInfo.ios.buildNumber),
+      buildNumber: versionInfo.ios.buildNumber,
     },
     android: {
       adaptiveIcon: {
@@ -63,7 +71,11 @@ module.exports = () => {
     ],
     scheme: 'veilpay',
     extra: {
-      eas: { projectId: 'b083fea1-cac0-4e6c-a07d-81ec0417cf36' },
+      eas: {
+        projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID || 'b083fea1-cac0-4e6c-a07d-81ec0417cf36'
+      },
     },
   };
+
+  return expoConfig;
 };

@@ -14,7 +14,6 @@
     },
     "preview": {
       "distribution": "internal",
-      "autoIncrement": true,
       "channel": "preview",
       "environment": "preview",
       "env": {
@@ -26,7 +25,6 @@
     },
     "production": {
       "distribution": "store",
-      "autoIncrement": true,
       "channel": "production",
       "environment": "production",
       "env": {

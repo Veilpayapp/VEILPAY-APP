@@ -1,5 +1,18 @@
 const path = require('path');
-const versionInfo = require('./version.json');
+
+// Load version.json — must be present for builds
+let versionInfo;
+try {
+  versionInfo = require('./version.json');
+} catch (err) {
+  console.error('Failed to load version.json:', err.message);
+  // Fallback to prevent build failure
+  versionInfo = {
+    version: '1.0.0',
+    ios: { buildNumber: '1' },
+    android: { versionCode: 1 }
+  };
+}
 
 /**
  * VeilPay app config.

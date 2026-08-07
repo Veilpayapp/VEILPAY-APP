@@ -41,6 +41,7 @@
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "@expo-google-fonts/manrope": "^0.4.2",
+    "@expo/env": "^2.4.2",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@noble/secp256k1": "2.1.0",
     "@react-native-async-storage/async-storage": "2.2.0",

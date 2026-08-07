@@ -15,6 +15,7 @@ module.exports = {
     '^stellar-sdk$': '<rootDir>/__mocks__/stellar-sdk.js',
     '^stellar-sdk/rpc$': '<rootDir>/__mocks__/stellar-sdk-rpc.js',
     '^expo-file-system/legacy$': '<rootDir>/__mocks__/expo-file-system-legacy.js',
+    '^@noble/hashes/sha3$': '<rootDir>/__mocks__/@noble/hashes/sha3.js',
   },
   collectCoverageFrom: [
     'src/utils/**/*.{ts,tsx}',

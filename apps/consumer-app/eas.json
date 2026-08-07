@@ -23,9 +23,6 @@
       },
       "android": {
         "buildType": "apk"
-      },
-      "hook": {
-        "postExport": "eas-hooks/inject-doppler-preview.sh"
       }
     },
     "production": {
@@ -37,9 +34,6 @@
       },
       "android": {
         "buildType": "app-bundle"
-      },
-      "hook": {
-        "postExport": "eas-hooks/inject-doppler-production.sh"
       }
     }
   }

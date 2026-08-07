@@ -177,14 +177,8 @@ jest.mock('expo-haptics', () => ({
   },
 }));
 
-jest.mock('expo-constants', () => ({
-  expoConfig: {
-    extra: {
-      transakApiKey: 'test-transak-key',
-    },
-  },
-  manifest: {},
-}));
+// expo-constants is mocked via moduleNameMapper in jest.config.js
+// No need to mock here — the mapping handles automatic redirection
 
 jest.mock('expo-linking', () => ({
   createURL: jest.fn(),

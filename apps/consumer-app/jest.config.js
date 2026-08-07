@@ -11,6 +11,10 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'mjs'],
   moduleNameMapper: {
     '^rpc-websockets$': '<rootDir>/__mocks__/rpc-websockets.js',
+    '^expo-constants$': '<rootDir>/__mocks__/expo-constants.js',
+    '^stellar-sdk$': '<rootDir>/__mocks__/stellar-sdk.js',
+    '^stellar-sdk/rpc$': '<rootDir>/__mocks__/stellar-sdk-rpc.js',
+    '^expo-file-system/legacy$': '<rootDir>/__mocks__/expo-file-system-legacy.js',
   },
   collectCoverageFrom: [
     'src/utils/**/*.{ts,tsx}',

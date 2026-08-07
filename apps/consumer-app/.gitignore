@@ -42,6 +42,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+# But track build configuration files
+!/android/app/build.gradle
+!/android/build.gradle
 
 *storybook.log
 storybook-static

@@ -1,4 +1,4 @@
-module.exports = {
+module.exports = () => ({
   name: 'Veilpay',
   slug: 'veilpay',
   version: '1.0.2',
@@ -51,4 +51,4 @@ module.exports = {
   extra: {
     eas: { projectId: 'b083fea1-cac0-4e6c-a07d-81ec0417cf36' },
   },
-};
+});

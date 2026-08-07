@@ -28,11 +28,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+        env:
+          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9.0.0
+          version: latest
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -54,11 +56,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+        env:
+          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9.0.0
+          version: latest
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

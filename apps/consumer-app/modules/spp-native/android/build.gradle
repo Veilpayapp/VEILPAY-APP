@@ -8,13 +8,6 @@ plugins {
 group = 'com.veilpay'
 version = '0.1.0'
 
-repositories {
-  maven {
-    url = findRustlsPlatformVerifierMavenRepo()
-    metadataSources { artifact() }
-  }
-}
-
 android {
   namespace "expo.modules.sppnative"
   defaultConfig {
@@ -33,56 +26,5 @@ android {
 }
 
 dependencies {
-  // The crate ships an AAR in a local Maven repo without a POM; force AAR
-  // resolution so Gradle does not look for a default .jar artifact.
-  implementation "rustls:rustls-platform-verifier:0.1.1@aar"
-}
-
-String findRustlsPlatformVerifierMavenRepo() {
-  def manifest = file("../../../../../packages/spp-native/Cargo.toml")
-  def sppNativeDir = manifest.parentFile
-
-  // First, check if the maven repo already exists (built by post-install hook)
-  def mavenRepoPath = new File(sppNativeDir, "target/cargo-ndk/maven")
-  if (mavenRepoPath.exists() && mavenRepoPath.listFiles().length > 0) {
-    println "[SPP Native] Using pre-built maven repo: ${mavenRepoPath.absolutePath}"
-    return mavenRepoPath.absolutePath
-  }
-
-  // If repo doesn't exist, try to query cargo (may fail in EAS)
-  // Resolve cargo path: use CARGO env var, or construct from CARGO_HOME, or fallback to "cargo"
-  def cargoExe = System.getenv("CARGO")
-  if (!cargoExe) {
-    def cargoHome = System.getenv("CARGO_HOME")
-    if (cargoHome) {
-      def cargoPath = new File(cargoHome, "bin/cargo")
-      if (cargoPath.exists()) {
-        cargoExe = cargoPath.absolutePath
-      }
-    }
-  }
-  cargoExe = cargoExe ?: "cargo"
-
-  try {
-    def metadataText = providers.exec {
-      it.workingDir = sppNativeDir
-      commandLine(cargoExe, "metadata", "--format-version", "1", "--filter-platform", "aarch64-linux-android", "--manifest-path", manifest.absolutePath)
-    }.standardOutput.asText.get()
-
-    def metadata = new JsonSlurper().parseText(metadataText)
-    def rustlsAndroid = metadata.packages.find { it.name == "rustls-platform-verifier-android" }
-    if (rustlsAndroid == null) {
-      throw new GradleException("Cargo metadata did not include rustls-platform-verifier-android; build packages/spp-native with Android pool-ops dependencies first")
-    }
-
-    return new File(file(rustlsAndroid.manifest_path).parentFile, "maven").path
-  } catch (Exception e) {
-    // If cargo fails, assume the maven repo exists at the default location
-    println "[SPP Native] Cargo query failed (${e.message}), assuming pre-built maven repo exists"
-    def defaultMavenPath = new File(sppNativeDir, "target/cargo-ndk/maven")
-    if (defaultMavenPath.exists()) {
-      return defaultMavenPath.absolutePath
-    }
-    throw new GradleException("Cannot find SPP native maven repo and cargo is not available. Ensure the post-install hook has built the native module.")
-  }
+  // No external dependencies needed - native .so files are pre-built by post-install hook
 }

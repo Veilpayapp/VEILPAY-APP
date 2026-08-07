@@ -13,7 +13,7 @@ This document is the **security policy and threat overview** for the monorepo. D
 > [!IMPORTANT]
 > Do **not** open a public GitHub issue for security bugs.
 
-1. **Email:** `security@veilpay.app`
+1. **Email:** `veilpay@proton.me`
 2. **Subject:** `[SECURITY] <short title>`
 3. **Include:** description, repro steps, impact, and a suggested fix if you have one.
 

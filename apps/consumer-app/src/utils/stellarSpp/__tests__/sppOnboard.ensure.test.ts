@@ -46,6 +46,21 @@ jest.mock('ed25519-hd-key', () => ({
   derivePath: jest.fn(() => ({ key: Buffer.alloc(32) })),
 }));
 
+// Mock Keypair.fromRawEd25519Seed method directly
+jest.mock('stellar-sdk', () => {
+  const actualStellar = jest.requireActual('stellar-sdk');
+  return {
+    ...actualStellar,
+    Keypair: {
+      ...actualStellar.Keypair,
+      fromRawEd25519Seed: jest.fn().mockReturnValue({
+        publicKey: jest.fn(() => OWNER),
+        sign: jest.fn(),
+      }),
+    },
+  };
+});
+
 const OWNER = 'GBU4T3ZUDWDCD3XQ2E7DNQ7V6A5FPR24LW7B5XH7LY4TMJXMITXG7ZME';
 
 function putAccount(record: Record<string, unknown>) {
@@ -72,12 +87,8 @@ describe('ensureSppAccountReady', () => {
       updatedAt: Date.now(),
     });
 
-    // Keypair.publicKey must match OWNER for insert to proceed past address check.
-    const stellar = require('stellar-sdk');
-    jest.spyOn(stellar.Keypair, 'fromRawEd25519Seed').mockReturnValue({
-      publicKey: () => OWNER,
-      sign: jest.fn(),
-    });
+    // Mock is already configured in jest.mock() block above.
+    // Keypair.fromRawEd25519Seed returns mocked keypair with OWNER public key.
 
     const { ensureSppAccountReady } = await import('../sppOnboard');
     const result = await ensureSppAccountReady('stellar-testnet', OWNER);

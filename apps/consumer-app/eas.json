@@ -22,7 +22,6 @@
       "distribution": "internal",
       "channel": "preview",
       "environment": "preview",
-      "autoIncrement": true,
       "env": {
         "SPP_NATIVE_POOL_OPS": "1"
       },
@@ -34,7 +33,6 @@
       "distribution": "store",
       "channel": "production",
       "environment": "production",
-      "autoIncrement": true,
       "env": {
         "SPP_NATIVE_POOL_OPS": "1"
       },

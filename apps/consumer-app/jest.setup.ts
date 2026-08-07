@@ -127,6 +127,27 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 
+/**
+ * SEC-002: Crypto.randomUUID polyfill for Jest
+ * Crypto.randomUUID() returns undefined in Jest environment.
+ * This polyfill generates proper v4 UUIDs for biometric token generation.
+ */
+if (!global.crypto) {
+  (global as any).crypto = {};
+}
+
+const generateUUIDv4 = (): string => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+if (!global.crypto.randomUUID) {
+  global.crypto.randomUUID = generateUUIDv4;
+}
+
 jest.useFakeTimers();
 global.fetch = jest.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) })) as unknown as typeof fetch;
 
@@ -193,3 +214,22 @@ jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(() => Promise.resolve()),
   deleteItemAsync: jest.fn(() => Promise.resolve()),
 }));
+
+/**
+ * SEC-002: Polyfill Crypto.randomUUID() for Jest environment
+ * In Jest, Crypto.randomUUID() returns undefined, breaking token generation.
+ * This polyfill ensures cryptographically secure UUIDs are generated in tests.
+ */
+if (!global.Crypto) {
+  (global as any).Crypto = {};
+}
+
+if (!global.Crypto.randomUUID || global.Crypto.randomUUID() === undefined) {
+  global.Crypto.randomUUID = (): string => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  };
+}

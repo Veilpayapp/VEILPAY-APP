@@ -1,11 +1,13 @@
 {
   "cli": {
-    "version": ">= 5.0.0",
-    "appVersionSource": "remote"
+    "version": ">= 21.7.0"
   },
   "build": {
     "base": {
-      "node": "20.11.0"
+      "node": "20.11.0",
+      "android": {
+        "image": "default"
+      }
     },
     "development": {
       "developmentClient": true,
@@ -18,9 +20,9 @@
     },
     "preview": {
       "distribution": "internal",
-      "autoIncrement": true,
       "channel": "preview",
       "environment": "preview",
+      "autoIncrement": true,
       "env": {
         "SPP_NATIVE_POOL_OPS": "1"
       },
@@ -29,9 +31,10 @@
       }
     },
     "production": {
-      "autoIncrement": true,
+      "distribution": "store",
       "channel": "production",
       "environment": "production",
+      "autoIncrement": true,
       "env": {
         "SPP_NATIVE_POOL_OPS": "1"
       },

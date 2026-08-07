@@ -23,7 +23,8 @@
       },
       "android": {
         "buildType": "apk"
-      }
+      },
+      "preInstallHook": "eas-hooks/inject-doppler-preview.sh"
     },
     "production": {
       "autoIncrement": true,
@@ -34,7 +35,8 @@
       },
       "android": {
         "buildType": "app-bundle"
-      }
+      },
+      "preInstallHook": "eas-hooks/inject-doppler-production.sh"
     }
   }
 }

@@ -151,15 +151,13 @@ flowchart LR
 ## 📁 Monorepo Layout
 
 ```text
-root/
-  ├── config/            # Root configuration files (tsconfig, turbo, prettier, eslint, etc.)
-  ├── infra/             # Infrastructure as code and deployment configurations
+config/                  # Root configuration files (tsconfig, turbo, prettier, eslint, etc.)
+infra/                   # Infrastructure as code and deployment configurations
 
 apps/
   ├── consumer-app/      # Expo React Native wallet (authoritative UI)
   ├── backend/           # Express API and workers (authoritative API)
-  ├── indexer/           # Chain indexing and status detection
-  └── graphify-out/      # Generated GraphQL artifacts and typings
+  └── indexer/           # Chain indexing and status detection
 
 packages/
   ├── shared/            # Shared types and validation contracts
@@ -168,10 +166,10 @@ packages/
   ├── contracts-solana/  # Solana programs and Anchor tooling
   ├── spp-native/        # Rust native bridge for Stellar Private Payments
   ├── auditor/           # Security auditing and verification tooling
-  ├── antigravity-utils/ # Utility functions and helpers
   └── vendor/            # Vendored dependencies (submodules)
 
 docs/                    # Product, architecture, protocol, and security documentation
+plans/                   # Roadmap and readiness plans
 e2e/                     # Cross-service end-to-end tests
 ```
 

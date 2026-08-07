@@ -28,8 +28,20 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
         with:
-          version: 9.0.0
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -45,7 +57,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Setup Expo
-        run: pnpm --filter consumer-app exec eas --version
+        working-directory: apps/consumer-app
+        run: npx -p eas-cli@20 eas --version
 
       - name: Build Android APK (EAS local)
         working-directory: apps/consumer-app

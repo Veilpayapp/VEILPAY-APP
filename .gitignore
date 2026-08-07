@@ -14,9 +14,18 @@ build-artifacts/
 .env
 .env.local
 .env.*.local
-!.env.example
+.env.example
 env_backup/
 env_backup.zip
+
+# Config files (local only, never commit)
+.eslintrc.js
+.npmrc
+.prettierrc
+.prettierignore
+
+# Planning & roadmap (local only)
+plans/
 
 # IDE
 .idea/

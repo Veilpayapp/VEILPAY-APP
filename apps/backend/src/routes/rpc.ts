@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { getRpcUrl } from '../lib/rpcEndpoints';
+import { playIntegrityAuth } from '../middleware/playIntegrityAuth';
 import {
   consumeRpcBudget,
   isRpcCircuitOpen,
@@ -18,30 +19,6 @@ const router = Router();
 // Read-only methods only. Signing/admin/debug/trace methods are rejected so an
 // attacker who discovers the endpoint cannot burn provider credits on
 // expensive calls or attempt write operations through our key.
-
-const ALLOWED_RPC_METHODS: ReadonlySet<string> = new Set([
-  // EVM — standard read
-  'eth_getBalance', 'eth_call', 'eth_blockNumber', 'eth_chainId',
-  'eth_getTransactionByHash', 'eth_getTransactionReceipt',
-  'eth_getLogs', 'eth_getCode', 'eth_getStorageAt',
-  'eth_gasPrice', 'eth_estimateGas', 'eth_getTransactionCount',
-  'eth_feeHistory', 'eth_maxPriorityFeePerGas',
-  'eth_getBlockByNumber', 'eth_getBlockByHash', 'eth_getBlockReceipts',
-  'eth_getBlockTransactionCountByNumber', 'eth_getBlockTransactionCountByHash',
-  'eth_getUncleByBlockNumberAndIndex', 'eth_getUncleCountByBlockNumber',
-  'net_version', 'net_listening', 'net_peerCount',
-  'web3_clientVersion',
-  // Alchemy-enhanced read
-  'alchemy_getTokenBalances', 'alchemy_getTokenMetadata',
-  'alchemy_getAssetTransfers', 'alchemy_getTokenAllowance',
-  // Solana JSON-RPC read
-  'getBalance', 'getTokenAccountsByOwner', 'getAccountInfo',
-  'getSlot', 'getSlotLeader', 'getLatestBlockhash', 'getBlock',
-  'getSignatureStatuses', 'getTransaction', 'getSignaturesForAddress',
-  'getTokenAccountBalance', 'getEpochInfo', 'getHealth', 'getVersion',
-  'getInflationGovernor', 'getInflationRate', 'getSupply',
-  'getMinimumBalanceForRentExemption', 'getRecentPerformanceSamples',
-]);
 
 /** SEC-004: hard caps on batch size, eth_getLogs range, and response body. */
 const MAX_BATCH_SIZE = 10;
@@ -62,6 +39,12 @@ function extractMethods(body: unknown): string[] {
   return [];
 }
 
+import { validationService } from '../services/validationService';
+
+// ... (other imports)
+
+// ...
+
 function checkMethodAllowlist(body: unknown): { allowed: boolean; disallowed?: string[] } {
   const methods = extractMethods(body);
   if (methods.length === 0) {
@@ -69,7 +52,7 @@ function checkMethodAllowlist(body: unknown): { allowed: boolean; disallowed?: s
     // on the chain allowlist + upstream to reject malformed requests.
     return { allowed: true };
   }
-  const disallowed = methods.filter((m) => !ALLOWED_RPC_METHODS.has(m));
+  const disallowed = methods.filter((m) => !validationService.isMethodAllowed(m, 'all'));
   return disallowed.length > 0 ? { allowed: false, disallowed } : { allowed: true };
 }
 
@@ -283,7 +266,7 @@ async function rpcGuardRejects(res: Response): Promise<boolean> {
 // ─── Routes ────────────────────────────────────────────────────────────────
 
 // JSON-RPC POST proxy — used by EVM (viem) and Solana JSON-RPC clients.
-router.post('/:chainKey', asyncRoute(async (req: Request, res: Response) => {
+router.post('/:chainKey', playIntegrityAuth, asyncRoute(async (req: Request, res: Response) => {
   const { chainKey } = req.params;
 
   const targetUrl = getRpcUrl(chainKey);
@@ -346,7 +329,7 @@ router.post('/:chainKey', asyncRoute(async (req: Request, res: Response) => {
 
 // REST GET passthrough — used by Stellar (`/accounts/...`) which exposes
 // an HTTP REST API rather than JSON-RPC.
-router.get('/:chainKey/*', asyncRoute(async (req: Request, res: Response) => {
+router.get('/:chainKey/*', playIntegrityAuth, asyncRoute(async (req: Request, res: Response) => {
   const { chainKey } = req.params;
   const subPath: string = req.params[0] || '';
 

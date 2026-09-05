@@ -10,7 +10,13 @@ const originalEnv = process.env;
 
 beforeEach(() => {
   jest.resetModules();
-  process.env = { ...originalEnv };
+  // NOTE: Do NOT reassign `process.env` to a new object here. babel-preset-expo
+  // rewrites `process.env.EXPO_PUBLIC_*` reads in source to `expo/virtual/env`,
+  // which captures the original `process.env` object by reference. Replacing the
+  // object would make runtime assignments below invisible to the code under test.
+  // Reset the specific keys instead.
+  process.env.NODE_ENV = 'test';
+  delete process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
 });
 
 afterEach(() => {

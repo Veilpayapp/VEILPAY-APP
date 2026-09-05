@@ -33,22 +33,24 @@ export type SppNativeExpoModule = {
   version(): string;
   ping(input?: string | null): string;
   capabilities(): SppNativeCapabilities;
-  deposit(amount: string): SppNativeOpResult;
-  transfer(amount: string, recipient: string): SppNativeOpResult;
-  withdraw(amount: string, to: string): SppNativeOpResult;
-  ensureAsp(): SppNativeOpResult;
-  deriveKeys?(sigHex: string, network: string): SppNativeOpResult;
-  poolReadiness?(): SppNativeOpResult;
-  poolOpen?(configJson: string): SppNativeOpResult;
-  poolClose?(): SppNativeOpResult;
+  deposit(amount: string): Promise<SppNativeOpResult>;
+  transfer(amount: string, recipient: string): Promise<SppNativeOpResult>;
+  withdraw(amount: string, to: string): Promise<SppNativeOpResult>;
+  ensureAsp(): Promise<SppNativeOpResult>;
+  deriveKeys?(sigHex: string, network: string): Promise<SppNativeOpResult>;
+  poolReadiness?(): Promise<SppNativeOpResult>;
+  poolOpen?(configJson: string): Promise<SppNativeOpResult>;
+  poolClose?(): Promise<SppNativeOpResult>;
   /** DATA-001: sync encrypted notes from chain into native store. */
-  poolSync?(): SppNativeOpResult;
+  poolSync?(): Promise<SppNativeOpResult>;
   /** DATA-001: private balance in stroops after sync. */
-  poolBalance?(): SppNativeOpResult;
+  poolBalance?(): Promise<SppNativeOpResult>;
   /** Absolute writable app data dir (no file://). */
   appDataDir?(): string;
   /** Copy bundled circuit assets into app data when missing. */
-  ensureCircuitAssets?(): SppNativeOpResult;
+  ensureCircuitAssets?(): Promise<SppNativeOpResult>;
+  /** BIP39 mnemonic to a 64-byte seed encoded as lowercase hex. */
+  mnemonicToSeed?(mnemonicPhrase: string): Promise<string>;
 };
 
 let cached: SppNativeExpoModule | null | undefined;

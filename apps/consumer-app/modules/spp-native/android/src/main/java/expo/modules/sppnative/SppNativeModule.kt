@@ -3,6 +3,9 @@ package expo.modules.sppnative
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import java.io.File
+import java.text.Normalizer
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.PBEKeySpec
 import org.json.JSONObject
 
 /**
@@ -59,7 +62,7 @@ class SppNativeModule : Module() {
           // Flip when Rust sdk/pool is linked via NDK (CAP_POOL_OPS).
           "poolOps" to false,
           "aspLeaf" to false,
-          "backend" to "native"
+          "backend" to "js-stub"
         )
       }
     }
@@ -77,7 +80,7 @@ class SppNativeModule : Module() {
       }
     }
 
-    Function("deposit") { amount: String ->
+    AsyncFunction("deposit") { amount: String ->
       if (SppNativeRust.loaded) {
         jsonResult(SppNativeRust.nativeDeposit(amount))
       } else {
@@ -85,7 +88,7 @@ class SppNativeModule : Module() {
       }
     }
 
-    Function("transfer") { amount: String, recipient: String ->
+    AsyncFunction("transfer") { amount: String, recipient: String ->
       if (SppNativeRust.loaded) {
         jsonResult(SppNativeRust.nativeTransfer(amount, recipient))
       } else {
@@ -93,7 +96,7 @@ class SppNativeModule : Module() {
       }
     }
 
-    Function("withdraw") { amount: String, to: String ->
+    AsyncFunction("withdraw") { amount: String, to: String ->
       if (SppNativeRust.loaded) {
         jsonResult(SppNativeRust.nativeWithdraw(amount, to))
       } else {
@@ -101,7 +104,7 @@ class SppNativeModule : Module() {
       }
     }
 
-    Function("ensureAsp") {
+    AsyncFunction("ensureAsp") {
       if (SppNativeRust.loaded) {
         jsonResult(SppNativeRust.nativeEnsureAsp())
       } else {
@@ -115,7 +118,7 @@ class SppNativeModule : Module() {
       }
     }
 
-    Function("deriveKeys") { sigHex: String, network: String ->
+    AsyncFunction("deriveKeys") { sigHex: String, network: String ->
       if (SppNativeRust.loaded) {
         jsonResult(SppNativeRust.nativeDeriveKeys(sigHex, network))
       } else {
@@ -129,7 +132,7 @@ class SppNativeModule : Module() {
       }
     }
 
-    Function("poolReadiness") {
+    AsyncFunction("poolReadiness") {
       if (SppNativeRust.loaded) {
         jsonResult(SppNativeRust.nativePoolReadiness())
       } else {
@@ -148,9 +151,9 @@ class SppNativeModule : Module() {
       }
     }
 
-    Function("poolOpen") { configJson: String ->
+    AsyncFunction("poolOpen") { configJson: String ->
       if (!SppNativeRust.loaded) {
-        return@Function notReady("pool_open", "libspp_native.so not loaded")
+        return@AsyncFunction notReady("pool_open", "libspp_native.so not loaded")
       }
       try {
         jsonResult(SppNativeRust.nativePoolOpen(configJson))
@@ -161,9 +164,29 @@ class SppNativeModule : Module() {
       }
     }
 
-    Function("poolClose") {
+    /**
+     * BIP39 mnemonic-to-seed via PBKDF2-HMAC-SHA512 on a background thread.
+     * Returns the 64-byte seed as a lowercase hex string.
+     *
+     * Runs on the Expo module background queue (not the JS thread), avoiding
+     * the ~1.5s JS thread freeze that the pure-JS implementation causes.
+     */
+    AsyncFunction("mnemonicToSeed") { mnemonicPhrase: String ->
+      val normalized = Normalizer.normalize(mnemonicPhrase, Normalizer.Form.NFKD)
+      val spec = PBEKeySpec(
+        normalized.toCharArray(),
+        "mnemonic".toByteArray(Charsets.UTF_8),
+        2048, // BIP39 iteration count
+        512   // 64 bytes × 8 bits
+      )
+      val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512")
+      val seed = factory.generateSecret(spec).encoded
+      seed.joinToString("") { "%02x".format(it) }
+    }
+
+    AsyncFunction("poolClose") {
       if (!SppNativeRust.loaded) {
-        return@Function mapOf("ok" to true, "op" to "pool_close", "message" to "no-op without .so")
+        return@AsyncFunction mapOf("ok" to true, "op" to "pool_close", "message" to "no-op without .so")
       }
       try {
         jsonResult(SppNativeRust.nativePoolClose())
@@ -177,9 +200,9 @@ class SppNativeModule : Module() {
 
     // DATA-001: chain-backed note recovery primitives (session must be open).
     // Catch UnsatisfiedLinkError: older .so may load but lack pool_sync/balance symbols.
-    Function("poolSync") {
+    AsyncFunction("poolSync") {
       if (!SppNativeRust.loaded) {
-        return@Function notReady("pool_sync", "libspp_native.so not loaded")
+        return@AsyncFunction notReady("pool_sync", "libspp_native.so not loaded")
       }
       try {
         jsonResult(SppNativeRust.nativePoolSync())
@@ -190,9 +213,9 @@ class SppNativeModule : Module() {
       }
     }
 
-    Function("poolBalance") {
+    AsyncFunction("poolBalance") {
       if (!SppNativeRust.loaded) {
-        return@Function notReady("pool_balance", "libspp_native.so not loaded")
+        return@AsyncFunction notReady("pool_balance", "libspp_native.so not loaded")
       }
       try {
         jsonResult(SppNativeRust.nativePoolBalance())
@@ -211,7 +234,7 @@ class SppNativeModule : Module() {
       appDataDirPath()
     }
 
-    Function("ensureCircuitAssets") {
+    AsyncFunction("ensureCircuitAssets") {
       ensureCircuitAssets()
     }
   }

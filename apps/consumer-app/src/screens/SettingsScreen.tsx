@@ -411,8 +411,14 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
   ];
 
   const privacySection: SettingsItem[] = [
-    // SPP-001 / UX-001: no diagnostic Private XLM screen in any build.
-    // Background ASP + recovery: useSppBackgroundSetup. User path: select pXLM.
+    {
+      id: "spp-diagnostics",
+      label: "Private Payment Diagnostics",
+      description: "View or export release-safe SPP errors",
+      iconName: "info",
+      type: "navigate",
+      onPress: () => navigation.navigate(SCREENS.SPP_DIAGNOSTICS),
+    },
     {
       id: "privacy-mode",
       label: "Enhanced Privacy",

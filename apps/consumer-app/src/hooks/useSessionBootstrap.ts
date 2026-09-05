@@ -127,9 +127,12 @@ export function useSessionBootstrap() {
         const initialChainType = state.chainType ?? 'evm';
         const initialChainKey = state.activeChain?.key;
         const initialAddress = addresses[initialChainType] || addresses['evm'];
-        
+
         if (initialAddress) {
-          await connect(initialAddress, initialChainType, initialChainKey);
+          // Pass pre-derived addresses so connect() skips the redundant
+          // SecureStore mnemonic read + re-derivation (multiChainDerivation
+          // already cached the seed above).
+          await connect(initialAddress, initialChainType, initialChainKey, addresses);
         } else {
           disconnect();
         }

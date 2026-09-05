@@ -1,5 +1,5 @@
 /**
- * VeilPay Webhook Delivery Job
+ * Veilpay Webhook Delivery Job
  *
  * Async webhook delivery with retry logic using BullMQ + Redis.
  * - 3 retry attempts with exponential backoff (5s, 30s, 120s)

@@ -95,6 +95,7 @@ export function StellarSppScreen({ navigation }: Props) {
   const chainKey = activeChain?.key ?? null;
   const enabled = isSppEnabledForChain(chainKey);
   const status = getSppStatus(chainKey);
+  const privacyNetLabel = activeChain?.isTestnet ? 'TESTNET' : 'MAINNET';
 
   const [amount, setAmount] = useState('1');
   const [recipient, setRecipient] = useState('');
@@ -108,6 +109,16 @@ export function StellarSppScreen({ navigation }: Props) {
   const proveReady = Boolean(prep?.readyForProve);
   /** One auto insert attempt per mount when leaf is ready (avoid effect loops). */
   const aspAutoAttempted = useRef(false);
+
+  /**
+   * Format prep blockers into a user-friendly status message.
+   * Shows why buttons are disabled and what's needed.
+   */
+  const readinessMessage = prep?.blockers && prep.blockers.length > 0
+    ? prep.blockers[0]
+    : proveReady
+      ? `Ready for private payments (${privacyNetLabel})`
+      : `Setting up private account… (${privacyNetLabel})`;
 
   const refreshNotes = useCallback(async () => {
     if (!chainKey || !address) {
@@ -415,6 +426,24 @@ export function StellarSppScreen({ navigation }: Props) {
                 accessibilityLabel="Private payment recipient"
               />
 
+              {!proveReady && prep && (
+                <SovereignCard style={styles.statusCard}>
+                  <View style={styles.statusContainer}>
+                    <ActivityIndicator size="small" color={colors.accent} />
+                    <View style={styles.statusText}>
+                      <Text style={[styles.statusLabel, { color: colors.textSecondary }]}>
+                        Getting ready…
+                      </Text>
+                      <Text
+                        style={[styles.statusMessage, { color: colors.textTertiary }]}
+                        numberOfLines={3}
+                      >
+                        {readinessMessage}
+                      </Text>
+                    </View>
+                  </View>
+                </SovereignCard>
+              )}
               <View style={styles.actions}>
                 <SovereignButton
                   title="Shield"
@@ -579,6 +608,28 @@ const themeStyles = (colors: {
     actions: {
       gap: 10,
       marginTop: 8,
+    },
+    statusCard: {
+      marginBottom: 8,
+    },
+    statusContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    statusText: {
+      flex: 1,
+      gap: 2,
+    },
+    statusLabel: {
+      fontFamily: typography.fontFamily.bodyBold,
+      fontSize: typography.fontSize.small,
+      letterSpacing: 0.3,
+    },
+    statusMessage: {
+      fontFamily: typography.fontFamily.body,
+      fontSize: typography.fontSize.micro,
+      lineHeight: 16,
     },
     spinner: { marginTop: 12 },
     noteRow: {

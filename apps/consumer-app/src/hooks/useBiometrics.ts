@@ -37,7 +37,7 @@ const PROMPT_MESSAGES: Record<BiometricContext, string> = {
   send_payment:       'Authorize this transaction with biometrics',
   export_key:         'Authenticate to view your private key',
   backup_seed:        'Authenticate to view your recovery phrase',
-  app_unlock:         'Authenticate to access VeilPay',
+  app_unlock:         'Authenticate to access Veilpay',
   toggle_biometrics:  'Confirm your identity to change biometric settings',
   deposit:            'Authenticate to proceed with deposit',
   account_wipe:       'Authenticate to erase all local wallet data',

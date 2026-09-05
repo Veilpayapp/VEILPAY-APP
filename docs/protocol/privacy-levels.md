@@ -12,7 +12,7 @@ Veilpay includes privacy-oriented primitives such as stealth addresses and encry
 
 ## Private Stellar track
 
-The Stellar Private Payments track is the first native privacy-chain integration path. It is currently treated as testnet and gated work. Mainnet activation requires audit, operational limits, and safety controls.
+The Stellar Private Payments track is the first native privacy-chain integration path. Contracts are deployed on both testnet and mainnet; the testnet flow was verified end-to-end on 2026-07-09 (CLI E2E), and the mainnet shield/transfer/unshield flow is implemented and shipping in app builds, pending a user-approved on-chain test. Full production activation still requires external audit, operational limits, and safety controls.
 
 ## Roadmap privacy chains
 

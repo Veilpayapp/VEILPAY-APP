@@ -41,6 +41,8 @@ import {
   privacyAssetToPaymentToken,
 } from '../constants/privacyAssets';
 import { getLocalPrivateBalance } from '../utils/stellarSpp';
+import { computeMaxSendableAmount } from '../utils/maxSendable';
+import { fetchNativeBalance } from '../utils/balanceFetcher';
 import { useSecureScreen } from '../hooks/useSecureScreen';
 
 type SendPaymentScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'SendPayment'>;
@@ -79,6 +81,12 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
       : 'public'
   );
   const [privateBalance, setPrivateBalance] = useState('0');
+  // Stellar subentry count, for the protocol minimum-balance reserve that MAX
+  // must leave behind. `undefined` until the Horizon read lands; the reserve
+  // helper then falls back to the bare-account floor (2 x 0.5 XLM).
+  const [stellarSubentryCount, setStellarSubentryCount] = useState<
+    number | undefined
+  >(undefined);
   const lastContinueAttemptRef = useRef(0);
 
   const { activeChain, balance, address } = useWalletStore();
@@ -227,6 +235,30 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
       cancelled = true;
     };
   }, [address, privacyAsset]);
+
+  // Stellar subentry count for the MAX reserve. The displayed balance is the
+  // GROSS Horizon figure — nothing in the balance path nets out the protocol
+  // minimum, so MAX has to subtract it here or the signer rejects the amount.
+  React.useEffect(() => {
+    if (!address || activeChain?.type !== 'xlm' || !activeChain?.key) {
+      setStellarSubentryCount(undefined);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      const result = await fetchNativeBalance(address, activeChain.key).catch(
+        () => null
+      );
+      if (!cancelled && typeof result?.subentryCount === 'number') {
+        setStellarSubentryCount(result.subentryCount);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [address, activeChain?.type, activeChain?.key]);
 
   // Keep token balance in sync with mode: shield uses public XLM; private modes use pXLM.
   React.useEffect(() => {
@@ -603,19 +635,33 @@ export function SendPaymentScreen({ navigation, route }: SendPaymentScreenProps)
   const handleQuickAmount = (percent: string) => {
     setSelectedPercent(percent);
     const balanceNum = parseFloat(selectedToken.balance || '0');
-    if (percent === 'MAX') {
-      const gasReserveMap: Record<string, number> = {
-        ethereum: 0.01, polygon: 0.005, arbitrum: 0.002, sepolia: 0.001,
-      };
-      const gasReserve = activeChain?.type === 'evm'
-        ? (gasReserveMap[activeChain.key] ?? 0.005)
-        : 0;
-      const maxAmount = Math.max(0, balanceNum - gasReserve);
-      setAmount(maxAmount.toFixed(6));
-    } else {
+
+    if (percent !== 'MAX') {
       const multiplier = parseInt(percent) / 100;
       setAmount((balanceNum * multiplier).toFixed(6));
+      setIsAmountTouched(true);
+      trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_QUICK_AMOUNT_SELECTED, {
+        percent, token_symbol: selectedToken.symbol,
+      });
+      return;
     }
+
+    // MAX has to leave behind whatever the signer will demand, or the button
+    // is a dead end. What that is depends on the asset being spent — the old
+    // code reserved 0 for every non-EVM chain, so MAX on Stellar proposed the
+    // whole balance and the signer rejected it. Math lives in utils/maxSendable
+    // so it is testable; this screen has no test that presses MAX.
+    setAmount(
+      computeMaxSendableAmount({
+        balance: balanceNum,
+        chainType: activeChain?.type,
+        chainKey: activeChain?.key,
+        isPrivacyAsset: selectedToken.isPrivacyAsset,
+        isPrivacyMode,
+        subentryCount: stellarSubentryCount,
+      })
+    );
+
     setIsAmountTouched(true);
     trackEvent(ANALYTICS_EVENTS.SEND_PAYMENT_QUICK_AMOUNT_SELECTED, {
       percent, token_symbol: selectedToken.symbol,

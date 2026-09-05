@@ -20,6 +20,8 @@ use jni22::sys::{jobject, jstring as jstring22};
 use jni22::{Env as Env22, EnvUnowned, Outcome};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
+#[cfg(target_os = "android")]
+use std::sync::OnceLock;
 
 use crate::{
     spp_native_capabilities, spp_native_deposit, spp_native_derive_keys, spp_native_ensure_asp,
@@ -49,6 +51,39 @@ fn env22_platform_error(env: &mut EnvUnowned, code: &str, message: &str) -> jstr
         Outcome::Ok(value) => value,
         _ => std::ptr::null_mut(),
     }
+}
+
+/// Register the process JVM and a global application context for Android
+/// crates which access platform services from native worker threads.
+///
+/// `hickory-resolver` uses `ndk-context` when its Android system resolver is
+/// enabled. Expo does not run `ndk-glue`, so this must be bootstrapped from the
+/// JNI entry point. The global reference is intentionally transferred to
+/// `ndk-context` and remains valid for the lifetime of the process.
+#[cfg(target_os = "android")]
+fn init_ndk_context(env: &mut Env22, context: &JObject22) -> Result<(), String> {
+    static INIT: OnceLock<Result<(), String>> = OnceLock::new();
+
+    INIT.get_or_init(|| {
+        let vm = env
+            .get_java_vm()
+            .map_err(|e| format!("could not obtain Java VM: {e}"))?;
+        let global_context = env
+            .new_global_ref(context)
+            .map_err(|e| format!("could not retain Android context: {e}"))?;
+
+        // SAFETY: `vm` is the process Java VM and `global_context` is a valid
+        // global JNI reference whose ownership is intentionally transferred to
+        // ndk-context for process lifetime.
+        unsafe {
+            ndk_context::initialize_android_context(
+                vm.get_raw().cast(),
+                global_context.into_raw().cast(),
+            );
+        }
+        Ok(())
+    })
+    .clone()
 }
 
 fn c_ptr_to_jstring(env: &mut JNIEnv, ptr: *mut c_char) -> jstring {
@@ -82,6 +117,16 @@ pub extern "system" fn Java_expo_modules_sppnative_SppNativeRust_nativeInitPlatf
         }
 
         let context = unsafe { JObject22::from_raw(env, context) };
+        if let Err(e) = init_ndk_context(env, &context) {
+            let message = serde_json::to_string(&e)
+                .unwrap_or_else(|_| r#""Android context initialization failed""#.to_string());
+            return Ok(env22_new_string(
+                env,
+                &format!(
+                    r#"{{"ok":false,"code":"SPP_ANDROID_CONTEXT_INIT_FAILED","op":"platform_init","message":{message}}}"#
+                ),
+            ));
+        }
         match rustls_platform_verifier::android::init_with_env(env, context) {
             Ok(()) => Ok(env22_new_string(
                 env,

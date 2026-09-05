@@ -197,7 +197,7 @@ contract Groth16Verifier is IGroth16Verifier {
      }
  
     // VEILPAY_WRAPPER_INJECTED
-    // ---- VeilPay Groth16Verifier wrapper (injected by compile.sh) ----
+    // ---- Veilpay Groth16Verifier wrapper (injected by compile.sh) ----
     // Public inputs: [merkleRoot, nullifierHash, recipient, amount, token]
     //   — see design.md §Public input ordering contract /
     //     packages/circuits/docs/CIRCUIT_SECURITY.md

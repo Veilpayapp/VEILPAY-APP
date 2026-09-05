@@ -14,6 +14,14 @@ export interface BalanceResult {
   lastUpdated: number;
   source: 'rpc' | 'indexer' | 'cache' | 'fallback';
   error?: string;
+  /**
+   * Stellar only. Horizon's `subentry_count` — trustlines, offers, extra
+   * signers, data entries. Needed to compute the protocol minimum balance
+   * `(2 + subentries) x 0.5 XLM`, which callers must leave behind on a
+   * max-out send. `balanceFormatted` is the GROSS balance and is never net
+   * of this reserve.
+   */
+  subentryCount?: number;
 }
 
 export interface TokenBalance extends BalanceResult {
@@ -212,16 +220,19 @@ async function fetchStellarBalance(address: string, chainConfig: ChainConfig): P
     
     if (!response.ok) {
       if (response.status === 404 || response.status === 400) {
-        return { balance: '0', balanceFormatted: '0.000', symbol: nativeToken.symbol, decimals: nativeToken.decimals, lastUpdated: Date.now(), source: 'rpc' };
+        return { balance: '0', balanceFormatted: '0.000', symbol: nativeToken.symbol, decimals: nativeToken.decimals, lastUpdated: Date.now(), source: 'rpc', subentryCount: 0 };
       }
       throw new Error(`Stellar API error: ${response.status}`);
     }
 
-    const data = await response.json() as { balances?: Array<{ balance: string; asset_type: string }> };
-    
+    const data = await response.json() as {
+      balances?: Array<{ balance: string; asset_type: string }>;
+      subentry_count?: number;
+    };
+
     const nativeBal = data.balances?.find((b: any) => b.asset_type === 'native');
-    const balanceStr = nativeBal?.balance || '0'; 
-    
+    const balanceStr = nativeBal?.balance || '0';
+
     const numValue = parseFloat(balanceStr);
     const stroops = Math.floor(numValue * 1e7).toString();
 
@@ -232,6 +243,8 @@ async function fetchStellarBalance(address: string, chainConfig: ChainConfig): P
       decimals: nativeToken.decimals,
       lastUpdated: Date.now(),
       source: 'rpc',
+      subentryCount:
+        typeof data.subentry_count === 'number' ? data.subentry_count : undefined,
     };
   } catch (error) {
     captureError(error instanceof Error ? error : new Error('Failed to fetch Stellar balance'), {

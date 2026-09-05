@@ -84,7 +84,7 @@ describe('SEC-001: Mnemonic Phrase Security', () => {
 
     try {
       await signAndSendTransaction(
-        { to: 'invalid-address', value: '0.1' }, // Invalid address triggers error
+        { to: '0x1234567890123456789012345678901234567890', value: '0.1' }, // Mocked send path errors after derive; validates the finally-wipe
         'sepolia'
       );
     } catch (e) {
@@ -102,8 +102,15 @@ describe('SEC-002: Biometric Token Security', () => {
   });
 
   it('should generate cryptographically random tokens', () => {
-    const token1 = generateBiometricToken();
-    const token2 = generateBiometricToken();
+    // The per-user rate limit (MAX_TOKENS_PER_USER) is a deliberate security control;
+    // sampling two tokens for one user within the window would trip it. To verify the
+    // generator produces distinct random tokens without weakening that limit, give each
+    // sample a fresh module instance (fresh in-memory token store) via jest.resetModules.
+    const mod1 = require('./secureSigner');
+    const token1 = mod1.generateBiometricToken();
+    jest.resetModules();
+    const mod2 = require('./secureSigner');
+    const token2 = mod2.generateBiometricToken();
 
     // Tokens should be different
     expect(token1).not.toBe(token2);

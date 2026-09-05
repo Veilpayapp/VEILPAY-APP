@@ -1,5 +1,5 @@
 /**
- * VeilPay Webhook Queue Infrastructure (Producer)
+ * Veilpay Webhook Queue Infrastructure (Producer)
  *
  * REL-002: durable outbox — persist a WebhookDelivery row (status=pending)
  * with a stable idempotency key BEFORE enqueue. The worker updates the same
@@ -209,6 +209,102 @@ export async function enqueueWebhook(
   }
 
   return job;
+}
+
+/**
+ * REL-002 recovery: re-enqueue deliveries that were left `pending` because the
+ * process crashed between the outbox row create and the BullMQ add. Without
+ * this sweep such a row is orphaned forever (webhook silently dropped).
+ *
+ * Idempotent: each stale row is passed back through `enqueueWebhook` reusing
+ * its `deliveryId`, so the BullMQ `jobId` (`wh-<deliveryId>`) dedupes against a
+ * job that already exists. Only rows older than ORPHAN_PENDING_AGE_MS are
+ * touched, so an in-flight normal create is never raced.
+ */
+export const ORPHAN_PENDING_AGE_MS = 60_000;
+export const ORPHAN_RECOVERY_BATCH = 100;
+
+export async function recoverOrphanedPendingDeliveries(): Promise<number> {
+  // W2: lazily initialize the producer rather than silently no-oping when the
+  // producer wasn't initialized in this process (e.g. a worker-only or second
+  // instance). When Redis is genuinely unavailable, ensureQueueInitialized
+  // returns false and we skip without crashing.
+  if (!ensureQueueInitialized()) {
+    logger.warn(
+      '[WebhookQueue] Recovery sweep skipped — queue producer unavailable'
+    );
+    return 0;
+  }
+  try {
+    const cutoff = new Date(Date.now() - ORPHAN_PENDING_AGE_MS);
+    const stale = await prisma.webhookDelivery.findMany({
+      where: {
+        status: 'pending',
+        createdAt: { lt: cutoff },
+        // W1: skip rows already claimed by an earlier sweep (in-recovery), so
+        // a restart cannot re-sweep a row the previous sweep already picked up.
+        nextRetryAt: null,
+      },
+      orderBy: { createdAt: 'asc' },
+      take: ORPHAN_RECOVERY_BATCH,
+      select: { id: true, payload: true },
+    });
+    let reenqueued = 0;
+    for (const row of stale) {
+      const payload = row.payload as unknown as WebhookDeliveryPayload | null;
+      if (!payload || typeof payload !== 'object') continue;
+
+      // W1: the BullMQ `jobId` (`wh-<deliveryId>`) dedupe only holds while the
+      // job still lives in Redis; `removeOnComplete` purges completed jobs. If
+      // the job already exists in the queue (still queued/active) the enqueue
+      // already happened — skip to avoid re-delivering a handled delivery.
+      const jobId = buildWebhookJobId(payload, row.id);
+      const existing = webhookQueueInstance
+        ? await webhookQueueInstance.getJob(jobId)
+        : null;
+      if (existing) continue;
+
+      // W1: claim the row before enqueue so this sweep's pick survives a
+      // restart (in-flight re-enqueued job isn't re-swept). Revisit nextRetryAt
+      // as the claim timestamp — it is a no-op field in the delivery flow.
+      try {
+        await prisma.webhookDelivery.update({
+          where: { id: row.id },
+          data: { nextRetryAt: new Date() },
+        });
+      } catch (claimErr) {
+        logger.warn(
+          { err: claimErr },
+          `[WebhookQueue] Failed to claim delivery ${row.id}, skipping`
+        );
+        continue;
+      }
+
+      const job = await enqueueWebhook({ ...payload, deliveryId: row.id });
+      if (job) {
+        reenqueued += 1;
+      } else {
+        // Enqueue failed — revert the claim so the next sweep can retry it.
+        await prisma.webhookDelivery
+          .update({
+            where: { id: row.id },
+            data: { nextRetryAt: null },
+          })
+          .catch(() => undefined);
+      }
+    }
+    if (reenqueued > 0) {
+      logger.info(
+        `[WebhookQueue] Recovery re-enqueued ${reenqueued} orphaned pending deliveries`
+      );
+    }
+    return reenqueued;
+  } catch (err) {
+    logger.warn(
+      `[WebhookQueue] Recovery sweep failed: ${err instanceof Error ? err.message : String(err)}`
+    );
+    return 0;
+  }
 }
 
 export async function closeWebhookQueue(): Promise<void> {

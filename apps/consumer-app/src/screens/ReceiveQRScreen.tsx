@@ -158,9 +158,9 @@ export function ReceiveQRScreen({ navigation }: ReceiveQRScreenProps) {
     try {
       await Share.share({
         message: hasAmount
-          ? `Pay me ${requestedAmount} ${activeChain?.symbol || ''} on VeilPay:\n${requestLink}`
-          : `Send to me on VeilPay:\n${requestLink}`,
-        title: 'VeilPay payment request',
+          ? `Pay me ${requestedAmount} ${activeChain?.symbol || ''} on Veilpay:\n${requestLink}`
+          : `Send to me on Veilpay:\n${requestLink}`,
+        title: 'Veilpay payment request',
       });
       shared = true;
     } catch {

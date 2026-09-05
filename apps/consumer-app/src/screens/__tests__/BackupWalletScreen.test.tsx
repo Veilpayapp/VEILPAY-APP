@@ -6,6 +6,7 @@ const mockShowToast = jest.fn();
 const mockSetClipboardString = jest.fn();
 const mockGetStoredMnemonic = jest.fn();
 const mockAuthenticate = jest.fn();
+const mockCopyToClipboard = jest.fn();
 
 const walletState = {};
 
@@ -27,6 +28,19 @@ jest.mock('../../hooks/useBiometrics', () => ({
   useBiometrics: () => ({
     isAvailable: true,
     authenticate: mockAuthenticate,
+  }),
+}));
+
+// The screen copies via useClipboardAutoWipe (which calls utils/clipboard internally).
+// Mock the hook so its copy() can succeed; the real hook's copy() returns false
+// when expo-clipboard is unavailable, which would surface the error toast.
+jest.mock('../../hooks/useClipboardAutoWipe', () => ({
+  useClipboardAutoWipe: () => ({
+    copy: (...args: unknown[]) => mockCopyToClipboard(...args),
+    clear: jest.fn(),
+    isClipboardActive: false,
+    timeRemaining: 0,
+    countdownText: '',
   }),
 }));
 
@@ -98,8 +112,10 @@ describe('BackupWalletScreen', () => {
     mockSetClipboardString.mockReset();
     mockGetStoredMnemonic.mockReset();
     mockAuthenticate.mockReset();
+    mockCopyToClipboard.mockReset();
     settingsState.biometricsEnabled = true;
     mockAuthenticate.mockResolvedValue({ success: true });
+    mockCopyToClipboard.mockResolvedValue(true);
     mockGetStoredMnemonic.mockResolvedValue([
       'apple', 'banana', 'candy', 'dog', 'elephant', 'fox',
       'grape', 'house', 'ice', 'jacket', 'kite', 'lemon'
@@ -170,10 +186,13 @@ describe('BackupWalletScreen', () => {
     fireEvent.press(screen.getByText('COPY ANYWAY'));
 
     await waitFor(() => {
-      expect(mockSetClipboardString).toHaveBeenCalledWith(
+      expect(mockCopyToClipboard).toHaveBeenCalledWith(
         'apple banana candy dog elephant fox grape house ice jacket kite lemon'
       );
-      expect(mockShowToast).toHaveBeenCalledWith('Phrase copied to clipboard', 'success');
+      expect(mockShowToast).toHaveBeenCalledWith(
+        'Phrase copied - will clear in 30 seconds',
+        'success'
+      );
     });
   });
 

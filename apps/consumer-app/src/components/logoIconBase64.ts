@@ -1,5 +1,5 @@
 /**
- * Inlined VeilPay shield (256px PNG from New logo/Logo.png).
+ * Inlined Veilpay shield (256px PNG from New logo/Logo.png).
  * Embedded as base64 so the mark is part of the JS bundle in local APK builds (no separate drawable/asset resolve). Native splash still uses assets/logo-icon.png.
  */
 export const LOGO_ICON_BASE64 =

@@ -1,4 +1,4 @@
-# VeilPay Agent Guidance
+# Veilpay Agent Guidance
 
 This repo already includes the Antigravity skills pack under `packages/antigravity-utils/skills/`.
 Use the local skills there as the source of truth instead of duplicating them into the app.

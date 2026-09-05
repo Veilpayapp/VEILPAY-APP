@@ -116,6 +116,15 @@ export function createMockPoolBackend(options?: {
             op: 'pool_open',
             message: 'mock poolOps false',
           },
+    poolSync: async () =>
+      poolOps
+        ? { ok: true, op: 'pool_sync', message: 'mock pool synced' }
+        : {
+            ok: false,
+            code: 'SPP_OPS_NOT_READY',
+            op: 'pool_sync',
+            message: 'mock poolOps false',
+          },
     poolClose: async () => ({ ok: true, op: 'pool_close' }),
     poolReadiness: async () => ({
       ok: poolOps,

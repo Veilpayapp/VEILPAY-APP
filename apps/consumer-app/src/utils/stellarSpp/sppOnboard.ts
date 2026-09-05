@@ -21,10 +21,12 @@ import {
   Contract,
   Operation,
   nativeToScVal,
+  scValToNative,
+  xdr,
   Account,
 } from '@stellar/stellar-sdk';
 import { Server, Api, assembleTransaction } from '@stellar/stellar-sdk/rpc';
-import { mnemonicToSeed } from '@scure/bip39';
+import { deriveMnemonicSeed } from '../mnemonicSeed';
 import { derivePath } from 'ed25519-hd-key';
 import { getStoredMnemonic } from '../transactions';
 import {
@@ -48,6 +50,75 @@ export const SPP_KEY_DERIVATION_MESSAGE = 'Privacy Pool Key Derivation [v1]';
 
 const STELLAR_DERIVATION_PATH = "m/44'/148'/0'";
 
+type AspLeafEvent = {
+  ledger?: number;
+  txHash?: string;
+  value?: string;
+};
+
+/**
+ * Check membership from contract events without cursor pagination. The mainnet
+ * RPC used by the app has returned a `4294967295` cursor sentinel that skips
+ * later pages; advancing by ledger avoids retrying that broken cursor.
+ */
+async function findAspLeafOnChain(
+  config: SppDeploymentConfig,
+  leafDecimal: string
+): Promise<string | null> {
+  let startLedger = config.deploymentLedger;
+  for (let page = 0; page < 100; page++) {
+    const response = await fetch(config.sorobanRpcUrl, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'getEvents',
+        params: {
+          startLedger,
+          filters: [
+            {
+              type: 'contract',
+              contractIds: [config.aspMembershipId],
+              topics: [['**']],
+            },
+          ],
+          pagination: { limit: 200 },
+        },
+      }),
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json()) as {
+      result?: { events?: AspLeafEvent[] };
+    };
+    const events = payload.result?.events ?? [];
+    if (events.length === 0) return null;
+
+    let maxLedger = startLedger;
+    for (const event of events) {
+      if (typeof event.ledger === 'number') {
+        maxLedger = Math.max(maxLedger, event.ledger);
+      }
+      if (!event.value) continue;
+      try {
+        const decoded = scValToNative(
+          xdr.ScVal.fromXDR(event.value, 'base64')
+        ) as { leaf?: bigint | string };
+        if (decoded?.leaf != null && String(decoded.leaf) === leafDecimal) {
+          return event.txHash || `on-chain-leaf-${leafDecimal.slice(0, 16)}`;
+        }
+      } catch {
+        // Ignore unrelated or malformed historical events and keep scanning.
+      }
+    }
+
+    const nextLedger = maxLedger + 1;
+    if (nextLedger <= startLedger) return null;
+    startLedger = nextLedger;
+  }
+  return null;
+}
+
 export type SppOnboardResult = {
   account: SppAccountRecord;
   /** True when leaf was computed (native) or already stored. */
@@ -62,8 +133,20 @@ export type SppOnboardResult = {
   message: string;
 };
 
+// module-level cache for deriveStellarKeypair — avoids redundant ~1.5s Pbkdf2
+// calls when ensureSppAccountReady calls it multiple times. The bootstrap path
+// already derived the seed, but this cache is separate from multiChainDerivation's
+// because the modules are independently loaded.
+let _cachedMnemonic: string | null = null;
+let _cachedSeed: Uint8Array | null = null;
+
 async function deriveStellarKeypair(mnemonicPhrase: string): Promise<Keypair> {
-  const seed = await mnemonicToSeed(mnemonicPhrase);
+  const cached = _cachedMnemonic === mnemonicPhrase ? _cachedSeed : null;
+  const seed = cached ?? (await deriveMnemonicSeed(mnemonicPhrase));
+  if (!cached) {
+    _cachedMnemonic = mnemonicPhrase;
+    _cachedSeed = seed;
+  }
   const { key } = derivePath(STELLAR_DERIVATION_PATH, Buffer.from(seed).toString('hex'));
   return Keypair.fromRawEd25519Seed(key as Buffer);
 }
@@ -175,6 +258,38 @@ export async function insertAspMembershipLeaf(
     account.aspMembershipContractId === config.aspMembershipId;
   if (account?.aspInserted && account.aspInsertTxHash && sameContract) {
     return { txHash: account.aspInsertTxHash, account };
+  }
+
+  // SecureStore can be stale after reinstall/interrupted onboarding. Confirm
+  // chain state before repeating an insert that may deterministically trap on
+  // deployments that reject an already-present leaf.
+  const existingTxHash = await findAspLeafOnChain(config, leaf).catch(() => null);
+  if (existingTxHash) {
+    const existingRecord =
+      account ?? {
+        chainKey,
+        ownerAddress,
+        aspLeafDecimal: leaf,
+        aspInserted: false,
+        keysRegistered: false,
+        updatedAt: Date.now(),
+      };
+    if (!account) await saveSppAccount(existingRecord);
+    const marked = await markAspInserted(
+      chainKey,
+      ownerAddress,
+      existingTxHash,
+      config.aspMembershipId
+    );
+    return {
+      txHash: existingTxHash,
+      account: marked ?? {
+        ...existingRecord,
+        aspInserted: true,
+        aspInsertTxHash: existingTxHash,
+        aspMembershipContractId: config.aspMembershipId,
+      },
+    };
   }
 
   const words = await getStoredMnemonic();
@@ -296,12 +411,12 @@ export async function registerPublicKeysOnChain(
   // Index PublicKeyEvent so this device (and soon peers after their sync)
   // can resolve G… → note/enc keys for private transfer.
   try {
-    const { ensurePoolSession } = await import('./sppPoolSession');
-    const { sppNativePoolSync } = await import('./sppNativeBridge');
-    await ensurePoolSession(chainKey, ownerAddress);
-    await sppNativePoolSync();
+    const { syncPoolWithRpcFailover } = await import('./sppRpcFailover');
+    const firstSync = await syncPoolWithRpcFailover(chainKey, ownerAddress);
+    if (!firstSync.ok) throw new Error(firstSync.message || 'Private pool sync failed');
     await new Promise((r) => setTimeout(r, 1500));
-    await sppNativePoolSync();
+    const secondSync = await syncPoolWithRpcFailover(chainKey, ownerAddress);
+    if (!secondSync.ok) throw new Error(secondSync.message || 'Private pool sync failed');
   } catch {
     /* transfer path will sync again */
   }
@@ -499,9 +614,14 @@ async function submitInsertLeaf(
     const sim = await server.simulateTransaction(built);
     if (Api.isSimulationError(sim)) {
       const errText = String(sim.error || '');
-      // Duplicate / already-present leaf: treat as success path for idempotency.
-      if (/already|exist|duplicate/i.test(errText)) {
-        return `sim-idempotent-${leafDecimal.slice(0, 16)}`;
+      // Some deployments trap rather than return a descriptive duplicate
+      // error. Re-check contract events before classifying the simulation as a
+      // failure so an already-present leaf self-heals local state.
+      const existing = await findAspLeafOnChain(config, leafDecimal).catch(
+        () => null
+      );
+      if (existing) {
+        return existing;
       }
       throw new SppClientError(
         errText || 'ASP insert_leaf simulation failed',
@@ -557,6 +677,10 @@ async function submitInsertLeaf(
         return hash;
       }
       if (got.status === Api.GetTransactionStatus.FAILED) {
+        const existing = await findAspLeafOnChain(config, leafDecimal).catch(
+          () => null
+        );
+        if (existing) return existing;
         throw new SppClientError(
           'ASP insert_leaf transaction failed on-chain',
           'SPP_ASP_SUBMIT_FAILED'
@@ -831,13 +955,13 @@ export async function ensureSppAccountReady(
       current = inserted.account;
       // Index LeafAdded into native sqlite so prove can see membership.
       try {
-        const { ensurePoolSession } = await import('./sppPoolSession');
-        const { sppNativePoolSync } = await import('./sppNativeBridge');
-        await ensurePoolSession(chainKey, ownerAddress);
-        await sppNativePoolSync();
+        const { syncPoolWithRpcFailover } = await import('./sppRpcFailover');
+        const firstSync = await syncPoolWithRpcFailover(chainKey, ownerAddress);
+        if (!firstSync.ok) throw new Error(firstSync.message || 'Private pool sync failed');
         // Second pass — first sync right after insert can miss the new page.
         await new Promise((r) => setTimeout(r, 1500));
-        await sppNativePoolSync();
+        const secondSync = await syncPoolWithRpcFailover(chainKey, ownerAddress);
+        if (!secondSync.ok) throw new Error(secondSync.message || 'Private pool sync failed');
       } catch {
         /* deposit will sync again */
       }
@@ -867,18 +991,18 @@ export async function ensureSppAccountReady(
       current,
       config,
       aspReady
-        ? `Private XLM ready to send — ${reg.error}`
+        ? `Private XLM ready to send (${config.network.toUpperCase()}) — ${reg.error}`
         : reg.error
     );
   }
 
   const aspReady = isAspReady(current, config.aspMembershipId);
   const keysRegistered = isKeysRegistered(current, config.registryId);
-  let message = 'Private XLM set up on this device';
+  let message = `Private XLM set up on this device (${config.network.toUpperCase()})`;
   if (aspReady && keysRegistered) {
-    message = 'Private XLM ready — can send and receive private transfers';
+    message = `Private XLM ready — can send and receive private transfers (${config.network.toUpperCase()})`;
   } else if (aspReady) {
-    message = 'Private XLM ready';
+    message = `Private XLM ready (${config.network.toUpperCase()})`;
   }
 
   return finalizeOnboardResult(current, config, message);
@@ -920,7 +1044,7 @@ export async function onboardSppAccount(
     message =
       'Privacy derivation signed. ASP leaf compute needs the native module next — then membership can be registered automatically.';
   } else if (account.aspInserted) {
-    message = 'Private XLM account already registered for ASP membership.';
+    message = `Private XLM account already registered for ASP membership (${config.network.toUpperCase()}).`;
   }
 
   // Always try registry when pubkeys exist (even if ASP insert failed — receive

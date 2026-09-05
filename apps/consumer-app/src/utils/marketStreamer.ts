@@ -14,7 +14,7 @@ const BINANCE_SYMBOLS: Record<string, string> = {
   XLM: 'XLMUSDT',
 };
 
-// Reverse map for quick lookup from Binance stream symbol to VeilPay symbol
+// Reverse map for quick lookup from Binance stream symbol to Veilpay symbol
 const STREAM_TO_SYMBOL: Record<string, string> = Object.entries(BINANCE_SYMBOLS).reduce(
   (acc, [internal, binance]) => {
     acc[binance.toLowerCase()] = internal;
@@ -29,7 +29,7 @@ class MarketStreamer {
   private maxReconnectAttempts = 5;
   private activeStreams = new Set<string>();
   
-  // Ref count: how many screens are asking for a specific VeilPay symbol
+  // Ref count: how many screens are asking for a specific Veilpay symbol
   private refCounts: Record<string, number> = {};
   
   private listeners: Set<Listener> = new Set();

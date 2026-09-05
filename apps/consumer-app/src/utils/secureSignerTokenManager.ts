@@ -218,14 +218,16 @@ export class BiometricTokenManager {
 
   /**
    * Clean up expired tokens and failure records periodically.
-   * Removes tokens older than 2x expiry window and consumed tokens.
+   * Removes tokens older than 2x expiry window. Consumed tokens are kept in the
+   * store (within this window) so token-reuse attempts are still detected and
+   * reported distinctly instead of surfacing as "token not found".
    */
   private cleanupExpiredTokens(now: number): void {
     const cutoff = now - BiometricTokenManager.TOKEN_EXPIRY_MS * 2;
     let deletedCount = 0;
 
     for (const [key, entry] of this.tokenStore.entries()) {
-      if (entry.issuedAt < cutoff || entry.consumed) {
+      if (entry.issuedAt < cutoff) {
         this.tokenStore.delete(key);
         deletedCount++;
       }

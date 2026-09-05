@@ -8,38 +8,43 @@ import { AppState } from 'react-native';
 import { useClipboardAutoWipe } from '../useClipboardAutoWipe';
 import * as clipboardUtils from '../../utils/clipboard';
 
-// Mock clipboard utilities
+// Mock clipboard utilities with a stateful fake. The hook only wipes the
+// clipboard when getClipboardString() still matches the value it copied, so
+// the fake must return whatever setClipboardString last wrote.
+const mockClipboardStore: { current: string } = { current: '' };
 jest.mock('../../utils/clipboard', () => ({
-  setClipboardString: jest.fn().mockResolvedValue(true),
-  getClipboardString: jest.fn().mockResolvedValue(''),
+  setClipboardString: jest.fn(async (value: string) => {
+    mockClipboardStore.current = value;
+    return true;
+  }),
+  getClipboardString: jest.fn(async () => mockClipboardStore.current),
 }));
 
-// Mock AppState - use factory pattern to avoid hoisted variable issues
+// Mock AppState by spying on the real module. A whole-module jest.mock of
+// 'react-native' (spreading requireActual) breaks the require chain of
+// @react-native/virtualized-lists with an Object.assign error, so use a
+// targeted spy instead.
 const mockAppStateListeners: ((state: any) => void)[] = [];
-jest.mock('react-native', () => {
-  const actual = jest.requireActual('react-native');
-  return {
-    ...actual,
-    AppState: {
-      addEventListener: jest.fn((event: string, listener: (state: any) => void) => {
-        if (event === 'change') {
-          mockAppStateListeners.push(listener);
-        }
-        return { remove: jest.fn() };
-      }),
-    },
-  };
-});
 
 describe('useClipboardAutoWipe', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     mockAppStateListeners.length = 0;
+
+    jest.spyOn(AppState, 'addEventListener').mockImplementation(
+      ((event: string, listener: (state: any) => void) => {
+        if (event === 'change') {
+          mockAppStateListeners.push(listener);
+        }
+        return { remove: jest.fn() };
+      }) as any
+    );
   });
 
   afterEach(() => {
     jest.useRealTimers();
+    jest.restoreAllMocks();
   });
 
   it('copies data to clipboard', async () => {
@@ -82,9 +87,14 @@ describe('useClipboardAutoWipe', () => {
 
     expect(result.current.isClipboardActive).toBe(true);
 
-    // Advance to 30 seconds
+    // Advance to 30 seconds and flush async clearClipboard work
     act(() => {
       jest.advanceTimersByTime(30000);
+    });
+    // clearClipboard is async and not awaited by the setTimeout callback,
+    // so flush microtasks before asserting
+    await act(async () => {
+      await Promise.resolve();
     });
 
     expect(clipboardUtils.setClipboardString).toHaveBeenCalledWith('');
@@ -202,6 +212,11 @@ describe('useClipboardAutoWipe', () => {
 
     act(() => {
       jest.advanceTimersByTime(3000);
+    });
+    // Flush the async clearClipboard (timeout fired at 5s) so the final
+    // countdown clears to ''
+    await act(async () => {
+      await Promise.resolve();
     });
 
     expect(result.current.countdownText).toBe('');

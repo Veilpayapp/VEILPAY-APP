@@ -12,9 +12,9 @@
  * - syncing    → indeterminate progress with sync copy
  */
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import Animated, { FadeOut, SlideInDown } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { Icon, type IconName } from '../Icon';
 import { useTheme, useStyles, typography, type Colors } from '../../styles/design-tokens';
 import type { PrivacyReadyStatus } from './DashboardBalanceCard';
@@ -28,6 +28,10 @@ export interface PrivacyStatusBannerProps {
   statusDetail: string | null;
   /** Whether private mode is active. */
   privacyMode: boolean;
+  /** Network qualifier for network-ambiguous copy ('TESTNET' | 'MAINNET'). */
+  networkLabel?: string;
+  /** Clears transient success/info copy after its quiet confirmation window. */
+  onDismiss?: () => void;
 }
 
 /**
@@ -35,10 +39,45 @@ export interface PrivacyStatusBannerProps {
  */
 function classifyBanner(
   readyStatus: PrivacyReadyStatus,
-  detail: string | null
+  detail: string | null,
+  networkLabel?: string
 ): { variant: PrivacyBannerVariant; icon: IconName; label: string; sublabel?: string } | null {
+  const qual = networkLabel ? ` · ${networkLabel}` : '';
   if (!detail && readyStatus === 'ready') return null; // fully ready, hide banner
   if (!detail && !readyStatus) return null;
+
+  // Prove-ready confirmation. Must be matched before the generic `/sync/`
+  // classifier below, otherwise the "Sync ready" detail set by the home
+  // readiness gate renders as an indeterminate spinner — i.e. the banner
+  // would claim it is still syncing at the exact moment sync completed.
+  if (
+    readyStatus === 'ready' &&
+    /sync ready|ready for private|private xlm ready/i.test(detail || '')
+  ) {
+    return {
+      variant: 'ready',
+      icon: 'success',
+      label: `Private XLM ready${qual}`,
+      sublabel: 'Sync complete — private sends enabled',
+    };
+  }
+
+  // Prove-readiness is authoritative and sticky. A later best-effort balance
+  // refresh can still hit a transient RPC/network error, but that must not
+  // replace the confirmed ready state with the contradictory red
+  // "Sync unavailable" banner. Keep the useful distinction in quiet copy;
+  // diagnostics retain the underlying transport failure for troubleshooting.
+  if (
+    readyStatus === 'ready' &&
+    /sync failed|network error|error sending|unreachable|timed out/i.test(detail || '')
+  ) {
+    return {
+      variant: 'info',
+      icon: 'success',
+      label: `Private XLM ready${qual}`,
+      sublabel: 'Latest balance refresh was unavailable',
+    };
+  }
 
   // Fund needed — highest priority actionable state
   if (/not funded|send at least|fund.*account|2 xlm/i.test(detail || '')) {
@@ -104,8 +143,8 @@ function classifyBanner(
     return {
       variant: 'setting_up',
       icon: 'shield',
-      label: 'Setting up private account',
-      sublabel: 'This only happens once',
+      label: `Setting up private account${qual}`,
+      sublabel: 'This only happens once per network',
     };
   }
 
@@ -144,14 +183,24 @@ export function PrivacyStatusBanner({
   readyStatus,
   statusDetail,
   privacyMode,
+  networkLabel,
+  onDismiss,
 }: PrivacyStatusBannerProps) {
   const styles = useStyles(themeStyles);
   const { colors } = useTheme();
 
   const banner = useMemo(
-    () => classifyBanner(readyStatus, statusDetail),
-    [readyStatus, statusDetail]
+    () => classifyBanner(readyStatus, statusDetail, networkLabel),
+    [readyStatus, statusDetail, networkLabel]
   );
+
+  useEffect(() => {
+    if (!privacyMode || !banner || !onDismiss) return;
+    if (banner.variant !== 'ready' && banner.variant !== 'info') return;
+
+    const timer = setTimeout(onDismiss, 2_500);
+    return () => clearTimeout(timer);
+  }, [banner, onDismiss, privacyMode]);
 
   if (!privacyMode || !banner) return null;
 
@@ -205,7 +254,7 @@ export function PrivacyStatusBanner({
 
   return (
     <Animated.View
-      entering={SlideInDown.duration(300).springify().damping(18)}
+      entering={FadeIn.duration(200)}
       exiting={FadeOut.duration(200)}
       style={[
         styles.container,
@@ -223,7 +272,7 @@ export function PrivacyStatusBanner({
         )}
       </View>
       <View style={styles.textWrap}>
-        <Text style={[styles.label, { color: vs.labelColor }]} numberOfLines={1}>
+        <Text style={[styles.label, { color: vs.labelColor }]} numberOfLines={2}>
           {banner.label}
         </Text>
         {banner.sublabel ? (
@@ -240,7 +289,7 @@ const themeStyles = (colors: Colors) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       paddingVertical: 10,
       paddingHorizontal: 12,
       marginTop: 12,
@@ -252,6 +301,7 @@ const themeStyles = (colors: Colors) =>
       height: 20,
       alignItems: 'center',
       justifyContent: 'center',
+      marginTop: -2,
     },
     textWrap: {
       flex: 1,
@@ -260,6 +310,7 @@ const themeStyles = (colors: Colors) =>
     label: {
       fontFamily: typography.fontFamily.mono,
       fontSize: 12,
+      lineHeight: 16,
       fontWeight: '600',
       letterSpacing: 0.3,
     },
@@ -267,5 +318,6 @@ const themeStyles = (colors: Colors) =>
       fontFamily: typography.fontFamily.body,
       fontSize: 11,
       lineHeight: 15,
+      flexWrap: 'wrap',
     },
   });

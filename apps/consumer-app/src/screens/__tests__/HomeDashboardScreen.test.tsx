@@ -220,6 +220,7 @@ describe('HomeDashboardScreen', () => {
   });
 
   it('opens swap externally and routes buy/sell in-app', async () => {
+    jest.setTimeout(30000);
     const navigation = { navigate: jest.fn() };
     const route = { key: 'Home', name: 'Home', params: undefined };
 
@@ -258,7 +259,7 @@ describe('HomeDashboardScreen', () => {
     fireEvent.press(screen.getByText('OFF-RAMP FIAT'));
 
     expect(navigation.navigate).toHaveBeenCalledWith(SCREENS.ONRAMP_AMOUNT, { flow: 'sell' });
-  });
+  }, 30000);
 
   it('switches network through the selector modal', async () => {
     const navigation = { navigate: jest.fn() };

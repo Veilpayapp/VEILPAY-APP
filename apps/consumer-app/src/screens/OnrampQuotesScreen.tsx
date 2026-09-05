@@ -15,6 +15,7 @@ import { buildTransakDepositUrl, FIAT_CURRENCIES, type FiatCurrency } from '../u
 import { filterSupportedQuotes, getSupportedTokens, isTokenSupported } from '../utils/onrampProviderMatrix';
 import { logQuotesFetched, logQuotesFetchError, logProviderSelected, logUnsupportedChain } from '../utils/onrampLogger';
 import { useOnramp } from '../hooks/useOnramp';
+import { getAttestationHeaders } from '../services/attestation';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/AppNavigator';
@@ -119,7 +120,11 @@ export function OnrampQuotesScreen({ navigation, route }: OnrampQuotesScreenProp
         cryptoToken,
         flow,
       });
-      const response = await fetch(`${baseUrl}/api/v1/onramp/quotes?${query.toString()}`);
+      // Hardening #2: attach Play Integrity attestation headers when enabled.
+      const attestationHeaders = await getAttestationHeaders();
+      const response = await fetch(`${baseUrl}/api/v1/onramp/quotes?${query.toString()}`, {
+        headers: attestationHeaders,
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch quotes');

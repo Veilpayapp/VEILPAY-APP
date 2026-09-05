@@ -6,8 +6,76 @@ def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 def sppCircuitAssetDir = file("$buildDir/generated/sppCircuitAssets")
 def sppCircuitSourceDir = file("$projectRoot/assets/spp/circuits")
 
+// reqwest 0.13 uses rustls-platform-verifier on Android. Cargo ships the
+// matching JVM verifier AAR alongside the resolved Rust crate. Package it in
+// the application (rather than the Expo library AAR) so JNI certificate
+// verification can load org.rustls.platformverifier at runtime.
+// Resolution is lazy (runs only when the compile classpath / packaging actually
+// queries it, not at Gradle configuration time) and tolerant: if cargo is not on
+// PATH or the packages/spp-native manifest cannot be resolved (e.g. a fresh clone
+// before the submodule is initialized), we log a clear warning and return null
+// instead of hard-failing the whole build. lint/test and other tasks that never
+// touch the native TLS verifier therefore configure and run even in a cargo-less
+// environment. The AAR is only absent when resolution genuinely fails; the
+// correctly-resolvable path below still returns the packaged AAR. It can be
+// skipped entirely with -Pandroid.enableNativeTlsVerifier=false.
+def rustlsVerifierEnabled = (findProperty('android.enableNativeTlsVerifier') ?: 'true').toBoolean()
+
+File findRustlsPlatformVerifierAar() {
+    if (!rustlsVerifierEnabled) {
+        logger.warn('[rustls-verifier] disabled via -Pandroid.enableNativeTlsVerifier=false; skipping AAR packaging')
+        return null
+    }
+    def manifest = new File(rootDir, '../../../packages/spp-native/Cargo.toml').canonicalFile
+    def metadataText
+    try {
+        metadataText = providers.exec {
+            workingDir manifest.parentFile
+            commandLine 'cargo', 'metadata', '--format-version', '1',
+                '--filter-platform', 'aarch64-linux-android',
+                '--manifest-path', manifest.absolutePath
+        }.standardOutput.asText.get()
+    } catch (Exception e) {
+        logger.warn(
+            "rustls-platform-verifier AAR not packaged: cargo metadata failed (${e.message}). " +
+            "Install the Rust toolchain (packages/spp-native) for native-pool TLS verifier " +
+            "packaging, or set -Pandroid.enableNativeTlsVerifier=false to skip. " +
+            "lint/test continue without it."
+        )
+        return null
+    }
+    def metadata
+    try {
+        metadata = new groovy.json.JsonSlurper().parseText(metadataText)
+    } catch (Exception e) {
+        logger.warn(
+            "rustls-platform-verifier AAR not packaged: failed to parse cargo metadata (${e.message}). " +
+            "Set -Pandroid.enableNativeTlsVerifier=false to skip."
+        )
+        return null
+    }
+    def supportPackage = metadata.packages.find {
+        it.name == 'rustls-platform-verifier-android'
+    }
+    if (supportPackage == null) {
+        logger.warn('rustls-platform-verifier AAR not packaged: cargo metadata did not resolve rustls-platform-verifier-android')
+        return null
+    }
+    def packageDir = new File(supportPackage.manifest_path).parentFile
+    def version = supportPackage.version
+    def aar = new File(
+        packageDir,
+        "maven/rustls/rustls-platform-verifier/${version}/rustls-platform-verifier-${version}.aar"
+    )
+    if (!aar.isFile()) {
+        logger.warn("rustls-platform-verifier AAR not packaged: missing ${aar}")
+        return null
+    }
+    return aar
+}
+
 // Read version from version.json (source of truth)
-def versionFile = file("$projectRoot/apps/consumer-app/version.json")
+def versionFile = file("$projectRoot/version.json")
 def versionInfo = null
 if (versionFile.exists()) {
     def slurper = new groovy.json.JsonSlurper()
@@ -144,22 +212,22 @@ android {
             // Production keystore - loaded from Doppler via gradle.properties
             // ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
             // are injected by EAS preInstallHook before gradle execution
-            def keystorePath = System.getenv("ANDROID_KEYSTORE_FILE") ?: findProperty("ANDROID_KEYSTORE_FILE")
-            def keystorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: findProperty("ANDROID_KEYSTORE_PASSWORD")
-            def keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: findProperty("ANDROID_KEY_ALIAS")
-            def keyPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: findProperty("ANDROID_KEY_PASSWORD")
+            def ksPath = System.getenv("ANDROID_KEYSTORE_FILE") ?: findProperty("ANDROID_KEYSTORE_FILE")
+            def ksPassword = System.getenv("ANDROID_KEYSTORE_PASSWORD") ?: findProperty("ANDROID_KEYSTORE_PASSWORD")
+            def kAlias = System.getenv("ANDROID_KEY_ALIAS") ?: findProperty("ANDROID_KEY_ALIAS")
+            def kPassword = System.getenv("ANDROID_KEY_PASSWORD") ?: findProperty("ANDROID_KEY_PASSWORD")
 
-            if (keystorePath && keystorePassword && keyAlias && keyPassword) {
-                storeFile file(keystorePath)
-                storePassword keystorePassword
-                this.keyAlias keyAlias
-                keyPassword keyPassword
+            if (ksPath && ksPassword && kAlias && kPassword) {
+                storeFile file(ksPath)
+                storePassword ksPassword
+                keyAlias kAlias
+                keyPassword kPassword
             } else {
                 // Fallback to debug keystore if production keystore not configured
                 // This should only happen in local builds; EAS builds MUST have release keystore
                 storeFile file('debug.keystore')
                 storePassword 'android'
-                this.keyAlias 'androiddebugkey'
+                keyAlias 'androiddebugkey'
                 keyPassword 'android'
             }
         }
@@ -223,6 +291,15 @@ tasks.matching { it.name.toLowerCase().contains("lint") }.configureEach {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    // Lazy + tolerant: `cargo metadata` runs only when this file collection is
+    // queried (compile-classpath resolution / packaging), never at Gradle
+    // configuration time. On any resolution failure findRustlsPlatformVerifierAar()
+    // returns null -> empty collection -> the AAR is omitted with a warning above,
+    // so lint/test and fresh-checkout builds with no cargo still configure and run.
+    implementation files(providers.provider {
+        def aar = findRustlsPlatformVerifierAar()
+        return aar == null ? [] : [aar]
+    })
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";

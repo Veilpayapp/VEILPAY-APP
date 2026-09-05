@@ -1,5 +1,5 @@
 /**
- * VeilPay — Circuit Artifact URLs
+ * Veilpay — Circuit Artifact URLs
  *
  * Build-time configuration for the Groth16 circuit artifacts consumed by
  * `ZkpProver` (the WebView-hosted snarkjs bridge) and any pre-flight checks
@@ -54,6 +54,26 @@ export const CIRCUIT_ZKEY_URL: string =
   (process.env.EXPO_PUBLIC_CIRCUIT_ZKEY_URL as string | undefined) ?? '';
 
 /**
+ * Pinned SHA-256 hex digests of the circuit artifacts (`withdraw.wasm` and
+ * `withdraw_final.zkey`). Supply at bundle time:
+ *
+ *   EXPO_PUBLIC_CIRCUIT_WASM_SHA256 = <sha256 hex of withdraw.wasm>
+ *   EXPO_PUBLIC_CIRCUIT_ZKEY_SHA256 = <sha256 hex of withdraw_final.zkey>
+ *
+ * `ZkpProver` verifies the fetched bytes against these before handing them to
+ * `snarkjs.groth16.fullProve`, so a tampered or MITM'd artifact cannot silently
+ * substitute a malicious wasm/zkey that exfiltrates the private witness. Empty
+ * means "not pinned" — the integrity check is skipped (URL-only fetch), which
+ * keeps previously-working local builds unblocked. Pins are REQUIRED-IF-CONFIGURED:
+ * when both artifact URLs are set AND both hashes are present, the hashes are
+ * enforced; if the hashes are absent the URL-only path proceeds without blocking.
+ */
+export const CIRCUIT_WASM_SHA256: string =
+  (process.env.EXPO_PUBLIC_CIRCUIT_WASM_SHA256 as string | undefined) ?? '';
+export const CIRCUIT_ZKEY_SHA256: string =
+  (process.env.EXPO_PUBLIC_CIRCUIT_ZKEY_SHA256 as string | undefined) ?? '';
+
+/**
  * Throws a typed, human-readable error if either circuit artifact URL is
  * unconfigured. Intended to be called as a pre-flight guard at the start of
  * any `'max'`-privacy payment flow (and from `ZkpProver` before injecting
@@ -63,14 +83,19 @@ export const CIRCUIT_ZKEY_URL: string =
  * @throws Error with code `CIRCUIT_NOT_CONFIGURED` when either URL is empty.
  */
 export function assertCircuitConfigured(): void {
-  if (CIRCUIT_WASM_URL === '' || CIRCUIT_ZKEY_URL === '') {
-    const missing: string[] = [];
-    if (CIRCUIT_WASM_URL === '') missing.push('EXPO_PUBLIC_CIRCUIT_WASM_URL');
-    if (CIRCUIT_ZKEY_URL === '') missing.push('EXPO_PUBLIC_CIRCUIT_ZKEY_URL');
+  // Fail closed ONLY when the artifact URLs are missing. The SHA-256 pins are
+  // REQUIRED-IF-CONFIGURED: when both URLs and both hashes are present the
+  // integrity check is enforced (in the WebView PROVE script); when the hashes
+  // are absent we proceed with URL-only fetch rather than disabling the whole
+  // privacy feature for a build that previously worked.
+  const missing: string[] = [];
+  if (CIRCUIT_WASM_URL === '') missing.push('EXPO_PUBLIC_CIRCUIT_WASM_URL');
+  if (CIRCUIT_ZKEY_URL === '') missing.push('EXPO_PUBLIC_CIRCUIT_ZKEY_URL');
+  if (missing.length > 0) {
     const err = new Error(
       `Privacy circuit artifacts are not configured. Missing env var(s): ${missing.join(
         ', '
-      )}. Set them in the Expo build environment to the public URLs of withdraw.wasm and withdraw_final.zkey produced by packages/circuits/compile.sh.`
+      )}. Set them in the Expo build environment to the public URLs of withdraw.wasm and withdraw_final.zkey produced by packages/circuits/compile.sh. (Optional: pin each artifact with its SHA-256 digest via EXPO_PUBLIC_CIRCUIT_WASM_SHA256 / EXPO_PUBLIC_CIRCUIT_ZKEY_SHA256 to enable integrity verification.)`
     );
     (err as Error & { code?: string }).code = 'CIRCUIT_NOT_CONFIGURED';
     throw err;

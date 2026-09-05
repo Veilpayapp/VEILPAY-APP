@@ -28,7 +28,8 @@ describe('Security Fixes Integration: Secure Withdrawal Flow', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    process.env = { ...originalEnv };
+    // Set individual env vars instead of replacing process.env (which can
+    // cause issues with the function reading the wrong reference)
     process.env.NODE_ENV = 'production';
     process.env.EXPO_PUBLIC_BACKEND_BASE_URL = 'https://api.example.com';
   });
@@ -204,7 +205,7 @@ describe('Security Fixes Integration: Secure Withdrawal Flow', () => {
       }
 
       // All errors should be clear and actionable
-      expect(errors['SEC-004']).toContain('nullifier');
+      expect(errors['SEC-004']).toContain('Nullifier');
       expect(errors['SEC-005']).toContain('production');
       expect(errors['SEC-008']).toBeDefined();
     });

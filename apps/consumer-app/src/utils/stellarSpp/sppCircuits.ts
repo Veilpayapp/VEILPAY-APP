@@ -67,12 +67,8 @@ export async function getCircuitsReadinessForDir(dir: string): Promise<CircuitsR
     };
     if (FS.getInfoAsync) {
       for (const name of REQUIRED) {
-        const path = dir.endsWith('/') ? `${dir}${name}` : `${dir}/${name}`;
-        const uri = path.startsWith('file:')
-          ? path
-          : path.startsWith('/')
-            ? `file://${path}`
-            : path;
+        const path = `${dir}/${name}`;
+        const uri = path.startsWith('/') ? `file://${path}` : path;
         const info = await FS.getInfoAsync(uri);
         if (!info.exists) missing.push(name);
       }

@@ -12,7 +12,7 @@ export interface OnrampConfig {
 }
 
 /**
- * Maps VeilPay internal tokens/networks to Onramp.money codes.
+ * Maps Veilpay internal tokens/networks to Onramp.money codes.
  */
 export const getOnrampConfig = (tokenSymbol: string, chainKey: string): OnrampConfig => {
   const symbol = tokenSymbol.toUpperCase();

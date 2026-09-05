@@ -1,0 +1,250 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Veilpay SPP privacy state machine — verified diagram</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1d212b; --ink:#e8eaf0; --mut:#9aa3b2;
+    --line:#2a2f3b; --accent:#7c8cf8; --green:#4ade80; --amber:#fbbf24; --red:#f87171;
+    --violet:#c084fc; --cyan:#22d3ee;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#f6f7f9; --panel:#ffffff; --panel2:#f1f3f7; --ink:#1b1f27; --mut:#5b6472;
+      --line:#dfe3ea; --accent:#4f5bd5; --green:#15803d; --amber:#b45309; --red:#b91c1c;
+      --violet:#7c3aed; --cyan:#0e7490;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1d212b; --ink:#e8eaf0; --mut:#9aa3b2;
+    --line:#2a2f3b; --accent:#7c8cf8; --green:#4ade80; --amber:#fbbf24; --red:#f87171;
+    --violet:#c084fc; --cyan:#22d3ee;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 28px 80px}
+  h1{font-size:26px;line-height:1.25;margin:0 0 6px;letter-spacing:-.3px}
+  .sub{color:var(--mut);font-size:14px;margin:0 0 30px}
+  .tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.4px;
+    text-transform:uppercase;border:1px solid var(--line);border-radius:6px;padding:2px 8px;
+    margin-right:6px;color:var(--mut)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:22px 22px 8px;margin:26px 0;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+  .card h2{font-size:17px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .card .lead{color:var(--mut);font-size:13.5px;margin:0 0 14px}
+  .var{font-family:ui-monospace,"SF Mono",Consolas,Menlo,monospace;font-size:12.5px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 6px;
+    color:var(--accent);white-space:nowrap}
+  .mermaid{background:transparent;margin:6px 0 14px;overflow-x:auto}
+  .badge{font-size:11px;font-weight:600;border-radius:20px;padding:2px 10px;white-space:nowrap}
+  .b-a{background:rgba(193,132,252,.14);color:var(--violet)}
+  .b-b{background:rgba(251,191,36,.14);color:var(--amber)}
+  .b-c{background:rgba(248,113,113,.14);color:var(--red)}
+  .b-ok{background:rgba(74,222,128,.14);color:var(--green)}
+  .note{font-size:13px;color:var(--mut);border-left:3px solid var(--line);
+    padding:2px 0 2px 14px;margin:12px 0}
+  .note b{color:var(--ink)}
+  code{font-family:ui-monospace,"SF Mono",Consolas,Menlo,monospace;font-size:12px}
+  .ln{color:var(--cyan);font-size:11px;font-family:ui-monospace,Consolas,monospace}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0 14px}
+  th{text-align:left;color:var(--mut);font-weight:600;border-bottom:1px solid var(--line);
+    padding:6px 10px;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+  td{border-bottom:1px solid var(--line);padding:8px 10px;vertical-align:top}
+  td:first-child{white-space:nowrap;font-weight:600}
+  .dosage{margin:14px 0 6px}
+  .dosage h3{font-size:14px;margin:18px 0 8px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .fix{border:1px solid var(--line);border-left:3px solid var(--line);border-radius:8px;
+    padding:12px 14px;margin:10px 0}
+  .fix.a{border-left-color:var(--violet)} .fix.b{border-left-color:var(--amber)}
+  .fix.c{border-left-color:var(--red)}
+  .fix .h{font-weight:700;font-size:13.5px;margin-bottom:4px}
+  .fix p{margin:4px 0;font-size:13px;color:var(--mut)}
+  .fix p b{color:var(--ink)}
+  .srcs{font-size:11.5px;color:var(--mut)}
+</style>
+
+<h1>Veilpay SPP privacy — state machine &amp; root causes</h1>
+<p class="sub">Three independently-verified Mermaid diagrams over the actual source, with surgical line annotations for Problems A&nbsp;/&nbsp;B&nbsp;/&nbsp;C. Every line number was adversarially checked against <span class="var">HomeDashboardScreen.tsx</span>, <span class="var">usePaymentTransaction.ts</span>, <span class="var">DashboardBalanceCard.tsx</span>, <span class="var">PrivacyStatusBanner.tsx</span> by 10 verifier agents + 1 completeness critic.</p>
+
+<div class="card">
+  <h2>① <code>privacyReadyStatus</code> — the 4-state readiness latch <span class="var">HomeDashboardScreen.tsx:203</span></h2>
+  <p class="lead">This latch gates the whole private-send flow. <span class="badge b-a">A</span> lives here: on mainnet it can land on <b>unavailable</b> and, once there, there is <b>no</b> edge out to <b>ready</b>.</p>
+
+  <pre class="mermaid">
+stateDiagram-v2
+    direction LR
+
+    [*] --> null: "initial useState(null) (HomeDashboardScreen:203)"
+
+    note right of null
+        Mode off or pre-first-select.
+        privacyReadyStatus defaults null at mount (:203).
+        Card shows total balance, no privacy chrome.
+    end note
+
+    null --> setting_up: "handleSelectPrivacyAsset sticky fill (HomeDashboardScreen:697) — prev ?? setting_up"
+    null --> unavailable: "probe finds caps.poolOps false (:459, :736-739)"
+    null --> ready: "quiet readiness probe, account.aspInserted true (HomeDashboardScreen:467-468) — NO readyForProve check"
+
+    setting_up --> setting_up: "prepareSppOp poll attempt 1-3 not ready, 1s gap (:778-801, :831-853) — setPrivacyStatusDetail(formatSppSyncUserMessage(blocker))"
+    setting_up --> ready: "prep.readyForProve true (:783-786, :836-839, :871) — proveReady = true; setVisibility('ready')"
+    setting_up --> ready: "recovery path proveReady true (:925, :932, :936-937) — only confirmed prove-readiness unlocks send UI (:921-924)"
+    setting_up --> setting_up: "ensureSppAccountReady then poll exhausted (:804-810, :856-862) — setVisibility('setting_up'); detail keeps blocker msg"
+
+    ready --> ready: "re-enter sticky — prev === 'ready' ? 'ready' : 'setting_up' (:471-473)"
+    ready --> null: "handleExitPrivacyMode (HomeDashboardScreen:962-969) — privacySetupGen++; setSelectedPrivacyAssetId(null); setPrivacyStatusDetail(null)"
+    ready --> setting_up: "FORBIDDEN — sticky guard blocks downgrade (:471-473)"
+
+    setting_up --> unavailable: "caps.poolOps false probed at enter (:736-739) — setVisibility('unavailable'); detail: needs a pool-ops build"
+    unavailable --> unavailable: "re-enter sticky, setVisibility keeps unavailable (:697, :737-738)"
+
+    unavailable --> setting_up: "NO EDGE — unreachable in code (see Problem A)"
+    setting_up --> null: "handleExitPrivacyMode (:962-969) / probe !privacyMode (:448-449)"
+    unavailable --> null: "handleExitPrivacyMode (:962-969) / probe !privacyMode (:448-449)"
+    null --> null: "privacyMode false, status not wired to card (:1321-1322)"
+  </pre>
+
+  <p class="note"><b>Critical verified nuance:</b> the latch can reach <b>ready</b> by <em>two independent paths</em> — the heavy <code>prepareSppOp().readyForProve</code> poll (<span class="ln">:786/:839/:871</span>) <b>and</b> the quiet probe at <span class="ln">:467-468</span>, which trusts <code>account.aspInserted</code> alone with no prove check. The code's own comment (<span class="ln">:764-766</span>) calls trusting <code>aspInserted</code> alone "exactly the bug that enabled sends after the readiness poll had said not ready."</p>
+</div>
+
+<div class="card">
+  <h2>② <code>privacyStatusDetail</code> — banner copy lifecycle &amp; the clear-at-exit race <span class="var">HomeDashboardScreen.tsx:206</span></h2>
+  <p class="lead">This drives the PrivacyStatusBanner, which is <b>stateless</b> — renders whenever <code>privacyMode &amp;&amp; classifyBanner(...)</code>, no dismiss, no expiry. <span class="badge b-b">B</span> lives in the clear points.</p>
+
+  <pre class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> Null
+
+    state "null" as Null
+    state "Setting up…" as C01
+    state "Publishing receive keys…" as C02
+    state "Syncing private account…" as C03
+    state "Sync ready" as C04
+    state "Error / blocker string" as ERR
+
+    Null --> C01: "enter, keysRegistered true (HomeDashboardScreen:813-816) — keysRegistered ? 'Setting up…' : 'Publishing receive keys…'"
+    Null --> C02: "enter, keysRegistered false (HomeDashboardScreen:813-816)"
+    Null --> C03: "enter, setupComplete not yet prove-ready (HomeDashboardScreen:772, :825) — setPrivacyStatusDetail('Syncing private account…')"
+    Null --> ERR: "owner missing (:690-693) | no poolOps (:739) | async throw (:945)"
+
+    C01 --> C03: "ensureSppAccountReady asp+keys ok, poll starts (HomeDashboardScreen:818-825)"
+    C02 --> C03: "ensureSppAccountReady asp+keys ok, poll starts (HomeDashboardScreen:818-825)"
+    C03 --> C03: "poll attempt 1-3 not prove-ready, 1s gap (:793-797, :846-850) — setPrivacyStatusDetail(formatSppSyncUserMessage(blocker))"
+    C03 --> C04: "prep.readyForProve true (:786-787, :839-840, :930, :934) — setPrivacyStatusDetail('Sync ready')"
+    C03 --> ERR: "poll exhausted (:804-810, :856-862) — detail keeps gatingSppBlocker / 'finishing…'"
+    C01 --> ERR: "ensure rejects / blocker (HomeDashboardScreen:886-892)"
+    C02 --> ERR: "ensure rejects / blocker (HomeDashboardScreen:886-892)"
+
+    %% ── Problem B: async re-set hazard (focus / light refresh) ──
+    C04 --> C04: "focus refresh re-sets, keeps 'Sync ready' — no clear (:332/:338/:354/:377)"
+    C04 --> ERR: "later refresh finds link-fail / non-recover (:354, :377)"
+    ERR --> ERR: "focus refresh re-paints same stale blocker — no clear"
+    Null --> C04: "focus bounce re-sets stale 'Sync ready' AFTER the exit-clear (:409/:425)"
+
+    C01 --> Null: exit (:967)
+    C02 --> Null: exit (:967)
+    C03 --> Null: exit (:967)
+    C04 --> Null: exit (:967)
+    ERR --> Null: exit (:967)
+
+    note right of Null
+        CLEAR points — only TWO, both on mode flip:
+          enter :676 — setPrivacyStatusDetail(null) on select (synchronous)
+          exit  :967 — setPrivacyStatusDetail(null) on handleExitPrivacyMode
+        No other path clears — a non-null detail is STICKY while in privacy
+        mode, and PrivacyStatusBanner.tsx has no auto-hide timer.
+
+        ASYNC RE-SET HAZARD (Problem B): handleRefreshPrivateBalance
+        (HomeDashboardScreen:319-382) writes detail at :332 (Restored),
+        :338 (Synced no pXLM), :354 (link-fail), :377 (catch) on EVERY
+        focus / light refresh, AFTER the enter-clear at :676. It never
+        clears again. A Settings→Home bounce (:409/:425) restores the
+        cached balance and re-sets detail, so a stale "Sync ready"/error
+        string survives the exit-clear and re-renders the banner back on
+        the standard screen.
+    end note
+  </pre>
+
+  <p class="note"><b>Narrow but real window (critic-verified):</b> the enter-clear at <span class="ln">:676</span> runs <em>synchronously</em> before the <code>InteractionManager</code>-heavy work, which neutralizes most stale-detail cases. The race only bites when an in-flight <code>refreshPrivateBalance</code> resolves between the clear and the first heavy-work status update — and every later focus refresh re-paints it with no matching clear.</p>
+</div>
+
+<div class="card">
+  <h2>③ SEND-GATE <code>txStatus</code> — proving → FROZEN is absorbing <span class="var">usePaymentTransaction.ts:203</span></h2>
+  <p class="lead">The private prove path can freeze permanently in <b>proving</b>. <span class="badge b-c">C</span> lives here: no timeout, no abort on the SPP path.</p>
+
+  <pre class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> IDLE
+
+    IDLE --> PROVING: "private confirm passes preflight — :1102 setTxStatus('proving'), async proof ~10-20s"
+    IDLE --> FAILED: "preflight bail — missing detail :391; bad addr :416; no mnemonic :425/:433; offline :456; spp disabled :504; poolOps off :519; asp not ready :527"
+    IDLE --> IDLE: "gas-estimate poll, no status change — :239-341"
+
+    PROVING --> PROVING: "await sppDeposit / sppWithdraw / sppTransfer pending in native prover / RPC — :1112-1124"
+    PROVING --> CONFIRMED: "spp op resolves → txResult confirmed — :1152-1153"
+    PROVING --> FAILED: "SppClientError SPP_OPS_NOT_READY / SPP_ASP_NOT_READY — :1180; other SppClientError → outer catch :585"
+    PROVING --> FAILED: "TransactionError / RelayerError from prover — outer catch :585 + :658"
+
+    PROVING --> FROZEN: "prove promise never settles — NO timeout, NO AbortController on private path — :1112-1124"
+    PROVING --> FROZEN: "unmount during prove — !isMountedRef guard :1150 returns WITHOUT clearing, status stays 'proving'"
+
+    note right of FROZEN
+        Standard path threads pollAbortRef (AbortController, :210/:1217);
+        the private SPP path has NO timeout and NO abort signal (:1112-1124).
+        sppDeposit/sppTransfer/sppWithdraw await the native prover or an RPC
+        call that can hang. If it never settles — or the screen unmounts into
+        the bare return at :1150 — txStatus is stuck at 'proving' for life.
+        No terminal status ever fires, so the modal spinner never flips to the
+        result geometry (Problem C loading-centering).
+    end note
+
+    FROZEN --> FROZEN: mounted but promise pending forever — :1112
+  </pre>
+</div>
+
+<div class="card">
+  <h2>Root-cause → fix mapping</h2>
+  <p class="lead">For each problem: the exact state variable, the failing mechanism, and the surgical fix.</p>
+
+  <h3><span class="badge b-a">A</span>&nbsp; Mainnet shield failure (never reaches send)</h3>
+  <div class="fix a"><div class="h">Two distinct scenarios — do not conflate</div>
+    <p><b>(a1) No mainnet manifest:</b> <code>SPP_MAINNET</code> null → <code>canActivatePrivacyAsset</code> false (<span class="var">privacyAssets.ts:78-81</span>) → <code>handleSelectPrivacyAsset</code> toasts and returns early (<span class="var">HomeDashboardScreen.tsx:660-663</span>). Never reaches the send flow.</p>
+    <p><b>(a2) poolOps off on a configured asset:</b> <code>sppNativeCapabilities().poolOps === false</code> → latch lands <code>unavailable</code> (<span class="var">:736-741</span>) with <b>no outgoing edge</b>. Send is gated on <code>ready</code>, so nothing that consumes <code>unavailable</code> blocks the dispatch — <code>sppDeposit/Withdraw/Transfer</code> hit the native layer and throw <code>SPP_OPS_NOT_READY</code>, surfacing as a failed modal.</p>
+  </div>
+  <div class="fix a"><div class="h">Mechanism</div>
+    <p>On mainnet the latch often <em>does</em> flip <code>ready</code> but <em>for the wrong reason</em>: the quiet probe at <span class="ln">:467-468</span> sets <code>ready</code> purely from <code>account.aspInserted</code> — a write that was <em>submitted</em> but not yet <em>visible on-chain</em> (the <code>4294967295</code> cursor / event-paging problem documented in <code>sppOnboard.ts:59-120</code>). The probe is thus a false-positive ready, gating sends that then fail in the prover. Code comment <span class="ln">:764-766</span> admits exactly this.</p>
+  </div>
+  <div class="fix a"><div class="h">Fix</div>
+    <p><b>(a1):</b> surface the disabled reason on the shield card, don't rely on a bare toast. <b>(a2):</b> wire an <code>unavailable → disabled send</code> guard at the hook level (<span class="var">usePaymentTransaction.ts</span>) so dispatch never reaches the native layer when <code>privacyReadyStatus === 'unavailable'</code>. <b>Both:</b> de-risk the probe — gate the <code>:467-468</code> <code>ready</code> on <code>existing.aspInserted &amp;&amp; existing.aspMembershipContractId === cfg.aspMembershipId &amp;&amp; existing.keysRegistered &amp;&amp; existing.registryContractId === cfg.registryId</code> (<span class="var">:751-760</span>) instead of <code>aspInserted</code> alone, or make the latch go <code>ready</code> only through a real <code>findAspLeafOnChain</code> re-check (<span class="var">sppOnboard.ts:266</span>).</p>
+  </div>
+
+  <h3><span class="badge b-b">B</span>&nbsp; Repeated re-sync on toggle + banner not clearing</h3>
+  <div class="fix b"><div class="h">Re-sync on toggle</div>
+    <p><code>privacyReadyStatus</code> is sticky (<span class="ln">:697</span> <code>prev ?? setting_up</code>), but <code>handleSelectPrivacyAsset</code> unconditionally re-runs the whole heavy block — <code>ensureSppAccountReady</code> (<span class="ln">:818</span>), the 3-attempt <code>prepareSppOp</code> poll (<span class="ln">:778/:831</span>) and the <code>aspReady</code>-branch <code>prepareSppOp</code> (<span class="ln">:867</span>) — on every enter even when <code>setupComplete</code> is already true. <code>privacySetupGenRef</code> aborts in-flight work (<span class="ln">:667</span>) but the next enter redoes all of it; the "alreadyRecovered → local only" short-circuit (<span class="ln">:900-903</span>) only suppresses the native balance open, not the probe (<span class="ln">:447-484</span>) or the prepare/poll. The user sees "Syncing private account…" → "Sync ready" churn per toggle.</p>
+  </div>
+  <div class="fix b"><div class="h">Banner not clearing</div>
+    <p>Only two null-writes on <code>privacyStatusDetail</code> — enter <span class="ln">:676</span>, exit <span class="ln">:967</span>. <code>handleRefreshPrivateBalance</code> re-writes it on every focus (<span class="ln">:332/:338/:354/:377</span>) with no matching clear, so the exit-clear is undone by an async refresh that landed after it (or by the next focus bounce), re-rendering a stale "Sync ready"/error banner on the standard screen. <code>PrivacyStatusBanner.tsx</code> is stateless with no auto-hide timer.</p>
+  </div>
+  <div class="fix b"><div class="h">Fix</div>
+    <p><b>Re-sync:</b> in <code>handleSelectPrivacyAsset</code>, short-circuit the heavy block when <code>setupComplete</code> is already true and status is already <code>ready</code> (skip <code>ensureSppAccountReady</code> + the poll; jump straight to a light <code>refreshPrivateBalanceSmart</code>). <b>Banner:</b> (1) add an expiry timer in <code>PrivacyStatusBanner.tsx</code> for <code>ready</code>/<code>info</code> variants (~3s auto-hide); (2) gate <code>privacyStatusDetail</code> writes in <code>refreshPrivateBalanceSmart</code>'s non-user paths on a fresh <code>setupGen === privacySetupGenRef.current</code>, and let the probe (<span class="ln">:447</span>) <code>setPrivacyStatusDetail(null)</code> when the mode flipped off.</p>
+  </div>
+
+  <h3><span class="badge b-c">C</span>&nbsp; Prove freeze + loading-animation centering</h3>
+  <div class="fix c"><div class="h">Prove freeze</div>
+    <p><code>setTxStatus('proving')</code> (<span class="ln">:1102</span>) has no timeout. The <code>proving → terminal</code> edge depends solely on <code>await sppDeposit/Withdraw/Transfer</code> (<span class="ln">:1115-1124</span>) settling. When the native prover hangs, <code>proving</code> is absorbing — nothing escapes it. Unlike the standard path's <code>pollAbortRef</code> (<span class="ln">:210/:1217</span>), the SPP path has no AbortController. The unmount guard <code>!isMountedRef.current</code> (<span class="ln">:1150</span>) <code>return</code>s before any <code>setTxStatus</code>, so leaving the screen mid-prove leaves status stuck.</p>
+  </div>
+  <div class="fix c"><div class="h">Loading centering</div>
+    <p>Because no terminal <code>failed</code>/<code>confirmed</code> ever fires, the <code>TransactionStatusCard</code> modal never flips from its in-progress geometry to the result geometry — the loading indicator stays in the wrong (un-finalized) layout and the spinner sits off-center.</p>
+  </div>
+  <div class="fix c"><div class="h">Fix</div>
+    <p>Wrap the SPP prove in a watchdog: <code>Promise.race</code> around <span class="ln">:1112-1124</span> with a ~30–45s budget (mirroring the ~10–20s promise) ending in <code>setTxStatus('failed')</code> + <code>setTxResult({hash:'',status:'failed',error:'Proof generation timed out'})</code>. In the <code>!isMountedRef.current</code> branch (<span class="ln">:1150</span>), set <code>failed</code> instead of a bare return, and thread an AbortController on the private path so the prover can be cancelled.</p>
+  </div>
+</div>
+
+<p class="srcs">Line annotations are verified against the working tree as of this analysis (HomeDashboardScreen.tsx, usePaymentTransaction.ts, PrivacyStatusBanner.tsx, DashboardBalanceCard.tsx, privacyAssets.ts, sppOnboard.ts, sppClient.ts).</p>
+
+</body>

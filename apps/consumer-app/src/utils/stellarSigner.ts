@@ -13,8 +13,8 @@ import {
   Memo,
   Account,
 } from 'stellar-sdk';
-import { mnemonicToSeed } from '@scure/bip39';
 import { derivePath } from 'ed25519-hd-key';
+import { deriveMnemonicSeed } from './mnemonicSeed';
 import { getStoredMnemonic, TransactionError } from './transactions';
 import { captureError, addBreadcrumb } from './sentry';
 import type { SignerParams, SignerResult } from './secureSigner';
@@ -57,7 +57,7 @@ function getStellarNetwork(chainKey: string): string {
 }
 
 async function deriveKeypair(mnemonicPhrase: string): Promise<Keypair> {
-  const seed = await mnemonicToSeed(mnemonicPhrase);
+  const seed = await deriveMnemonicSeed(mnemonicPhrase);
   const { key } = derivePath(STELLAR_DERIVATION_PATH, Buffer.from(seed).toString('hex'));
   return Keypair.fromRawEd25519Seed(key as any);
 }

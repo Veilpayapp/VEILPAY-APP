@@ -235,12 +235,12 @@ interface WorkspaceTarget {
 
 /**
  * Workspace directories whose `package.json` lives in this monorepo's
- * `apps/` or `packages/` tree but which are not VeilPay code — vendored
+ * `apps/` or `packages/` tree but which are not Veilpay code — vendored
  * upstream submodules (third-party skill packs, scaffold repos, etc.).
  *
  * They get a `package.json` because we need pnpm to resolve their
  * dependencies, but their lint output, tsc output, and coverage are not
- * VeilPay's responsibility and would otherwise dominate the aggregated
+ * Veilpay's responsibility and would otherwise dominate the aggregated
  * Code_Quality_Findings_List with thousands of upstream warnings.
  *
  * Each entry is the workspace-relative directory name (`packages/<name>`

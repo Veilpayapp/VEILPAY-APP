@@ -2,8 +2,9 @@ import { Worker, QueueEvents } from 'bullmq';
 import { prisma } from '../../lib/prisma';
 import { getRedisClient } from '../../lib/redis';
 import { deliverWebhook } from '../webhookDelivery';
-import { enqueueWebhookDlq } from '../webhookQueue';
+import { enqueueWebhookDlq, recoverOrphanedPendingDeliveries } from '../webhookQueue';
 import { incrementWebhookDeliveryAttempt } from '../../utils/metrics';
+import { logger } from '../../lib/logger';
 import { initializeWebhookWorker, closeWebhookWorker } from '../webhookWorker';
 
 let globalProcessor: any;
@@ -44,10 +45,19 @@ jest.mock('../webhookDelivery', () => ({
 
 jest.mock('../webhookQueue', () => ({
   enqueueWebhookDlq: jest.fn(),
+  recoverOrphanedPendingDeliveries: jest.fn(),
 }));
 
 jest.mock('../../utils/metrics', () => ({
   incrementWebhookDeliveryAttempt: jest.fn(),
+}));
+
+// Mock redis lock to execute the guarded callback immediately, so the worker-init
+// orphan-recovery sweep can be asserted deterministically regardless of Redis state.
+jest.mock('../../lib/redisLock', () => ({
+  withRedisLock: jest.fn(async (_key: string, _ttl: number, fn: () => Promise<unknown>) => {
+    await fn();
+  }),
 }));
 
 describe('webhookWorker', () => {
@@ -65,12 +75,16 @@ describe('webhookWorker', () => {
     expect(result).toBe(false);
   });
 
-  it('initializes the worker and queue events', () => {
-    jest.isolateModules(() => {
+  it('initializes the worker and runs the orphan-recovery sweep', async () => {
+    jest.isolateModules(async () => {
       const { initializeWebhookWorker } = require('../webhookWorker');
       (getRedisClient as jest.Mock).mockReturnValue({});
       const result = initializeWebhookWorker();
       expect(result).toBe(true);
+      // withRedisLock executes the guarded callback in a fire-and-forget microtask;
+      // yield so the recovery sweep has a chance to run, then assert it was triggered.
+      await new Promise((r) => setImmediate(r));
+      expect(recoverOrphanedPendingDeliveries).toHaveBeenCalled();
     });
   });
 
@@ -105,10 +119,11 @@ describe('webhookWorker', () => {
     });
 
     it('delivers webhook successfully', async () => {
+      const infoSpy = jest.spyOn(logger, 'info');
       (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({ webhookUrl: 'http://example.com' });
       (deliverWebhook as jest.Mock).mockResolvedValue({ success: true, statusCode: 200 });
       const job = { id: 'j-1', data: { merchantId: 'm-1', eventType: 'test' }, attemptsMade: 0, opts: { attempts: 3 } };
-      
+
       await processor(job);
 
       expect(deliverWebhook).toHaveBeenCalledWith('http://example.com', job.data);
@@ -116,6 +131,10 @@ describe('webhookWorker', () => {
       expect(prisma.webhookDelivery.create).toHaveBeenCalledWith(expect.objectContaining({
         data: expect.objectContaining({ status: 'delivered' }),
       }));
+      // SEC: the worker must never log the merchant's webhookUrl — merchants often embed
+      // an auth token in it. Assert no info log line contains the URL (credential-leak guard).
+      const logged = infoSpy.mock.calls.map((c: unknown[]) => JSON.stringify(c)).join(' ');
+      expect(logged).not.toContain('http://example.com');
     });
 
     it('handles webhook delivery failure but not final attempt', async () => {

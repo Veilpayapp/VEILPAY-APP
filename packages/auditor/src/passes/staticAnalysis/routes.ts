@@ -241,7 +241,7 @@ const CORS_INVOCATION_PATTERN = /\bcors\s*\(/;
  *   - HMAC + nonce model: a `createHmac(...).digest(...)` call combined
  *     with explicit timestamp-window enforcement (`Math.abs(... -
  *     timestamp) > <300_000-ish>`) and a Redis-or-equivalent nonce key.
- *     This is the model VeilPay uses for its `x-api-key` /
+ *     This is the model Veilpay uses for its `x-api-key` /
  *     `x-signature` / `x-timestamp` request envelope.
  */
 const JWT_LIBRARY_PATTERN = /\bfrom\s+['"](?:jsonwebtoken|jose)['"]/;
@@ -907,7 +907,7 @@ type AuthModelKind = 'jwt' | 'hmac' | 'unknown';
 /**
  * Classify the backend auth model so the JWT alg/ttl/refresh probes can
  * recognise an HMAC + nonce stack as a valid alternative. The HMAC + nonce
- * stack — used by VeilPay's `x-api-key` / `x-signature` / `x-timestamp`
+ * stack — used by Veilpay's `x-api-key` / `x-signature` / `x-timestamp`
  * envelope — provides the same security properties as JWT alg/ttl/refresh
  * (algorithm fixed by SHA-256 HMAC, freshness enforced by the timestamp
  * window, replay invalidation via the nonce TTL), so a hard JWT-only check

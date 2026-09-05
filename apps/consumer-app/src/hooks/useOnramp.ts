@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useTransactionStore, type OnrampOrderRecord, type OnrampOrderStatus } from '../stores/transactionStore';
 import { getOnrampConfig } from '../utils/onramp';
 import { captureError } from '../utils/sentry';
+import { getAttestationHeaders } from '../services/attestation';
 import type { FiatGatewayProvider } from '../utils/fiatGateway';
 
 const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
@@ -32,7 +33,7 @@ export const useOnramp = () => {
   const setLatestOnrampOrder = useTransactionStore(s => s.setLatestOnrampOrder);
 
   /**
-   * Fetches a signed Onramp URL from the VeilPay backend.
+   * Fetches a signed Onramp URL from the Veilpay backend.
    * The caller must supply `walletAddress` (resolved per-chain-type) to prevent
    * cross-chain fund loss.
    */
@@ -52,11 +53,15 @@ export const useOnramp = () => {
 
     try {
       const config = getOnrampConfig(params.cryptoToken, params.chainKey);
-      
+
+      // Hardening #2: attach Play Integrity attestation headers when enabled.
+      const attestationHeaders = await getAttestationHeaders();
+
       const response = await fetch(`${BACKEND_URL}/api/v1/onramp/url`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...attestationHeaders,
         },
         body: JSON.stringify({
           userAddress: params.walletAddress,

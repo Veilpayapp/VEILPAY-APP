@@ -216,6 +216,49 @@ jest.mock('expo-secure-store', () => ({
 }));
 
 /**
+ * SEC-002: expo-crypto module mock for Jest.
+ * Source files call `Crypto.randomUUID()` / `Crypto.digestStringAsync()` via a
+ * namespace import, so global `crypto`/`Crypto` polyfills NEVER intercept them —
+ * the native module binding (ExpoCrypto.randomUUID etc.) is undefined in Jest and
+ * the calls throw. This module-level mock is the only effective fix.
+ * digestStringAsync returns a deterministic 64-hex FNV-1a digest (same output
+ * length as SHA-256) so callers slicing `digest.slice(0, 32)` still work.
+ */
+jest.mock('expo-crypto', () => {
+  const generateUUIDv4 = (): string =>
+    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+
+  const digestStringAsync = jest.fn(async (_algorithm: unknown, data: string) => {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < data.length; i++) {
+      h ^= data.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+    return (h >>> 0).toString(16).padStart(64, '0');
+  });
+
+  return {
+    randomUUID: generateUUIDv4,
+    digestStringAsync,
+    CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
+    getRandomBytes: jest.fn((size: number) => {
+      const bytes = new Uint8Array(size);
+      for (let i = 0; i < size; i++) bytes[i] = Math.floor(Math.random() * 256);
+      return bytes;
+    }),
+    getRandomBytesAsync: jest.fn(async (size: number) => {
+      const bytes = new Uint8Array(size);
+      for (let i = 0; i < size; i++) bytes[i] = Math.floor(Math.random() * 256);
+      return bytes;
+    }),
+  };
+});
+
+/**
  * SEC-002: Polyfill Crypto.randomUUID() for Jest environment
  * In Jest, Crypto.randomUUID() returns undefined, breaking token generation.
  * This polyfill ensures cryptographically secure UUIDs are generated in tests.

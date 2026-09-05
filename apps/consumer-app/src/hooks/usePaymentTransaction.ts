@@ -128,6 +128,10 @@ import {
   createSppActivityRecord,
   getSppConfigForChain,
   isSppEnabledForChain,
+  STELLAR_CLASSIC_FEE_STROOPS,
+  sppFeeCeilingStroops,
+  stroopsToXlm,
+  type SppOperationProgressEvent,
 } from '../utils/stellarSpp';
 
 
@@ -157,6 +161,14 @@ interface PaymentTransactionParams {
   selectedNetwork: any;
   isSendSupported: boolean;
   zkpProverRef: React.RefObject<ZkpProverRef | null>;
+  /** Privacy readiness status — gates private sends until setup completes. */
+  privacyReadyStatus?: 'ready' | 'setting_up' | 'unavailable' | null;
+  /**
+   * Unspent private note count, used to bound the SPP fee ceiling: a spend
+   * consolidates across roughly `notes - 1` pool transactions, each paying its
+   * own Soroban fee. Only read on the `'private'` Stellar path.
+   */
+  sppNoteCount?: number;
   /**
    * Required for `privacyLevel === 'max'`: identifies the source
    * `CommitmentRecord` in SecureStore that the withdraw will spend.
@@ -186,6 +198,8 @@ export function usePaymentTransaction({
   zkpProverRef,
   sourceCommitmentHash,
   sppOp = 'transfer',
+  privacyReadyStatus = null,
+  sppNoteCount = 0,
 }: PaymentTransactionParams) {
   const [txStatus, setTxStatus] = useState<UiTxStatus>('idle');
   const [txResult, setTxResult] = useState<TransactionResult | null>(null);
@@ -201,8 +215,10 @@ export function usePaymentTransaction({
   const toast = useToast();
 
   const isWalletVerificationPending = hasMnemonic === null;
+  // For private sends, also gate on readiness completion.
+  const isPrivateSendNotReady = privacyLevel === 'private' && privacyReadyStatus !== 'ready';
   const isSendDisabled =
-    isWalletVerificationPending || hasMnemonic === false || !isSendSupported;
+    isWalletVerificationPending || hasMnemonic === false || !isSendSupported || isPrivateSendNotReady;
 
   useEffect(() => {
     async function checkMnemonic() {
@@ -245,6 +261,9 @@ export function usePaymentTransaction({
 
         let estimate;
         if (activeChain?.type === 'svm') {
+          // 5000 lamports = base fee per signature, one signer. Correct for a
+          // plain transfer (no ComputeBudget instruction is ever added), but
+          // it is a hardcoded constant with no network read — hence isStale.
           const estimatedCostWei = 5000n;
           const estimatedCostEth = (
             Number(estimatedCostWei) / LAMPORTS_PER_SOL
@@ -257,22 +276,32 @@ export function usePaymentTransaction({
             estimatedCostWei,
             estimatedCostEth,
             estimatedCostUsd: null,
-            isStale: false,
+            isStale: true,
             fetchedAt: Date.now(),
           } as GasEstimate;
         } else if (activeChain?.type === 'xlm') {
-          // Stellar base fee: 100 stroops = 0.00001 XLM
-          const estimatedCostWei = 100n;
-          const estimatedCostEth = '0.00001';
+          // A classic 1-op payment costs 100 stroops. SPP ops are Soroban
+          // invokes whose real fee is BASE_FEE + minResourceFee, set by
+          // simulation only after the proof exists — unknowable here. Quote a
+          // labelled ceiling instead of the classic constant, which understated
+          // a shield by ~1000x and let it clear the funds gate.
+          // isStale/isCeiling are true for the private path because this is a
+          // hardcoded bound with no network read (buildStaticFallback's
+          // convention in gasEstimator).
+          const isPrivateOp = privacyLevel === 'private';
+          const stroops = isPrivateOp
+            ? sppFeeCeilingStroops(sppOp ?? 'transfer', sppNoteCount)
+            : STELLAR_CLASSIC_FEE_STROOPS;
           estimate = {
             gasLimit: 0n,
             maxFeePerGas: 0n,
             maxPriorityFeePerGas: 0n,
             gasPrice: 0n,
-            estimatedCostWei,
-            estimatedCostEth,
+            estimatedCostWei: stroops,
+            estimatedCostEth: stroopsToXlm(stroops),
             estimatedCostUsd: null,
-            isStale: false,
+            isStale: isPrivateOp,
+            isCeiling: isPrivateOp,
             fetchedAt: Date.now(),
           } as GasEstimate;
         } else {
@@ -344,6 +373,9 @@ export function usePaymentTransaction({
     recipient,
     txStatus,
     activeChain,
+    privacyLevel,
+    sppOp,
+    sppNoteCount,
   ]);
 
   const handleConfirmSend = async () => {
@@ -432,11 +464,13 @@ export function usePaymentTransaction({
       (privacyLevel === 'stealth' || privacyLevel === 'max') &&
       !isPrivacyStackConfigured()
     ) {
+      const message = 'Privacy stack not configured for this build.';
       trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_VALIDATION_FAILED, {
         reason: 'privacy_stack_not_configured',
         privacy_level: privacyLevel,
       });
-      toast.show('Privacy stack not configured for this build.', 'error');
+      toast.show(message, 'error');
+      setTxResult({ hash: '', status: 'failed', error: message });
       setTxStatus('failed');
       return;
     }
@@ -447,27 +481,27 @@ export function usePaymentTransaction({
     // reaching the `runMaxFlow` "not yet implemented" throw, which would
     // let the user pick a commitment and start proving before failing.
     if (privacyLevel === 'max' && !isMaxPrivacyWithdrawReady()) {
+      const message =
+        'Max-privacy withdraw is not available in this build. Use Standard or Stealth instead.';
       trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_VALIDATION_FAILED, {
         reason: 'max_withdraw_not_ready',
         privacy_level: privacyLevel,
       });
-      toast.show(
-        'Max-privacy withdraw is not available in this build. Use Standard or Stealth instead.',
-        'error'
-      );
+      toast.show(message, 'error');
+      setTxResult({ hash: '', status: 'failed', error: message });
       setTxStatus('failed');
       return;
     }
 
     if (privacyLevel === 'private' && !isSppEnabledForChain(activeNetworkKey)) {
+      const message =
+        'Private XLM is not configured for the selected Stellar network.';
       trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_VALIDATION_FAILED, {
         reason: 'spp_not_enabled',
         privacy_level: privacyLevel,
       });
-      toast.show(
-        'Private XLM is only available on Stellar Testnet until audit gates pass.',
-        'error'
-      );
+      toast.show(message, 'error');
+      setTxResult({ hash: '', status: 'failed', error: message });
       setTxStatus('failed');
       return;
     }
@@ -475,14 +509,32 @@ export function usePaymentTransaction({
     // SPP-001 / Phase 2: hard-disable private ops without native poolOps
     // (not only toast after prove). Public Standard still works.
     if (privacyLevel === 'private' && !isSppPoolOpsReady()) {
+      const message =
+        'Private payments aren’t ready on this build yet. Public XLM still works — pick Standard, or install a pool-ops build.';
       trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_VALIDATION_FAILED, {
         reason: 'spp_pool_ops_not_ready',
         privacy_level: privacyLevel,
       });
-      toast.show(
-        'Private payments aren’t ready on this build yet. Public XLM still works — pick Standard, or install a pool-ops preview APK.',
-        'info'
-      );
+      toast.show(message, 'info');
+      setTxResult({ hash: '', status: 'failed', error: message });
+      setTxStatus('failed');
+      return;
+    }
+
+    // ASP membership must be registered on-chain before proving, otherwise the
+    // SDK fails deep in `prove_next` with `MembershipSync(RegisterAtASP)` after
+    // a minute of wasted proof generation. Fail fast with actionable copy.
+    if (privacyLevel === 'private' && privacyReadyStatus !== 'ready') {
+      const message =
+        privacyReadyStatus === 'unavailable'
+          ? 'Private payments are unavailable on this build.'
+          : 'Private account setup is still finishing. Wait for “Private XLM ready” on the home card, then try again.';
+      trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_VALIDATION_FAILED, {
+        reason: 'spp_asp_membership_not_ready',
+        privacy_level: privacyLevel,
+      });
+      toast.show(message, 'info');
+      setTxResult({ hash: '', status: 'failed', error: message });
       setTxStatus('failed');
       return;
     }
@@ -533,7 +585,10 @@ export function usePaymentTransaction({
 
       setTxStatus('failed');
 
+      let errorMessage = 'Transaction failed. Please try again.';
+
       if (error instanceof TransactionError) {
+        errorMessage = error.message;
         trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_FAILED, {
           network_key: activeNetworkKey,
           reason: error.code,
@@ -547,31 +602,27 @@ export function usePaymentTransaction({
             // than hardcoding ETH — a Solana/Stellar/BNB send should
             // not tell the user to "add more ETH".
             const fundsSymbol = selectedNetwork?.symbol || token || 'funds';
-            toast.show(
-              `Insufficient funds. Please add more ${fundsSymbol} to your wallet.`,
-              'error'
-            );
+            errorMessage = `Insufficient funds. Please add more ${fundsSymbol} to your wallet.`;
+            toast.show(errorMessage, 'error');
             break;
           }
           case 'INVALID_ADDRESS':
-            toast.show(
-              'Invalid recipient address. Please check and try again.',
-              'error'
-            );
+            errorMessage = 'Invalid recipient address. Please check and try again.';
+            toast.show(errorMessage, 'error');
             break;
           case 'NETWORK_ERROR':
-            toast.show(
-              'Network error. Please check your connection and try again.',
-              'error'
-            );
+            errorMessage = 'Network error. Please check your connection and try again.';
+            toast.show(errorMessage, 'error');
             break;
           case 'USER_REJECTED':
-            toast.show('Transaction cancelled.', 'error');
+            errorMessage = 'Transaction cancelled.';
+            toast.show(errorMessage, 'error');
             break;
           default:
             toast.show(error.message, 'error');
         }
       } else if (error instanceof SppClientError) {
+        errorMessage = error.message;
         trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_FAILED, {
           network_key: activeNetworkKey,
           reason: error.code,
@@ -581,6 +632,7 @@ export function usePaymentTransaction({
         });
         toast.show(error.message, 'error');
       } else if (error instanceof RelayerError) {
+        errorMessage = error.message;
         trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_FAILED, {
           network_key: activeNetworkKey,
           reason: `relayer_${error.kind}`,
@@ -590,9 +642,10 @@ export function usePaymentTransaction({
         });
         const statusSuffix =
           typeof error.status === 'number' ? ` (HTTP ${error.status})` : '';
-        toast.show(`Relayer error: ${error.message}${statusSuffix}`, 'error');
+        errorMessage = `Relayer error: ${error.message}${statusSuffix}`;
+        toast.show(errorMessage, 'error');
       } else {
-        const errorMessage =
+        errorMessage =
           error instanceof Error ? error.message : 'Failed to send payment';
         trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_FAILED, {
           network_key: activeNetworkKey,
@@ -602,6 +655,8 @@ export function usePaymentTransaction({
         });
         toast.show(errorMessage, 'error');
       }
+
+      setTxResult({ hash: '', status: 'failed', error: errorMessage });
     }
 
     // ===================================================================
@@ -1045,28 +1100,57 @@ export function usePaymentTransaction({
         }
       }
 
-      setTxStatus('proving');
+      const handleSppProgress = (event: SppOperationProgressEvent) => {
+        if (!isMountedRef.current) return;
+        if (event.stage === 'sync_pool') {
+          if (event.status === 'start') {
+            setTxStatus('spp_syncing');
+          } else if (event.status === 'success') {
+            setTxStatus('proving');
+            toast.show(
+              op === 'shield'
+                ? 'Creating private proof for shield… usually ~10–20s'
+                : op === 'unshield'
+                  ? 'Creating private proof for unshield… usually ~10–20s'
+                  : 'Creating private proof… usually ~10–20s',
+              'info'
+            );
+          }
+        } else if (event.stage === 'generate_proof' && event.status === 'start') {
+          setTxStatus('proving');
+        } else if (event.stage === 'submit_tx' && event.status === 'start') {
+          setTxStatus('sending');
+        }
+      };
+
+      setTxStatus('spp_syncing');
       toast.show(
-        op === 'shield'
-          ? 'Creating private proof for shield… usually ~10–20s'
-          : op === 'unshield'
-            ? 'Creating private proof for unshield… usually ~10–20s'
-            : 'Creating private proof… usually ~10–20s',
+        'Syncing the private pool…',
         'info'
       );
 
       try {
         let result;
         if (op === 'shield') {
-          result = await sppDeposit(activeNetworkKey, address, amount);
+          result = await sppDeposit(activeNetworkKey, address, amount, {
+            onProgress: handleSppProgress,
+          });
         } else if (op === 'unshield') {
           const to = recipient.trim() || address;
-          result = await sppWithdraw(activeNetworkKey, address, amount, to);
-        } else {
-          result = await sppTransfer(activeNetworkKey, address, amount, {
-            kind: 'address',
-            stellarAddress: recipient.trim(),
+          result = await sppWithdraw(activeNetworkKey, address, amount, to, {
+            onProgress: handleSppProgress,
           });
+        } else {
+          result = await sppTransfer(
+            activeNetworkKey,
+            address,
+            amount,
+            {
+              kind: 'address',
+              stellarAddress: recipient.trim(),
+            },
+            { onProgress: handleSppProgress }
+          );
         }
 
         // Always persist private activity even if the screen unmounted during
@@ -1114,10 +1198,15 @@ export function usePaymentTransaction({
               privacy_level: 'private',
               confirmation_time_ms: Date.now() - attemptStartedAt,
             });
-            toast.show(
-              'Private payments aren’t ready on this build yet. Public XLM still works — pick Standard, or try again after the next update.',
-              'info'
-            );
+            // Surface the real failure in the result modal, not the dead
+            // local toast. The hook's `useToast` instance is never rendered
+            // by the screen, so without this the modal falls back to its
+            // generic "There was an issue processing your transaction."
+            setTxResult({
+              hash: '',
+              status: 'failed',
+              error: err.message,
+            });
             setTxStatus('failed');
             return;
           }

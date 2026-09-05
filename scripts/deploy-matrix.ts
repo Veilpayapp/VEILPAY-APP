@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * VeilPay Multi-Chain Deployment Health Check
+ * Veilpay Multi-Chain Deployment Health Check
  *
  * Validates that all configured RPC endpoints are live and responding correctly.
  * Run this before any deployment to catch misconfigured or down endpoints.
@@ -254,7 +254,7 @@ function printResult(r: ProbeResult): void {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
-  console.log(`\n${BOLD}VeilPay Multi-Chain Deployment Matrix${RESET}`);
+  console.log(`\n${BOLD}Veilpay Multi-Chain Deployment Matrix${RESET}`);
   console.log(`${'─'.repeat(70)}`);
   console.log(`${DIM}Probing ${CHAIN_MATRIX.length} chains...${RESET}\n`);
 

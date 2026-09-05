@@ -21,7 +21,7 @@ import { Buffer } from 'buffer/';
 import { getRpcUrl } from './rpc';
 import { captureError, addBreadcrumb } from './sentry';
 import { getStoredMnemonic, TransactionError } from './transactions';
-import { mnemonicToSeed } from '@scure/bip39';
+import { deriveMnemonicSeed } from './mnemonicSeed';
 import { derivePath } from 'ed25519-hd-key';
 import type { GasEstimate } from './gasEstimator';
 import { withTimeout } from './timing';
@@ -115,7 +115,7 @@ async function sendSolanaTransaction(
   // These two are independent — load the web3 lib and derive the seed in parallel.
   const [{ PublicKey, Transaction, SystemProgram, Connection, Keypair }, seed] = await Promise.all([
     getSolanaWeb3(),
-    mnemonicToSeed(mnemonicWords.join(' ')),
+    deriveMnemonicSeed(mnemonicWords.join(' ')),
   ]);
   const derivedSeed = derivePath("m/44'/501'/0'/0'", Buffer.from(seed).toString('hex')).key;
   const solanaKeypair = Keypair.fromSeed(derivedSeed);
@@ -191,7 +191,7 @@ async function sendStellarTransaction(
 
   const toAddress = params.to;
   
-  const seed = await mnemonicToSeed(mnemonicWords.join(' '));
+  const seed = await deriveMnemonicSeed(mnemonicWords.join(' '));
   const stellarDerivedSeed = derivePath("m/44'/148'/0'", Buffer.from(seed).toString('hex')).key;
   const fromKeypair = Keypair.fromRawEd25519Seed(stellarDerivedSeed as any);
   const fromAddress = fromKeypair.publicKey();

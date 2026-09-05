@@ -7,7 +7,7 @@ Veilpay’s privacy architecture combines practical wallet privacy features with
 - Stealth-address utilities.
 - Encrypted notes.
 - ZK-oriented proof and privacy-pool scaffolding.
-- Stellar SPP testnet integration work.
+- Stellar SPP: testnet flow verified end-to-end; mainnet contracts deployed with the app flow built (final on-chain test pending user approval).
 
 ## Design goals
 
@@ -26,5 +26,5 @@ Not every Veilpay payment is private by default. Standard chain transfers remain
 - [Stealth addresses](stealth-addresses.md) — one-time recipient addresses that reduce linkability.
 - [Encrypted notes](encrypted-notes.md) — recipient-only memo protection.
 - [Zero-knowledge direction](zero-knowledge.md) — proof and privacy-pool scaffolding, and the gates before it is production-live.
-- [Stellar Private Payments](stellar-spp.md) — the first native privacy-chain track, testnet-first and mainnet-gated.
+- [Stellar Private Payments](stellar-spp.md) — the first native privacy-chain track; testnet verified, mainnet deployed and shipping, audit-gated for production.
 - [Privacy-chain roadmap](privacy-chain-roadmap.md) — staged plan across Stellar SPP, Monero, Zcash, and Midnight.

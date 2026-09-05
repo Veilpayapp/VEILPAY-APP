@@ -109,8 +109,8 @@ describe('SEC-004: Nullifier Hash Validation', () => {
     });
 
     it('should handle case-insensitive hex input', async () => {
-      const nullifierLower = '0x' + 'abcdef'.repeat(11) as Hex;
-      const nullifierUpper = ('0x' + 'ABCDEF'.repeat(11)).slice(0, 66) as Hex;
+      const nullifierLower = '0x' + 'abcdef'.repeat(10) + 'abcdef' as Hex;
+      const nullifierUpper = '0x' + 'ABCDEF'.repeat(10) + 'ABCDEF' as Hex;
       const hash1 = await computeNullifierHash(nullifierLower);
       const hash2 = await computeNullifierHash(nullifierUpper);
       expect(hash1.toLowerCase()).toBe(hash2.toLowerCase());

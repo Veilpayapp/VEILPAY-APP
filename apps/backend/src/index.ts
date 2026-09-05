@@ -17,14 +17,15 @@ import { docsRoutes } from "./routes/docs";
 import { rpcRoutes } from "./routes/rpc";
 import { errorHandler } from "./middleware/errorHandler";
 import { requestLogger } from "./middleware/requestLogger";
-import { globalRateLimiter, authRateLimiter, webhookRateLimiter, webhookVerifyRateLimiter, rpcRateLimiter } from "./middleware/rateLimiter";
-import { startInvoiceExpiryWorker, stopInvoiceExpiryWorker } from "./lib/invoiceExpiry";
+import { globalRateLimiter, authRateLimiter, webhookRateLimiter, webhookVerifyRateLimiter, rpcRateLimiter, onrampCreateLimiter, onrampQuotesLimiter, attestationNonceLimiter } from "./middleware/rateLimiter";
+import { startAllBackgroundWorkers, stopAllBackgroundWorkers } from './services/backgroundWorkerService';
 import { closeWebhookQueue, initializeWebhookQueue } from "./jobs/webhookQueue";
 import { closeWebhookWorker, initializeWebhookWorker } from "./jobs/webhookWorker";
-import { startChainIndexer, stopChainIndexer } from "./jobs/chainIndexer";
+// ... (remove startInvoiceExpiryWorker, stopInvoiceExpiryWorker, startChainIndexer, stopChainIndexer)
 import { paymentRoutes } from "./routes/payment";
 import { relayerRoutes } from "./routes/relayer";
 import onrampRoutes from "./routes/onramp";
+import attestationRoutes from "./routes/attestation";
 import { prisma } from "./lib/prisma";
 import { getRedisClient } from "./lib/redis";
 
@@ -36,6 +37,8 @@ Sentry.init({
 });
 
 const app = express();
+
+app.set('trust proxy', config.trustProxyHops);
 
 app.use(helmet({
   contentSecurityPolicy: {
@@ -96,10 +99,16 @@ app.use("/api/v1/webhook", webhookRateLimiter);
 app.use("/api/v1/webhook/verify", webhookVerifyRateLimiter);
 // Dedicated limiter for the RPC proxy (protects provider key quota)
 app.use("/api/v1/rpc", rpcRateLimiter);
+// Dedicated limiters for the unauthenticated onramp routes (bound DB writes
+// and upstream Binance fetches well below the shared global bucket).
+app.use("/api/v1/onramp/url", onrampCreateLimiter);
+app.use("/api/v1/onramp/quotes", onrampQuotesLimiter);
+// Public nonce-minter for the Play Integrity attestation flow (bounded).
+app.use("/api/v1/attestation", attestationNonceLimiter);
 
 app.get("/", (_req, res) => {
   res.json({
-    name: "VeilPay API",
+    name: "Veilpay API",
     version: "1.0.0",
     description: "Multi-Chain Privacy Payment Protocol API",
   });
@@ -112,6 +121,7 @@ app.use("/api/v1/merchant", merchantRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/webhook", webhookRoutes);
 app.use("/api/v1/onramp", onrampRoutes);
+app.use("/api/v1/attestation", attestationRoutes);
 app.use("/api/v1/relayer", relayerRoutes);
 app.use("/api/v1/rpc", rpcRoutes);
 app.use("/api/docs", docsRoutes);
@@ -127,26 +137,22 @@ export { app };
 
 if (require.main === module) {
   app.listen(config.port, '0.0.0.0', () => {
-    console.log(`[VeilPay] API server running on port ${config.port}`);
-    console.log(`[VeilPay] Environment: ${config.nodeEnv}`);
-    // BE-C2 fix: start invoice expiry background worker
-    startInvoiceExpiryWorker();
+    console.log(`[Veilpay] API server running on port ${config.port}`);
+    console.log(`[Veilpay] Environment: ${config.nodeEnv}`);
+    startAllBackgroundWorkers();
     // Active startup of BullMQ webhook queue and worker
     initializeWebhookQueue();
     initializeWebhookWorker();
-    console.log(`[VeilPay] Webhook delivery worker started`);
-    // Multi-chain polling worker
-    startChainIndexer();
+    console.log(`[Veilpay] Webhook delivery worker started`);
   });
 
   const shutdown = async (): Promise<void> => {
-    console.log("[VeilPay] Shutting down...");
-    stopInvoiceExpiryWorker();
-    stopChainIndexer();
+    console.log("[Veilpay] Shutting down...");
+    stopAllBackgroundWorkers();
     await closeWebhookWorker();
     await closeWebhookQueue();
     await prisma.$disconnect();
-    console.log("[VeilPay] Graceful shutdown complete");
+    console.log("[Veilpay] Graceful shutdown complete");
     process.exit(0);
   };
 
@@ -157,6 +163,6 @@ if (require.main === module) {
     shutdown().catch(console.error);
   });
   process.on("unhandledRejection", (err) => {
-    console.error('[VeilPay] Unhandled rejection:', err);
+    console.error('[Veilpay] Unhandled rejection:', err);
   });
 }

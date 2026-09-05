@@ -1,7 +1,7 @@
 {
   "name": "@veilpay/circuits",
   "version": "1.0.0",
-  "description": "Zero-knowledge circuits for VeilPay privacy pool",
+  "description": "Zero-knowledge circuits for Veilpay privacy pool",
   "main": "index.js",
   "scripts": {
     "compile": "bash compile.sh",

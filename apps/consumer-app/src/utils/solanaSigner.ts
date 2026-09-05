@@ -1,8 +1,8 @@
 import { Transaction, SystemProgram, Keypair, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { derivePath } from 'ed25519-hd-key';
-import { mnemonicToSeed } from '@scure/bip39';
 import { Buffer } from 'buffer';
+import { deriveMnemonicSeed } from './mnemonicSeed';
 import { getStoredMnemonic, TransactionError, NETWORKS } from './transactions';
 import { poolCallSolana } from './solanaRpcPool';
 import { captureError, addBreadcrumb } from './sentry';
@@ -55,7 +55,7 @@ export async function signAndSendSolanaTransaction(
   let txResult: SignerResult;
   try {
     const mnemonicPhrase = mnemonicWords.join(' ');
-    const seed = await mnemonicToSeed(mnemonicPhrase);
+    const seed = await deriveMnemonicSeed(mnemonicPhrase);
     const derivedSeed = derivePath("m/44'/501'/0'/0'", Buffer.from(seed).toString('hex')).key;
     const keypair = Keypair.fromSeed(derivedSeed);
 

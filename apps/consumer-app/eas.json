@@ -15,9 +15,7 @@
     },
     "preview": {
       "distribution": "internal",
-      "autoIncrement": true,
       "channel": "preview",
-      "environment": "preview",
       "env": {
         "SPP_NATIVE_POOL_OPS": "1"
       },

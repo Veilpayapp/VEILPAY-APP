@@ -214,6 +214,18 @@ const rateCache = new Map<string, { priceInUsdt: number; expiresAt: number }>();
  * not an executable price. INR additionally carries the local P2P premium at
  * which USDT trades on Indian ramps. Unknown currencies fall back to USD parity.
  */
+/**
+ * Allowlist of crypto assets the backend will price / create orders for.
+ * `/quotes` interpolates the caller's `cryptoToken` into an outbound Binance
+ * symbol and would otherwise proxy an arbitrary upstream lookup to a fixed
+ * host — reject anything outside this list with a 400 instead. Keep in sync
+ * with the tokens the consumer-app exposes to end users.
+ */
+const SUPPORTED_CRYPTO_TOKENS: ReadonlySet<string> = new Set([
+  'USDT', 'USDC', 'DAI', 'ETH', 'WETH', 'MATIC', 'POL', 'SOL', 'BTC',
+  'WBTC', 'USDE', 'PYUSD', 'FDUSD', 'TUSD', 'BUSD', 'XLM',
+]);
+
 const USDT_TO_FIAT: Record<string, number> = {
   INR: 101.5,
   USD: 1.0,
@@ -275,6 +287,10 @@ export const getOnrampQuotes = async (req: Request, res: Response, _next: NextFu
     const currency = (typeof fiatCurrency === 'string' ? fiatCurrency : 'INR').toUpperCase();
     const usdtToFiat = USDT_TO_FIAT[currency] ?? USDT_TO_FIAT.USD;
     const token = String(cryptoToken).toUpperCase();
+    if (!SUPPORTED_CRYPTO_TOKENS.has(token)) {
+      res.status(400).json({ error: 'Unsupported cryptoToken', code: 'ONRAMP_UNSUPPORTED_TOKEN' });
+      return;
+    }
     const isStable = token === 'USDT' || token === 'USDC';
 
     // Fallback base rate (used if the live price is unavailable). Expressed in

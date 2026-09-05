@@ -2,7 +2,7 @@
 // Public inputs: [merkleRoot, nullifierHash, recipient, amount] — see design.md §Public input ordering contract
 //
 // =============================================================================
-// VeilPay Privacy Stack — End-to-End Smoke Test
+// Veilpay Privacy Stack — End-to-End Smoke Test
 // =============================================================================
 //
 // What this script does

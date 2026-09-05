@@ -61,6 +61,7 @@
     "@storybook/react-native": "^10.4.4",
     "@storybook/react-native-ui-lite": "^10.4.4",
     "@veilpay/expo-spp-native": "file:modules/spp-native",
+    "@veilpay/expo-integrity-native": "file:modules/integrity-native",
     "@walletconnect/sign-client": "^2.23.9",
     "@web3icons/core": "4.0.51",
     "babel-loader": "^8.4.1",

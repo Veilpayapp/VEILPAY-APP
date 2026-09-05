@@ -119,7 +119,7 @@ Write-Host "[apk-win] assembling arm64-v8a $Configuration APK (Doppler, NODE_ENV
 Push-Location $androidDir
 try {
   $code = 0
-  doppler run --project veilpay --config prd -- cmd /c "gradlew.bat $gradleTask -PreactNativeArchitectures=arm64-v8a --no-daemon"
+  doppler run --project veilpay --config prd -- cmd /c ".\gradlew.bat $gradleTask -PreactNativeArchitectures=arm64-v8a --no-daemon"
   $code = $LASTEXITCODE
   if ($code -ne 0) { throw "gradlew failed exit=$code" }
 } finally {

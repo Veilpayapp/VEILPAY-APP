@@ -30,7 +30,7 @@ Veilpay currently focuses on:
 - EVM networks: Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, and Sepolia for testing.
 - Solana mainnet and devnet flows.
 - Stellar mainnet and testnet flows.
-- Stellar Private Payments on testnet as the first native privacy-chain integration track.
+- Stellar Private Payments as the first native privacy-chain integration track: contracts deployed on testnet and mainnet, testnet flow verified end-to-end, and the mainnet shield/transfer/unshield flow implemented in app builds (final on-chain test pending user approval).
 
 Planned privacy-chain tracks include Monero, Zcash, and Midnight. Those tracks are documented as roadmap items and are not described as production-live integrations.
 

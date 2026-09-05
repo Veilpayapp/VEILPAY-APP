@@ -13,9 +13,11 @@ apps/
 packages/
   shared/            Shared chain metadata and utilities
   circuits/          ZK circuit assets and experiments
-  contracts-evm/     EVM contracts
-  contracts-solana/  Solana programs
+  contracts-evm/     EVM contracts (VeilPool + Groth16 verifier)
+  contracts-solana/  Solana programs (Groth16 verify_proof)
   spp-native/        Rust native module for Stellar SPP
+  auditor/           Plan and production-readiness audit tooling
+  vendor/            Vendored submodules (incl. Nethermind stellar-private-payments)
 ```
 
 ## Runtime layout

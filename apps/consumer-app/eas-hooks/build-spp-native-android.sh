@@ -42,7 +42,7 @@ POSEIDON2_SPP="$REPO_ROOT/packages/vendor/spp/poseidon2"
 OUT_JNI="$APP_ROOT/modules/spp-native/android/src/main/jniLibs"
 SPP_VENDOR_ROOT="$REPO_ROOT/packages/vendor/spp"
 SPP_VENDOR_REPO="https://github.com/NethermindEth/stellar-private-payments"
-# Must match the packages/vendor/spp gitlink in the VeilPay repository.
+# Must match the packages/vendor/spp gitlink in the Veilpay repository.
 SPP_VENDOR_COMMIT="dbe6a98323c954d39bd5204f6ba58905cc27d2d7"
 # Opt-in: build with --features android-jni,pool-ops when SPP_NATIVE_POOL_OPS=1
 # (requires full packages/vendor/spp + wasmer NDK; default stays derive-only).
@@ -115,6 +115,26 @@ if [[ "${SPP_NATIVE_POOL_OPS:-}" == "1" ]]; then
     exit 1
   fi
   log "✓ SPP vendor commit verified: $actual_commit"
+
+  # Apply local vendored SDK patches (Android TLS/DNS, bounded retries/sync,
+  # and cursor recovery). EAS fetches pristine dbe6a98; without this patch it
+  # ships a .so that can use the broken platform resolver/verifier path and can
+  # leave pool_sync running for minutes on a deterministic network failure.
+  PATCH="$REPO_ROOT/apps/consumer-app/eas-hooks/patches/spp-vendor-sdk-stellar.patch"
+  if [[ -f "$PATCH" ]]; then
+    log "Applying spp-vendor-sdk-stellar.patch…"
+    if ! git -C "$SPP_VENDOR_ROOT" apply --check "$PATCH" 2>/dev/null; then
+      log "ERROR: Patch $PATCH does not apply cleanly to $SPP_VENDOR_COMMIT"
+      log "  Rebase the patch against the vendored SDK before building."
+      exit 1
+    fi
+    git -C "$SPP_VENDOR_ROOT" apply "$PATCH"
+    log "✓ SPP SDK patch applied (Android DNS/TLS + bounded sync + cursor recovery)"
+  else
+    log "ERROR: missing $PATCH"
+    log "  Commit the sdk/stellar patch file to the Veilpay repo."
+    exit 1
+  fi
 fi
 
 if [[ ! -f "$SPP_NATIVE/Cargo.toml" ]]; then

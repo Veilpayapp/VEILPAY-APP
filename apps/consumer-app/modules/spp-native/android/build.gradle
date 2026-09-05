@@ -1,5 +1,3 @@
-import groovy.json.JsonSlurper
-
 plugins {
   id 'com.android.library'
   id 'expo-module-gradle-plugin'
@@ -20,11 +18,47 @@ android {
       jniLibs.srcDirs = ['src/main/jniLibs']
     }
   }
+
+  // Add verification task to ensure native libs exist before compilation
+  tasks.register('verifyNativeLibs') {
+    doLast {
+      def jniLibsDir = file('src/main/jniLibs')
+      def requiredAbis = ['arm64-v8a', 'armeabi-v7a', 'x86_64']
+
+      def present = requiredAbis.findAll { new File(new File(jniLibsDir, it), 'libspp_native.so').exists() }
+      def missing = requiredAbis - present
+
+      // Hard-fail only when NO ABI is available (native integration missing
+      // entirely). Partial ABI coverage is valid — many builds ship arm64 only.
+      // Previously this threw for every missing ABI, which broke reduced-ABI
+      // and fresh-machine debug builds that only target arm64-v8a.
+      if (present.isEmpty()) {
+        throw new GradleException(
+          "No libspp_native.so found under ${jniLibsDir.absolutePath} for any ABI. " +
+          "Ensure build-spp-native-android.sh has run successfully."
+        )
+      }
+      if (!missing.isEmpty()) {
+        logger.warn(
+          "SPP native lib missing for ABIs: ${missing}. " +
+          "This build supports: ${present}. Rebuild libspp_native.so for full ABI coverage."
+        )
+      }
+    }
+  }
+
+  // Force dependency
+  tasks.matching { it.name.startsWith('compile') }.configureEach {
+    dependsOn 'verifyNativeLibs'
+  }
+
   lintOptions {
     abortOnError false
   }
 }
 
 dependencies {
-  // No external dependencies needed - native .so files are pre-built by post-install hook
+  // Native .so files are pre-built by the post-install hook. The final app
+  // packages rustls-platform-verifier's JVM AAR because Android libraries
+  // cannot safely embed direct local AAR dependencies.
 }

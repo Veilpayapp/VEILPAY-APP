@@ -7,7 +7,7 @@
  */
 export const enUS = {
   // App / chrome
-  'app.name': 'VeilPay',
+  'app.name': 'Veilpay',
 
   // Onboarding
   'onboarding.headline': 'PRIVATE PAYMENTS,\nFULLY YOURS.',

@@ -11,7 +11,13 @@ import { config } from '../config';
  *
  * The token format is `orderId.signature` where:
  *   - `orderId` is the FiatOrder primary key (UUID);
- *   - `signature = HMAC-SHA256(webhookSigningSecret, orderId)` (hex).
+ *   - `signature = HMAC-SHA256(webhookSigningSecret, 'onramp-status:' + orderId)` (hex).
+ *
+ * Domain separation: the HMAC message is prefixed with `onramp-status:` so the
+ * tag is distinct from the merchant-webhook signing messages that share the
+ * same webhookSigningSecret. This prevents a captured status token
+ * (HMAC_K('onramp-status:'+uuid)) from doubling as a valid webhook signature
+ * over an overlapping message, and vice-versa.
  *
  * The status endpoint requires the token, splits on `.`, re-computes the
  * HMAC, and compares in constant time before looking up the order. An
@@ -24,9 +30,14 @@ import { config } from '../config';
 
 const TOKEN_SEPARATOR = '.';
 
+// HMAC message domain tag. Kept distinct from the webhook-signing message
+// shapes (`webhookDelivery` and `webhookController`) so the same secret used
+// for three protocols cannot have a tag from one replayed against another.
+const STATUS_DOMAIN_TAG = 'onramp-status:';
+
 function signatureFor(orderId: string): string {
   return createHmac('sha256', config.webhookSigningSecret)
-    .update(orderId)
+    .update(`${STATUS_DOMAIN_TAG}${orderId}`)
     .digest('hex');
 }
 

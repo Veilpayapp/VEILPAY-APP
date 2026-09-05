@@ -1,5 +1,5 @@
 /**
- * VeilPay — Stellar Private Payments (SPP) contract config
+ * Veilpay — Stellar Private Payments (SPP) contract config
  *
  * Testnet IDs come from the vendored Nethermind deployment:
  *   packages/vendor/spp/deployments/testnet/deployments.json
@@ -50,26 +50,27 @@ export interface SppDeploymentConfig {
 }
 
 /**
- * Live Nethermind testnet deployment (verified Phase 0).
+ * Live testnet deployment (redeployed 2026-08-14 by the local `deployer`
+ * identity to bring the deployment ledger back inside RPC event retention).
  * Self-deploy only if these contracts age out of RPC event retention (~7d)
  * or lose admin funding.
  */
 export const SPP_TESTNET: SppDeploymentConfig = {
   chainKey: 'stellar-testnet',
   network: 'testnet',
-  deployer: 'GDF4BXPQY5N4BEO24UIHM4NVB62MW7HDWH7SVHKLVZAMLP5IIHCFQORC',
-  admin: 'GDF4BXPQY5N4BEO24UIHM4NVB62MW7HDWH7SVHKLVZAMLP5IIHCFQORC',
+  deployer: 'GAYVTTQQECQVBXKXWYS4MGXNRRA2YNQ2VVLQGHQZSEZGUIS3N6XTVSGK',
+  admin: 'GAYVTTQQECQVBXKXWYS4MGXNRRA2YNQ2VVLQGHQZSEZGUIS3N6XTVSGK',
   horizonUrl: 'https://horizon-testnet.stellar.org',
   sorobanRpcUrl: 'https://soroban-testnet.stellar.org',
   networkPassphrase: 'Test SDF Network ; September 2015',
-  poolId: 'CDLGZULLAUAILSZKT23AK4GND2UTY76QH5VP5DFNDBICCGS77OHWRQTU',
-  verifierId: 'CC6RRMS5NRFNVAC2FEJN4BJUJ677GSDY5ARMJQE55IUQXTAEMGRRINZ3',
-  aspMembershipId: 'CAGEKSPTCJUXUWAS54U3UFYDJZS5JYHK4H3L5TKIW74JDKQYNTNM43X2',
-  aspNonMembershipId: 'CCVKPO23U6NSYTLZKG765I2OJXJWMQVR4QPMC7V4ITBO6E5MLIVEJPO3',
-  registryId: 'CDNNPMUJ6GV343MZZ7H6C6YHHTPWJODNHV3CJ7Z7VGMUEXYWS7RR2BDD',
+  poolId: 'CAQPTBBJSYOOUSGT6LWF2RBGQIRN33QNC2NL7YBFQSA3ZHUMSLCSH2FF',
+  verifierId: 'CB3KRMHFOEH2IFQDKHVH6VACONCIXMOYFWMW2ENGCLFI566QID7QG3MN',
+  aspMembershipId: 'CBKMN45LGWUACD3CZDHZ756G3DJ4GFZNRESUF733BGWKGAUWUDSMHDLA',
+  aspNonMembershipId: 'CBXZQFEC2OAXOLQ2BMBN7ZFUQFVP5M5ILAXA37DFDFNRGFWU2IYABI5K',
+  registryId: 'CBGV4ZMLJ3T7MDQOM3PH4BVCTDTRKGRBNZOABRJ2FH2JEBYQTQ7SLQ7M',
   nativeTokenContractId: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
   explorerBaseUrl: 'https://stellar.expert/explorer/testnet',
-  deploymentLedger: 3754534,
+  deploymentLedger: 4125614,
   maxDepositStroops: '1000000000',
 };
 
@@ -249,6 +250,22 @@ export function getSppBootnodeUrl(config: SppDeploymentConfig): string | null {
   const env = process.env.EXPO_PUBLIC_SPP_BOOTNODE_URL?.trim();
   if (env) return env;
   return null;
+}
+
+/**
+ * Fallback Soroban RPC URL for mainnet, used when the primary RPC is unreachable
+ * (DNS/connection error). Returns null for testnet (no fallback needed).
+ *
+ * Primary: https://soroban-rpc.mainnet.stellar.gateway.fm/v1/nu31fr9dc (from Doppler)
+ * Fallback: https://mainnet.sorobanrpc.com (Lumen public RPC — verified reachable)
+ *
+ * The fallback URL can be overridden via EXPO_PUBLIC_SPP_FALLBACK_RPC_URL in Doppler.
+ */
+export function getSppFallbackRpcUrl(config: SppDeploymentConfig): string | null {
+  if (config.network !== 'mainnet') return null;
+  const env = process.env.EXPO_PUBLIC_SPP_FALLBACK_RPC_URL?.trim();
+  if (env) return env;
+  return 'https://mainnet.sorobanrpc.com';
 }
 
 /** Mainnet is strict by default; Testnet preserves the existing dogfood default. */

@@ -1,14 +1,13 @@
 /**
  * Bridge to native SPP (Expo module → future Rust cdylib).
  *
- * Resolution order:
- * 1. `@veilpay/expo-spp-native` when autolinked in a dev-client / release build
- * 2. Pure JS stub (Jest, Expo Go, web)
- *
- * Never log secrets.
+ * UNIFIED BRIDGE: Native backend must be initialized before use.
+ * JS stubs are for Jest/mock environments only.
  */
 
 import type { SppNativeCapabilities } from './types';
+import { recordSppDiagnostic } from './sppDiagnostics';
+
 
 export type SppNativeOpResult = {
   ok: boolean;
@@ -52,6 +51,8 @@ export type SppNativeModule = {
   poolSync?(): Promise<SppNativeOpResult> | SppNativeOpResult;
   /** DATA-001: private balance (stroops) after sync. */
   poolBalance?(): Promise<SppNativeOpResult> | SppNativeOpResult;
+  /** BIP39 mnemonic → 64-byte seed via native PBKDF2-HMAC-SHA512 (background thread). */
+  mnemonicToSeed?(mnemonicPhrase: string): Promise<string> | string;
 };
 
 const notReady = (op: string): SppNativeOpResult => ({
@@ -79,27 +80,28 @@ const JsStub: SppNativeModule = {
     ok: false,
     code: 'SPP_ASP_NOT_READY',
     op: 'ensure_asp',
-    message:
-      'ASP leaf compute needs native derive (libspp_native). Select pXLM under Privacy to sign setup; leaf lands with NDK .so.',
+    message: 'Native SPP bridge not initialized. Call ensureInitialized() first.',
   }),
   deriveKeys: () => ({
     ok: false,
     code: 'SPP_DERIVE_NOT_READY',
     op: 'derive_keys',
-    message:
-      'JS stub has no Poseidon2. Use a native build with libspp_native.so (cargo-ndk).',
+    message: 'Native SPP bridge not initialized. Call ensureInitialized() first.',
   }),
   poolReadiness: () => ({
     ok: false,
     op: 'pool_readiness',
     code: 'SPP_OPS_NOT_READY',
-    message: 'JS stub: sdk/pool not linked; use native build + feature pool-ops',
+    message: 'Native SPP bridge not initialized. Call ensureInitialized() first.',
   }),
   poolOpen: () => notReady('pool_open'),
   poolClose: () => ({ ok: true, op: 'pool_close', message: 'js-stub no-op' }),
   poolSync: () => notReady('pool_sync'),
   poolBalance: () => notReady('pool_balance'),
   ensureCircuitAssets: () => notReady('ensure_circuit_assets'),
+  mnemonicToSeed: () => {
+    throw new Error('mnemonicToSeed not available in JS stub — use the native Expo module');
+  },
 };
 
 function tryLoadExpoNative(): SppNativeModule | null {
@@ -111,18 +113,19 @@ function tryLoadExpoNative(): SppNativeModule | null {
         version(): string;
         ping(input?: string | null): string;
         capabilities(): SppNativeCapabilities;
-        deposit(amount: string): SppNativeOpResult;
-        transfer(amount: string, recipient: string): SppNativeOpResult;
-        withdraw(amount: string, to: string): SppNativeOpResult;
-        ensureAsp(): SppNativeOpResult;
-        deriveKeys?(sigHex: string, network: string): SppNativeOpResult;
-        poolReadiness?(): SppNativeOpResult;
-        poolOpen?(configJson: string): SppNativeOpResult;
-        poolClose?(): SppNativeOpResult;
-        poolSync?(): SppNativeOpResult;
-        poolBalance?(): SppNativeOpResult;
+        deposit(amount: string): Promise<SppNativeOpResult> | SppNativeOpResult;
+        transfer(amount: string, recipient: string): Promise<SppNativeOpResult> | SppNativeOpResult;
+        withdraw(amount: string, to: string): Promise<SppNativeOpResult> | SppNativeOpResult;
+        ensureAsp(): Promise<SppNativeOpResult> | SppNativeOpResult;
+        deriveKeys?(sigHex: string, network: string): Promise<SppNativeOpResult> | SppNativeOpResult;
+        poolReadiness?(): Promise<SppNativeOpResult> | SppNativeOpResult;
+        poolOpen?(configJson: string): Promise<SppNativeOpResult> | SppNativeOpResult;
+        poolClose?(): Promise<SppNativeOpResult> | SppNativeOpResult;
+        poolSync?(): Promise<SppNativeOpResult> | SppNativeOpResult;
+        poolBalance?(): Promise<SppNativeOpResult> | SppNativeOpResult;
         appDataDir?(): string;
-        ensureCircuitAssets?(): SppNativeOpResult;
+        ensureCircuitAssets?(): Promise<SppNativeOpResult> | SppNativeOpResult;
+        mnemonicToSeed?(mnemonicPhrase: string): Promise<string> | string;
       };
     };
     const native = mod.getSppNativeExpoModule?.();
@@ -193,6 +196,8 @@ function tryLoadExpoNative(): SppNativeModule | null {
         const d = native.appDataDir?.();
         return typeof d === 'string' ? d : '';
       },
+      mnemonicToSeed: (phrase) =>
+        native.mnemonicToSeed?.(phrase) ?? Promise.reject(new Error('mnemonicToSeed not available')),
     };
   } catch {
     return null;
@@ -200,6 +205,41 @@ function tryLoadExpoNative(): SppNativeModule | null {
 }
 
 let backend: SppNativeModule = tryLoadExpoNative() ?? JsStub;
+// ─── Native Bridge Initialization ──────────────────────────────────────────
+
+let isInitializing = false;
+let initialized = false;
+let initializationPromise: Promise<boolean> | null = null;
+
+export async function ensureInitialized(): Promise<boolean> {
+  if (initialized) return true;
+  if (initializationPromise) return initializationPromise;
+
+  initializationPromise = (async () => {
+    try {
+      isInitializing = true;
+      // 1. Verify library readiness
+      const ready = await backend.poolReadiness?.();
+      // 2. Verify circuit assets
+      const assets = await backend.ensureCircuitAssets?.();
+
+      initialized = ready?.ok === true && assets?.ok === true;
+      return initialized;
+    } catch (e) {
+      console.error("[SPPBridge] Initialization failed", e);
+      return false;
+    } finally {
+      isInitializing = false;
+      initializationPromise = null; // Clear to allow retry on failure
+    }
+  })();
+
+  return initializationPromise;
+}
+
+export function isSppInitialized(): boolean {
+  return initialized;
+}
 
 /**
  * Inject a backend (tests or post-link). Production prefers Expo native module.
@@ -303,14 +343,63 @@ async function asResult(
   }
 }
 
+/**
+ * Race a promise against a timeout. If the timeout fires first, the returned
+ * promise rejects with a descriptive TimeoutError. The original promise is
+ * abandoned (its eventual result is ignored) but never leaks to the caller.
+ */
+function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  label: string
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timed = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      const err: Error & { code?: string } = new Error(
+        `Native ${label} timed out after ${ms}ms`
+      );
+      err.code = 'SPP_NATIVE_TIMEOUT';
+      reject(err);
+    }, ms);
+  });
+  return Promise.race([promise, timed]).finally(() => clearTimeout(timer));
+}
+
 async function callNative(
   op: string,
-  invoke: () => SppNativeOpResult | Promise<SppNativeOpResult> | undefined
+  invoke: () => SppNativeOpResult | Promise<SppNativeOpResult> | undefined,
+  timeoutMs?: number
 ): Promise<SppNativeOpResult> {
+  void recordSppDiagnostic({
+    status: 'start',
+    step: `native:${op}`,
+    operation: op,
+  });
   try {
-    return asResult(invoke(), op);
+    const promise = asResult(invoke(), op);
+    const result = await (timeoutMs ? withTimeout(promise, timeoutMs, op) : promise);
+    void recordSppDiagnostic({
+      status: result.ok ? 'success' : 'error',
+      step: `native:${op}`,
+      operation: op,
+      code: result.code,
+      message: result.message,
+      rawError: result.ok ? undefined : result.message,
+      txHash: result.txHash,
+    });
+    return result;
   } catch (e) {
-    return exceptionResult(e, op);
+    const result = exceptionResult(e, op);
+    void recordSppDiagnostic({
+      status: 'error',
+      step: `native:${op}`,
+      operation: op,
+      code: result.code,
+      message: result.message,
+      rawError: e,
+    });
+    return result;
   }
 }
 
@@ -344,11 +433,13 @@ export async function sppNativeDeriveKeys(
 }
 
 export async function sppNativePoolReadiness(): Promise<SppNativeOpResult> {
-  return callNative('pool_readiness', () => backend.poolReadiness?.());
+  return callNative('pool_readiness', () => backend.poolReadiness?.(), 15_000);
 }
 
 export async function sppNativePoolOpen(configJson: string): Promise<SppNativeOpResult> {
-  return callNative('pool_open', () => backend.poolOpen?.(configJson));
+  // 30s timeout: pool_open connects to the RPC + opens SQLite + initialises
+  // the prover. A slow or unreachable RPC should not hang the JS thread.
+  return callNative('pool_open', () => backend.poolOpen?.(configJson), 30_000);
 }
 
 export async function sppNativePoolClose(): Promise<SppNativeOpResult> {
@@ -356,11 +447,14 @@ export async function sppNativePoolClose(): Promise<SppNativeOpResult> {
 }
 
 export async function sppNativePoolSync(): Promise<SppNativeOpResult> {
-  return callNative('pool_sync', () => backend.poolSync?.());
+  // The current Android SDK bounds sync internally at 30s (testnet) / 90s
+  // (mainnet). Keep an app-side ceiling for older shipped .so files too, so a
+  // stale native binary cannot leave the user staring at a spinner for minutes.
+  return callNative('pool_sync', () => backend.poolSync?.(), 120_000);
 }
 
 export async function sppNativePoolBalance(): Promise<SppNativeOpResult> {
-  return callNative('pool_balance', () => backend.poolBalance?.());
+  return callNative('pool_balance', () => backend.poolBalance?.(), 15_000);
 }
 
 export async function sppNativeEnsureCircuitAssets(): Promise<SppNativeOpResult> {
@@ -374,5 +468,25 @@ export function sppNativeAppDataDir(): string {
     return typeof d === 'string' ? d.trim() : '';
   } catch {
     return '';
+  }
+}
+
+/**
+ * BIP39 mnemonic → 64-byte seed via native PBKDF2-HMAC-SHA512.
+ * Returns a hex string, or null if native module is unavailable (caller falls
+ * back to the JS implementation). Runs on a background thread — does not
+ * block the JS thread.
+ */
+export async function sppNativeMnemonicToSeed(
+  mnemonicPhrase: string
+): Promise<string | null> {
+  try {
+    const result = await backend.mnemonicToSeed?.(mnemonicPhrase);
+    if (typeof result === 'string' && result.length === 128) {
+      return result;
+    }
+    return null;
+  } catch {
+    return null;
   }
 }

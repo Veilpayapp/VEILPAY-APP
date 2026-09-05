@@ -1,7 +1,7 @@
 [package]
 name = "veil_pool"
 version = "0.1.0"
-description = "VeilPay Privacy Pool for Solana"
+description = "Veilpay Privacy Pool for Solana"
 edition = "2021"
 
 [lib]

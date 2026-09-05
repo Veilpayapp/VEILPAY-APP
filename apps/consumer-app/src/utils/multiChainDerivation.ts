@@ -6,10 +6,24 @@ import { derivePath } from 'ed25519-hd-key';
 import { Keypair } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 import * as StellarSdk from 'stellar-sdk';
+import { sppNativeMnemonicToSeed } from '../utils/stellarSpp/sppNativeBridge';
 
 // Cache seed to avoid massive blocking delay on every account derivation
 let cachedMnemonic: string | null = null;
 let cachedSeed: Uint8Array | null = null;
+
+/**
+ * Returns the cached BIP39 seed for the given mnemonic, if it was already
+ * derived this session. SPP modules (sppOnboard, sppPoolSession) call this
+ * to avoid redundant ~1.5s Pbkdf2 calls after the bootstrap path already
+ * derived the seed.
+ */
+export function getCachedMnemonicSeed(mnemonicPhrase: string): Uint8Array | null {
+  if (cachedMnemonic === mnemonicPhrase && cachedSeed) {
+    return cachedSeed;
+  }
+  return null;
+}
 
 export async function deriveAddressesForAllChains(mnemonicWords: string[], accountIndex: number = 0): Promise<Record<ChainType, string>> {
   const mnemonicPhrase = mnemonicWords.join(' ');
@@ -19,12 +33,19 @@ export async function deriveAddressesForAllChains(mnemonicWords: string[], accou
   // 1. EVM
   const evmAddress = account.address.toLowerCase();
 
-  // Cache the seed derivation because mnemonicToSeed takes ~1.5s on mobile JS thread
+  // Cache the seed derivation because mnemonicToSeed takes ~1.5s on mobile JS thread.
+  // Prefer the native (Kotlin) PBKDF2 implementation via the Expo module bridge,
+  // which runs on a background thread and completes in ~10-50ms instead of ~1,500ms.
   let seed: Uint8Array;
   if (cachedMnemonic === mnemonicPhrase && cachedSeed) {
     seed = cachedSeed;
   } else {
-    seed = await mnemonicToSeed(mnemonicPhrase);
+    const nativeHex = await sppNativeMnemonicToSeed(mnemonicPhrase);
+    if (nativeHex) {
+      seed = Buffer.from(nativeHex, 'hex');
+    } else {
+      seed = await mnemonicToSeed(mnemonicPhrase);
+    }
     cachedMnemonic = mnemonicPhrase;
     cachedSeed = seed;
   }

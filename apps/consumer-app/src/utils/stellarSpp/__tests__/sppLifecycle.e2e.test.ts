@@ -63,6 +63,14 @@ jest.mock('../sppPoolSession', () => ({
   closePoolSession: jest.fn(async () => ({ ok: true, op: 'pool_close' })),
 }));
 
+jest.mock('../sppRpcFailover', () => ({
+  syncPoolWithRpcFailover: jest.fn(async () => ({
+    ok: true,
+    usedFallback: false,
+    syncResult: { ok: true, op: 'pool_sync', message: 'mock pool synced' },
+  })),
+}));
+
 jest.mock('../../../stores/sppAccountStore', () => ({
   getSppAccount: jest.fn(async () => ({
     chainKey: 'stellar-testnet',

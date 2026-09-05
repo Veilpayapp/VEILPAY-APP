@@ -19,7 +19,7 @@ router.get("/ui", (_req, res) => {
   res.send(`<!DOCTYPE html>
 <html>
 <head>
-  <title>VeilPay API Documentation</title>
+  <title>Veilpay API Documentation</title>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
@@ -33,7 +33,7 @@ router.get("/ui", (_req, res) => {
   </style>
 </head>
 <body>
-  <h1>VeilPay API Documentation</h1>
+  <h1>Veilpay API Documentation</h1>
   <p>Base URL: <code>${config.nodeEnv === "development" ? "http://localhost:" + config.port : "https://api.veilpay.com"}</code></p>
   <div id="endpoints"></div>
   <script>

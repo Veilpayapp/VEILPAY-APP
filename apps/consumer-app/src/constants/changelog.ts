@@ -1,5 +1,5 @@
 /**
- * VeilPay release notes / "What's New" changelog.
+ * Veilpay release notes / "What's New" changelog.
  *
  * SOURCE OF TRUTH for the user-facing update details shown in the About →
  * Version → "What's New" modal. Keep this in lockstep with `version.json`:
@@ -30,6 +30,46 @@ export interface ReleaseNote {
  */
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.0.4',
+    build: 16,
+    date: '2026-08-18',
+    highlights: [
+      'Native DNS resolution fixed — the private-payment sync no longer fails on networks where the app can browse the web but the native client can\'t resolve Stellar RPC. Sync also now fails fast (30s) instead of spinning for minutes on a dead network.',
+      'Private-payment sync now works on more Wi-Fi and mobile data connections — the native layer uses its own DNS resolver instead of the system one.',
+    ],
+  },
+  {
+    version: '1.0.4',
+    build: 15,
+    date: '2026-08-16',
+    highlights: [
+      'Pool sync timeout increased from 60s to 300s — avoids timeout failures on the initial private-account sync from the deployment ledger, especially on mainnet.',
+    ],
+  },
+  {
+    version: '1.0.3',
+    build: 14,
+    date: '2026-08-15',
+    highlights: [
+      'Private XLM on mainnet: if your private history can’t reach the primary network, the app now automatically retries on a backup connection — sync should complete reliably.',
+      'Re-entering Private XLM in the same session is instant — no more repeated “setting up” before you can send.',
+      'Shield, transfer, and unshield now show a live progress checklist (deriving keys → syncing pool → generating proof → submitting) instead of a silent wait.',
+      'The confirm screen fits on one screen: fees collapse to a single total, the network badge is compact, and the send button stays in reach.',
+      'Network errors now show plain-language messages (“Check your connection…”) instead of raw technical text.',
+    ],
+  },
+  {
+    version: '1.0.2',
+    build: 13,
+    date: '2026-08-14',
+    highlights: [
+      'Private XLM sync is back on the test network — fresh on-chain contracts so your private balance loads reliably again.',
+      'Privacy status now shows which network you’re on (TESTNET / MAINNET) everywhere it matters.',
+      'Switching between test and main networks keeps their private accounts fully separate, so setup runs correctly on each one.',
+      'Private payment diagnostics exports now include the active network.',
+    ],
+  },
+  {
     version: '1.0.1',
     build: 13,
     date: '2026-07-10',
@@ -54,7 +94,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     build: 11,
     date: '2026-07-07',
     highlights: [
-      'Fresh new look — VeilPay has a redesigned gold shield logo across the app, home screen icon, and splash screen.',
+      'Fresh new look — Veilpay has a redesigned gold shield logo across the app, home screen icon, and splash screen.',
       'The logo now looks crisp on both the dark and light themes.',
     ],
   },
@@ -63,7 +103,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     build: 10,
     date: '2026-07-07',
     highlights: [
-      'A heads-up before you send: VeilPay now checks your balance up front and stops you from submitting a payment you can\'t cover, instead of letting it fail on-chain.',
+      'A heads-up before you send: Veilpay now checks your balance up front and stops you from submitting a payment you can\'t cover, instead of letting it fail on-chain.',
       'The confirm button on the send screen is more reliable — no more taps that quietly do nothing.',
       'Small visual polish on the pending Buy/Sell card so it matches the rest of the app.',
     ],
@@ -73,7 +113,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     build: 9,
     date: '2026-07-07',
     highlights: [
-      'Get notified the moment a payment lands — VeilPay now shows an on-device notification with the amount when you receive funds while the app is open.',
+      'Get notified the moment a payment lands — Veilpay now shows an on-device notification with the amount when you receive funds while the app is open.',
       'Turn it on anytime under Settings → Notifications; nothing about your payments leaves your phone.',
     ],
   },

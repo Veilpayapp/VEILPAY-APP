@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import type { TransactionRecord } from '../types/transactions';
 import { fetchTransactionHistoryPage } from '../utils/transactionHistory';
 import type { FiatGatewayProvider as SharedFiatGatewayProvider } from '../utils/fiatGateway';
@@ -48,6 +49,45 @@ export interface OnrampOrderRecord {
   chainKey: string;
   txHash?: string;
   updatedAt: number;
+}
+
+// ---------------------------------------------------------------------------
+// SEC-005 hardening: the onramp statusToken is an access credential (the
+// bearer authorizing `GET /api/v1/onramp/status/:token`). It must NOT live in
+// AsyncStorage, which is unencrypted and included in device backups. We store
+// the small token in SecureStore (hardware-backed, device-only, ~130 chars,
+// well under the ~2KB limit) and keep only the non-sensitive order metadata in
+// AsyncStorage. The order id + token are mirrored; a token for an older order
+// id is removed on the next write.
+const ONRAMP_TOKEN_SECURE_PREFIX = 'veilpay:onramp-status-token:';
+const ONRAMP_SECURE_OPTIONS: SecureStore.SecureStoreOptions = {
+  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+};
+
+function onrampTokenKey(orderId: string): string {
+  return `${ONRAMP_TOKEN_SECURE_PREFIX}${orderId}`;
+}
+
+async function persistOnrampStatusTokenToSecure(
+  order: Pick<OnrampOrderRecord, 'id' | 'statusToken'> | null
+): Promise<void> {
+  try {
+    // Best-effort: drop stale tokens for other in-flight order ids first.
+    const previous = useTransactionStore.getState().latestOnrampOrder;
+    if (previous && previous.id !== order?.id) {
+      await SecureStore.deleteItemAsync(onrampTokenKey(previous.id), ONRAMP_SECURE_OPTIONS);
+    }
+    if (order?.statusToken && order.id) {
+      await SecureStore.setItemAsync(
+        onrampTokenKey(order.id),
+        order.statusToken,
+        ONRAMP_SECURE_OPTIONS
+      );
+    }
+  } catch {
+    // Never throw from the store write path; the poll simply won't restore
+    // the token after a restart (identical to SecureStore's other failure modes).
+  }
 }
 
 /**
@@ -151,18 +191,21 @@ export const useTransactionStore = create<TransactionState>()(
       },
       
       setLatestOnrampOrder: (order: OnrampOrderRecord) => {
-        set({
-          latestOnrampOrder: {
-            ...order,
-            provider: 'onramp_money',
-            walletAddress: order.walletAddress || order.userAddress,
-            userAddress: order.userAddress || order.walletAddress,
-            updatedAt: order.updatedAt ?? Date.now(),
-          },
-        });
+        const normalized = {
+          ...order,
+          provider: 'onramp_money' as const,
+          walletAddress: order.walletAddress || order.userAddress,
+          userAddress: order.userAddress || order.walletAddress,
+          updatedAt: order.updatedAt ?? Date.now(),
+        };
+        set({ latestOnrampOrder: normalized });
+        // SEC-005: the signed statusToken is an access credential — keep it in
+        // SecureStore, never in the AsyncStorage-persisted slice.
+        void persistOnrampStatusTokenToSecure(normalized);
       },
 
       clearLatestOnrampOrder: () => {
+        void persistOnrampStatusTokenToSecure(null);
         set({ latestOnrampOrder: null });
       },
 
@@ -266,8 +309,32 @@ export const useTransactionStore = create<TransactionState>()(
           const publicRows = all.filter((t) => !isSppActivityRecord(t));
           return dedupeTransactions([...privateRows, ...publicRows]).slice(0, 50);
         })(),
-        latestOnrampOrder: state.latestOnrampOrder,
+        // SEC-005: strip the signed statusToken credential from the persisted
+        // AsyncStorage slice (it is mirrored to SecureStore separately). The
+        // non-sensitive order metadata still persists so the home dashboard
+        // can render a cancelled/completed onramp card.
+        latestOnrampOrder: state.latestOnrampOrder
+          ? { ...state.latestOnrampOrder, statusToken: undefined }
+          : state.latestOnrampOrder,
       }),
+      // SEC-005: restore the statusToken from SecureStore after hydration so
+      // an in-flight order can still be polled across app restarts.
+      onRehydrateStorage: () => (state) => {
+        const order = state?.latestOnrampOrder;
+        if (!order?.id) return;
+        void (async () => {
+          try {
+            const token = await SecureStore.getItemAsync(onrampTokenKey(order.id), ONRAMP_SECURE_OPTIONS);
+            if (token && token.length > 0) {
+              useTransactionStore.setState({
+                latestOnrampOrder: { ...order, statusToken: token },
+              });
+            }
+          } catch {
+            // Poll simply won't restore the token; do not surface a crash.
+          }
+        })();
+      },
       migrate: (persistedState: unknown, fromVersion: number) => {
         // SEC-005: in-flight onramp orders created BEFORE the statusToken
         // was introduced (v1) have no `statusToken` and therefore cannot

@@ -216,9 +216,15 @@ pub fn open_session(config_json: &str) -> Result<(), String> {
         user_address: cfg.user_address.clone(),
         storage_path: cfg.storage_path,
         prover_artifacts: artifacts,
+        sync_timeout_secs: None,
     };
 
-    let pool = PrivatePool::open(pool_config, signer).map_err(|e| format!("open pool: {e}"))?;
+    // Sync is driven explicitly by the JS orchestration layer, which can
+    // preflight the endpoint, apply failover policy, and surface progress.
+    // Avoid the SDK's inline sync mode here; otherwise every prove/submit
+    // operation silently performs a second unbounded catch-up.
+    let pool = PrivatePool::open_local(pool_config, signer)
+        .map_err(|e| format!("open pool: {e}"))?;
 
     let mut guard = SESSION.lock();
     *guard = Some(SendBoundSession(BoundSession {

@@ -1,4 +1,4 @@
-//! VeilPay SPP native FFI.
+//! Veilpay SPP native FFI.
 //!
 //! - `version` / `ping` / `capabilities`
 //! - `derive_keys` — SEP-53 signature → note/enc pubkeys + ASP leaf (Poseidon2)

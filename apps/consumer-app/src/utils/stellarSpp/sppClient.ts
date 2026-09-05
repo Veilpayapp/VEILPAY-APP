@@ -35,6 +35,9 @@ import {
 import { getCircuitsReadiness } from './sppCircuits';
 import { formatStroops, parsePositiveStroops, tryParseStroops } from './sppAmount';
 import { probeAspMembershipRoot } from './sppOnboard';
+import { runWithSppDiagnostics } from './sppDiagnostics';
+import { recordSppProgressDiagnostic } from './sppProgressSubscriber';
+import { formatSppSyncUserMessage } from './sppSyncMessages';
 import {
   SppClientError,
   type SppClientContext,
@@ -68,6 +71,55 @@ export type SppPrepChecklist = {
   blockers: string[];
 };
 
+export type SppOperationStage = 'sync_pool' | 'generate_proof' | 'submit_tx';
+export type SppOperationProgressStatus = 'start' | 'success' | 'error';
+export type SppOperationProgressEvent = {
+  stage: SppOperationStage;
+  status: SppOperationProgressStatus;
+  message?: string;
+};
+export type SppOperationOptions = {
+  onProgress?: (event: SppOperationProgressEvent) => void;
+};
+
+function emitSppOperationProgress(
+  options: SppOperationOptions | undefined,
+  stage: SppOperationStage,
+  status: SppOperationProgressStatus,
+  operation: string,
+  message?: string
+): void {
+  const event: SppOperationProgressEvent = { stage, status, message };
+  try {
+    options?.onProgress?.(event);
+  } catch {
+    // Progress observers are best-effort and must never break a payment.
+  }
+  void recordSppProgressDiagnostic({
+    status,
+    step: stage,
+    operation,
+    message,
+  });
+}
+
+async function syncPoolForOperation(
+  chainKey: string,
+  ownerAddress: string,
+  operation: string,
+  options?: SppOperationOptions
+): Promise<void> {
+  emitSppOperationProgress(options, 'sync_pool', 'start', operation);
+  const { syncPoolWithRpcFailover } = await import('./sppRpcFailover');
+  const sync = await syncPoolWithRpcFailover(chainKey, ownerAddress);
+  if (!sync.ok) {
+    const message = sync.message || 'Private pool sync failed';
+    emitSppOperationProgress(options, 'sync_pool', 'error', operation, message);
+    throw new SppClientError(message, 'SPP_POOL_SYNC_FAILED');
+  }
+  emitSppOperationProgress(options, 'sync_pool', 'success', operation);
+}
+
 function requireContext(chainKey: string, ownerAddress: string): SppClientContext {
   const config = assertSppEnabled(chainKey);
   if (!ownerAddress || !/^G[A-Z2-7]{55}$/.test(ownerAddress)) {
@@ -77,9 +129,13 @@ function requireContext(chainKey: string, ownerAddress: string): SppClientContex
 }
 
 function throwFromNative(result: SppNativeOpResult, fallbackOp: string): never {
+  // Never default a native failure to SPP_OPS_NOT_READY: the UI intercepts
+  // that code as "app build is too old", which is a lie when the real problem
+  // is a genuine deposit/transfer failure whose `code` field was omitted. Use
+  // a neutral fallback so the actual `message` reaches the user verbatim.
   throw new SppClientError(
     result.message || `SPP ${result.op || fallbackOp} failed`,
-    result.code || 'SPP_OPS_NOT_READY'
+    result.code || 'SPP_NATIVE_OP_FAILED'
   );
 }
 
@@ -91,7 +147,9 @@ function throwSppBlockers(blockers: string[]): never {
   const useful = blockers.filter(Boolean);
   throw new SppClientError(
     useful.length
-      ? `Private payment is not prove-ready yet: ${useful.join('; ')}`
+      ? `Private payment is not prove-ready yet: ${useful
+          .map((b) => formatSppSyncUserMessage(b))
+          .join('; ')}`
       : 'Private payment is not prove-ready yet',
     'SPP_PROVE_NOT_READY'
   );
@@ -218,6 +276,42 @@ export async function prepareSppOp(
 }
 
 /**
+ * The blocker that actually gates `readyForProve`, or `null` when prove-ready.
+ *
+ * `prepareSppOp().blockers` mixes gating and *informational* entries — notably
+ * the Soroban RPC health probe, which is pushed before the circuits message but
+ * is explicitly not part of `readyForProve`. UI that renders `blockers[0]`
+ * therefore tells the user "Soroban RPC unreachable" while the real reason the
+ * send is locked (usually unstaged circuit assets) sits further down the list.
+ * Always drive gate copy off this helper, not off `blockers[0]`.
+ */
+export function gatingSppBlocker(
+  prep: SppPrepChecklist | null | undefined
+): string | null {
+  if (!prep) return null;
+  if (prep.readyForProve) return null;
+  if (!prep.chainEnabled) {
+    return 'Private payments are not configured for this network';
+  }
+  if (!prep.poolOps) return 'Private sends need a pool-ops build of the app';
+  if (!prep.keysSigned) {
+    return 'Select pXLM under Privacy to finish privacy setup';
+  }
+  if (!prep.hasAspLeaf) return 'ASP leaf not derived yet — re-select pXLM';
+  if (!prep.aspInserted && prep.asp.status !== 'ready') {
+    return prep.asp.message || 'ASP membership not on-chain yet';
+  }
+  if (!prep.circuitsReady) {
+    return prep.circuitsMissing.length
+      ? `Proving assets not staged yet (missing ${prep.circuitsMissing.join(', ')})`
+      : 'Proving assets not staged yet';
+  }
+  // Prove-ready is false for a reason not covered above — fall back to the
+  // raw list rather than claiming readiness we cannot explain.
+  return prep.blockers[0] || 'Private account is not prove-ready yet';
+}
+
+/**
  * Local unspent private balance from SecureStore notes (not chain sync).
  */
 export async function getLocalPrivateBalance(
@@ -294,23 +388,8 @@ export async function recoverSppNotesFromChain(
     }
 
     await ensureSppAccountReadySoft(chainKey, ownerAddress);
-    const { ensurePoolSession } = await import('./sppPoolSession');
-    let opened = await ensurePoolSession(chainKey, ownerAddress);
-    // One retry: first open after reinstall often races mnemonic / FS seed.
-    if (!opened.ok) {
-      await new Promise((r) => setTimeout(r, 750));
-      opened = await ensurePoolSession(chainKey, ownerAddress);
-    }
-    if (!opened.ok) {
-      return {
-        recovered: false,
-        amount: localBefore.amount,
-        notes: localBefore.notes,
-        message: opened.message || 'Could not open pool session for recovery',
-      };
-    }
-
-    const sync = await sppNativePoolSync();
+    const { syncPoolWithRpcFailover } = await import('./sppRpcFailover');
+    const sync = await syncPoolWithRpcFailover(chainKey, ownerAddress);
     if (!sync.ok) {
       return {
         recovered: false,
@@ -320,8 +399,28 @@ export async function recoverSppNotesFromChain(
       };
     }
 
-    // Second sync pass — first scan after empty sqlite can miss late pages.
-    await sppNativePoolSync().catch(() => ({ ok: false }));
+    // Second pass — the first sync after an empty sqlite (fresh install / DB
+    // loss) can miss late ledger pages, under-reporting recovered balance.
+    // Mirror the onboarding double-sync: a short gap, then a re-sync before
+    // reading the native balance. A mere parallel page-scan gap, not a network
+    // failure, so a second full failover is unnecessary — re-run the native
+    // sync directly.
+    // Second pass — the first sync after an empty sqlite (fresh install / DB
+    // loss) can miss late ledger pages, under-reporting recovered balance.
+    // Mirror the onboarding double-sync: a short gap, then a re-sync before
+    // reading the native balance. A mere page-scan gap, not a network failure,
+    // so a second full failover is unnecessary — re-run the native sync
+    // directly.
+    await new Promise((r) => setTimeout(r, 1500));
+    const secondSync = await sppNativePoolSync();
+    if (!secondSync.ok) {
+      return {
+        recovered: false,
+        amount: localBefore.amount,
+        notes: localBefore.notes,
+        message: secondSync.message || 'Native pool sync failed',
+      };
+    }
 
     const bal = await sppNativePoolBalance();
     if (!bal.ok || bal.balanceStroops == null) {
@@ -419,10 +518,30 @@ async function ensureSppAccountReadySoft(
  * Shield public XLM into the pool.
  * @throws SppClientError
  */
-export async function deposit(
+export function deposit(
   chainKey: string,
   ownerAddress: string,
-  amount: string
+  amount: string,
+  options?: SppOperationOptions
+): Promise<SppTxResult> {
+  const config = getSppConfigForChain(chainKey);
+  return runWithSppDiagnostics(
+    {
+      step: 'shield',
+      operation: 'shield',
+      chainKey,
+      contractId: config?.poolId,
+      contractFunction: 'transact',
+    },
+    () => depositImpl(chainKey, ownerAddress, amount, options)
+  );
+}
+
+async function depositImpl(
+  chainKey: string,
+  ownerAddress: string,
+  amount: string,
+  options?: SppOperationOptions
 ): Promise<SppTxResult> {
   const ctx = requireContext(chainKey, ownerAddress);
   requirePositiveAmount(amount);
@@ -431,8 +550,12 @@ export async function deposit(
   const { ensureSppAccountReady } = await import('./sppOnboard');
   try {
     await ensureSppAccountReady(chainKey, ownerAddress);
-  } catch {
-    // Continue; native ops still fail closed if needed.
+  } catch (e) {
+    // Continue; native ops still fail closed if needed. Log the reason so a
+    // subsequent native failure can be diagnosed instead of hitting a black
+    // box (release Hermes swallows console.warn, but this preserves the path
+    // for debug and for any future diagnostic surface).
+    console.warn('[SPP] ensureSppAccountReady failed:', e);
   }
 
   const caps = sppNativeCapabilities();
@@ -445,16 +568,23 @@ export async function deposit(
     throwSppBlockers(prep.blockers);
   }
 
-  const { ensurePoolSession } = await import('./sppPoolSession');
-  const opened = await ensurePoolSession(chainKey, ownerAddress);
-  if (!opened.ok) {
-    throwFromNative(opened, 'pool_open');
-  }
+  await syncPoolForOperation(chainKey, ownerAddress, 'shield', options);
+  emitSppOperationProgress(options, 'generate_proof', 'start', 'shield');
 
   const result = await sppNativeDeposit(amount);
   if (!result.ok || !result.txHash) {
+    emitSppOperationProgress(
+      options,
+      'generate_proof',
+      'error',
+      'shield',
+      result.message
+    );
     throwFromNative(result, 'deposit');
   }
+  emitSppOperationProgress(options, 'generate_proof', 'success', 'shield');
+  emitSppOperationProgress(options, 'submit_tx', 'start', 'shield');
+  emitSppOperationProgress(options, 'submit_tx', 'success', 'shield');
 
   await saveSppNote({
     id: `dep-${result.txHash}`,
@@ -546,11 +676,32 @@ async function commitSpendPlan(
  * Private transfer to registry address or raw note/enc keys.
  * @throws SppClientError
  */
-export async function transfer(
+export function transfer(
   chainKey: string,
   ownerAddress: string,
   amount: string,
-  recipient: SppTransferRecipient
+  recipient: SppTransferRecipient,
+  options?: SppOperationOptions
+): Promise<SppTxResult> {
+  const config = getSppConfigForChain(chainKey);
+  return runWithSppDiagnostics(
+    {
+      step: 'transfer',
+      operation: 'transfer',
+      chainKey,
+      contractId: config?.poolId,
+      contractFunction: 'transact',
+    },
+    () => transferImpl(chainKey, ownerAddress, amount, recipient, options)
+  );
+}
+
+async function transferImpl(
+  chainKey: string,
+  ownerAddress: string,
+  amount: string,
+  recipient: SppTransferRecipient,
+  options?: SppOperationOptions
 ): Promise<SppTxResult> {
   const ctx = requireContext(chainKey, ownerAddress);
   requirePositiveAmount(amount);
@@ -588,16 +739,23 @@ export async function transfer(
     throwSppBlockers(prep.blockers);
   }
 
-  const { ensurePoolSession } = await import('./sppPoolSession');
-  const opened = await ensurePoolSession(chainKey, ownerAddress);
-  if (!opened.ok) {
-    throwFromNative(opened, 'pool_open');
-  }
+  await syncPoolForOperation(chainKey, ownerAddress, 'transfer', options);
+  emitSppOperationProgress(options, 'generate_proof', 'start', 'transfer');
 
   const result = await sppNativeTransfer(amount, recipientWire);
   if (!result.ok || !result.txHash) {
+    emitSppOperationProgress(
+      options,
+      'generate_proof',
+      'error',
+      'transfer',
+      result.message
+    );
     throwFromNative(result, 'transfer');
   }
+  emitSppOperationProgress(options, 'generate_proof', 'success', 'transfer');
+  emitSppOperationProgress(options, 'submit_tx', 'start', 'transfer');
+  emitSppOperationProgress(options, 'submit_tx', 'success', 'transfer');
   await commitSpendPlan(
     chainKey,
     ownerAddress,
@@ -612,11 +770,32 @@ export async function transfer(
  * Unshield to a public Stellar address (defaults to owner).
  * @throws SppClientError
  */
-export async function withdraw(
+export function withdraw(
   chainKey: string,
   ownerAddress: string,
   amount: string,
-  to?: string
+  to?: string,
+  options?: SppOperationOptions
+): Promise<SppTxResult> {
+  const config = getSppConfigForChain(chainKey);
+  return runWithSppDiagnostics(
+    {
+      step: 'unshield',
+      operation: 'unshield',
+      chainKey,
+      contractId: config?.poolId,
+      contractFunction: 'transact',
+    },
+    () => withdrawImpl(chainKey, ownerAddress, amount, to, options)
+  );
+}
+
+async function withdrawImpl(
+  chainKey: string,
+  ownerAddress: string,
+  amount: string,
+  to?: string,
+  options?: SppOperationOptions
 ): Promise<SppTxResult> {
   const ctx = requireContext(chainKey, ownerAddress);
   requirePositiveAmount(amount);
@@ -642,16 +821,23 @@ export async function withdraw(
     throwSppBlockers(prep.blockers);
   }
 
-  const { ensurePoolSession } = await import('./sppPoolSession');
-  const opened = await ensurePoolSession(chainKey, ownerAddress);
-  if (!opened.ok) {
-    throwFromNative(opened, 'pool_open');
-  }
+  await syncPoolForOperation(chainKey, ownerAddress, 'unshield', options);
+  emitSppOperationProgress(options, 'generate_proof', 'start', 'unshield');
 
   const result = await sppNativeWithdraw(amount, recipient);
   if (!result.ok || !result.txHash) {
+    emitSppOperationProgress(
+      options,
+      'generate_proof',
+      'error',
+      'unshield',
+      result.message
+    );
     throwFromNative(result, 'withdraw');
   }
+  emitSppOperationProgress(options, 'generate_proof', 'success', 'unshield');
+  emitSppOperationProgress(options, 'submit_tx', 'start', 'unshield');
+  emitSppOperationProgress(options, 'submit_tx', 'success', 'unshield');
   await commitSpendPlan(
     chainKey,
     ownerAddress,

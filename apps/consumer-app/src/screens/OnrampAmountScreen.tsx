@@ -181,7 +181,7 @@ export function OnrampAmountScreen({ navigation, route }: OnrampAmountScreenProp
             <View style={styles.infoRow}>
               <Icon name="info" size={16} color={colors.accent} />
               <Text style={styles.infoText}>
-                You are using the VeilPay Aggregator for this transaction. 
+                You are using the Veilpay Aggregator for this transaction.
                 We will find the best rate across multiple providers.
               </Text>
             </View>

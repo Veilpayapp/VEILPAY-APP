@@ -93,7 +93,7 @@ export function FiatGatewayModal({ visible, onClose, onBuy, onSell, currentCurre
 
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              Providers handle KYC securely. VeilPay does not store your personal identity data.
+              Providers handle KYC securely. Veilpay does not store your personal identity data.
             </Text>
             <SovereignButton title="CLOSE" variant="outline" onPress={onClose} />
           </View>

@@ -1,5 +1,5 @@
 /**
- * VeilPay — Deployed Contract Addresses (Sepolia)
+ * Veilpay — Deployed Contract Addresses (Sepolia)
  *
  * App-local copy of the Foundry deployment manifest lives at
  * `src/constants/deployments/sepolia.json` so Metro/EAS never need a monorepo

@@ -39,6 +39,7 @@ import { OnrampAmountScreen } from "../screens/OnrampAmountScreen";
 import { OnrampQuotesScreen } from "../screens/OnrampQuotesScreen";
 import { AddCustomNetworkScreen } from "../screens/AddCustomNetworkScreen";
 import { InAppBrowserScreen } from "../screens/InAppBrowserScreen";
+import { SppDiagnosticsScreen } from "../screens/SppDiagnosticsScreen";
 import type { TransactionRecord } from "../types/transactions";
 
 import type { PaymentToken } from "../types/tokens";
@@ -143,6 +144,7 @@ export type RootStackParamList = {
   [SCREENS.TOKEN_DETAIL]: { tokenSymbol: string; chainKey: string; };
   [SCREENS.SETTINGS]: undefined;
   [SCREENS.ADD_CUSTOM_NETWORK]: undefined;
+  [SCREENS.SPP_DIAGNOSTICS]: undefined;
 
   [SCREENS.DEPOSIT_CRYPTO]: undefined;
 
@@ -427,10 +429,11 @@ export function AppNavigator({ initialRouteName = SCREENS.ONBOARDING }: AppNavig
       component={AddCustomNetworkScreen}
       options={getScreenTransition(SCREENS.ADD_CUSTOM_NETWORK)}
     />
-        {/* SPP-001 / UX-001: StellarSpp diagnostic hub is intentionally NOT
-            registered in any build (preview, production, or local release).
-            ASP + recovery run in the background via useSppBackgroundSetup;
-            users interact only through pXLM selection / Send privacy flow. */}
+        <Stack.Screen
+          name={SCREENS.SPP_DIAGNOSTICS}
+          component={SppDiagnosticsScreen}
+          options={getScreenTransition(SCREENS.SPP_DIAGNOSTICS)}
+        />
 
         {/* Priority 6: Fiat On/Off Ramps */}
 

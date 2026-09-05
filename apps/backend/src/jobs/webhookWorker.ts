@@ -1,5 +1,5 @@
 /**
- * VeilPay Webhook Queue Infrastructure (Consumer)
+ * Veilpay Webhook Queue Infrastructure (Consumer)
  *
  * REL-002: updates the outbox WebhookDelivery row on each attempt when
  * payload.deliveryId is present.
@@ -12,7 +12,8 @@ import { getRedisClient } from '../lib/redis';
 import { deliverWebhook, type WebhookDeliveryPayload } from './webhookDelivery';
 import { incrementWebhookDeliveryAttempt } from '../utils/metrics';
 import { logger } from '../lib/logger';
-import { enqueueWebhookDlq } from './webhookQueue';
+import { enqueueWebhookDlq, recoverOrphanedPendingDeliveries } from './webhookQueue';
+import { withRedisLock } from '../lib/redisLock';
 
 let webhookWorkerInstance: Worker<WebhookDeliveryPayload> | null = null;
 let queueEventsInstance: QueueEvents | null = null;
@@ -60,7 +61,9 @@ export function initializeWebhookWorker(): boolean {
           return;
         }
 
-        logger.info(`[WebhookWorker] Delivering job ${job.id} to ${merchant.webhookUrl}`);
+                // Do NOT log merchant.webhookUrl: merchants often embed an auth token in
+        // the URL query string (e.g. ?token=...), and logging it leaks that credential.
+        logger.info(`[WebhookWorker] Delivering job ${job.id} for merchant ${payload.merchantId}`);
 
         // Mark retrying on subsequent attempts
         if (payload.deliveryId && job.attemptsMade > 0) {
@@ -158,6 +161,15 @@ export function initializeWebhookWorker(): boolean {
     });
 
     logger.info('[WebhookWorker] Consumer initialized successfully');
+
+    // REL-002 recovery: re-enqueue orphaned pending deliveries (crash between
+    // outbox create and BullMQ add). Fire-and-forget + Redis-locked so only one
+    // instance sweeps and a failure never blocks worker startup.
+    void withRedisLock('webhook_recovery', 60_000, () => recoverOrphanedPendingDeliveries())
+      .catch((err: unknown) => {
+        logger.warn(`[WebhookWorker] Recovery sweep skipped: ${err instanceof Error ? err.message : String(err)}`);
+      });
+
     return true;
   } catch (err) {
     logger.warn(

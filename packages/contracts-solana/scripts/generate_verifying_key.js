@@ -3,7 +3,7 @@
  * `Groth16Verifyingkey` constant consumed by the Solana program.
  *
  * Mirrors Light Protocol's `parse_vk_to_rust.js` (groth16-solana 0.2.0)
- * against VeilPay's withdraw circuit VK, fixing `nr_pubinputs` to
+ * against Veilpay's withdraw circuit VK, fixing `nr_pubinputs` to
  * `IC.length - 1` (IC[0] is the constant term, not a public input).
  *
  * Usage:

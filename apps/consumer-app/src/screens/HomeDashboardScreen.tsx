@@ -75,6 +75,18 @@ import type { PrivacyAssetListItem } from "../components/dashboard/TokenAssetsLi
 
 const TRANSAK_OUTCOME_TTL_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Session-level prove-readiness cache, keyed by `${chainKey}:${owner}`.
+ *
+ * Once `prepareSppOp().readyForProve` is confirmed for a (chain, owner) in this
+ * JS process, re-entering pXLM skips the entire setup pipeline (pool_open,
+ * pool_sync, derive_keys, circuit_assets, prepareSppOp) and shows "Sync ready"
+ * instantly. In-memory only — resets on app kill. Separate entries per network
+ * (testnet/mainnet keys never collide). Pull-to-refresh (forceRecover) clears
+ * the entry so an explicit refresh re-verifies.
+ */
+const sppProveReadyCache = new Map<string, boolean>();
+
 type HomeDashboardScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Home">;
 type HomeDashboardRouteProp = RouteProp<RootStackParamList, "Home">;
 
@@ -269,6 +281,14 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
       const lightOnly = opts?.lightOnly === true;
       const chainKey = privacyAsset.chainKey;
       const owner = stellarOwnerAddress;
+      // Explicit pull-to-refresh is the user saying "re-verify" — drop the
+      // session prove-readiness cache so the next pXLM entry re-runs setup.
+      if (forceRecover) {
+        sppProveReadyCache.delete(`${chainKey}:${owner}`);
+      }
+      const refreshGeneration = privacySetupGenRef.current;
+      const isCurrentRefresh = () =>
+        refreshGeneration === privacySetupGenRef.current;
 
       privateRefreshInFlightRef.current = true;
       try {
@@ -328,13 +348,13 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
           if (amtNum > 0) {
             const isRestoreMsg =
               /recover|restor|chain/i.test(result.message || '') && forceRecover;
-            if (isRestoreMsg) {
+            if (isRestoreMsg && isCurrentRefresh()) {
               setPrivacyStatusDetail(`Restored ${amt} pXLM`);
             }
             if (announce && isRestoreMsg) {
               toastRef.current.show(`Private balance restored: ${amt} pXLM`, 'success');
             }
-          } else if (announce && forceRecover) {
+          } else if (announce && forceRecover && isCurrentRefresh()) {
             setPrivacyStatusDetail(
               result.message || 'Synced — no pXLM found for this seed yet'
             );
@@ -351,11 +371,13 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
           /UnsatisfiedLinkError|JNI_SYMBOL_MISSING|No implementation found|outdated/i.test(
             result.message || ''
           );
-        setPrivacyStatusDetail(
-          isLinkFail
-            ? 'Private sync needs an updated app build'
-            : result.message || 'Could not restore private balance'
-        );
+        if (isCurrentRefresh()) {
+          setPrivacyStatusDetail(
+            isLinkFail
+              ? 'Private sync needs an updated app build'
+              : result.message || 'Could not restore private balance'
+          );
+        }
         if (announce && !isLinkFail) {
           toastRef.current.show(
             result.message || 'Could not restore private balance',
@@ -374,7 +396,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
         }
         const msg =
           e instanceof Error ? e.message : 'Private balance refresh failed';
-        setPrivacyStatusDetail(msg);
+        if (isCurrentRefresh()) setPrivacyStatusDetail(msg);
         if (announce) toastRef.current.show(msg, 'error');
       } finally {
         privateRefreshInFlightRef.current = false;
@@ -464,8 +486,18 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
           stellarOwnerAddress
         ).catch(() => null);
         if (cancelled) return;
-        if (account?.aspInserted) {
-          setPrivacyReadyStatus('ready');
+        const { getSppConfigForChain } = await import('../constants/spp');
+        const sppCfg = getSppConfigForChain(privacyAsset.chainKey);
+        if (
+          account?.aspInserted &&
+          account.aspMembershipContractId &&
+          (!sppCfg || account.aspMembershipContractId === sppCfg.aspMembershipId)
+        ) {
+          // Store membership alone is not prove-readiness. Preserve a ready
+          // result established by prepareSppOp, but never create one here.
+          setPrivacyReadyStatus((prev) =>
+            prev === 'ready' ? 'ready' : 'setting_up'
+          );
         } else {
           // Do not downgrade an already-ready card (select path set ready before store catch-up).
           setPrivacyReadyStatus((prev) =>
@@ -710,6 +742,8 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
               setLastKnownPrivateAmount,
               hasRecoveredThisSession,
               sppNativeCapabilities,
+              prepareSppOp,
+              gatingSppBlocker,
             } = await import('../utils/stellarSpp');
             const { getSppAccount } = await import('../stores/sppAccountStore');
             const { formatSppSyncUserMessage } = await import(
@@ -746,6 +780,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
             const alreadyRecovered = hasRecoveredThisSession(asset.chainKey, owner);
             const { getSppConfigForChain } = await import('../constants/spp');
             const sppCfg = getSppConfigForChain(asset.chainKey);
+            const privacyNet = sppCfg?.network === 'mainnet' ? 'MAINNET' : 'TESTNET';
             let aspReady = Boolean(
               existing?.aspInserted &&
                 existing.aspMembershipContractId &&
@@ -757,10 +792,76 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
                 (!sppCfg || existing.registryContractId === sppCfg.registryId)
             );
             const setupComplete = aspReady && keysRegistered;
+            // Authoritative prove-readiness. SecureStore's aspInserted /
+            // keysRegistered only record that the writes were *submitted*;
+            // `prepareSppOp().readyForProve` is the only signal that the SDK
+            // will actually accept a prove. The send UI must stay locked, and
+            // the banner must not claim "ready", until this flips true.
+            let proveReady = false;
 
-            if (setupComplete) {
+            // Session-ready cache: if this (chain, owner) already proved ready
+            // earlier in the session, skip the entire setup/readiness poll —
+            // re-entering pXLM should be instant, not re-register.
+            const proveCacheKey = `${asset.chainKey}:${owner}`;
+            if (sppProveReadyCache.get(proveCacheKey)) {
+              proveReady = true;
               setPrivacyReadyStatus('ready');
-              setPrivacyStatusDetail(null);
+              setPrivacyStatusDetail(
+                `Sync ready · ${activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'}`
+              );
+            } else if (setupComplete) {
+              // Already proved ready from a prior select this session → skip the
+              // heavy re-poll on re-toggle (Problem B: no "Syncing…" → "Sync ready"
+              // churn). The sticky latch preserved 'ready' across exit→re-enter.
+              let isReady = privacyReadyStatus === 'ready';
+              let lastBlocker: string | null = null;
+              if (isReady) {
+                proveReady = true;
+              } else {
+                // Verify with prepareSppOp to ensure ASP membership sync is actually complete
+                // Poll until ready or give up after retries
+                setPrivacyStatusDetail('Syncing private account…');
+                let readyCheckAttempt = 0;
+                const maxAttempts = 3;
+                while (!isReady && readyCheckAttempt < maxAttempts) {
+                  if (setupGen !== privacySetupGenRef.current) return;
+                  const prep = await prepareSppOp(asset.chainKey, owner).catch(() => null);
+                  if (setupGen !== privacySetupGenRef.current) return;
+
+                  if (prep?.readyForProve) {
+                    isReady = true;
+                    proveReady = true;
+                    setPrivacyReadyStatus('ready');
+                    setPrivacyStatusDetail(
+                      `Sync ready · ${activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'}`
+                    );
+                  } else {
+                    readyCheckAttempt++;
+                    lastBlocker = gatingSppBlocker(prep) || null;
+                    if (readyCheckAttempt < maxAttempts) {
+                      // Update status during polling so banner shows progress
+                      setPrivacyStatusDetail(
+                        formatSppSyncUserMessage(
+                          lastBlocker || 'Syncing private account…',
+                          { network: privacyNet }
+                        )
+                      );
+                      // Wait 1s before retrying
+                      await new Promise((r) => setTimeout(r, 1000));
+                    }
+                  }
+                }
+              }
+
+              if (!isReady) {
+                setPrivacyReadyStatus('setting_up');
+                setPrivacyStatusDetail(
+                  formatSppSyncUserMessage(
+                    lastBlocker || 'Private account setup finishing…',
+                    { network: privacyNet }
+                  )
+                );
+              }
             } else {
               setPrivacyReadyStatus('setting_up');
               // Quiet status line only — no toast storm on setup.
@@ -772,25 +873,91 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
               aspReady = Boolean(result.aspReady);
               keysRegistered = Boolean(result.keysRegistered);
               if (aspReady && keysRegistered) {
-                setPrivacyReadyStatus('ready');
-                setPrivacyStatusDetail(null);
+                // Double-check with prepareSppOp to ensure sync is complete
+                // Poll with retries
+                setPrivacyStatusDetail('Syncing private account…');
+                let readyCheckAttempt = 0;
+                const maxAttempts = 3;
+                let isReady = false;
+                let lastBlocker: string | null = null;
+
+                while (!isReady && readyCheckAttempt < maxAttempts) {
+                  if (setupGen !== privacySetupGenRef.current) return;
+                  const prep = await prepareSppOp(asset.chainKey, owner).catch(() => null);
+                  if (setupGen !== privacySetupGenRef.current) return;
+
+                  if (prep?.readyForProve) {
+                    isReady = true;
+                    proveReady = true;
+                    setPrivacyReadyStatus('ready');
+                    setPrivacyStatusDetail(
+                      `Sync ready · ${activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'}`
+                    );
+                  } else {
+                    readyCheckAttempt++;
+                    lastBlocker = gatingSppBlocker(prep) || null;
+                    if (readyCheckAttempt < maxAttempts) {
+                      // Update status during polling so banner shows progress
+                      setPrivacyStatusDetail(
+                        formatSppSyncUserMessage(
+                          lastBlocker || 'Syncing private account…',
+                          { network: privacyNet }
+                        )
+                      );
+                      await new Promise((r) => setTimeout(r, 1000));
+                    }
+                  }
+                }
+
+                if (!isReady) {
+                  setPrivacyReadyStatus('setting_up');
+                  setPrivacyStatusDetail(
+                    formatSppSyncUserMessage(
+                      lastBlocker || 'Private account setup finishing…',
+                      { network: privacyNet }
+                    )
+                  );
+                }
               } else if (aspReady) {
                 // Can send/shield; receive still needs registry — surface quietly.
-                setPrivacyReadyStatus('ready');
-                setPrivacyStatusDetail(
-                  formatSppSyncUserMessage(
-                    result.message || 'Finish receive-key registration…'
-                  )
-                );
+                // But still check prepareSppOp for ASP membership sync status.
+                const prep = await prepareSppOp(asset.chainKey, owner).catch(() => null);
+                if (setupGen !== privacySetupGenRef.current) return;
+                if (prep?.readyForProve) {
+                  proveReady = true;
+                  setPrivacyReadyStatus('ready');
+                  setPrivacyStatusDetail(
+                    formatSppSyncUserMessage(
+                      result.message || 'Finish receive-key registration…',
+                      { network: privacyNet }
+                    )
+                  );
+                } else {
+                  // ASP sync still pending
+                  setPrivacyReadyStatus('setting_up');
+                  setPrivacyStatusDetail(
+                    formatSppSyncUserMessage(
+                      gatingSppBlocker(prep) || result.message || 'Waiting for ASP sync…',
+                      { network: privacyNet }
+                    )
+                  );
+                }
               } else {
                 setPrivacyReadyStatus('setting_up');
                 setPrivacyStatusDetail(
                   formatSppSyncUserMessage(
-                    result.message || 'Finish private account setup…'
+                    result.message || 'Finish private account setup…',
+                    { network: privacyNet }
                   )
                 );
               }
               setPrivacyReadyTick((t) => t + 1);
+            }
+
+            // Cache confirmed prove-readiness so a later re-enter (even after a
+            // screen unmount, e.g. Settings → Home) skips the setup pipeline.
+            if (proveReady) {
+              sppProveReadyCache.set(proveCacheKey, true);
             }
 
             // 3) Balance: never force pool_sync on re-select.
@@ -814,21 +981,40 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
 
             const syncMsg = formatSppSyncUserMessage(recovery.message, {
               aspReady,
+              network: privacyNet,
             });
 
             if (recovery.recovered && amtNum > 0) {
-              if (aspReady) setPrivacyReadyStatus('ready');
+              // Only a confirmed prove-readiness poll may unlock the send UI.
+              // `aspReady` alone means the ASP write was *submitted*, not that
+              // membership is visible on-chain — trusting it here re-enabled
+              // sends after the readiness poll had already said "not ready".
+              if (proveReady) setPrivacyReadyStatus('ready');
               // One quiet success toast only on first meaningful restore this select.
               if (!cached || Number.parseFloat(cached) <= 0) {
                 toast.show(`Private balance: ${amt} pXLM`, 'success');
               }
-              setPrivacyStatusDetail(null);
+              setPrivacyStatusDetail(
+                proveReady
+                  ? `Sync ready · ${activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'}`
+                  : syncMsg || null
+              );
             } else if (recovery.recovered) {
-              if (aspReady) setPrivacyReadyStatus('ready');
-              setPrivacyStatusDetail(syncMsg || null);
-            } else if (aspReady) {
+              if (proveReady) setPrivacyReadyStatus('ready');
+              setPrivacyStatusDetail(
+                proveReady
+                  ? syncMsg || `Sync ready · ${activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'}`
+                  : syncMsg || null
+              );
+            } else if (proveReady) {
               setPrivacyReadyStatus('ready');
-              setPrivacyStatusDetail(syncMsg);
+              // A failed best-effort balance restore does not revoke confirmed
+              // prove-readiness. Avoid rendering the contradictory combination
+              // "Private XLM ready" + "Sync unavailable"; the native failure
+              // remains available in SPP diagnostics.
+              setPrivacyStatusDetail(
+                `Sync ready · ${activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'}`
+              );
             } else {
               setPrivacyStatusDetail(syncMsg || 'Could not restore private balance');
             }
@@ -849,6 +1035,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
       setActiveChain,
       setSelectedPrivacyAssetId,
       toast,
+      privacyReadyStatus,
     ]
   );
 
@@ -860,6 +1047,10 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
     setPrivacyStatusDetail(null);
     // Keep privateBalance in memory for instant re-entry paint; no toast (less jank).
   }, [setSelectedPrivacyAssetId]);
+
+  const handleDismissPrivacyStatus = useCallback(() => {
+    setPrivacyStatusDetail(null);
+  }, []);
 
   const privacyListItems: PrivacyAssetListItem[] = useMemo(() => {
     const catalog = getPrivacyAssetsForChain(activeChain?.key);
@@ -1213,6 +1404,7 @@ export function HomeDashboardScreen({ navigation, route }: HomeDashboardScreenPr
                 cryptoSymbol={privacyMode ? privacyAsset?.symbol : activeChain?.symbol}
                 privacyReadyStatus={privacyMode ? privacyReadyStatus : null}
                 privacyStatusDetail={privacyMode ? privacyStatusDetail : null}
+                onDismissPrivacyStatus={handleDismissPrivacyStatus}
               />
             </Animated.View>
           </MotiView>

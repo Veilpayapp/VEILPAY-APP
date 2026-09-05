@@ -26,6 +26,11 @@ describe('BiometricTokenManager - SEC-002 Security', () => {
     it('should generate tokens that are NOT predictable (not timestamp-based)', () => {
       const userId = 'user1';
       const token1 = manager.generateBiometricToken(userId);
+
+      // Rate limit allows 1 token per user per 30s window, so advance past it
+      // before generating the second token. This keeps the test on the intent
+      // (unpredictable tokens) while respecting the rate-limiting contract.
+      jest.advanceTimersByTime(30_001);
       const token2 = manager.generateBiometricToken(userId);
 
       // Tokens should have 'bm_' prefix indicating our format

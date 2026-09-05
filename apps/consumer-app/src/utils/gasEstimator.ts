@@ -11,6 +11,12 @@ export interface GasEstimate {
   estimatedCostEth: string;
   estimatedCostUsd: string | null;
   isStale: boolean;
+  /**
+   * The figure is an upper bound, not a point estimate. Soroban invokes set
+   * their real fee from simulation after the proof exists, so the confirm
+   * screen can only quote a ceiling — UI must label it as "up to".
+   */
+  isCeiling?: boolean;
   fetchedAt: number;
 }
 

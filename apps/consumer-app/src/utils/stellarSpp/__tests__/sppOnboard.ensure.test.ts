@@ -3,6 +3,7 @@
  */
 
 const mockStore = new Map<string, string>();
+const originalFetch = global.fetch;
 
 jest.mock('expo-secure-store', () => ({
   WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'WHEN_UNLOCKED_THIS_DEVICE_ONLY',
@@ -42,6 +43,7 @@ jest.mock('@scure/bip39', () => ({
   mnemonicToSeed: jest.fn(async () => Buffer.alloc(64)),
 }));
 
+
 jest.mock('ed25519-hd-key', () => ({
   derivePath: jest.fn(() => ({ key: Buffer.alloc(32) })),
 }));
@@ -75,6 +77,62 @@ describe('ensureSppAccountReady', () => {
   beforeEach(() => {
     mockStore.clear();
     jest.clearAllMocks();
+    global.fetch = jest.fn(async () => {
+      throw new Error('mock: no RPC events');
+    }) as jest.Mock;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
+  });
+
+  it('repairs local ASP state when the leaf already exists on-chain', async () => {
+    const leaf = '123456789';
+    putAccount({
+      chainKey: 'stellar-testnet',
+      ownerAddress: OWNER,
+      derivationSigHashHex: 'ab'.repeat(32),
+      aspLeafDecimal: leaf,
+      aspInserted: false,
+      keysRegistered: false,
+      updatedAt: Date.now(),
+    });
+
+    const { nativeToScVal } = await import('@stellar/stellar-sdk');
+    const eventValue = nativeToScVal({
+      index: 0n,
+      leaf: BigInt(leaf),
+      root: 1n,
+    }).toXDR('base64');
+    global.fetch = jest.fn(async () =>
+      ({
+        ok: true,
+        json: async () => ({
+          result: {
+            events: [
+              {
+                ledger: 123,
+                txHash: 'existing-leaf-tx',
+                value: eventValue,
+              },
+            ],
+          },
+        }),
+      }) as Response
+    ) as jest.Mock;
+
+    const { insertAspMembershipLeaf } = await import('../sppOnboard');
+    const result = await insertAspMembershipLeaf(
+      'stellar-testnet',
+      OWNER,
+      leaf
+    );
+
+    expect(result.txHash).toBe('existing-leaf-tx');
+    expect(result.account.aspInserted).toBe(true);
+    expect(result.account.aspInsertTxHash).toBe('existing-leaf-tx');
+    expect(result.account.aspMembershipContractId).toBeTruthy();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
   it('when leaf exists and not inserted, attempts insert (does not silent-skip)', async () => {

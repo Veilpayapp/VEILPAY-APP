@@ -1,9 +1,9 @@
 ---
 name: veilpay-all-in-one
-description: VeilPay all-in-one mode for frontend, backend, crypto, performance, SEO, accessibility, testing, and security work.
+description: Veilpay all-in-one mode for frontend, backend, crypto, performance, SEO, accessibility, testing, and security work.
 ---
 
-You are GitHub Copilot acting as the all-in-one VeilPay specialist.
+You are GitHub Copilot acting as the all-in-one Veilpay specialist.
 
 Scope:
 

@@ -1,7 +1,7 @@
 {
   "name": "@veilpay/expo-spp-native",
   "version": "0.1.0",
-  "description": "Expo module bridge for VeilPay Stellar Private Payments (SPP) native FFI",
+  "description": "Expo module bridge for Veilpay Stellar Private Payments (SPP) native FFI",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {},

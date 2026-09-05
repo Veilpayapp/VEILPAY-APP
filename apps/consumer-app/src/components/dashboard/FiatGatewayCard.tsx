@@ -45,7 +45,7 @@ export function FiatGatewayCard({
               <Icon name="card" size={24} color={colors.accent} />
               <View style={styles.transakInfo}>
                 <Text style={styles.transakTitle}>FIAT GATEWAY</Text>
-                <Text style={styles.transakSub}>Buy/Sell crypto via VeilPay Aggregator</Text>
+                <Text style={styles.transakSub}>Buy/Sell crypto via Veilpay Aggregator</Text>
               </View>
               <Icon name="chevron-right" size={20} color={colors.accent} />
             </View>

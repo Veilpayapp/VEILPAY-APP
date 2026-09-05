@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Deploy VeilPay Contracts to Testnet
+# Deploy Veilpay Contracts to Testnet
 # Usage: ./deploy.sh <network>
 
 set -e

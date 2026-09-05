@@ -2,7 +2,7 @@
 
 ## Target
 
-**VeilPay consumer app targets [WCAG 2.2 Level AA](https://www.w3.org/TR/WCAG22/).**
+**Veilpay consumer app targets [WCAG 2.2 Level AA](https://www.w3.org/TR/WCAG22/).**
 
 That is the bar for money-flow screens (onboarding, home, send, receive, confirm,
 settings) and for any control that moves funds, reveals secrets, or changes

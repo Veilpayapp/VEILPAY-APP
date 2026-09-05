@@ -1,4 +1,4 @@
-# VeilPay Circuit Security
+# Veilpay Circuit Security
 
 ## What we prove
 

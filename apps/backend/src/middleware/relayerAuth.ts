@@ -31,14 +31,17 @@ export function relayerCallerAuth(
   next: NextFunction
 ): void {
   const expected = (process.env.RELAYER_SHARED_SECRET || '').trim();
-  const nodeEnv = process.env.NODE_ENV || 'development';
+  // Fail closed when NODE_ENV is unset: an unspecified environment must not
+  // auto-open the gas-sponsoring relayer to anonymous callers. Only an explicit
+  // development/test value (or the explicit ALLOW opt-out) opens it.
+  const nodeEnv = process.env.NODE_ENV; // no default
   const allowUnauth =
     process.env.RELAYER_ALLOW_UNAUTHENTICATED === 'true' ||
     nodeEnv === 'test' ||
     nodeEnv === 'development';
 
   if (!expected) {
-    if (!allowUnauth && nodeEnv === 'production') {
+    if (!allowUnauth) {
       res.status(503).json({
         error: 'Relayer caller auth not configured',
         code: 'RELAYER_AUTH_NOT_CONFIGURED',

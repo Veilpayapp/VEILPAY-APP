@@ -38,6 +38,7 @@ export const SCREENS = {
   TOKEN_DETAIL: 'TokenDetail',
   SETTINGS: 'Settings',
   ADD_CUSTOM_NETWORK: 'AddCustomNetwork',
+  SPP_DIAGNOSTICS: 'SppDiagnostics',
 
   // Priority 5: Fiat On/Off Ramps
   DEPOSIT_CRYPTO: 'DepositCrypto',
@@ -84,6 +85,7 @@ export const SCREEN_TITLES: Record<ScreenName, string> = {
   [SCREENS.TOKEN_DETAIL]: 'Token Detail',
   [SCREENS.SETTINGS]: 'Settings',
   [SCREENS.ADD_CUSTOM_NETWORK]: 'Add Network',
+  [SCREENS.SPP_DIAGNOSTICS]: 'Private Payment Diagnostics',
   [SCREENS.DEPOSIT_CRYPTO]: 'Deposit',
 
   [SCREENS.WITHDRAW_FIAT]: 'Withdraw',

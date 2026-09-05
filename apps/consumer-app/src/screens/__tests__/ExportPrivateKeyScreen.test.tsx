@@ -198,7 +198,7 @@ describe('ExportPrivateKeyScreen', () => {
       expect(mockSetClipboardString).toHaveBeenCalledWith(
         '0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdef'
       );
-      expect(mockShowToast).toHaveBeenCalledWith('Private key copied to clipboard', 'success');
+      expect(mockShowToast).toHaveBeenCalledWith('Private key copied to clipboard - will clear in 30s', 'success');
     });
   });
 

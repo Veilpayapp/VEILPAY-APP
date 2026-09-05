@@ -8,7 +8,7 @@ pragma solidity ^0.8.25;
 /*
  * forge-config: default
  *
- * Deploys the full VeilPay privacy stack (Layer 1) to a target chain in the
+ * Deploys the full Veilpay privacy stack (Layer 1) to a target chain in the
  * canonical order required by design.md §packages/contracts-evm:
  *
  *      Groth16Verifier  →  VeilPool(verifier, hasher, feeRecipient, FEE_BPS)

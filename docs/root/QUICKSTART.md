@@ -48,13 +48,16 @@ pnpm test               # Run all tests
 apps/
 ├── consumer-app/   # Mobile wallet (Expo)
 ├── backend/        # API server
-├── indexer/        # Event indexer
-└── frontend/       # Merchant dashboard
+└── indexer/        # Event indexer
 
 packages/
 ├── shared/         # Shared types
-├── contracts-evm/  # Solidity
-└── contracts-solana/ # Anchor
+├── contracts-evm/  # Solidity (VeilPool + Groth16 verifier)
+├── contracts-solana/ # Anchor
+├── circuits/       # Circom privacy circuits
+├── spp-native/     # Rust native bridge for Stellar SPP
+├── auditor/        # Plan/production-readiness audit tooling
+└── vendor/         # Vendored dependencies (submodules, incl. SPP)
 ```
 
 ## Current Status
@@ -68,10 +71,12 @@ planned, see [Current status](docs/getting-started/current-status.md).
 - Webhook dispatcher (queue, worker, delivery, idempotent expiry events)
 - Indexer with chain event parsing and payment-confirmation detection
 - Redis-backed infrastructure and BullMQ jobs; Docker infrastructure
+- Stellar SPP testnet end-to-end (CLI E2E passed 2026-07-09; app onboarding verified on-device)
+- Stellar SPP mainnet contracts deployed; shield/transfer/unshield flow built; final on-chain test pending user approval
 
 **Gated / not production-live**
-- Stellar SPP is testnet-only and fail-closed on mainnet pending audit and
-  operational gates
+- Stellar SPP mainnet transactions are pending a user-approved on-device test with real XLM
+- External audit of SPP circuits/contracts is pending
 - Solana/EVM privacy-pool contracts are scaffolding; proof verification is
   intentionally fail-closed pending verifier work
 

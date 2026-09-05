@@ -100,7 +100,7 @@ export function InAppBrowserScreen({ navigation, route }: Props) {
     <View style={styles.timeoutContainer}>
       <Icon name="close" size={28} color={colors.error} />
       <Text style={styles.timeoutTitle}>Link not allowed</Text>
-      <Text style={styles.timeoutText}>This page cannot be opened inside VeilPay.</Text>
+      <Text style={styles.timeoutText}>This page cannot be opened inside Veilpay.</Text>
       <PressableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
         <Text style={styles.closeButtonText}>CLOSE</Text>
       </PressableOpacity>

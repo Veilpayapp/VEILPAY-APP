@@ -33,6 +33,47 @@ describe('sppSyncMessages', () => {
       )
     ).toMatch(/3484556|recent history|Older notes/i);
   });
+
+  it('maps DNS lookup failures to a user-friendly message', () => {
+    expect(
+      formatSppSyncUserMessage(
+        'sync: indexer catch-up: network error: ... dns error: failed to lookup address information'
+      )
+    ).toMatch(/Network temporarily unavailable/i);
+  });
+
+  it('maps connect failures to a user-friendly message', () => {
+    expect(
+      formatSppSyncUserMessage('client error (Connect): failed to connect to host')
+    ).toMatch(/Could not reach the private payment network/i);
+  });
+
+  it('maps request timeouts to a user-friendly message', () => {
+    expect(formatSppSyncUserMessage('error sending request: operation timed out')).toMatch(
+      /Connection timed out/i
+    );
+  });
+
+  it('maps native pool catch-up timeouts to a user-friendly message', () => {
+    expect(
+      formatSppSyncUserMessage(
+        'sync: pool sync timed out (phase=catch_up, limit=90s, elapsed=90s)'
+      )
+    ).toMatch(/Connection timed out/i);
+  });
+
+  it('maps ledger retention gap to a user-friendly message', () => {
+    expect(
+      formatSppSyncUserMessage(
+        'startLedger must be within 120960 ledgers of latest ledger'
+      )
+    ).toMatch(/Private history gap detected/i);
+  });
+
+  it('does not mangle the raw message when nothing maps', () => {
+    const raw = 'some unknown native error text';
+    expect(formatSppSyncUserMessage(raw)).toBe(raw);
+  });
 });
 
 describe('SPP bootnode config helpers', () => {

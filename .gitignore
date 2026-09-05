@@ -111,3 +111,10 @@ graphify-build.py
 graphify-detect.py
 graphify-report.py
 graphify-semantic.py
+
+# Local build / tooling caches (never commit)
+.tmp-adb/
+build-setup/
+cargo-cacherustup/
+apps/consumer-app/.eas/
+apps/consumer-app/.doppler.yaml

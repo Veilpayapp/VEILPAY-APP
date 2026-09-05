@@ -2,7 +2,7 @@
   "name": "@veilpay/auditor",
   "version": "0.1.0",
   "private": true,
-  "description": "Production-readiness audit pipeline for the VeilPay workspace (planning-only).",
+  "description": "Production-readiness audit pipeline for the Veilpay workspace (planning-only).",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "bin": {

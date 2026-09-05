@@ -82,15 +82,14 @@ function MainApp() {
     Manrope_700Bold,
     Manrope_800ExtraBold,
   });
-  const [jetBrainsMonoFontsLoaded, jetBrainsMonoFontsError] = useJetBrainsMonoFonts({
-    JetBrainsMono_400Regular,
-  });
+  // JetBrains Mono is only used in code blocks — excluded from the
+  // areFontsReady critical path so it doesn't delay first paint.
+  useJetBrainsMonoFonts({ JetBrainsMono_400Regular });
 
-  const fontLoadError = interFontsError ?? manropeFontsError ?? jetBrainsMonoFontsError;
+  const fontLoadError = interFontsError ?? manropeFontsError;
   const areFontsReady = (
     interFontsLoaded
     && manropeFontsLoaded
-    && jetBrainsMonoFontsLoaded
   ) || Boolean(fontLoadError);
 
   const { hasHydrated, address, isConnected, chainType } = useWalletStore(

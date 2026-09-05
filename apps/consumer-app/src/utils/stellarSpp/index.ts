@@ -17,11 +17,25 @@ export {
   withdraw,
   ensureAspMembership,
   prepareSppOp,
+  gatingSppBlocker,
   withExplorer,
   type AspMembershipStatus,
   type SppPrepChecklist,
   type SppNoteRecoveryResult,
+  type SppOperationStage,
+  type SppOperationProgressStatus,
+  type SppOperationProgressEvent,
+  type SppOperationOptions,
 } from './sppClient';
+
+export {
+  XLM_STROOPS,
+  STELLAR_CLASSIC_FEE_STROOPS,
+  SPP_TRANSACT_FEE_CEILING_STROOPS,
+  stroopsToXlm,
+  sppPlannedTxCount,
+  sppFeeCeilingStroops,
+} from './sppFees';
 
 export {
   recoverSppNotesCoordinated,
@@ -62,6 +76,17 @@ export {
   type SppNativeOpResult,
   type SppNativeModule,
 } from './sppNativeBridge';
+
+export {
+  clearSppDiagnostics,
+  exportSppDiagnostics,
+  getSppDiagnostics,
+  recordSppDiagnostic,
+  runWithSppDiagnostics,
+  sanitizeSppDiagnosticText,
+  type SppDiagnosticRecord,
+  type SppDiagnosticStatus,
+} from './sppDiagnostics';
 
 export {
   ensurePoolSession,

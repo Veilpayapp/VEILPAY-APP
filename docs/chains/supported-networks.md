@@ -25,4 +25,4 @@ The public Veilpay docs focus on the networks currently used by the product road
 
 ## Privacy-chain roadmap
 
-Stellar SPP is the first native privacy-chain track. Monero, Zcash, and Midnight are planned tracks and are not production-live Veilpay integrations.
+Stellar SPP is the first native privacy-chain track: contracts are deployed on testnet (verified end-to-end) and mainnet (flow built, final on-chain test pending user approval). Monero, Zcash, and Midnight are planned tracks and are not production-live Veilpay integrations.

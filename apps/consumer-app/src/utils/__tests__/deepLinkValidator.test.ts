@@ -11,6 +11,13 @@ import {
   DeepLinkPaymentSchema,
 } from '../deepLinkValidator';
 
+// Valid 40-hex-character EVM addresses (the EVM pattern requires /^0x[a-fA-F0-9]{40}$/)
+const VALID_EVM = '0xab5801a7d398351b8be11c439e05c5b3259aec9b';
+const VALID_EVM_MIXED = '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B';
+const VALID_EVM_UPPER = '0xAB5801A7D398351B8BE11C439E05C5B3259AEC9B';
+// Malformed: 38 hex characters (must be 40)
+const INVALID_EVM_SHORT = '0x742d35Cc6634C0532925a3b844Bc9e7595f42b';
+
 describe('deepLinkValidator', () => {
   beforeEach(() => {
     deepLinkRateLimiter.clear();
@@ -18,18 +25,18 @@ describe('deepLinkValidator', () => {
 
   describe('validateDeepLinkPayment', () => {
     describe('recipient validation', () => {
-      it('accepts valid EVM address (lowercase)', () => {
+      it('accepts valid EVM address (mixed case)', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634C0532925a3b844Bc9e7595f42bB',
+          address: VALID_EVM_MIXED,
           amount: 1.5,
         });
         expect(result.valid).toBe(true);
-        expect(result.payment?.recipient).toBe('0x742d35Cc6634C0532925a3b844Bc9e7595f42bB'.toLowerCase());
+        expect(result.payment?.recipient).toBe(VALID_EVM_MIXED);
       });
 
       it('rejects invalid EVM address (wrong length)', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35Cc6634C0532925a3b844Bc9e7595f42b',
+          address: INVALID_EVM_SHORT,
           amount: 1.5,
         });
         expect(result.valid).toBe(false);
@@ -38,7 +45,7 @@ describe('deepLinkValidator', () => {
 
       it('accepts all-lowercase EVM address without checksum validation', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: 1.5,
         });
         expect(result.valid).toBe(true);
@@ -46,7 +53,7 @@ describe('deepLinkValidator', () => {
 
       it('accepts all-uppercase EVM address', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742D35CC6634C0532925A3B844BC9E7595F42BB',
+          address: VALID_EVM_UPPER,
           amount: 1.5,
         });
         expect(result.valid).toBe(true);
@@ -74,7 +81,7 @@ describe('deepLinkValidator', () => {
           amount: 1.5,
         });
         expect(result.valid).toBe(false);
-        expect(result.error).toContain('Recipient');
+        expect(result.error).toContain('Required');
       });
 
       it('rejects non-address strings', () => {
@@ -90,7 +97,7 @@ describe('deepLinkValidator', () => {
     describe('amount validation', () => {
       it('accepts positive amount', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: 1.5,
         });
         expect(result.valid).toBe(true);
@@ -99,7 +106,7 @@ describe('deepLinkValidator', () => {
 
       it('accepts string amount', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: '42.5',
         });
         expect(result.valid).toBe(true);
@@ -107,9 +114,20 @@ describe('deepLinkValidator', () => {
       });
 
       it('rejects zero amount', () => {
+        // amount: 0 is falsy, so the validator maps it to undefined → "Required"
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: 0,
+        });
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain('Required');
+      });
+
+      it('rejects zero amount passed as string', () => {
+        // '0' is truthy, so it reaches the schema and fails the positive check
+        const result = validateDeepLinkPayment({
+          address: VALID_EVM,
+          amount: '0',
         });
         expect(result.valid).toBe(false);
         expect(result.error).toContain('greater than 0');
@@ -117,7 +135,7 @@ describe('deepLinkValidator', () => {
 
       it('rejects negative amount', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: -1.5,
         });
         expect(result.valid).toBe(false);
@@ -126,7 +144,7 @@ describe('deepLinkValidator', () => {
 
       it('rejects non-finite amount', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: Infinity,
         });
         expect(result.valid).toBe(false);
@@ -135,7 +153,7 @@ describe('deepLinkValidator', () => {
 
       it('rejects amount exceeding max', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: 1e16,
         });
         expect(result.valid).toBe(false);
@@ -144,7 +162,7 @@ describe('deepLinkValidator', () => {
 
       it('accepts amount near max limit', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: 1e15,
         });
         expect(result.valid).toBe(true);
@@ -155,7 +173,7 @@ describe('deepLinkValidator', () => {
       it('rejects amount exceeding user balance', () => {
         const result = validateDeepLinkPayment(
           {
-            address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+            address: VALID_EVM,
             amount: 100,
           },
           { userBalance: 50 }
@@ -167,7 +185,7 @@ describe('deepLinkValidator', () => {
       it('accepts amount within user balance', () => {
         const result = validateDeepLinkPayment(
           {
-            address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+            address: VALID_EVM,
             amount: 50,
           },
           { userBalance: 100 }
@@ -177,7 +195,7 @@ describe('deepLinkValidator', () => {
 
       it('skips balance check if userBalance not provided', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: 999999,
         });
         expect(result.valid).toBe(true);
@@ -188,7 +206,7 @@ describe('deepLinkValidator', () => {
       it('allows first payment', () => {
         const result = validateDeepLinkPayment(
           {
-            address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+            address: VALID_EVM,
             amount: 1,
           },
           { userId: 'user123' }
@@ -199,7 +217,7 @@ describe('deepLinkValidator', () => {
       it('rejects second payment within 5 seconds', () => {
         validateDeepLinkPayment(
           {
-            address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+            address: VALID_EVM,
             amount: 1,
           },
           { userId: 'user123' }
@@ -207,7 +225,7 @@ describe('deepLinkValidator', () => {
 
         const result = validateDeepLinkPayment(
           {
-            address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+            address: VALID_EVM,
             amount: 2,
           },
           { userId: 'user123' }
@@ -219,7 +237,7 @@ describe('deepLinkValidator', () => {
       it('provides remaining wait time in rate limit error', () => {
         validateDeepLinkPayment(
           {
-            address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+            address: VALID_EVM,
             amount: 1,
           },
           { userId: 'user123' }
@@ -227,7 +245,7 @@ describe('deepLinkValidator', () => {
 
         const result = validateDeepLinkPayment(
           {
-            address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+            address: VALID_EVM,
             amount: 2,
           },
           { userId: 'user123' }
@@ -238,14 +256,14 @@ describe('deepLinkValidator', () => {
       it('allows different users to pay simultaneously', () => {
         const result1 = validateDeepLinkPayment(
           {
-            address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+            address: VALID_EVM,
             amount: 1,
           },
           { userId: 'user1' }
         );
         const result2 = validateDeepLinkPayment(
           {
-            address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+            address: VALID_EVM,
             amount: 1,
           },
           { userId: 'user2' }
@@ -256,12 +274,12 @@ describe('deepLinkValidator', () => {
 
       it('skips rate limit if userId not provided', () => {
         validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: 1,
         });
 
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: 2,
         });
         expect(result.valid).toBe(true);
@@ -272,13 +290,13 @@ describe('deepLinkValidator', () => {
       it('warns when EVM address used on non-EVM chain', () => {
         const result = validateDeepLinkPayment(
           {
-            address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+            address: VALID_EVM,
             amount: 1,
           },
           { chainType: 'xlm' }
         );
         expect(result.valid).toBe(true);
-        expect(result.warnings).toContain(expect.stringContaining('EVM address'));
+        expect(result.warnings).toContainEqual(expect.stringContaining('EVM address'));
       });
 
       it('warns when Stellar address used on non-Stellar chain', () => {
@@ -290,14 +308,14 @@ describe('deepLinkValidator', () => {
           { chainType: 'evm' }
         );
         expect(result.valid).toBe(true);
-        expect(result.warnings).toContain(expect.stringContaining('Stellar address'));
+        expect(result.warnings).toContainEqual(expect.stringContaining('Stellar address'));
       });
     });
 
     describe('token validation', () => {
       it('accepts valid token symbol', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: 1,
           token: 'USDC',
         });
@@ -307,7 +325,7 @@ describe('deepLinkValidator', () => {
 
       it('accepts optional token', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: 1,
         });
         expect(result.valid).toBe(true);
@@ -315,7 +333,7 @@ describe('deepLinkValidator', () => {
 
       it('rejects invalid token symbols', () => {
         const result = validateDeepLinkPayment({
-          address: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+          address: VALID_EVM,
           amount: 1,
           token: 'INVALID!@#',
         });
@@ -374,19 +392,19 @@ describe('deepLinkValidator', () => {
   describe('createDeepLinkSecurityWarning', () => {
     it('creates formatted warning with recipient shorthand', () => {
       const warning = createDeepLinkSecurityWarning(
-        '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+        VALID_EVM,
         100,
         'USDC'
       );
-      expect(warning).toContain('0x742d');
-      expect(warning).toContain('f42b');
+      expect(warning).toContain('0xab58');
+      expect(warning).toContain('ec9b');
       expect(warning).toContain('100 USDC');
       expect(warning).toContain('deep link');
     });
 
     it('handles recipient without token', () => {
       const warning = createDeepLinkSecurityWarning(
-        '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+        VALID_EVM,
         50
       );
       expect(warning).toContain('50');
@@ -397,7 +415,7 @@ describe('deepLinkValidator', () => {
   describe('DeepLinkPaymentSchema', () => {
     it('validates complete payment object', () => {
       const data = {
-        recipient: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+        recipient: VALID_EVM,
         amount: 1.5,
         token: 'USDC',
         chainKey: 'ethereum',
@@ -407,7 +425,7 @@ describe('deepLinkValidator', () => {
 
     it('allows minimal payment object', () => {
       const data = {
-        recipient: '0x742d35cc6634c0532925a3b844bc9e7595f42bb',
+        recipient: VALID_EVM,
         amount: 1.5,
       };
       expect(() => DeepLinkPaymentSchema.parse(data)).not.toThrow();

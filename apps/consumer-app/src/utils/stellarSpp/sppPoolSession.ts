@@ -6,7 +6,7 @@
  */
 
 import { Keypair } from 'stellar-sdk';
-import { mnemonicToSeed } from '@scure/bip39';
+import { deriveMnemonicSeed } from '../mnemonicSeed';
 import { derivePath } from 'ed25519-hd-key';
 import {
   assertSppEnabled,
@@ -53,8 +53,19 @@ export function toNativeFsPath(uriOrPath: string): string {
   return p.replace(/\/+$/, '') || (p.startsWith('/') ? '/' : p);
 }
 
+// module-level cache for deriveStellarKeypair — avoids redundant ~1.5s Pbkdf2
+// calls when ensurePoolSession calls it. Separate from sppOnboard's cache
+// because the modules are independently loaded.
+let _cachedMnemonic: string | null = null;
+let _cachedSeed: Uint8Array | null = null;
+
 async function deriveStellarKeypair(mnemonicPhrase: string): Promise<Keypair> {
-  const seed = await mnemonicToSeed(mnemonicPhrase);
+  const cached = _cachedMnemonic === mnemonicPhrase ? _cachedSeed : null;
+  const seed = cached ?? (await deriveMnemonicSeed(mnemonicPhrase));
+  if (!cached) {
+    _cachedMnemonic = mnemonicPhrase;
+    _cachedSeed = seed;
+  }
   const { key } = derivePath(STELLAR_DERIVATION_PATH, Buffer.from(seed).toString('hex'));
   return Keypair.fromRawEd25519Seed(key as Buffer);
 }
@@ -155,14 +166,29 @@ export function getSppCircuitsDir(): string {
   return `${root}spp/circuits`;
 }
 
-export function getSppWalletDbPath(ownerAddress: string): string {
+/**
+ * Absolute SQLite wallet path for one (network, address) pair.
+ *
+ * The path MUST include the network: membership blinding is network-dependent
+ * (sdk/prover derive_membership_blinding hashes the network context), so
+ * testnet and mainnet sessions for the same Stellar address must never share a
+ * database file. A shared file lets `ensure_wallet_ready` early-return on the
+ * second network's keys and reuse the first network's blinding — a correctness
+ * bug that breaks membership proofs. Per-network files also separate every
+ * network-scoped chain-state table (sync metadata, notes, ASP leaves) at once.
+ */
+export function getSppWalletDbPath(
+  ownerAddress: string,
+  network: 'testnet' | 'mainnet'
+): string {
   const safe = ownerAddress.replace(/[^A-Z0-9]/gi, '').slice(0, 12);
+  const net = network === 'mainnet' ? 'mainnet' : 'testnet';
   const root = getAppDataRoot();
   if (!root) {
-    return `spp/wallet-${safe || 'default'}.sqlite`;
+    return `spp/wallet-${net}-${safe || 'default'}.sqlite`;
   }
   // root already ends with /
-  return `${root}spp/wallet-${safe || 'default'}.sqlite`;
+  return `${root}spp/wallet-${net}-${safe || 'default'}.sqlite`;
 }
 
 export type EnsurePoolSessionOptions = {
@@ -170,6 +196,8 @@ export type EnsurePoolSessionOptions = {
   circuitsDir?: string;
   /** Absolute sqlite path override. */
   storagePath?: string;
+  /** Override the Soroban RPC URL (used for RPC failover on mainnet). */
+  rpcUrl?: string;
 };
 
 /**
@@ -198,7 +226,9 @@ export async function ensurePoolSession(
   }
 
   const circuitsDir = toNativeFsPath(options?.circuitsDir ?? getSppCircuitsDir());
-  const storagePath = toNativeFsPath(options?.storagePath ?? getSppWalletDbPath(ownerAddress));
+  const storagePath = toNativeFsPath(
+    options?.storagePath ?? getSppWalletDbPath(ownerAddress, config.network)
+  );
 
   if (!storagePath.startsWith('/') && !/^[A-Za-z]:[\\/]/.test(storagePath)) {
     return {
@@ -239,7 +269,7 @@ export async function ensurePoolSession(
   const { signatureHex } = await signSppKeyDerivationMessage();
 
   const openConfig = {
-    rpcUrl: config.sorobanRpcUrl,
+    rpcUrl: options?.rpcUrl?.trim() || config.sorobanRpcUrl,
     networkPassphrase: config.networkPassphrase,
     secretKey,
     userAddress: ownerAddress,

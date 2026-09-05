@@ -1,0 +1,389 @@
+diff --git a/sdk/pool/Cargo.toml b/sdk/pool/Cargo.toml
+index c2237d5..df10903 100644
+--- a/sdk/pool/Cargo.toml
++++ b/sdk/pool/Cargo.toml
+@@ -27,7 +27,7 @@ witness = { workspace = true }
+ 
+ [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ futures-timer = "3"
+-tokio = { workspace = true, features = ["rt-multi-thread"] }
++tokio = { workspace = true, features = ["rt-multi-thread", "time"] }
+ 
+ [target.'cfg(target_arch = "wasm32")'.dependencies]
+ gloo-timers = { workspace = true }
+diff --git a/sdk/pool/src/pool.rs b/sdk/pool/src/pool.rs
+index 2cfb54e..6d12639 100644
+--- a/sdk/pool/src/pool.rs
++++ b/sdk/pool/src/pool.rs
+@@ -111,19 +111,36 @@ impl<S: Storage> PrivatePool<S> {
+     /// storage current; you may still call this for an explicit foreground
+     /// catch-up.
+     pub async fn sync(&self) -> Result<(), PoolError> {
+-        let indexer = Indexer::init(
+-            self.client.clone(),
+-            self.storage.fork()?,
+-            &self.config.contract_config,
+-        )
+-        .await
+-        .map_err(|e| PoolError::Other(format!("indexer: {e:#}")))?;
+-        indexer
+-            .catch_up()
++        // A dead RPC must not leave a mobile payment spinner alive for the
++        // native client's per-request retry windows. Keep enough headroom for
++        // a real first sync, while bounding the user-visible operation.
++        let timeout_secs = if self.config.contract_config.network == "testnet" {
++            30
++        } else {
++            90
++        };
++
++        tokio::time::timeout(std::time::Duration::from_secs(timeout_secs), async {
++            let indexer = Indexer::init(
++                self.client.clone(),
++                self.storage.fork()?,
++                &self.config.contract_config,
++            )
+             .await
+-            .map_err(|e| PoolError::Other(format!("indexer catch-up: {e:#}")))?;
++            .map_err(|e| PoolError::Other(format!("indexer: {e:#}")))?;
++            indexer
++                .catch_up()
++                .await
++                .map_err(|e| PoolError::Other(format!("indexer catch-up: {e:#}")))?;
+ 
+-        self.storage.process_pending_state().await
++            self.storage.process_pending_state().await
++        })
++        .await
++        .map_err(|_| {
++            PoolError::Other(format!(
++                "pool sync timed out after {timeout_secs}s; RPC did not catch up in time"
++            ))
++        })?
+     }
+ 
+     pub async fn estimate(&self, amount: NoteAmount) -> Result<Estimate, PoolError> {
+diff --git a/sdk/stellar/Cargo.toml b/sdk/stellar/Cargo.toml
+index 7435a80..b218c88 100644
+--- a/sdk/stellar/Cargo.toml
++++ b/sdk/stellar/Cargo.toml
+@@ -32,6 +32,19 @@ thiserror = { workspace = true }
+ # external
+ gloo-timers = { workspace = true }
+ 
++[target.'cfg(target_os = "android")'.dependencies]
++# HTTPS Soroban RPC on Android must NOT go through rustls-platform-verifier:
++# it false-positives "Revoked" on valid Gateway.fm Let's Encrypt certs and
++# fails entirely when nativeInitPlatform init is absent/stale ("failed to call
++# native verifier: Error"). Use Mozilla webpki roots + HTTP/1.1 instead.
++# Android's libc/getaddrinfo resolver can disagree with the JS networking
++# stack (especially on captive/VPN/private-DNS networks). Use reqwest's
++# Hickory resolver for a consistent native DNS path, with its built-in Google
++# DNS fallback when the platform resolver configuration is unavailable.
++reqwest = { workspace = true, features = ["rustls", "hickory-dns"] }
++rustls = { version = "0.23", default-features = false, features = ["aws_lc_rs", "std", "tls12"] }
++webpki-root-certs = "1.0"
++
+ [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+ contract-types = { workspace = true }
+ pool = { workspace = true }
+diff --git a/sdk/stellar/src/indexer.rs b/sdk/stellar/src/indexer.rs
+index efe1051..ada8e22 100644
+--- a/sdk/stellar/src/indexer.rs
++++ b/sdk/stellar/src/indexer.rs
+@@ -6,6 +6,14 @@ use types::{ContractConfig, ContractsEventData, SyncMetadata};
+ // https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getEvents
+ const PAGE_SIZE: usize = 300;
+ const MAX_PAGES_PER_ROUND: usize = 10;
++/// Some Soroban RPC providers emit this sentinel as the event-index portion of
++/// a cursor. Reusing such a cursor has been observed to return an empty page
++/// even when later events are available by `startLedger`.
++const INVALID_CURSOR_EVENT_INDEX: &str = "4294967295";
++
++fn has_invalid_event_index(cursor: &str) -> bool {
++    cursor.rsplit('-').next() == Some(INVALID_CURSOR_EVENT_INDEX)
++}
+ 
+ pub struct Indexer<S: ContractDataStorage> {
+     client: Client,
+@@ -74,7 +82,7 @@ impl<S: ContractDataStorage> Indexer<S> {
+             .filter(|meta| active_contract_ids.contains(meta.contract_id.as_str()))
+             .collect();
+ 
+-        let start_ledger = active_sync
++        let mut start_ledger = active_sync
+             .iter()
+             .map(|meta| meta.last_indexed_ledger)
+             .min()
+@@ -110,6 +118,21 @@ impl<S: ContractDataStorage> Indexer<S> {
+             None
+         };
+ 
++        // Recover databases affected by the provider cursor bug. Older builds
++        // persisted the sentinel cursor together with `latestLedger`, which
++        // could advance the local checkpoint to the chain tip while silently
++        // skipping events. Replaying from deployment is safe because event
++        // storage is idempotent, and it repairs those already-corrupted
++        // checkpoints instead of only protecting fresh installs.
++        if cursor.as_deref().is_some_and(has_invalid_event_index) {
++            log::warn!(
++                "[INDEXER] invalid RPC event cursor detected; replaying active contracts from deployment ledger={} via startLedger",
++                self.min_pool_ledger
++            );
++            cursor = None;
++            start_ledger = self.min_pool_ledger;
++        }
++
+         let mut may_have_more = false;
+ 
+         for page in 0..MAX_PAGES_PER_ROUND {
+@@ -138,7 +161,16 @@ impl<S: ContractDataStorage> Indexer<S> {
+                 .clone()
+                 .ok_or_else(|| anyhow!("cursor is not found in the events response"))?;
+             let is_empty = events.is_empty();
+-            let progress_ledger = if is_empty {
++            let invalid_cursor = has_invalid_event_index(&new_cursor);
++            let progress_ledger = if is_empty && invalid_cursor {
++                // RPC cursor returned empty despite more events existing
++                // (the `4294967295` sentinel). Don't advance metadata to the
++                // chain tip, which would skip those events. Keep the current
++                // position so the next round retries via startLedger without
++                // cursor — startLedger-based pagination is not affected by
++                // the cursor bug.
++                start_ledger
++            } else if is_empty {
+                 latest_ledger
+             } else {
+                 events
+@@ -162,7 +194,14 @@ impl<S: ContractDataStorage> Indexer<S> {
+                         .iter()
+                         .map(|contract_id| SyncMetadata {
+                             contract_id: contract_id.clone(),
+-                            cursor: new_cursor.clone(),
++                            // Never persist a cursor that cannot be resumed.
++                            // An empty cursor makes the next round use
++                            // startLedger from the saved progress instead.
++                            cursor: if invalid_cursor {
++                                String::new()
++                            } else {
++                                new_cursor.clone()
++                            },
+                             last_indexed_ledger: progress_ledger,
+                             last_fully_indexed_ledger: 0,
+                         })
+@@ -171,9 +210,24 @@ impl<S: ContractDataStorage> Indexer<S> {
+                 )
+                 .await?;
+ 
+-            cursor = Some(new_cursor);
+             if is_empty {
+-                return Ok(may_have_more);
++                // When the cursor carries the sentinel and the page is empty,
++                // re-enter the loop so the next round uses startLedger-based
++                // pagination (which is not affected by the cursor bug).
++                return Ok(invalid_cursor || may_have_more);
++            }
++
++            if invalid_cursor {
++                log::warn!(
++                    "[INDEXER] RPC returned an invalid event cursor after ledger={progress_ledger}; continuing from the next ledger without a cursor"
++                );
++                cursor = None;
++                // `startLedger` is inclusive. Advancing avoids replaying the
++                // page we just stored; a single contract set cannot produce
++                // PAGE_SIZE events in one ledger under the supported pools.
++                start_ledger = progress_ledger.saturating_add(1);
++            } else {
++                cursor = Some(new_cursor);
+             }
+             may_have_more = true;
+         }
+@@ -189,6 +243,22 @@ impl<S: ContractDataStorage> Indexer<S> {
+     }
+ }
+ 
++#[cfg(test)]
++mod tests {
++    use super::has_invalid_event_index;
++
++    #[test]
++    fn rejects_u32_max_event_index_cursor() {
++        assert!(has_invalid_event_index("0274056034887139327-4294967295"));
++    }
++
++    #[test]
++    fn accepts_regular_event_cursor() {
++        assert!(!has_invalid_event_index("0274056034887139327-12"));
++        assert!(!has_invalid_event_index("opaque-cursor"));
++    }
++}
++
+ #[async_trait::async_trait(?Send)]
+ pub trait ContractDataStorage {
+     /// Gets the last synced ledger and cursor for all contracts.
+diff --git a/sdk/stellar/src/rpc.rs b/sdk/stellar/src/rpc.rs
+index bffd39c..4f7288b 100644
+--- a/sdk/stellar/src/rpc.rs
++++ b/sdk/stellar/src/rpc.rs
+@@ -51,6 +51,14 @@ pub enum Error {
+     Timeout,
+ }
+ 
++fn should_retry_error(error: &Error) -> bool {
++    match error {
++        Error::Reqwest(error) => is_transient_reqwest_error(error),
++        Error::Timeout => true,
++        _ => false,
++    }
++}
++
+ // JSON-RPC Plumbing
+ #[derive(Serialize)]
+ struct JsonRpcRequest<T> {
+@@ -243,6 +251,7 @@ pub struct Client {
+ 
+ impl Client {
+     const DEFAULT_TIMEOUT_SECS: u32 = 30;
++    const TRANSIENT_MAX_ATTEMPTS: u32 = 3;
+     // https://developers.stellar.org/docs/data/apis/rpc/api-reference/methods/getLedgerEntries
+     const MAX_LEDGER_KEYS_PER_REQUEST: usize = 200;
+ 
+@@ -273,7 +282,40 @@ impl Client {
+         let uri = Uri::from_parts(parts)?;
+         let base_url = uri.to_string();
+ 
+-        #[cfg(not(target_arch = "wasm32"))]
++        #[cfg(all(not(target_arch = "wasm32"), target_os = "android"))]
++        let http_client = {
++            // Android must bypass rustls-platform-verifier: it fails with
++            // "failed to call native verifier" when nativeInitPlatform was not
++            // (or could not be) initialized, and false-positives "Revoked" on
++            // valid Gateway.fm Let's Encrypt certs. Use Mozilla webpki roots
++            // (bundled, no JNI dependency) pinned to HTTP/1.1 (HTTP/2 body
++            // streaming stalls on Gateway.fm over the Android rustls connector).
++            let mut root_store = rustls::RootCertStore::empty();
++            root_store.add_parsable_certificates(
++                webpki_root_certs::TLS_SERVER_ROOT_CERTS.iter().cloned(),
++            );
++            let provider =
++                std::sync::Arc::new(rustls::crypto::aws_lc_rs::default_provider());
++            let config = rustls::ClientConfig::builder_with_provider(provider)
++                .with_safe_default_protocol_versions()
++                .expect("rustls safe default protocol versions are always supported")
++                .with_root_certificates(root_store)
++                .with_no_client_auth();
++            // Marker string for artifact verification: `strings libspp_native.so |
++            // grep webpki-root-certs` proves this TLS path is in the shipped .so.
++            log::debug!(
++                "webpki-root-certs TLS configured for Android (bypassing rustls-platform-verifier)"
++            );
++            reqwest::Client::builder()
++                .timeout(std::time::Duration::from_secs(u64::from(timeout_secs)))
++                // Keep native Android DNS independent from libc/getaddrinfo;
++                // the JS fetch preflight may succeed while the old native
++                // resolver still reports "no address associated with host".
++                .hickory_dns(true)
++                .tls_backend_preconfigured(config)
++                .build()?
++        };
++        #[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
+         let http_client = reqwest::Client::builder()
+             .timeout(std::time::Duration::from_secs(u64::from(timeout_secs)))
+             .build()?;
+@@ -300,21 +342,41 @@ impl Client {
+             params,
+         };
+ 
+-        let request = async {
+-            self.http_client
+-                .post(&self.base_url)
+-                .json(&payload)
+-                .send()
+-                .await?
+-                .json::<JsonRpcResponse<R>>()
+-                .await
+-        };
++        let mut attempt = 0;
++        let resp = loop {
++            attempt += 1;
++            let request = async {
++                self.http_client
++                    .post(&self.base_url)
++                    .json(&payload)
++                    .send()
++                    .await?
++                    .error_for_status()?
++                    .json::<JsonRpcResponse<R>>()
++                    .await
++            };
+ 
+-        #[cfg(target_arch = "wasm32")]
+-        let resp = race_with_timeout(request, self.timeout_secs).await?;
++            #[cfg(target_arch = "wasm32")]
++            let result = race_with_timeout(request, self.timeout_secs).await;
++
++            #[cfg(not(target_arch = "wasm32"))]
++            let result = request.await.map_err(Error::from);
+ 
+-        #[cfg(not(target_arch = "wasm32"))]
+-        let resp = request.await?;
++            match result {
++                Ok(resp) => break resp,
++                Err(error)
++                    if attempt < Self::TRANSIENT_MAX_ATTEMPTS
++                        && should_retry_error(&error) =>
++                {
++                    log::warn!(
++                        "[RPC:stellar-rpc-transient-retry-v1] transient {method} failure (attempt {attempt}/{}): {error}; retrying",
++                        Self::TRANSIENT_MAX_ATTEMPTS
++                    );
++                    sleep_before_retry(attempt).await;
++                }
++                Err(error) => return Err(error),
++            }
++        };
+ 
+         if let Some(err) = resp.error {
+             return Err(Error::JsonRpc {
+@@ -671,6 +733,41 @@ impl Client {
+     }
+ }
+ 
++fn is_transient_reqwest_error(error: &reqwest::Error) -> bool {
++    // A DNS/name-resolution failure is deterministic for this request. Do not
++    // spend the full retry budget on it: every RPC page would otherwise add
++    // another 30s request window and make the UI appear stuck for minutes.
++    if error.is_connect() {
++        let message = error.to_string().to_ascii_lowercase();
++        if message.contains("dns error")
++            || message.contains("failed to look up address")
++            || message.contains("no address associated with hostname")
++            || message.contains("name or service not known")
++            || message.contains("nodename nor servname provided")
++        {
++            return false;
++        }
++    }
++
++    error.is_timeout()
++        || error.is_connect()
++        || error.is_body()
++        || error.is_decode()
++        || error
++            .status()
++            .is_some_and(|status| status.as_u16() == 429 || status.is_server_error())
++}
++
++#[cfg(not(target_arch = "wasm32"))]
++async fn sleep_before_retry(attempt: u32) {
++    std::thread::sleep(std::time::Duration::from_millis(u64::from(attempt) * 250));
++}
++
++#[cfg(target_arch = "wasm32")]
++async fn sleep_before_retry(attempt: u32) {
++    gloo_timers::future::TimeoutFuture::new(attempt.saturating_mul(250)).await;
++}
++
+ /// Races a request future against a [`gloo_timers::future::TimeoutFuture`].
+ /// Returns [`Error::Timeout`] if the timer fires first.
+ #[cfg(target_arch = "wasm32")]

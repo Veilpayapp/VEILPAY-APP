@@ -194,7 +194,10 @@ export function parseRevertReason(err: unknown): string {
       const parsed = VEILPOOL_INTERFACE.parseError(data);
       if (parsed?.name) return parsed.name;
     } catch (e) {
-      console.error("parseError failed:", e, "data was:", data);
+      // Never log the raw `e`: ethers provider errors can embed the RPC URL
+      // (and any API key inside RELAYER_RPC_URL). Log only the safe message.
+      const errMsg = e instanceof Error ? e.message : "unknown error";
+      console.error("parseError failed:", errMsg, "data was:", data);
     }
   }
 

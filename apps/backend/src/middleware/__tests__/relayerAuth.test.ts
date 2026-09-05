@@ -30,6 +30,17 @@ describe('relayerCallerAuth (SEC-006 residual)', () => {
     expect(next).toHaveBeenCalled();
   });
 
+  it('fails closed when NODE_ENV is unset and no secret is configured', () => {
+    delete process.env.NODE_ENV;
+    delete process.env.RELAYER_SHARED_SECRET;
+    delete process.env.RELAYER_ALLOW_UNAUTHENTICATED;
+    const res = mockRes();
+    const next = jest.fn() as NextFunction;
+    relayerCallerAuth({ headers: {} } as Request, res, next);
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it('rejects in production when secret is not configured', () => {
     process.env.NODE_ENV = 'production';
     delete process.env.RELAYER_SHARED_SECRET;

@@ -1,5 +1,5 @@
 /**
- * VeilPay — Network privacy-stack support gate
+ * Veilpay — Network privacy-stack support gate
  *
  * Returns whether the active wallet chain supports the four-layer privacy
  * stack (`'stealth'` and `'max'` privacy levels). The stack is only deployed

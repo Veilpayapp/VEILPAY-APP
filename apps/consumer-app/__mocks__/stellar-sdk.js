@@ -9,6 +9,12 @@ module.exports = {
       publicKey: jest.fn(() => 'GBTEST123456789ABCDEF'),
       secret: jest.fn(() => secret),
     })),
+    // stellar-sdk v13 API used by multiChainDerivation (m/44'/148' path).
+    // Returns a valid 56-char G-address so derivation tests can assert format.
+    fromRawEd25519Seed: jest.fn(() => ({
+      publicKey: jest.fn(() => 'GABCDEFGHIJKLMNOPQRSTUVWXYZ234567ABCDEFGHIJKLMNOPQRSTUVW'),
+      secret: jest.fn(() => 'SBTEST123456789ABCDEF'),
+    })),
   },
   Account: jest.fn((publicKey, sequence) => ({
     accountId: jest.fn(() => publicKey),

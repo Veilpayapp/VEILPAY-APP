@@ -40,6 +40,8 @@ import { Icon } from '../components/Icon';
 import { ScreenBackButton } from '../components/ScreenBackButton';
 import { NetworkStatusBanner } from '../components/NetworkStatusBanner';
 import { ZkpProver, type ZkpProverRef } from '../components/ZkpProver';
+import { ShieldProgressModal } from '../components/spp/ShieldProgressModal';
+import { FeeBreakdownCard } from '../components/spp/FeeBreakdownCard';
 import { deriveAddressFromStoredMnemonic } from '../utils/secureSigner';
 import {
   getExplorerUrl,
@@ -49,6 +51,7 @@ import {
 import { estimateTransactionGas, isGasExpensive, type GasEstimate } from '../utils/gasEstimator';
 import { fetchNativeBalance } from '../utils/balanceFetcher';
 import { TransactionResultModal } from '../components/payment/TransactionResultModal';
+import type { UiTxStatus } from '../components/payment/TransactionStatusCard';
 import { FALLBACK_PRICES, getFiatExchangeRate, formatFiatValue, formatLastUpdated } from '../utils/priceFeed';
 import { resolveMarketQuoteSymbol } from '../utils/marketData';
 import { triggerLightImpactHaptic } from '../utils/haptics';
@@ -62,6 +65,13 @@ import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useMarketData } from '../hooks/useMarketData';
 import { usePaymentTransaction } from '../hooks/usePaymentTransaction';
+import { sppPlannedTxCount } from '../utils/stellarSpp/sppFees';
+import { derivePaymentFeeView } from '../utils/paymentFees';
+import { computeStellarMinReserveXlm } from '../utils/stellarSigner';
+import {
+  recordSppProgressDiagnostic,
+  resetSppProgress,
+} from '../utils/stellarSpp/sppProgressSubscriber';
 
 type PaymentConfirmationScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'PaymentConfirmation'>;
 type PaymentConfirmationScreenRoute = RouteProp<RootStackParamList, 'PaymentConfirmation'>;
@@ -91,11 +101,12 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
   const [nativeBalance, setNativeBalance] = useState<{
     amount: number;
     reliable: boolean;
+    subentryCount?: number;
   } | null>(null);
   const isMountedRef = useRef(true);
   const zkpProverRef = useRef<ZkpProverRef | null>(null);
 
-  const { activeChain, address } = useWalletStore();
+  const { activeChain, address, addresses } = useWalletStore();
   const { nativeCurrency } = useSettingsStore();
   const toast = useToast();
   const { isConnected } = useNetworkStatus();
@@ -160,6 +171,142 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
     FALLBACK_PRICES[quoteSymbol] ?? FALLBACK_PRICES[token] ?? 0;
 
   // -----------------------------------------------------------------
+  // SPP prove-readiness gate for `'private'` sends.
+  // -----------------------------------------------------------------
+  // `ensureSppAccountReady` reporting aspInserted/keysRegistered only means
+  // the writes were submitted — the ASP leaf still has to be visible
+  // on-chain before the SDK's `prove_next` accepts it. Without this gate the
+  // send fails deep inside proving with `MembershipSync(RegisterAtASP)` after
+  // ~a minute of wasted proof generation. Home computes the same readiness
+  // for the balance card, but this screen is a separate mount with its own
+  // lifecycle, so it re-derives readiness rather than trusting route params.
+  const [privacyReadyStatus, setPrivacyReadyStatus] = useState<
+    'ready' | 'setting_up' | 'unavailable' | null
+  >(null);
+  const [privacyReadyDetail, setPrivacyReadyDetail] = useState<string | null>(
+    null
+  );
+
+  // Unspent note count bounds the SPP fee ceiling: a spend consolidates
+  // across roughly `notes - 1` pool transactions, each paying its own
+  // Soroban fee, so a single-transact quote understates a multi-note spend.
+  const [sppNoteCount, setSppNoteCount] = useState(0);
+
+  const stellarOwner = useMemo(() => {
+    const xlm = addresses?.xlm;
+    if (typeof xlm === 'string' && /^G[A-Z2-7]{55}$/.test(xlm)) return xlm;
+    if (typeof address === 'string' && /^G[A-Z2-7]{55}$/.test(address)) {
+      return address;
+    }
+    return null;
+  }, [addresses?.xlm, address]);
+
+  useEffect(() => {
+    if (privacyLevel !== 'private') {
+      setPrivacyReadyStatus(null);
+      setPrivacyReadyDetail(null);
+      return;
+    }
+
+    if (!stellarOwner) {
+      setPrivacyReadyStatus('unavailable');
+      setPrivacyReadyDetail(
+        'Stellar address not ready — reopen Private XLM from Home.'
+      );
+      return;
+    }
+
+    let cancelled = false;
+    setPrivacyReadyStatus((prev) => prev ?? 'setting_up');
+
+    void (async () => {
+      const { prepareSppOp, gatingSppBlocker } = await import(
+        '../utils/stellarSpp/sppClient'
+      );
+      const { formatSppSyncUserMessage } = await import(
+        '../utils/stellarSpp/sppSyncMessages'
+      );
+      if (cancelled) return;
+
+      const maxAttempts = 10;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const prep = await prepareSppOp(activeNetworkKey, stellarOwner).catch(
+          () => null
+        );
+        if (cancelled) return;
+
+        if (prep?.readyForProve) {
+          setPrivacyReadyStatus('ready');
+          setPrivacyReadyDetail(null);
+          return;
+        }
+
+        // Terminal states — neither resolves by waiting, so stop polling
+        // instead of burning 10 RPC round-trips on a hopeless case.
+        if (prep && !prep.poolOps) {
+          setPrivacyReadyStatus('unavailable');
+          setPrivacyReadyDetail(
+            'Private sends need a pool-ops build of the app.'
+          );
+          return;
+        }
+        if (prep && !prep.chainEnabled) {
+          setPrivacyReadyStatus('unavailable');
+          setPrivacyReadyDetail(
+            'Private payments are not configured for this network.'
+          );
+          return;
+        }
+
+        setPrivacyReadyStatus('setting_up');
+        // Show the blocker that actually gates `readyForProve`, not
+        // `blockers[0]` — the RPC probe is informational and would otherwise
+        // mask the real reason (e.g. unstaged circuit assets).
+        setPrivacyReadyDetail(
+          formatSppSyncUserMessage(
+            (prep ? gatingSppBlocker(prep) : null) ||
+              'Syncing private account…',
+            { network: activeNetworkKey?.includes('testnet') ? 'TESTNET' : 'MAINNET' }
+          )
+        );
+
+        if (attempt < maxAttempts - 1) {
+          await new Promise((r) => setTimeout(r, 1500));
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [privacyLevel, activeNetworkKey, stellarOwner]);
+
+  // Note count for the SPP fee ceiling. Local read of SecureStore notes —
+  // no chain sync, so it is cheap enough to run alongside the readiness poll.
+  useEffect(() => {
+    if (privacyLevel !== 'private' || !stellarOwner) {
+      setSppNoteCount(0);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      const { getLocalPrivateBalance } = await import('../utils/stellarSpp');
+      const result = await getLocalPrivateBalance(
+        activeNetworkKey,
+        stellarOwner
+      ).catch(() => null);
+      if (!cancelled && result) {
+        setSppNoteCount(result.notes.length);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [privacyLevel, activeNetworkKey, stellarOwner]);
+
+  // -----------------------------------------------------------------
   // Privacy-aware payment dispatcher (task 11.1).
   // -----------------------------------------------------------------
   // Replaces the prior inline mock that only handled the `'standard'`
@@ -201,6 +348,8 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
     zkpProverRef,
     sourceCommitmentHash: undefined,
     sppOp: privacyLevel === 'private' ? sppOp : undefined,
+    privacyReadyStatus,
+    sppNoteCount,
   });
 
   // The hook owns gas estimation for the privacy-stack flows; for the
@@ -249,6 +398,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
         const next = {
           amount: Number.isFinite(parsed) ? parsed : 0,
           reliable,
+          subentryCount: result.subentryCount,
         };
         // Sticky-reliable: the balance poll re-runs every 15s, and a single
         // flaky read used to flip `reliable` back to false — which made the
@@ -483,49 +633,93 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
     });
   };
 
-  // Calculate fees (estimated)
-  const networkFee = gasEstimate?.estimatedCostEth ?? '0.001';
-  const privacyFee = privacyLevel === 'max' ? '0.005' : '0';
-  const totalFee = (parseFloat(networkFee) + parseFloat(privacyFee)).toFixed(4);
-  const totalAmount = (parseFloat(amount || '0') + parseFloat(totalFee)).toFixed(6);
+  // -----------------------------------------------------------------
+  // Fees and the pre-send insufficient-funds gate.
+  // -----------------------------------------------------------------
+  // The arithmetic lives in `derivePaymentFeeView` so it can be tested
+  // directly — this screen is effectively unrenderable under the current test
+  // setup, and these are the numbers a user reads before authorizing a
+  // payment. See utils/paymentFees.ts for the two invariants it holds: fees are
+  // native-denominated, and a missing estimate never fabricates a number nor
+  // disarms the gate below.
+  //
+  // Native sends require amount + fee; token and pXLM sends still require the
+  // public native fee. Stellar additionally requires the account minimum
+  // balance to remain after either kind of operation. The gate requires a
+  // *reliable* balance read: a fallback/errored read leaves
+  // `nativeBalance.reliable === false`, so a flaky RPC never falsely blocks a
+  // legitimate payment.
+  const nativeSymbol = selectedNetwork?.symbol;
+  const minimumBalanceNative =
+    activeChain?.type === 'xlm'
+      ? computeStellarMinReserveXlm(nativeBalance?.subentryCount)
+      : 0;
+  const {
+    feeSymbol,
+    isFeeCeiling,
+    networkFee,
+    hasFee,
+    totalFee,
+    privacyFee,
+    isNativeSend,
+    requiredNative,
+    nativeTotal,
+  } = derivePaymentFeeView({
+    gasEstimate,
+    privacyLevel,
+    amount,
+    token,
+    nativeSymbol,
+    minimumBalanceNative,
+  });
+
+  const sppTxCount = sppPlannedTxCount(sppOp, sppNoteCount);
   const gasWarning = gasExpensive && gasEstimate
-    ? `Estimated gas is ${gasEstimate.estimatedCostUsd ? `$${Number.parseFloat(gasEstimate.estimatedCostUsd).toFixed(2)}` : `${gasEstimate.estimatedCostEth} ETH`} right now.`
+    ? `Estimated gas is ${gasEstimate.estimatedCostUsd ? `$${Number.parseFloat(gasEstimate.estimatedCostUsd).toFixed(2)}` : `${gasEstimate.estimatedCostEth} ${feeSymbol}`} right now.`
     : null;
 
-  // -----------------------------------------------------------------
-  // Pre-send insufficient-funds gate.
-  // -----------------------------------------------------------------
-  // We only enforce this for *native-currency* sends (token === the
-  // network's native symbol) because that is exactly what the signer's
-  // own `value + gas` guard covers. For non-native token sends we can't
-  // compare the token amount against a native-balance read, so we leave
-  // that path to the signer/RPC as before (no regression — it was never
-  // pre-checked). The gate also requires a *reliable* balance read: a
-  // fallback/errored read leaves `nativeBalance.reliable === false`, so a
-  // flaky RPC never falsely blocks a legitimate payment.
-  const nativeSymbol = selectedNetwork?.symbol;
-  const isNativeSend = Boolean(nativeSymbol) && token === nativeSymbol;
-  const requiredNative = parseFloat(amount || '0') + parseFloat(totalFee);
+  // Token and pXLM sends also consume the public native balance for fees. On
+  // Stellar they must additionally leave the protocol reserve untouched, so
+  // the gate cannot be limited to `token === nativeSymbol`.
+  const hasNativeRequirement =
+    isNativeSend || hasFee || minimumBalanceNative > 0;
   const insufficientFunds = Boolean(
-    isNativeSend &&
-    nativeBalance?.reliable &&
-    Number.isFinite(requiredNative) &&
-    requiredNative > 0 &&
-    nativeBalance.amount < requiredNative
+    hasNativeRequirement &&
+      nativeBalance?.reliable &&
+      Number.isFinite(requiredNative) &&
+      requiredNative > 0 &&
+      nativeBalance.amount + Number.EPSILON < requiredNative
   );
   const availableBalanceLabel =
-    nativeBalance?.reliable && isNativeSend
+    nativeBalance?.reliable && hasNativeRequirement
       ? `${nativeBalance.amount} ${nativeSymbol}`
       : null;
 
-  // Get status display info — covers the full UiTxStatus union from
-  // {@link usePaymentTransaction} so the stealth- and max-privacy
-  // intermediate states render meaningful copy instead of falling
-  // through to the default "CONFIRM & SEND" label.
+  /**
+   * `'private'` sends stay locked until `prepareSppOp().readyForProve` is
+   * true. The hook enforces this too (defence in depth); this flag exists so
+   * the button can explain *why* it is disabled instead of looking broken.
+   */
+  const privateNotReady =
+    privacyLevel === 'private' && privacyReadyStatus !== 'ready';
+
+  const isInFlight =
+    txStatus === 'sending' ||
+    txStatus === 'pending' ||
+    txStatus === 'stealth_deriving' ||
+    txStatus === 'spp_syncing' ||
+    txStatus === 'proving' ||
+    txStatus === 'relaying';
+
+  // Status copy for the plain (non-SPP) in-flight spinner. The ShieldProgress
+  // modal replaces this for `'private'` sends; every other privacy level uses
+  // the simple status line below.
   const getStatusInfo = () => {
     switch (txStatus) {
       case 'stealth_deriving':
         return { text: 'DERIVING STEALTH ADDRESS...', color: colors.accent };
+      case 'spp_syncing':
+        return { text: 'SYNCING PRIVATE POOL...', color: colors.accent };
       case 'proving':
         return { text: 'GENERATING ZK PROOF...', color: colors.accent };
       case 'relaying':
@@ -543,14 +737,76 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
     }
   };
 
-  const isInFlight =
-    txStatus === 'sending' ||
-    txStatus === 'pending' ||
-    txStatus === 'stealth_deriving' ||
-    txStatus === 'proving' ||
-    txStatus === 'relaying';
-
   const statusInfo = getStatusInfo();
+
+  // -----------------------------------------------------------------
+  // SPP shield-progress wiring (private sends only).
+  // -----------------------------------------------------------------
+  // The ShieldProgressModal is driven by the operation-stage diagnostics
+  // emitted by sppClient. This screen only resets the model per attempt and
+  // closes the final confirmed stage; sync/prove/submit transitions come from
+  // the actual SPP pipeline rather than being inferred from a generic spinner.
+  // The SPP stage model (derive_keys → sync_pool → generate_proof → submit_tx)
+  // only describes the `'private'` (Stellar SPP) flow; standard / stealth / max
+  // sends keep the plain in-flight status line instead.
+  const isSppPrivateSend = privacyLevel === 'private';
+  const prevTxStatusRef = useRef<UiTxStatus | null>(null);
+  useEffect(() => {
+    if (!isSppPrivateSend) return;
+    const prev = prevTxStatusRef.current;
+    prevTxStatusRef.current = txStatus;
+
+    if (txStatus === 'idle') {
+      resetSppProgress();
+      return;
+    }
+
+    // A retry after a failure re-enters an in-flight state without passing
+    // through `idle` — reset the stage model so stale error/check states from
+    // the previous attempt don't carry into the new one. Reset exactly once
+    // per attempt (on the in-flight entry transition), not on every re-run.
+    const inFlightStatuses: UiTxStatus[] = [
+      'sending',
+      'pending',
+      'proving',
+      'spp_syncing',
+      'relaying',
+    ];
+    const inFlightNow = inFlightStatuses.includes(txStatus);
+    const inFlightBefore = prev !== null && inFlightStatuses.includes(prev);
+    if (inFlightNow && !inFlightBefore) {
+      resetSppProgress();
+    }
+
+    if (txStatus === 'confirmed') {
+      void recordSppProgressDiagnostic({
+        status: 'success',
+        step: 'submit_tx',
+        operation: sppOp,
+      });
+      void recordSppProgressDiagnostic({ status: 'success', step: 'confirmed' });
+    }
+  }, [txStatus, privacyLevel, sppOp, isSppPrivateSend]);
+
+  // ShieldProgressModal visibility — private (SPP) sends only. Stays up through
+  // `'confirmed'` so the success state can auto-dismiss (~1.2s) before
+  // TransactionResultModal takes over; a local state (not a derived prop) lets
+  // onDismiss work.
+  const [shieldModalVisible, setShieldModalVisible] = useState(false);
+  useEffect(() => {
+    if (!isSppPrivateSend) {
+      setShieldModalVisible(false);
+    } else if (isInFlight || txStatus === 'confirmed') {
+      setShieldModalVisible(true);
+    } else if (txStatus === 'idle' || txStatus === 'failed') {
+      setShieldModalVisible(false);
+    }
+  }, [isInFlight, txStatus, isSppPrivateSend]);
+
+  const handleShieldRetry = () => {
+    setShieldModalVisible(false);
+    handleConfirmSend();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -566,49 +822,62 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
       </View>
 
       <Animated.View entering={FadeInDown.duration(260)} style={styles.animatedContent}>
-        <ScrollView
+        <View
           style={styles.content}
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
-          showsVerticalScrollIndicator={false}
         >
-          {/* Network Notice */}
-      <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
-        <View style={styles.testnetNotice}>
-          <Icon name="testtube" size={24} color={colors.accent} />
-              <View style={styles.testnetNoticeText}>
-                <Text style={styles.testnetNoticeTitle}>
-                  {selectedNetwork?.isTestnet ? 'TESTNET MODE' : 'MAINNET MODE'}
-                </Text>
-                <Text style={styles.testnetNoticeDesc}>
-                  This transaction will be sent on {selectedNetwork?.name || 'the selected network'}.
-                  {selectedNetwork?.isTestnet
-                    ? ' Get faucet funds when supported.'
-                    : ' Real funds will be transferred on this network.'}
-                </Text>
-                <PressableOpacity
-                  onPress={handleGetTestnetETH}
-                  disabled={!faucetUrl}
-                  style={styles.faucetButton}
-                  accessibilityRole="button"
-                  accessibilityLabel="Get testnet funds"
-                  accessibilityHint="Opens faucet website to request test funds"
-                  accessibilityState={{ disabled: !faucetUrl }}
-                >
-                  <View style={styles.faucetLinkRow}>
-                    <Text style={[styles.faucetLink, !faucetUrl && styles.faucetLinkDisabled]}>
-                      Get Test {token || 'Funds'}
-                    </Text>
-                    <Icon
-                      name="chevron-right"
-                      size={12}
-                      color={faucetUrl ? colors.accent : colors.textFaint}
-                      style={styles.faucetLinkIcon}
-                    />
-                  </View>
-                </PressableOpacity>
-              </View>
+          {/* Details scroll area — bounded so the CONFIRM & SEND button stays
+              pinned and visible on small viewports; scrolls only if the
+              recipient/amount/fee detail content genuinely overflows. */}
+          <ScrollView
+            style={styles.detailsScroll}
+            contentContainerStyle={styles.detailsScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+          {/* Network Notice — compact chip/badge row (~40px) */}
+          <View style={styles.networkChipRow}>
+            <View
+              style={[
+                styles.networkChip,
+                {
+                  backgroundColor: selectedNetwork?.isTestnet
+                    ? colors.accentContainer
+                    : colors.error + '20',
+                },
+              ]}
+            >
+              <Icon
+                name="testtube"
+                size={14}
+                color={selectedNetwork?.isTestnet ? colors.accent : colors.errorMuted}
+              />
+              <Text
+                style={[
+                  styles.networkChipText,
+                  {
+                    color: selectedNetwork?.isTestnet
+                      ? colors.accent
+                      : colors.errorMuted,
+                  },
+                ]}
+              >
+                {selectedNetwork?.isTestnet ? 'TESTNET' : 'MAINNET'}
+              </Text>
             </View>
-          </SovereignCard>
+
+            {selectedNetwork?.isTestnet && faucetUrl && (
+              <PressableOpacity
+                onPress={handleGetTestnetETH}
+                style={styles.networkFaucetLink}
+                accessibilityRole="link"
+                accessibilityLabel="Get testnet funds"
+              >
+                <Text style={styles.networkFaucetLinkText}>
+                  Get {token || 'funds'}
+                </Text>
+                <Icon name="chevron-right" size={10} color={colors.accent} />
+              </PressableOpacity>
+            )}
+          </View>
 
           {/* Transaction Status Card Removed - Handled by Modal */}
 
@@ -749,33 +1018,28 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
             </View>
           </SovereignCard>
 
-          {/* Fee Breakdown */}
+          {/* Fee Breakdown — collapsible card */}
           <Text style={styles.sectionTitle}>FEE BREAKDOWN</Text>
-      <SovereignCard backgroundColor={colors.surfaceCard} padding={0} style={{ marginBottom: 24 }}>
-        <View style={styles.feeContent}>
-              <View style={styles.feeRow}>
-                <Text style={styles.feeLabel}>Network Fee (estimated)</Text>
-                <Text style={styles.feeValue}>{networkFee} {token}</Text>
-              </View>
-              {privacyLevel === 'max' && (
-                <View style={styles.feeRow}>
-                  <Text style={styles.feeLabel}>Privacy Pool Fee</Text>
-                  <Text style={styles.feeValue}>{privacyFee} {token}</Text>
-                </View>
-              )}
-              {privacyLevel === 'private' && (
-                <View style={styles.feeRow}>
-                  <Text style={styles.feeLabel}>ZK prove (est.)</Text>
-                  <Text style={styles.feeValue}>~10s · local</Text>
-                </View>
-              )}
-
-              <View style={styles.feeDivider} />
-              <View style={styles.feeRow}>
-                <Text style={styles.feeLabelTotal}>TOTAL AMOUNT</Text>
-                <Text style={styles.feeValueTotal}>{totalAmount} {token}</Text>
-              </View>
-            </View>
+          <SovereignCard
+            backgroundColor={colors.surfaceCard}
+            padding={0}
+            style={{ marginBottom: 24 }}
+          >
+            <FeeBreakdownCard
+              networkFee={networkFee}
+              feeSymbol={feeSymbol}
+              sppTxCount={sppTxCount}
+              sppOp={sppOp}
+              privacyLevel={privacyLevel}
+              hasFee={hasFee}
+              isFeeCeiling={isFeeCeiling}
+              totalFee={totalFee}
+              privacyFee={privacyFee}
+              isNativeSend={isNativeSend}
+              nativeTotal={nativeTotal}
+              amount={amount}
+              token={token}
+            />
           </SovereignCard>
 
           {gasWarning && (
@@ -824,8 +1088,8 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
           </SovereignCard>
 
           {/* Insufficient-funds notice — shown only when we have a
-              reliable balance read for a native-currency send that is
-              short of amount + fees. Distinct from the on-chain failure
+              reliable native-balance read that is short of the send debit,
+              fees, or required account reserve. Distinct from the on-chain failure
               path so the user learns before signing. */}
           {insufficientFunds && txStatus === 'idle' && (
             <SovereignCard backgroundColor="transparent" padding={0} style={{ marginBottom: 24, borderRadius: 0, borderWidth: 1, borderColor: colors.error }}>
@@ -836,7 +1100,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
                 <View style={styles.gasWarningTextWrap}>
                   <Text style={[styles.gasWarningTitle, { color: colors.error }]}>INSUFFICIENT FUNDS</Text>
                   <Text style={styles.gasWarningDesc}>
-                    You need about {requiredNative.toFixed(6)} {nativeSymbol} (amount + fees) on {selectedNetwork?.name || 'this network'}
+                    You need about {requiredNative.toFixed(activeChain?.type === 'xlm' ? 7 : 6)} {nativeSymbol} (including fees and any required account reserve) on {selectedNetwork?.name || 'this network'}
                     {availableBalanceLabel ? `, but your balance is ${availableBalanceLabel}` : ''}.
                     {selectedNetwork?.isTestnet
                       ? ' Use the faucet above to get test funds.'
@@ -847,7 +1111,35 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
             </SovereignCard>
           )}
 
-          <View style={{ marginTop: 'auto', marginBottom: 24 }}>
+          </ScrollView>
+
+          <View style={styles.actionArea}>
+            {privateNotReady && txStatus === 'idle' && (
+              <SovereignCard
+                backgroundColor={colors.surfaceCard}
+                style={{ marginBottom: 12 }}
+              >
+                <View style={styles.privacyGateRow}>
+                  {privacyReadyStatus === 'unavailable' ? (
+                    <Icon name="info" size={16} color={colors.textMuted} />
+                  ) : (
+                    <ActivityIndicator size="small" color={colors.accent} />
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.privacyGateLabel}>
+                      {privacyReadyStatus === 'unavailable'
+                        ? 'Private sends unavailable'
+                        : 'Finishing private account sync'}
+                    </Text>
+                    <Text style={styles.privacyGateDetail} numberOfLines={3}>
+                      {privacyReadyDetail ||
+                        'Waiting for privacy membership to confirm on-chain.'}
+                    </Text>
+                  </View>
+                </View>
+              </SovereignCard>
+            )}
+
             {txStatus === 'idle' && (
               <SovereignButton
                 title={
@@ -855,14 +1147,22 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
                     ? 'VERIFYING WALLET...'
                     : insufficientFunds
                       ? 'INSUFFICIENT FUNDS'
-                      : 'CONFIRM & SEND'
+                      : privateNotReady
+                        ? privacyReadyStatus === 'unavailable'
+                          ? 'PRIVATE SENDS UNAVAILABLE'
+                          : 'PREPARING PRIVATE ACCOUNT...'
+                        : 'CONFIRM & SEND'
                 }
                 accessibilityLabel={
                   isWalletVerificationPending
                     ? 'Verifying wallet'
                     : insufficientFunds
                       ? 'Insufficient funds'
-                      : 'Confirm and send payment'
+                      : privateNotReady
+                        ? privacyReadyStatus === 'unavailable'
+                          ? 'Private sends unavailable on this build'
+                          : 'Preparing private account, please wait'
+                        : 'Confirm and send payment'
                 }
                 accessibilityHint="Submits the payment with the selected privacy level"
                 variant={isSendDisabled || insufficientFunds ? 'outline' : 'primary'}
@@ -874,16 +1174,20 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
               />
             )}
 
-            {isInFlight && (
-              <View>
+            {isInFlight && !isSppPrivateSend && (
+              <View style={styles.inFlightStatus}>
                 <SovereignButton
                   title={statusInfo.text}
                   variant="outline"
-                  onPress={() => { }}
+                  onPress={() => {}}
                   disabled={true}
                   style={{ marginBottom: 8 }}
                 />
-                <ActivityIndicator size="small" color={colors.accent} style={{ marginTop: 8 }} />
+                <ActivityIndicator
+                  size="small"
+                  color={colors.accent}
+                  style={styles.inFlightSpinner}
+                />
               </View>
             )}
 
@@ -895,7 +1199,7 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
               />
             )}
           </View>
-        </ScrollView>
+        </View>
       </Animated.View>
 
       {/* Hidden WebView-hosted snarkjs prover. Mounted unconditionally so
@@ -922,6 +1226,15 @@ export function PaymentConfirmationScreen({ navigation, route }: PaymentConfirma
         onViewExplorer={txResult?.hash ? handleViewOnExplorer : undefined}
         onGoHome={handleGoHome}
       />
+
+      {/* Shield Progress Modal — replaces the in-flight spinner. Rendered last
+          so it layers above TransactionResultModal during the brief confirmed
+          window before auto-dismissing. */}
+      <ShieldProgressModal
+        visible={shieldModalVisible}
+        onRetry={handleShieldRetry}
+        onDismiss={() => setShieldModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -930,6 +1243,24 @@ const themeStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surfaceScreen,
+  },
+  privacyGateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  privacyGateLabel: {
+    fontFamily: typography.fontFamily.bodyBold,
+    color: colors.textSecondary,
+    fontSize: 13,
+    letterSpacing: 0.3,
+  },
+  privacyGateDetail: {
+    fontFamily: typography.fontFamily.body,
+    color: colors.textTertiary,
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 2,
   },
   header: {
     flexDirection: 'row',
@@ -969,102 +1300,62 @@ const themeStyles = (colors: any) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 24,
   },
+  detailsScroll: {
+    flexShrink: 1,
+    flexGrow: 0,
+  },
+  detailsScrollContent: {
+    paddingBottom: 16,
+  },
+  actionArea: {
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  inFlightStatus: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  inFlightSpinner: {
+    marginTop: 8,
+    alignSelf: 'center',
+  },
   animatedContent: {
     flex: 1,
   },
-  testnetNotice: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    padding: 16,
-  },
-  testnetIcon: {
-    fontSize: 24,
-  },
-  testnetNoticeText: {
-    flex: 1,
-    gap: 4,
-  },
-  testnetNoticeTitle: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.accent,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-  testnetNoticeDesc: {
-    fontFamily: typography.fontFamily.body,
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 18,
-  },
-  faucetLinkRow: {
+  networkChipRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
-  },
-  faucetLink: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.accent,
-    marginTop: 4,
-  },
-  faucetLinkIcon: {
-    marginLeft: 4,
-    marginTop: 4,
-  },
-  faucetButton: {
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  faucetLinkDisabled: {
-    color: colors.textTertiary,
-  },
-  statusContent: {
-    alignItems: 'center',
-    padding: 24,
     gap: 8,
+    minHeight: 40,
+    marginBottom: 16,
   },
-  statusIcon: {
-    marginBottom: 4,
+  networkChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 0,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
   },
-  statusTitle: {
+  networkChipText: {
     fontFamily: typography.fontFamily.mono,
-    fontSize: 18,
-    color: colors.textPrimary,
+    fontSize: 11,
     fontWeight: 'bold',
     letterSpacing: 1,
   },
-  statusHash: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textPrimary,
-    opacity: 0.8,
+  networkFaucetLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minHeight: 40,
+    justifyContent: 'center',
   },
-  viewExplorer: {
+  networkFaucetLinkText: {
     fontFamily: typography.fontFamily.mono,
     fontSize: 11,
     color: colors.accent,
-    marginTop: 4,
-  },
-  explorerButton: {
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  explorerLinkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  viewExplorerIcon: {
-    marginLeft: 4,
-  },
-  blockInfo: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 11,
-    color: colors.textPrimary,
-    opacity: 0.6,
-    marginTop: 4,
   },
   errorText: {
     fontFamily: typography.fontFamily.mono,
@@ -1191,42 +1482,6 @@ const themeStyles = (colors: any) => StyleSheet.create({
     color: colors.accent,
     fontWeight: 'bold',
   },
-  feeContent: {
-    padding: 16,
-    gap: 12,
-  },
-  feeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  feeLabel: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  feeValue: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.textPrimary,
-  },
-  feeDivider: {
-    height: 1,
-    backgroundColor: colors.outlineSubtle,
-  },
-  feeLabelTotal: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 12,
-    color: colors.accent,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-  feeValueTotal: {
-    fontFamily: typography.fontFamily.mono,
-    fontSize: 14,
-    color: colors.accent,
-    fontWeight: 'bold',
-  },
   gasWarningContent: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -1271,9 +1526,6 @@ const themeStyles = (colors: any) => StyleSheet.create({
     alignItems: 'flex-start',
     gap: 12,
     padding: 16,
-  },
-  privacyNoticeIcon: {
-    fontSize: 24,
   },
   privacyNoticeText: {
     flex: 1,

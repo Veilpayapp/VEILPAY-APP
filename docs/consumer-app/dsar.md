@@ -2,7 +2,7 @@
 
 ## Scope
 
-VeilPay’s consumer app is **self-custody first**. Most user data lives on the
+Veilpay’s consumer app is **self-custody first**. Most user data lives on the
 device (seed phrase in SecureStore, local transaction cache, address book).
 A small amount of optional analytics may leave the device when the user opts in.
 

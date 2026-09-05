@@ -6,7 +6,7 @@
 # ceremony. Do not deploy mainnet with these zkeys. Re-run a multi-party
 # ceremony after any circuit change.
 #
-# Hardened, atomic build pipeline for the VeilPay withdraw circuit.
+# Hardened, atomic build pipeline for the Veilpay withdraw circuit.
 #
 # Pipeline (each step exits non-zero on failure; nothing in the canonical
 # build/ directory or contracts-evm/src/Groth16Verifier.sol is overwritten
@@ -73,7 +73,7 @@ snarkjs zkey contribute "$BUILD_TMP/withdraw_0000.zkey" "$BUILD_TMP/withdraw_pha
   --name="dev2" -v -e="random text again"
 snarkjs zkey beacon "$BUILD_TMP/withdraw_phase2.zkey" "$BUILD_TMP/withdraw_final.zkey" \
   0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20 10 \
-  -n="VeilPay Final Beacon"
+  -n="Veilpay Final Beacon"
 
 echo "[4/6] export verification key..." >&2
 snarkjs zkey export verificationkey "$BUILD_TMP/withdraw_final.zkey" \

@@ -208,6 +208,55 @@ export const invoiceStatusRateLimiter = rateLimit({
   },
 });
 
+/**
+ * Tight per-IP limiter for the unauthenticated onramp order-creation endpoint.
+ * Every call writes a persistent FiatOrder row, so bound it well below the
+ * global 1000/min to stop table-bloat / provider-URL minting abuse.
+ */
+export const onrampCreateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('onramp_create'),
+  message: {
+    error: 'Too many onramp order creations. Please slow down.',
+    code: 'ONRAMP_CREATE_RATE_LIMIT',
+  },
+});
+
+/**
+ * Per-IP limiter for the unauthenticated quotes endpoint. Bounds upstream
+ * Binance fetches triggered by caller-supplied symbols.
+ */
+export const onrampQuotesLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('onramp_quotes'),
+  message: {
+    error: 'Too many quote requests. Please slow down.',
+    code: 'ONRAMP_QUOTES_RATE_LIMIT',
+  },
+});
+
+/**
+ * Light limiter on the public nonce-minting endpoint. Cheap to serve, but each
+ * nonce is a hook for an app attestation attempt, so bound minting per-IP.
+ */
+export const attestationNonceLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('attestation_nonce'),
+  message: {
+    error: 'Too many nonce requests. Please slow down.',
+    code: 'ATTESTATION_NONCE_RATE_LIMIT',
+  },
+});
+
 export const webhookVerifyRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
@@ -228,12 +277,12 @@ export const webhookVerifyRateLimiter = rateLimit({
  * shared, metered resource — an attacker who discovers the endpoint could
  * otherwise burn Alchemy/Infura quota.
  *
- * Keying: the client IP is ALWAYS the anchor of the rate-limit key. The
- * `x-veilpay-device-id` header is only used to sub-partition per device WITHIN
- * an IP (fairness across multiple devices behind one NAT). Because the header
- * is client-controlled, keying on it alone would let an attacker rotate the
- * header to mint unlimited fresh buckets and bypass the limit — anchoring on
- * IP prevents that while still preserving per-device fairness.
+ * Keying: the key is the resolved client IP (see `trust proxy` in index.ts),
+ * which is the true per-client IP behind the reverse proxy. The former
+ * `x-veilpay-device-id` sub-key is deliberately NOT used: it is a
+ * client-controlled header, and sub-keying on it let an attacker rotate the
+ * header to mint a fresh bucket per request, defeating the per-caller quota.
+ * IP-only keying is not rotatable.
  *
  * SECURITY(hardening): This is a quota-protection layer, not authentication.
  * Anyone can still call the endpoint. For production hardening, gate this route
@@ -246,17 +295,12 @@ export const rpcRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   store: getStore('rpc'),
-  keyGenerator: (req) => {
-    const ip = req.ip || 'unknown';
-    const rawDeviceId = req.headers['x-veilpay-device-id'];
-    if (typeof rawDeviceId === 'string' && rawDeviceId.length > 0) {
-      // Cap the length so a maliciously huge header can't bloat the store, and
-      // anchor on IP so rotating the device id cannot escape the IP's bucket.
-      const deviceId = rawDeviceId.slice(0, 128);
-      return `${ip}:device:${deviceId}`;
-    }
-    return ip;
-  },
+  // Key on the resolved client IP only. The x-veilpay-device-id header is
+  // client-controlled, so sub-keying on it let an attacker rotate the header
+  // to mint a fresh (ip, device) bucket per request and bypass the 120/min
+  // quota. `trust proxy` (index.ts) makes req.ip the true per-client IP, so
+  // IP-only keying is both correct and not rotatable.
+  keyGenerator: (req) => req.ip || 'unknown',
   handler: (_req, res) => {
     res.status(429).json({
       error: 'RPC rate limit exceeded. Please slow down.',

@@ -54,7 +54,7 @@ export function Logo({
     <View
       collapsable={false}
       style={[showText ? styles.row : styles.iconOnly, style]}
-      accessibilityLabel="VeilPay"
+      accessibilityLabel="Veilpay"
     >
       <View style={{ width: iconPx, height: iconPx }} collapsable={false}>
         <Svg width={iconPx} height={iconPx} viewBox="0 0 256 256">

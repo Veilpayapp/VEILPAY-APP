@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Bootstrap Doppler CLI for VeilPay secret management.
+  Bootstrap Doppler CLI for Veilpay secret management.
 
 .DESCRIPTION
   Installs the Doppler CLI, authenticates, sets up the project, and pulls

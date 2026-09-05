@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * VeilPay Chain Config Validator
+ * Veilpay Chain Config Validator
  *
  * Validates that all required environment variables are present and well-formed
  * before a build or deployment. Run this in CI before `eas build` or `npm run start`.
@@ -204,7 +204,7 @@ function printResult(r: ValidationResult): void {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 function main(): void {
-  console.log(`\n${BOLD}VeilPay Chain Config Validator${RESET}`);
+  console.log(`\n${BOLD}Veilpay Chain Config Validator${RESET}`);
   console.log(`${'─'.repeat(80)}`);
 
   // Load .env if running locally (optional — dotenv may not be installed)

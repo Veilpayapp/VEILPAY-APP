@@ -1,5 +1,5 @@
 /**
- * Official VeilPay web properties opened from Settings (in-app browser).
+ * Official Veilpay web properties opened from Settings (in-app browser).
  * Keep hosts in sync with `utils/externalLink` allowlist and InAppBrowser allowlist.
  */
 export const LEGAL_URLS = {

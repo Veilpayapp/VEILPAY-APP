@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# VeilPay Contract Verification Script
+# Veilpay Contract Verification Script
 # Usage: ./verify.sh <network> <contract_address> <constructor_args>
 
 set -e

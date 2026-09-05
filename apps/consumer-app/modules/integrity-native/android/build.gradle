@@ -1,0 +1,27 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.veilpay'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.integritynative"
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  // NOTE: uncomment once the Play Console app is registered and this module is
+  // being compiled for a real release build. Add to android/gradle (or here):
+  //   implementation "com.google.android.play:integrity:1.4.0"
+  // The Play Integrity SDK is only available in a connected Google Play / Play
+  // Console context; it cannot resolve in a plain offline build.
+  // implementation "com.google.android.play:integrity:1.4.0"
+}

@@ -42,6 +42,8 @@ interface DashboardBalanceCardProps {
   privacyReadyStatus?: PrivacyReadyStatus;
   /** Optional recovery / status detail under the crypto amount (e.g. restore result). */
   privacyStatusDetail?: string | null;
+  /** Clears transient private status copy after the banner fades. */
+  onDismissPrivacyStatus?: () => void;
 }
 
 export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
@@ -56,6 +58,7 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
   cryptoSymbol,
   privacyReadyStatus = null,
   privacyStatusDetail = null,
+  onDismissPrivacyStatus,
 }) => {
   const styles = useStyles(themeStyles);
   const theme = useTheme();
@@ -90,7 +93,7 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
       : privacyMode && privacyReadyStatus === 'unavailable'
         ? 'Private sends unavailable'
         : privacyMode && privacyReadyStatus === 'ready'
-          ? 'Private XLM ready'
+          ? `Private XLM ready · ${activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'}`
           : null;
 
   return (
@@ -104,7 +107,7 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
           ) : (
             <>
               <View style={styles.balanceRow}>
-                <View>
+                <View style={styles.balanceLeft}>
                   <Text style={styles.balanceLabel}>{balanceLabel}</Text>
                   <Text
                     style={styles.balanceAmount}
@@ -127,6 +130,8 @@ export const DashboardBalanceCard: React.FC<DashboardBalanceCardProps> = ({
                       readyStatus={privacyReadyStatus}
                       statusDetail={privacyStatusDetail}
                       privacyMode={privacyMode}
+                      networkLabel={activeChain?.isTestnet ? 'TESTNET' : 'MAINNET'}
+                      onDismiss={onDismissPrivacyStatus}
                     />
                   ) : null}
                 </View>
@@ -238,6 +243,14 @@ const themeStyles = (colors: Colors) =>
       justifyContent: 'space-between',
       alignItems: 'flex-start',
       marginBottom: 16,
+    },
+    // Must claim the row's remaining width. Without a flex basis this column
+    // shrink-wraps to its widest child ("$0.00"), and PrivacyStatusBanner —
+    // whose inner text uses flex:1 — inherits that ~100px cap and ellipsizes
+    // both of its lines regardless of how short the copy is.
+    balanceLeft: {
+      flex: 1,
+      minWidth: 0,
     },
     balanceLabel: {
       fontFamily: typography.fontFamily.mono,

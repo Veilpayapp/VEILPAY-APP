@@ -1,11 +1,11 @@
 export const openApiSpec = {
   openapi: "3.0.3",
   info: {
-    title: "VeilPay API",
+    title: "Veilpay API",
     description: "Multi-Chain Privacy Payment Protocol API",
     version: "1.0.0",
     contact: {
-      name: "VeilPay Support",
+      name: "Veilpay Support",
       email: "support@veilpay.com",
     },
   },

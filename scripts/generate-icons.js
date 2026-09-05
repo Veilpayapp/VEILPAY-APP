@@ -1,5 +1,5 @@
 /**
- * VeilPay app-icon generator.
+ * Veilpay app-icon generator.
  *
  * Source of truth: the repo-root `Logo.png` — the shield-only brand glyph
  * (black shield on an off-white background). Every launcher / splash / adaptive

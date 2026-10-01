@@ -17,7 +17,7 @@ Use this checklist before exposing a Veilpay environment to production traffic.
 - [ ] Health, readiness, and liveness endpoints pass.
 - [ ] Rate limiters enabled.
 - [ ] CORS origins explicit.
-- [ ] Sentry configured.
+- [ ] Sentry configured — `SENTRY_DSN` set for **backend and indexer** (both fail closed at boot in production without it).
 - [ ] Background job queue and worker running.
 
 ## Mobile
@@ -26,7 +26,7 @@ Use this checklist before exposing a Veilpay environment to production traffic.
 - [ ] SecureStore-only mnemonic storage verified.
 - [ ] Mainnet transaction feature flag intentionally set.
 - [ ] WalletConnect project ID configured.
-- [ ] OTA update channel configured.
+- [ ] Circuit prover assets staged and digest-verified (`node apps/consumer-app/scripts/stage-circuit-assets.js`) before the release bundle build.
 
 ## Privacy features
 

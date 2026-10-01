@@ -1,7 +1,7 @@
 # 🛡️ Veilpay Security
 
 > [!NOTE]
-> **Status:** Active development · Last updated: 2026-07-17  
+> **Status:** Active development · Last updated: 2026-10-02  
 > **External audits:** Pending (see [Ceremony & audit gates](docs/security/ceremony-and-audit-gates.md))
 
 This document is the **security policy and threat overview** for the monorepo. Deeper product checklists live under [`docs/security/`](docs/security/).
@@ -80,10 +80,11 @@ flowchart TD
 
 | Threat | Impact | Mitigations |
 | :--- | :--- | :--- |
-| **API Key Abuse** | High | Hashed keys, rate limits, auth middleware |
-| **Webhook Forgery** | High | Signature + timestamp windows ([webhook security](docs/security/webhook-security.md)) |
+| **API Key Abuse** | High | Hashed keys, rate limits, auth middleware, self-service key rotation (see 3.5) |
+| **Webhook Forgery** | High | HMAC-SHA256 signature + timestamp window ([webhook security](docs/security/webhook-security.md)) |
 | **Relayer Drain / Wrong Pool**| High | Contract allowlist; relayer never learns nullifier/secret |
-| **Injection / SSRF** | High | Zod validation, URL safety helpers |
+| **Injection / SSRF** | High | Zod validation, URL safety helpers; SSRF guard on indexer webhook delivery (see 3.5) |
+| **Redis Outage Blinding Limiter** | High | Bounded Redis failover with in-process degradation (see 3.5) |
 
 ### 🔐 3.3 Privacy Pool (EVM ZK)
 
@@ -145,6 +146,29 @@ nullifierHash = Poseidon(nullifier)
 - **Status:** Testnet-oriented; **fail-closed on mainnet** until product + audit gates pass.
 - **Requirement:** Native pool ops required for shield/transfer/unshield; derive-only builds must not expose Private mode as ready.
 
+### 🧱 3.5 Production Hardening Posture (rounds 3–4)
+
+Verified mechanisms currently enforced in code:
+
+| Control | Status | Where |
+| :--- | :--- | :--- |
+| **Mandatory prover pins (release)** | Enforced | Circuit prover artifacts (`withdraw.wasm`, `withdraw_final.zkey`, `snarkjs.min.js`) are staged locally by `apps/consumer-app/scripts/stage-circuit-assets.js` and digest-verified against the SHA-256 pins baked in `apps/consumer-app/src/constants/circuit.ts`. Release builds load the prover from these bundled files **with no remote fallback**; empty or mismatched pins fail closed. Dev keeps remote URLs with relaxed pinning. |
+| **Bounded Redis failover** | Enforced | The request-path Redis client (`apps/backend/src/lib/redis.ts`) carries hard deadlines (`commandTimeout`, `maxRetriesPerRequest: 2`, bounded reconnect); the rate limiter degrades to an in-process memory store instead of hanging when Redis is down (`apps/backend/src/middleware/rateLimiter.ts`). |
+| **Health before rate limiter** | Enforced | `/api/v1/health` mounts before the global rate limiter (`apps/backend/src/index.ts`), so liveness probes stay reachable when the limiter's store is degraded — orchestrators can see and drain unhealthy instances. |
+| **Sentry required in production** | Enforced | `SENTRY_DSN` is boot-required in production for **both** backend and indexer; each fails closed when it is empty. |
+| **Webhook signing secret hygiene** | Enforced | `WEBHOOK_SIGNING_SECRET` is independently required (min 32 chars, distinct from `JWT_SECRET`); the known development default value is rejected at boot. |
+| **Webhook retry integrity** | Enforced | Explicit webhook retries mint a fresh BullMQ jobId per attempt (per-attempt `jobId` in `apps/backend/src/jobs/webhookQueue.ts`) so dedupe can never silently swallow a re-delivery. |
+| **Webhook signature verification endpoint** | Enforced | `POST /api/v1/webhook/verify` validates a signature/timestamp/raw-body triple (HMAC-SHA256 over `` `${timestamp}.${rawBody}` ``, 5-minute window) and is rate-limited against signature probing. |
+| **SSL public-key pinning** | Enforced | `EXPO_PUBLIC_SSL_PINS` enables SPKI pinning in the consumer app; placeholder pins are rejected and pinning is never enabled with dummy hashes (`apps/consumer-app/src/utils/security.ts`). Arming real production hashes remains a release-checklist step. |
+
+Landed in round 4 (each verified in code at integration, 2026-10-02):
+
+- **Per-merchant webhook secrets** — `Merchant.webhookSecret` (nullable column, migration `1_webhook_secret_and_key_index`). Both signing and `POST /api/v1/webhook/verify` use `merchant.webhookSecret ?? WEBHOOK_SIGNING_SECRET`; the global fallback logs a deprecation warning (once per process) until the merchant is rotated, so one merchant's secret cannot forge another's callbacks. The on-ramp status token deliberately stays on the global secret (it is not merchant-scoped).
+- **Self-service API-key rotation** — `POST /api/v1/merchant/keys/rotate` (routes/merchant.ts:40, full auth stack). The swap is a compare-and-swap `updateMany({ where: { id, apiKeyHash: current } })`: a concurrent rotation returns **409 `API_KEY_ROTATION_CONFLICT`** with no key material; the new `vp_` key is returned exactly once; the old key 401s at the auth middleware immediately. The auth lookup itself is now an index probe — `@@index([apiKeyHash])` replaced a per-request sequential scan on `merchants`.
+- **Indexer webhook SSRF guard** — `apps/indexer/src/webhook/urlSafety.ts` (a keep-in-sync port of the backend's guard; a shared package is P2 debt). At delivery time the dispatcher enforces: http/https only (https required in production), blocked hostnames (localhost, cloud metadata, RFC1918/reserved/link-local ranges), DNS resolved once with the connection pinned to that IP via a custom agent `lookup` (DNS-rebinding TOCTOU mitigation), 3xx redirects rejected at the protocol layer, and a 10-second timeout. The indexer also signs with the same per-merchant scheme as the backend (the old `sha256=` body-only format and the `apiKeyHash` fallback are gone), and creates the `WebhookDelivery` outbox row **before** enqueueing so a crash cannot drop a merchant notification.
+
+**Credential rotation runbook:** [Doppler rotation & history purge](docs/security/doppler-rotation-and-history-purge.md) — rotate-then-purge ordering, per-secret rotation scope, and operator-only execution.
+
 ---
 
 ## 🚦 4. Production Gates
@@ -185,7 +209,7 @@ Derived from product audit IDs used in the consumer app:
 ### 🌐 Network
 - [x] HTTPS RPC and API endpoints in production config
 - [x] Deep-link validation against allowlists
-- [ ] Certificate pinning (roadmap)
+- [x] SSL public-key pinning implemented (`EXPO_PUBLIC_SSL_PINS`; placeholder pins rejected) — arming real production SPKI hashes stays on the release checklist
 
 ---
 
@@ -225,7 +249,7 @@ Some `pnpm audit` findings are deep transitive deps with no upstream patch. Trac
 - [ ] Professional external audit (contracts + circuits + relayer)
 - [ ] Multi-party Groth16 ceremony + published VK hashes
 - [ ] Native Play Integrity / DeviceCheck modules
-- [ ] Certificate pinning for production APIs
+- [ ] Arm production SSL pins (real SPKI hashes in `EXPO_PUBLIC_SSL_PINS`)
 
 ### 🛤️ Medium Term
 - [ ] Hardware wallet production UX

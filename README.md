@@ -176,9 +176,9 @@ e2e/                     # Cross-service end-to-end tests
 ## 🚀 Local Development
 
 ### Prerequisites
-- **Node.js** 20+ (Pinned to 20.11.0 in `.nvmrc`)
-- **pnpm** 9
-- **Docker** & **Docker Compose**
+- **Node.js** 24 (pinned in `.nvmrc`)
+- **pnpm** 9 — the only supported package manager in this workspace; do not run `npm install` or `yarn` here
+- **Docker** & **Docker Compose** (PostgreSQL + Redis backing services)
 - Expo-compatible Android or iOS development setup
 
 ### 1. Install & Configure
@@ -186,20 +186,70 @@ e2e/                     # Cross-service end-to-end tests
 ```bash
 pnpm install
 git submodule update --init --recursive
-cp .env.example .env
 ```
 
-*Ensure you fill in your `.env` correctly. **Never commit real secrets, keys, or mnemonics.***
+The environment reference is [`/.env.example`](.env.example) at the repository root — it covers backend and consumer-app variables in one file. Copy it to the target locations and fill in local values:
+
+```bash
+cp .env.example apps/backend/.env
+cp .env.example apps/consumer-app/.env.local   # only EXPO_PUBLIC_* vars are bundled
+```
+
+*Ensure you fill in your env files correctly. **Never commit real secrets, keys, or mnemonics.***
+
+#### Key environment variables
+
+| Variable | Service | Notes |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | backend | PostgreSQL connection string |
+| `DIRECT_URL` | backend | Direct (non-pooled) postgres URL; required by `apps/backend/prisma/schema.prisma` (`directUrl`) so `prisma migrate` never runs through a pooler |
+| `SENTRY_DSN` | backend **and** indexer | **Required in production** — both services fail closed at boot when it is empty |
+| `WEBHOOK_SIGNING_SECRET` | backend | Required, min 32 chars, distinct from `JWT_SECRET`; there is no development default (the known dev value is rejected at boot) |
+| `TRUST_PROXY_HOPS` | backend | Number of trusted reverse-proxy hops in front of the API; set to your load-balancer depth |
+| `JWT_SECRET` / `API_KEY_SALT` | backend | Required secrets (min 32 / min 16 chars) |
+| `ALCHEMY_API_KEY` / `INFURA_API_KEY` | backend | At least one is required in production (boot fails closed) |
+| `RELAYER_SHARED_SECRET` | backend | Required in production for the relayer withdraw path |
+
+The authoritative, always-current variable list is [`/.env.example`](.env.example); see also [Environment Variables](docs/reference/environment-variables.md).
 
 ### 2. Prepare Infrastructure
 
+The local Docker Compose stack (PostgreSQL 16 + Redis 7) is defined in [`config/docker-compose.yml`](config/docker-compose.yml):
+
 ```bash
-pnpm db:up
-pnpm --filter @veilpay/backend db:generate
-pnpm --filter @veilpay/backend db:migrate
+docker compose -f config/docker-compose.yml up -d
 ```
 
-### 3. Run the Services
+*(Requires a running Docker host. The root convenience script `pnpm db:up` runs plain `docker-compose up -d` from the repo root, where no compose file lives after the repo reorganization — prefer the explicit `-f` form above.)*
+
+### 3. Prepare the Database
+
+```bash
+pnpm --filter @veilpay/backend db:generate   # prisma generate (Prisma client)
+pnpm --filter @veilpay/backend db:migrate    # prisma migrate dev — LOCAL DEV ONLY
+```
+
+For production or CI, apply only the committed migrations:
+
+```bash
+pnpm --filter @veilpay/backend db:deploy     # prisma migrate deploy
+```
+
+> ⚠️ **Never run `prisma migrate dev` or `prisma db push` against a production database.** They can create uncommitted migration state and schema drift. Production uses `prisma migrate deploy` exclusively, applying the migrations committed under `apps/backend/prisma/migrations`.
+
+### 4. Stage Circuit Prover Assets (before ANY consumer-app bundle build)
+
+```bash
+node apps/consumer-app/scripts/stage-circuit-assets.js
+```
+
+This stages the withdraw-circuit prover artifacts (`withdraw.wasm`, `withdraw_final.zkey`, `snarkjs.min.js`) into `apps/consumer-app/assets/circuits/` — a gitignored directory, so **fresh clones start with none of these binaries** — and verifies every staged byte against the SHA-256 pins baked in [`apps/consumer-app/src/constants/circuit.ts`](apps/consumer-app/src/constants/circuit.ts). The script fails closed on any digest mismatch.
+
+- **Release builds:** the prover loads from these bundled local files with no remote fallback, and the integrity pins are **mandatory** — a build with missing/mismatched assets fails closed.
+- **Dev builds:** remote artifact URLs remain available and pinning is relaxed, but Metro still requires the staged assets to bundle.
+- `--offline` skips the network entirely (fails if no digest-valid local copy exists).
+
+### 5. Run the Services
 
 Open separate terminal windows and run:
 
@@ -210,7 +260,7 @@ pnpm consumer:dev
 ```
 *(The local backend defaults to `http://localhost:3001`)*
 
-### 4. Quality Checks
+### 6. Quality Checks
 
 ```bash
 pnpm lint
@@ -220,13 +270,85 @@ pnpm build       # Builds backend and indexer
 pnpm build:full  # Builds every workspace package
 ```
 
+Per-workspace checks:
+
+```bash
+pnpm --filter @veilpay/backend typecheck
+pnpm --filter @veilpay/backend test
+pnpm --filter @veilpay/indexer typecheck
+pnpm --filter @veilpay/indexer test
+pnpm --filter consumer-app typecheck
+pnpm --filter consumer-app test
+```
+
+Release hygiene (both are read-only checks):
+
+```bash
+node apps/consumer-app/scripts/check-version-sync.js   # app version / build number vs changelog
+node scripts/validate-maestro-flows.mjs                # e2e Maestro flow + testID coverage
+```
+
+## 🔌 Merchant API Essentials
+
+### API-key rotation
+
+A leaked merchant API key is a **self-service fix**: rotate it and the old key stops authorizing immediately (401 on first use), while the rotated key is returned to you **exactly once** — copy it to your secret manager at rotation time; VeilPay never shows it again.
+
+```http
+POST /api/v1/merchant/keys/rotate
+```
+
+Authenticated with the current merchant key (the same `x-api-key` + signature
+headers as every authenticated endpoint). After rotation, replace the stored key
+immediately: the endpoint response is the only place the new key ever appears.
+
+- **200** → `{"merchantId": "<uuid>", "apiKey": "vp_…", "warning": "Store this API key now — it is shown exactly once and never again."}`
+- **409** → `{"error": "API key conflict: the key was already rotated. Re-authenticate with the current key and retry.", "code": "API_KEY_ROTATION_CONFLICT"}` — a concurrent rotation won the compare-and-swap; no key material is returned. Re-authenticate with the current key and retry.
+- The old key stops authorizing **immediately** (401 at the auth middleware on first use after rotation).
+
+### Webhook signature verification
+
+Every merchant webhook is signed with HMAC-SHA256 over `${timestamp}.${rawBody}` — using the **merchant's per-merchant signing secret** if one is set, otherwise the global `WEBHOOK_SIGNING_SECRET` — and sent with two headers:
+
+| Header | Content |
+| :--- | :--- |
+| `X-VeilPay-Signature` | hex-encoded HMAC-SHA256 digest |
+| `X-VeilPay-Timestamp` | Unix timestamp in milliseconds |
+
+Verification rules (all enforced server-side at `apps/backend/src/controllers/webhookController.ts`):
+- Read the **raw request body** (exact bytes received — do not re-serialize parsed JSON).
+- Recompute HMAC-SHA256 over `` `${timestamp}.${rawBody}` `` and compare in constant time.
+- Reject timestamps outside the **5-minute** window.
+
+Minimal Node.js recipe:
+
+```js
+const crypto = require('crypto');
+
+const expected = crypto
+  .createHmac('sha256', process.env.WEBHOOK_SIGNING_SECRET)
+  .update(`${timestampHeader}.${rawBody}`) // rawBody = exact bytes received
+  .digest('hex');
+
+const ok =
+  expected.length === signatureHeader.length &&
+  crypto.timingSafeEqual(
+    Buffer.from(expected, 'hex'),
+    Buffer.from(signatureHeader, 'hex'),
+  );
+```
+
+You can validate your verifier against the backend's own endpoint — `POST /api/v1/webhook/verify` (rate-limited to resist signature probing; accepts a `merchantId` query parameter or a `merchantId` field in the verified body to check against that merchant's per-merchant secret) checks a signature/timestamp/body triple and returns `{"verified": true}` on match. Deeper guidance: [Webhook security](docs/security/webhook-security.md) · [Webhooks](docs/merchant-api/webhooks.md).
+
+**Both services sign identically.** The indexer signs its merchant webhooks with exactly the scheme above (aligned in round 4): bare-hex `X-VeilPay-Signature` = HMAC-SHA256 over `${timestamp}.${rawBody}` plus `X-VeilPay-Timestamp`, keyed by the merchant's per-merchant secret when set, else the global secret. Receivers that previously verified the indexer's old `sha256=`-prefixed body-only signature must switch to the shared scheme above — one verifier now covers backend and indexer webhooks.
+
 ## 📚 Documentation Reference
 
 - **Getting Started:** [Quickstart](docs/getting-started/quickstart.md) | [What is Veilpay?](docs/getting-started/what-is-veilpay.md) | [Current Status](docs/getting-started/current-status.md)
 - **Architecture:** [System Overview](docs/architecture/system-architecture.md) | [Backend](docs/architecture/backend.md) | [Consumer App](docs/architecture/consumer-app.md) | [Indexer](docs/architecture/indexer-and-jobs.md)
 - **Protocol:** [How it Works](docs/protocol/how-veilpay-works.md) | [Privacy Levels](docs/protocol/privacy-levels.md) | [Invoice Lifecycle](docs/protocol/invoice-lifecycle.md) | [Merchant API](docs/merchant-api/overview.md)
 - **Privacy:** [Overview](docs/privacy/overview.md) | [Stellar SPP](docs/privacy/stellar-spp.md)
-- **Reference:** [Supported Networks](docs/chains/supported-networks.md) | [Environment Variables](docs/reference/environment-variables.md)
-- **Security:** [Security Policy](SECURITY.md) | [Security Model](docs/security/security-model.md) | [Audit Gates](docs/security/ceremony-and-audit-gates.md)
+- **Reference:** [Supported Networks](docs/chains/supported-networks.md) | [Environment Variables](docs/reference/environment-variables.md) | [Settlement Reconciliation Runbook](docs/reference/settlement-reconciliation.md)
+- **Security:** [Security Policy](SECURITY.md) | [Security Model](docs/security/security-model.md) | [Audit Gates](docs/security/ceremony-and-audit-gates.md) | [Doppler Rotation Runbook](docs/security/doppler-rotation-and-history-purge.md)
 ---
 *No completed external audit is claimed in this README. Audit scope, trusted-setup requirements, and release gates are tracked in the security documentation.*

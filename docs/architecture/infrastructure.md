@@ -25,4 +25,4 @@ pnpm build
 
 ## Mobile delivery
 
-The consumer app uses Expo/EAS build and OTA update workflows. Build-time secrets are injected through configured hooks and should not be stored in public files.
+The consumer app builds with Expo/EAS tooling, but over-the-air (OTA) update channels are **retired**: `expo-updates` is disabled in `app.config.js` (`updates.enabled: false`) and `eas.json` is marked deprecated. App releases ship through store/APK builds. Production secrets are never stored in public files — they are injected at deploy time through Doppler.

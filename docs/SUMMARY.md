@@ -66,5 +66,6 @@
 
 - [Environment variables](reference/environment-variables.md)
 - [API route reference](reference/api-routes.md)
+- [Settlement reconciliation runbook](reference/settlement-reconciliation.md)
 - [Glossary](reference/glossary.md)
 - [GitBook publishing](reference/gitbook-publishing.md)

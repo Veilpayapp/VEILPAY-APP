@@ -2,6 +2,17 @@
 
 Webhooks notify merchants about Veilpay events.
 
+## Signature format
+
+Every webhook is signed with HMAC-SHA256 over `` `${timestamp}.${rawBody}` `` using the merchant's webhook signing secret, and delivered with two headers:
+
+```text
+X-VeilPay-Signature: <hex-encoded HMAC-SHA256 digest>
+X-VeilPay-Timestamp: <unix timestamp, milliseconds>
+```
+
+Verify by recomputing the HMAC over the **raw** request body (the exact bytes received — not re-serialized JSON) and the `X-VeilPay-Timestamp` header, comparing in constant time. Signatures with timestamps outside a 5-minute window are rejected.
+
 ## Test webhook
 
 ```http
@@ -16,7 +27,7 @@ Sends or validates a merchant webhook configuration.
 POST /api/v1/webhook/verify
 ```
 
-Verifies a webhook payload and signature.
+Verifies a webhook payload and signature. This endpoint is rate-limited to resist signature probing; use it to validate your verifier implementation against a known signature/timestamp/body triple.
 
 ## Failed webhooks
 

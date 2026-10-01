@@ -16,14 +16,24 @@ module.exports = {
     '^@noble/hashes/sha3$': '<rootDir>/__mocks__/@noble/hashes/sha3.js',
     '^circomlibjs$': '<rootDir>/__mocks__/circomlibjs.ts',
   },
-  // Coverage scope narrowed until branch coverage on the excluded dirs (screens,
-  // components) reaches 50% — see REMEDIATION_PROGRESS.md debt register; re-expand
-  // after raising coverage. hooks/stores are also below 50% branches individually
-  // but the global threshold is enforced and passing on this scope.
+  // Coverage scope: the utils/stores/hooks core, re-expanded (2026-10-02) to
+  // screens + components after per-dir branch coverage reached ≥50% in every
+  // directory (measured: utils 62.6 / stores 66.4 / hooks 50.6 / components
+  // ~54.8 / screens 50.8). DEBT (see REMEDIATION_PROGRESS.md): 11 source
+  // files carry a line-1 `/* istanbul ignore file */` directive (7 screens —
+  // AddCustomNetwork, HomeDashboard, QRScanner, ReceiveQR, SendPayment,
+  // TransactionHistory, TransakWebView — plus hooks useBalancePolling /
+  // usePushNotifications / useSessionBootstrap and utils/analytics.ts) and
+  // are therefore INVISIBLE to this gate: istanbul emits no coverage data
+  // for them, so they neither count in the denominator nor fail thresholds.
+  // Removing those directives is source-level work for the debt register;
+  // tests exist for several of them already.
   collectCoverageFrom: [
     'src/utils/**/*.{ts,tsx}',
     'src/stores/**/*.{ts,tsx}',
     'src/hooks/**/*.{ts,tsx}',
+    'src/screens/**/*.{ts,tsx}',
+    'src/components/**/*.{ts,tsx}',
     '!src/**/__tests__/**',
     '!src/**/*.test.{ts,tsx}',
     '!src/**/*.property.test.{ts,tsx}',

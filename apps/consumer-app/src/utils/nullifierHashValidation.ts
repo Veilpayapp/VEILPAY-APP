@@ -15,6 +15,15 @@
  *
  * We use circomlibjs which provides the same Poseidon implementation as
  * the circuit, ensuring cryptographic consistency.
+ *
+ * STATUS (SEC-004 close-out, 2026-09-16): ACCEPTED RESIDUAL — not yet wired.
+ * Its intended call site is the EVM max-privacy withdraw proof path, which
+ * ships gated dead (`EVM_MAX_PRIVACY_WITHDRAW_READY = false` in
+ * src/constants/contracts.ts; pool undeployed per the consumer-hardening
+ * plan). The control is unit-tested and ready to wire when that flag flips:
+ * validate every stored `nullifierHash === Poseidon(nullifier)` before proof
+ * generation. Owner: protocol lead. Do not flip the flag without this check
+ * live in the withdraw path.
  */
 
 import { buildPoseidon } from 'circomlibjs';

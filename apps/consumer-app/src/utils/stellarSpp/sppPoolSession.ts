@@ -5,7 +5,7 @@
  * Never logs secret keys.
  */
 
-import { Keypair } from 'stellar-sdk';
+import { Keypair } from '@stellar/stellar-sdk';
 import { deriveMnemonicSeed } from '../mnemonicSeed';
 import { derivePath } from 'ed25519-hd-key';
 import {
@@ -23,6 +23,7 @@ import {
 } from './sppNativeBridge';
 import { signSppKeyDerivationMessage } from './sppOnboard';
 import { getCircuitsReadinessForDir } from './sppCircuits';
+import { SPP_TRANSACT_FEE_CEILING_STROOPS } from './sppFees';
 
 const STELLAR_DERIVATION_PATH = "m/44'/148'/0'";
 
@@ -280,6 +281,11 @@ export async function ensurePoolSession(
     derivationSigHex: signatureHex,
     network: config.network,
     acceptDisclaimer: true,
+    // SEC-008 fee gate: native CeilingSigner refuses to sign any assembled
+    // envelope whose max fee exceeds this ceiling (stroops). JS funds-gate
+    // (usePaymentTransaction/maxSendable) uses the same constant; this closes
+    // the pre-SUBMIT half the funds gate cannot see.
+    maxFeeCeilingStroops: Number(SPP_TRANSACT_FEE_CEILING_STROOPS),
   };
 
   return sppNativePoolOpen(JSON.stringify(openConfig));

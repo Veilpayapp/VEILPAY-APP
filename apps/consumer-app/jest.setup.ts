@@ -145,7 +145,7 @@ const generateUUIDv4 = (): string => {
 };
 
 if (!global.crypto.randomUUID) {
-  global.crypto.randomUUID = generateUUIDv4;
+  global.crypto.randomUUID = generateUUIDv4 as typeof global.crypto.randomUUID;
 }
 
 jest.useFakeTimers();
@@ -267,8 +267,8 @@ if (!global.Crypto) {
   (global as any).Crypto = {};
 }
 
-if (!global.Crypto.randomUUID || global.Crypto.randomUUID() === undefined) {
-  global.Crypto.randomUUID = (): string => {
+if (!(global as any).Crypto.randomUUID || (global as any).Crypto.randomUUID() === undefined) {
+  (global as any).Crypto.randomUUID = (): string => {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
       const r = (Math.random() * 16) | 0;
       const v = c === 'x' ? r : (r & 0x3) | 0x8;

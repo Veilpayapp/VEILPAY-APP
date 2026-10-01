@@ -67,6 +67,23 @@ export interface CommitmentRecord {
  * keys mechanically derivable from the raw hash bytes.
  */
 const KEY_PREFIX = 'veilpay.commitment.';
+const INDEX_KEY = 'veilpay.commitment.index';
+
+async function getCommitmentIndex(): Promise<string[]> {
+  const raw = await SecureStore.getItemAsync(INDEX_KEY, SECURE_STORE_OPTIONS);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((x): x is string => typeof x === 'string');
+  } catch {
+    return [];
+  }
+}
+
+async function setCommitmentIndex(hashes: string[]): Promise<void> {
+  await SecureStore.setItemAsync(INDEX_KEY, JSON.stringify(hashes), SECURE_STORE_OPTIONS);
+}
 
 /**
  * Compute the SecureStore key for a given commitment hash.
@@ -103,6 +120,13 @@ const SECURE_STORE_OPTIONS: SecureStore.SecureStoreOptions = {
 export async function saveCommitmentRecord(r: CommitmentRecord): Promise<void> {
   const value = JSON.stringify(r);
   await SecureStore.setItemAsync(storageKey(r.commitmentHash), value, SECURE_STORE_OPTIONS);
+  // Update index
+  const hash = r.commitmentHash.slice(2).toLowerCase();
+  const index = await getCommitmentIndex();
+  if (!index.includes(hash)) {
+    index.push(hash);
+    await setCommitmentIndex(index);
+  }
 }
 
 /**
@@ -144,4 +168,20 @@ export async function markSpent(commitmentHash: Hex): Promise<void> {
   }
   record.spent = true;
   await saveCommitmentRecord(record);
+}
+
+/**
+ * Delete all commitment records from SecureStore.
+ * Used by account wipe to ensure no private pre-images remain.
+ *
+ * The hash prefix in the index is the key fragment only; rebuild the full
+ * storage key with the same prefix used on write.
+ */
+export async function clearAllCommitmentRecords(): Promise<void> {
+  const index = await getCommitmentIndex();
+  for (const hashFragment of index) {
+    const key = `${KEY_PREFIX}${hashFragment.toLowerCase()}`;
+    await SecureStore.deleteItemAsync(key, SECURE_STORE_OPTIONS).catch(() => undefined);
+  }
+  await SecureStore.deleteItemAsync(INDEX_KEY, SECURE_STORE_OPTIONS).catch(() => undefined);
 }

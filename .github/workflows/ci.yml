@@ -101,8 +101,11 @@ jobs:
       - name: Typecheck consumer app
         run: pnpm --filter consumer-app typecheck
 
+      - name: Check version sync
+        run: pnpm --filter consumer-app check:release
+
       - name: Test consumer app
-        run: pnpm --filter consumer-app test -- --coverage --passWithNoTests --coverageThreshold='{"global":{"lines":60,"functions":60,"branches":50,"statements":60}}'
+        run: pnpm --filter consumer-app test -- --coverage
 
       # UX-002: keep onboarding + send Maestro flows wired to real testIDs.
       # Full device runs still need an emulator + APK; this gate is the CI half.

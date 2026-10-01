@@ -5,7 +5,7 @@ import { mnemonicToSeed } from '@scure/bip39';
 import { derivePath } from 'ed25519-hd-key';
 import { Keypair } from '@solana/web3.js';
 import { Buffer } from 'buffer';
-import * as StellarSdk from 'stellar-sdk';
+import * as StellarSdk from '@stellar/stellar-sdk';
 import { sppNativeMnemonicToSeed } from '../utils/stellarSpp/sppNativeBridge';
 
 // Cache seed to avoid massive blocking delay on every account derivation

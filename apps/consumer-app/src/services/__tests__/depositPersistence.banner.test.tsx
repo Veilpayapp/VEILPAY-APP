@@ -136,10 +136,11 @@ describe('post-deposit error banner — SecureStore failure + launch retry (Req 
       expect(usePendingCommitmentQueue.getState().pending).toHaveLength(0);
     });
 
-    // SecureStore was hit twice in total: once on the failing initial
-    // save, once on the successful retry. Distinguishes a real retry from
-    // a "queue cleared without writing" bug.
-    expect(setItemAsyncMock).toHaveBeenCalledTimes(2);
+    // SecureStore was hit three times in total: once on the failing initial
+    // save, then twice on the successful retry (record + commitment-index
+    // mirror written by saveCommitmentRecord). Distinguishes a real retry
+    // from a "queue cleared without writing" bug.
+    expect(setItemAsyncMock).toHaveBeenCalledTimes(3);
 
     unmount();
   });

@@ -41,7 +41,7 @@ jest.mock('../sppOnboard', () => ({
 beforeAll(() => {
   global.fetch = jest.fn(async () => ({
     ok: true,
-    text: async () => JSON.stringify({ jsonrpc: '2.0', result: { id: '12345' } }),
+    text: async () => JSON.stringify({ jsonrpc: '2.0', result: { id: '12345', protocolVersion: 28 } }),
   })) as unknown as typeof fetch;
 });
 

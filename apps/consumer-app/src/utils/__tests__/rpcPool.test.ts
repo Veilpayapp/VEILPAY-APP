@@ -3,6 +3,7 @@ const ORIGINAL_ENV = process.env;
 type MockProvider = {
   url: string;
   getBlockNumber: jest.Mock;
+  getChainId: jest.Mock;
 };
 
 const mockProviderRegistry = new Map<string, MockProvider>();
@@ -15,6 +16,9 @@ jest.mock('viem', () => ({
       mockProviderRegistry.set(url, {
         url,
         getBlockNumber: jest.fn(),
+        // EVM health checks now validate eth_chainId; the pool under test is
+        // 'ethereum' (expected 1).
+        getChainId: jest.fn().mockResolvedValue(1),
       });
     }
     return mockProviderRegistry.get(url);

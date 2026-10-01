@@ -1,5 +1,29 @@
 import { createPublicClient, http, PublicClient } from 'viem';
 import { captureError } from './sentry';
+import { getAttestationHeaders } from '../services/attestation';
+import { getExpectedChainId, validateChainIdMatch } from './rpcValidation';
+
+/**
+ * SEC-008: per-request attestation for the backend RPC proxy. The nonce is
+ * single-use, so headers must be minted inside fetchFn (once per request), not
+ * configured statically. When Play Integrity is disabled the helper returns
+ * `{}` and this is a transparent pass-through to global fetch.
+ */
+const backendProxyFetch: NonNullable<Parameters<typeof http>[1]>['fetchFn'] = async (input, init) => {
+  const headers = await getAttestationHeaders();
+  if (Object.keys(headers).length === 0) return fetch(input as any, init);
+  const merged = new Headers(init?.headers as any);
+  for (const [k, v] of Object.entries(headers)) merged.set(k, v);
+  return fetch(input as any, { ...init, headers: merged });
+};
+
+/**
+ * Chain IDs that eth_chainId can be validated against. Non-EVM keys are
+ * excluded explicitly: NETWORKS carries an *arbitrary* positive chainId for
+ * solana (101), which eth_chainId against a Solana RPC would spuriously
+ * "mismatch" and open its circuit.
+ */
+const CHAIN_ID_VALIDATED_KEYS = new Set(['ethereum', 'polygon', 'bsc', 'arbitrum', 'base', 'sepolia']);
 
 type RpcProviderStatus = 'healthy' | 'degraded' | 'open';
 
@@ -219,11 +243,24 @@ class RpcProviderPool {
         if (state.status !== 'open' && Date.now() < state.openUntil) return;
         const provider = this.getOrCreateProvider(endpoint);
         try {
-          await this.withTimeout(provider.getBlockNumber());
+          // SEC-008: on EVM pools the probe doubles as chain-ID validation —
+          // a proxied/MITM'd endpoint answering with a different network's id
+          // must fail the health check, not just read blocks from anywhere.
+          if (CHAIN_ID_VALIDATED_KEYS.has(this.chainKey)) {
+            const chainId = await this.withTimeout(provider.getChainId());
+            validateChainIdMatch(this.chainKey, chainId);
+            const expected = getExpectedChainId(this.chainKey);
+            if (expected === null) {
+              throw new Error(`[rpcPool] no expected chainId for ${this.chainKey}`);
+            }
+          } else {
+            await this.withTimeout(provider.getBlockNumber());
+          }
           recordSuccess(endpoint.name);
           console.log(`[rpcPool] Health check passed: ${endpoint.name}`);
-        } catch {
-          console.warn(`[rpcPool] Health check failed: ${endpoint.name}`);
+        } catch (err) {
+          recordFailure(endpoint.name);
+          console.warn(`[rpcPool] Health check failed: ${endpoint.name}`, err instanceof Error ? err.message : err);
         }
       })
     );
@@ -231,9 +268,12 @@ class RpcProviderPool {
 
   private getOrCreateProvider(endpoint: RpcEndpoint): PublicClient {
     if (!this.providers.has(endpoint.name)) {
+      // Attestation headers go ONLY to our own backend proxy — never leak an
+      // integrity token to third-party public RPC endpoints.
+      const config = endpoint.name.startsWith('backend-proxy') ? { fetchFn: backendProxyFetch } : undefined;
       this.providers.set(
         endpoint.name,
-        createPublicClient({ transport: http(endpoint.url) })
+        createPublicClient({ transport: http(endpoint.url, config) })
       );
     }
     return this.providers.get(endpoint.name)!;

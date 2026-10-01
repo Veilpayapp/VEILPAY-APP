@@ -33,7 +33,7 @@ import {
   type SppNativeOpResult,
 } from './sppNativeBridge';
 import { getCircuitsReadiness } from './sppCircuits';
-import { formatStroops, parsePositiveStroops, tryParseStroops } from './sppAmount';
+import { formatStroops, parsePositiveStroops, tryParseStroops, assertSppTransactAllowed, type SppTransactOp } from './sppAmount';
 import { probeAspMembershipRoot } from './sppOnboard';
 import { runWithSppDiagnostics } from './sppDiagnostics';
 import { recordSppProgressDiagnostic } from './sppProgressSubscriber';
@@ -544,7 +544,7 @@ async function depositImpl(
   options?: SppOperationOptions
 ): Promise<SppTxResult> {
   const ctx = requireContext(chainKey, ownerAddress);
-  requirePositiveAmount(amount);
+  assertSppTransactAllowed('shield', amount);
 
   // Auto-setup when user shields without having selected pXLM first (no detour).
   const { ensureSppAccountReady } = await import('./sppOnboard');
@@ -704,7 +704,7 @@ async function transferImpl(
   options?: SppOperationOptions
 ): Promise<SppTxResult> {
   const ctx = requireContext(chainKey, ownerAddress);
-  requirePositiveAmount(amount);
+  assertSppTransactAllowed('transfer', amount);
 
   let recipientWire: string;
   if (recipient.kind === 'address') {
@@ -798,7 +798,7 @@ async function withdrawImpl(
   options?: SppOperationOptions
 ): Promise<SppTxResult> {
   const ctx = requireContext(chainKey, ownerAddress);
-  requirePositiveAmount(amount);
+  assertSppTransactAllowed('unshield', amount);
   const recipient = to ?? ownerAddress;
   if (!/^G[A-Z2-7]{55}$/.test(recipient)) {
     throw new SppClientError('Invalid withdraw destination', 'SPP_INVALID_RECIPIENT');

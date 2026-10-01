@@ -1,5 +1,6 @@
 import { startChainIndexer, stopChainIndexer } from '../jobs/chainIndexer';
 import { startInvoiceExpiryWorker, stopInvoiceExpiryWorker } from '../lib/invoiceExpiry';
+import { startRetentionPurge, stopRetentionPurge } from '../jobs/retentionPurge';
 
 export interface BackgroundTask {
   name: string;
@@ -17,6 +18,11 @@ const tasks: BackgroundTask[] = [
     name: 'invoiceExpiry',
     start: startInvoiceExpiryWorker,
     stop: stopInvoiceExpiryWorker,
+  },
+  {
+    name: 'retentionPurge',
+    start: startRetentionPurge,
+    stop: stopRetentionPurge,
   },
 ];
 

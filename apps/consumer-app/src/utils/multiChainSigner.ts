@@ -30,7 +30,7 @@ import { validateAddress as sharedValidateAddress } from './validation';
 // ─── Lazy-loaded module caches ──────────────────────────────────────────────
 
 let solanaWeb3Promise: Promise<typeof import('@solana/web3.js')> | null = null;
-let stellarSdkPromise: Promise<typeof import('stellar-sdk')> | null = null;
+let stellarSdkPromise: Promise<typeof import('@stellar/stellar-sdk')> | null = null;
 
 /** Deduplicate concurrent lazy imports */
 function getSolanaWeb3(): Promise<typeof import('@solana/web3.js')> {
@@ -40,9 +40,9 @@ function getSolanaWeb3(): Promise<typeof import('@solana/web3.js')> {
   return solanaWeb3Promise;
 }
 
-function getStellarSdk(): Promise<typeof import('stellar-sdk')> {
+function getStellarSdk(): Promise<typeof import('@stellar/stellar-sdk')> {
   if (!stellarSdkPromise) {
-    stellarSdkPromise = import('stellar-sdk');
+    stellarSdkPromise = import('@stellar/stellar-sdk');
   }
   return stellarSdkPromise;
 }

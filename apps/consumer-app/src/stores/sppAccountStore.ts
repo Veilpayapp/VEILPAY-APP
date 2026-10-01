@@ -39,6 +39,7 @@ export type SppAccountRecord = {
 };
 
 const KEY_PREFIX = 'veilpay.spp.account.';
+const INDEX_KEY = 'veilpay.spp.account.index';
 const SECURE_OPTS: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
 };
@@ -46,6 +47,22 @@ const SECURE_OPTS: SecureStore.SecureStoreOptions = {
 function storageKey(chainKey: string, ownerAddress: string): string {
   const safe = `${chainKey}.${ownerAddress}`.replace(/[^A-Za-z0-9._-]/g, '_');
   return `${KEY_PREFIX}${safe}`;
+}
+
+async function getAccountIndex(): Promise<string[]> {
+  const raw = await SecureStore.getItemAsync(INDEX_KEY, SECURE_OPTS);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((x): x is string => typeof x === 'string');
+  } catch {
+    return [];
+  }
+}
+
+async function setAccountIndex(keys: string[]): Promise<void> {
+  await SecureStore.setItemAsync(INDEX_KEY, JSON.stringify(keys), SECURE_OPTS);
 }
 
 export async function getSppAccount(
@@ -66,11 +83,14 @@ export async function getSppAccount(
 }
 
 export async function saveSppAccount(record: SppAccountRecord): Promise<void> {
-  await SecureStore.setItemAsync(
-    storageKey(record.chainKey, record.ownerAddress),
-    JSON.stringify(record),
-    SECURE_OPTS
-  );
+  const key = storageKey(record.chainKey, record.ownerAddress);
+  await SecureStore.setItemAsync(key, JSON.stringify(record), SECURE_OPTS);
+  // Update index
+  const index = await getAccountIndex();
+  if (!index.includes(key)) {
+    index.push(key);
+    await setAccountIndex(index);
+  }
 }
 
 export async function markAspInserted(
@@ -143,4 +163,16 @@ export async function clearKeysRegistered(
   };
   await saveSppAccount(next);
   return next;
+}
+
+/**
+ * Delete all SPP account records from SecureStore.
+ * Used by account wipe to remove all onboarded account metadata.
+ */
+export async function clearAllSppAccounts(): Promise<void> {
+  const keys = await getAccountIndex();
+  for (const key of keys) {
+    await SecureStore.deleteItemAsync(key, SECURE_OPTS).catch(() => undefined);
+  }
+  await SecureStore.deleteItemAsync(INDEX_KEY, SECURE_OPTS).catch(() => undefined);
 }

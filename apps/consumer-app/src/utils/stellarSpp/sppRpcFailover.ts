@@ -119,8 +119,18 @@ export function isSppNetworkConnectionError(
 // ---------------------------------------------------------------------------
 
 /**
+ * Minimum Soroban protocol version required for SPP operations.
+ *
+ * Protocol 28 (soroban-sdk ≥ 28 / @stellar/stellar-sdk XDR) changes RPC and
+ * contract interface assumptions. SPP operations fail closed below this
+ * version instead of submitting envelopes with mismatched XDR.
+ */
+export const MIN_SPP_RPC_PROTOCOL_VERSION = 28;
+
+/**
  * Check if a Soroban RPC endpoint is alive by sending a getLatestLedger
- * request. Returns true if the RPC responds within the timeout.
+ * request. Returns true if the RPC responds within the timeout with a
+ * protocol version >= MIN_SPP_RPC_PROTOCOL_VERSION.
  *
  * This is a simple HTTP POST to the JSON-RPC endpoint. It costs ~1-5 seconds
  * and avoids the 30s×3 retry stack in the native pool_open/pool_sync.
@@ -148,8 +158,28 @@ async function preflightRpc(rpcUrl: string): Promise<boolean> {
 
     const body = await response.text();
     const parsed = JSON.parse(body);
-    // A valid response has a "result" field with at least "id" (the ledger seq)
-    return parsed?.result?.id !== undefined;
+    // A valid response has a "result" field with at least "id" (the ledger seq).
+    if (parsed?.result?.id === undefined) return false;
+
+    const protocol = parsed?.result?.protocolVersion;
+    if (typeof protocol === 'number') {
+      void recordSppDiagnostic({
+        status: protocol >= MIN_SPP_RPC_PROTOCOL_VERSION ? 'info' : 'error',
+        step: 'rpc_preflight_protocol',
+        operation: 'rpc_preflight',
+        message: `RPC protocol ${protocol}; SPP requires >= ${MIN_SPP_RPC_PROTOCOL_VERSION}`,
+      });
+      return protocol >= MIN_SPP_RPC_PROTOCOL_VERSION;
+    }
+    // No protocolVersion in the response (unexpected) — fail closed rather
+    // than assume compatibility.
+    void recordSppDiagnostic({
+      status: 'error',
+      step: 'rpc_preflight_protocol',
+      operation: 'rpc_preflight',
+      message: 'RPC response missing protocolVersion; failing closed',
+    });
+    return false;
   } catch {
     return false;
   }

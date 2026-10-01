@@ -10,6 +10,7 @@
 import { z } from 'zod';
 import type { SupportedChainType } from './validation';
 import { validateAddress, normalizeAddress } from './validation';
+import { isAddress } from 'viem';
 
 // ─── EIP-55 Checksum Validation ────────────────────────────────────────────────
 
@@ -24,19 +25,16 @@ function isValidEIP55Checksum(address: string): boolean {
     return true;
   }
 
-  // All lowercase or all uppercase → no checksum
-  if (address === address.toLowerCase() || address === address.toUpperCase()) {
+  // All lowercase or all uppercase (compare the hex BODY: '0x'.toUpperCase()
+  // is '0X', so comparing the full address against toUpperCase() never matched)
+  // → no EIP-55 checksum to validate.
+  const body = address.slice(2);
+  if (body === body.toLowerCase() || body === body.toUpperCase()) {
     return true;
   }
 
-  // Has mixed case → must validate checksum
-  try {
-    // Import keccak256 if available; fallback to accepting mixed case
-    // (proper checksum requires Keccak-256 hash which is heavy; for now we accept it)
-    return true;
-  } catch {
-    return false;
-  }
+  // Mixed case → must validate checksum (viem strict mode enforces EIP-55).
+  return isAddress(address, { strict: true });
 }
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────

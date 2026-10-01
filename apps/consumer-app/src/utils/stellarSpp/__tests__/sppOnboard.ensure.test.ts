@@ -23,8 +23,8 @@ jest.mock('expo-crypto', () => ({
 
 // Force insert_leaf network path to fail closed (no real RPC) so we assert
 // the retry message rather than short-circuit "set up on this device".
-jest.mock('stellar-sdk/rpc', () => {
-  const actual = jest.requireActual('stellar-sdk/rpc');
+jest.mock('@stellar/stellar-sdk/rpc', () => {
+  const actual = jest.requireActual('@stellar/stellar-sdk/rpc');
   return {
     ...actual,
     Server: jest.fn().mockImplementation(() => ({
@@ -49,8 +49,8 @@ jest.mock('ed25519-hd-key', () => ({
 }));
 
 // Mock Keypair.fromRawEd25519Seed method directly
-jest.mock('stellar-sdk', () => {
-  const actualStellar = jest.requireActual('stellar-sdk');
+jest.mock('@stellar/stellar-sdk', () => {
+  const actualStellar = jest.requireActual('@stellar/stellar-sdk');
   return {
     ...actualStellar,
     Keypair: {
@@ -168,6 +168,8 @@ describe('ensureSppAccountReady', () => {
       aspInserted: true,
       aspInsertTxHash: 'done-hash',
       aspMembershipContractId: SPP_TESTNET.aspMembershipId,
+      notePublicKeyHex: 'ab'.repeat(32),
+      encryptionPublicKeyHex: 'cd'.repeat(32),
       keysRegistered: true,
       keysRegisterTxHash: 'keys-hash',
       registryContractId: SPP_TESTNET.registryId,

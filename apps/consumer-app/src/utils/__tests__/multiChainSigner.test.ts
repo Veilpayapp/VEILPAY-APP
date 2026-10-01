@@ -67,7 +67,7 @@ jest.mock('@solana/web3.js', () => ({
   },
 }));
 
-jest.mock('stellar-sdk', () => ({
+jest.mock('@stellar/stellar-sdk', () => ({
   Keypair: {
     fromRawEd25519Seed: () => ({ publicKey: () => 'Gmock_pubkey', sign: () => {} }),
   },
@@ -220,7 +220,7 @@ describe('multiChainSigner', () => {
     });
 
     it('throws for Stellar with proper error message on network failure', async () => {
-      const { Horizon } = require('stellar-sdk');
+      const { Horizon } = require('@stellar/stellar-sdk');
       jest
         .spyOn(Horizon.Server.prototype, 'loadAccount')
         .mockRejectedValueOnce(new Error('Network error'));
@@ -231,7 +231,7 @@ describe('multiChainSigner', () => {
     });
 
     it('throws for Stellar insufficient funds', async () => {
-      const { Horizon } = require('stellar-sdk');
+      const { Horizon } = require('@stellar/stellar-sdk');
       jest.spyOn(Horizon.Server.prototype, 'loadAccount').mockResolvedValueOnce({
         balances: [{ asset_type: 'native', balance: '0.5' }],
       });
@@ -242,7 +242,7 @@ describe('multiChainSigner', () => {
     });
 
     it('rejects a send that passes a flat-1-XLM check but violates subentry reserve', async () => {
-      const { Horizon } = require('stellar-sdk');
+      const { Horizon } = require('@stellar/stellar-sdk');
       jest.spyOn(Horizon.Server.prototype, 'loadAccount').mockResolvedValueOnce({
         balances: [{ asset_type: 'native', balance: '3.0' }],
         subentry_count: 4,

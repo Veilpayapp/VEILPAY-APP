@@ -29,6 +29,37 @@ $repoRoot = (Resolve-Path (Join-Path $projectRoot "..\..")).Path
 $androidDir = Join-Path $projectRoot "android"
 $so = Join-Path $projectRoot "modules\spp-native\android\src\main\jniLibs\arm64-v8a\libspp_native.so"
 $isRelease = $Configuration -eq "release"
+
+# .so freshness gate (release only): Gradle packages jniLibs but NEVER rebuilds
+# libspp_native.so, so a release APK can silently ship pre-repair native code.
+# Fail closed when the .so predates the SPP submodule commit it should be built
+# from. Deliberate exceptions: set SPP_NATIVE_ALLOW_STALE=1 (loudly logged).
+if ($isRelease) {
+    $sppRepo = Join-Path $repoRoot "packages/vendor/spp"
+    $trustRef = if ($env:SPP_NATIVE_TRUST_COMMIT) { $env:SPP_NATIVE_TRUST_COMMIT } else { "HEAD" }
+    if (-not (Test-Path $sppRepo)) {
+        throw "SPP submodule at $sppRepo not found - cannot verify .so freshness. Run: git submodule update --init packages/vendor/spp"
+    }
+    if (-not (Test-Path $so)) {
+        throw "Missing $so - run packages/spp-native/scripts/build-android-ndk.ps1 with SPP_NATIVE_POOL_OPS=1 first"
+    }
+    $commitDate = (git -C $sppRepo show -s --format=%ci $trustRef 2>$null)
+    if (-not $commitDate) {
+        throw "Cannot resolve SPP commit '$trustRef' in $sppRepo - .so freshness gate fails closed."
+    }
+    $commitDateTime = [datetime]::ParseExact("$commitDate".Trim(), "yyyy-MM-dd HH:mm:ss zzz", [System.Globalization.CultureInfo]::InvariantCulture)
+    $soLastWrite = (Get-Item $so).LastWriteTime
+    if ($soLastWrite -lt $commitDateTime) {
+        if ($env:SPP_NATIVE_ALLOW_STALE -eq "1") {
+            Write-Host "[apk-win] WARNING: shipping STALE native lib - .so mtime $soLastWrite predates SPP $trustRef ($commitDateTime) under SPP_NATIVE_ALLOW_STALE=1."
+        } else {
+            throw "libspp_native.so (mtime $soLastWrite) predates SPP submodule commit $trustRef ($commitDateTime). Gradle never rebuilds the .so: run packages/spp-native/scripts/build-android-ndk.ps1 with SPP_NATIVE_POOL_OPS=1, then re-run this build. For a deliberate exception set SPP_NATIVE_ALLOW_STALE=1."
+        }
+    } else {
+        Write-Host "[apk-win] .so freshness OK (mtime $soLastWrite >= SPP $trustRef $commitDateTime)."
+    }
+}
+
 $gradleTask = if ($isRelease) { "assembleRelease" } else { "assembleDebug" }
 $apkRel = if ($isRelease) {
   "app\build\outputs\apk\release\app-release.apk"

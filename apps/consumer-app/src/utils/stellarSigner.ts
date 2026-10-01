@@ -12,7 +12,7 @@ import {
   Asset,
   Memo,
   Account,
-} from 'stellar-sdk';
+} from '@stellar/stellar-sdk';
 import { derivePath } from 'ed25519-hd-key';
 import { deriveMnemonicSeed } from './mnemonicSeed';
 import { getStoredMnemonic, TransactionError } from './transactions';

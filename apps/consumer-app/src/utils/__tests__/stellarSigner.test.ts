@@ -15,7 +15,7 @@ jest.mock('../transactions', () => ({
   NETWORKS: { stellar: { symbol: 'XLM', chainId: 'public' } }
 }));
 
-jest.mock('stellar-sdk', () => {
+jest.mock('@stellar/stellar-sdk', () => {
   class AssetMock {
     code: string;
     issuer: string;
@@ -193,7 +193,7 @@ describe('stellarSigner', () => {
   });
 
   it('sends USDC when tokenCode + tokenAddress (issuer) are set', async () => {
-    const { Operation } = require('stellar-sdk');
+    const { Operation } = require('@stellar/stellar-sdk');
     (getStoredMnemonic as jest.Mock).mockResolvedValue(['test', 'seed']);
     const issuer = 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN';
 
@@ -249,7 +249,7 @@ describe('stellarSigner', () => {
   });
 
   it('establishStellarTrustline submits changeTrust', async () => {
-    const { Operation } = require('stellar-sdk');
+    const { Operation } = require('@stellar/stellar-sdk');
     (getStoredMnemonic as jest.Mock).mockResolvedValue(['test', 'seed']);
     const issuer = 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN';
 

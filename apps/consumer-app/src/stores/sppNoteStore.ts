@@ -148,3 +148,16 @@ export function sumSppNoteAmounts(notes: SppNoteRecord[]): string {
   }
   return formatStroops(stroops);
 }
+
+/**
+ * Delete all SPP note records from SecureStore.
+ * Used by account wipe to remove all private note material.
+ */
+export async function clearAllSppNotes(): Promise<void> {
+  const ids = await readIndex();
+  for (const id of ids) {
+    const key = noteStorageKey(id);
+    await SecureStore.deleteItemAsync(key, SECURE_STORE_OPTIONS).catch(() => undefined);
+  }
+  await SecureStore.deleteItemAsync(INDEX_KEY, SECURE_STORE_OPTIONS).catch(() => undefined);
+}

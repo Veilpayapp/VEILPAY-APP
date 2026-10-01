@@ -12,8 +12,9 @@ module.exports = {
   userInterfaceStyle: 'automatic',
   runtimeVersion: { policy: 'appVersion' },
   updates: {
+    // DEPRECATED: EAS/OTA is discontinued. This config is kept for historical reference.
     url: 'https://u.expo.dev/b083fea1-cac0-4e6c-a07d-81ec0417cf36',
-    enabled: true,
+    enabled: false,
     checkAutomatically: 'NEVER',
     fallbackToCacheTimeout: 0,
   },
@@ -41,6 +42,7 @@ module.exports = {
     ['expo-notifications', { icon: './assets/icon.png', color: '#6366F1' }],
     'expo-updates',
     '@react-native-community/datetimepicker',
+    './plugins/withVeilpaySecurity',
     [
       'expo-splash-screen',
       {

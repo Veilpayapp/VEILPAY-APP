@@ -170,7 +170,9 @@ export function ImportWalletScreen({ navigation }: ImportWalletScreenProps) {
 
       const addresses = await deriveAddressesForAllChains(mnemonicWords, 0);
       await connect(addresses.evm, 'evm', undefined, addresses);
-      navigation.reset({ index: 0, routes: [{ name: SCREENS.SET_PASSWORD as any }] });
+      // SetPasswordScreen (the plaintext app-password writer) was removed;
+      // the onboarding chain continues directly at biometric setup.
+      navigation.reset({ index: 0, routes: [{ name: SCREENS.BIOMETRIC_SETUP as any }] });
     } catch (error) {
       if (mnemonicStored) {
         try {

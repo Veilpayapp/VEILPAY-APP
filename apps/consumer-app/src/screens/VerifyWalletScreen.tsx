@@ -82,9 +82,10 @@ export function VerifyWalletScreen({ navigation, route }: VerifyWalletScreenProp
 
       // Connect wallet with the derived Ethereum address
       await connect(derivedAddress, 'evm');
-      
-      // Navigate to set password
-      navigation.reset({ index: 0, routes: [{ name: SCREENS.SET_PASSWORD as any }] });
+
+      // SetPasswordScreen (the plaintext app-password writer) was removed;
+      // the onboarding chain continues directly at biometric setup.
+      navigation.reset({ index: 0, routes: [{ name: SCREENS.BIOMETRIC_SETUP as any }] });
     } catch (error) {
       if (mnemonicStored) {
         try {

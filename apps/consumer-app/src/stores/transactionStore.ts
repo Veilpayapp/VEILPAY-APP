@@ -60,12 +60,29 @@ export interface OnrampOrderRecord {
 // AsyncStorage. The order id + token are mirrored; a token for an older order
 // id is removed on the next write.
 const ONRAMP_TOKEN_SECURE_PREFIX = 'veilpay:onramp-status-token:';
+const ONRAMP_INDEX_KEY = 'veilpay:onramp-token-index';
 const ONRAMP_SECURE_OPTIONS: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
 };
 
 function onrampTokenKey(orderId: string): string {
   return `${ONRAMP_TOKEN_SECURE_PREFIX}${orderId}`;
+}
+
+async function getOnrampIndex(): Promise<string[]> {
+  const raw = await SecureStore.getItemAsync(ONRAMP_INDEX_KEY, ONRAMP_SECURE_OPTIONS);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((x): x is string => typeof x === 'string');
+  } catch {
+    return [];
+  }
+}
+
+async function setOnrampIndex(ids: string[]): Promise<void> {
+  await SecureStore.setItemAsync(ONRAMP_INDEX_KEY, JSON.stringify(ids), ONRAMP_SECURE_OPTIONS);
 }
 
 async function persistOnrampStatusTokenToSecure(
@@ -75,7 +92,7 @@ async function persistOnrampStatusTokenToSecure(
     // Best-effort: drop stale tokens for other in-flight order ids first.
     const previous = useTransactionStore.getState().latestOnrampOrder;
     if (previous && previous.id !== order?.id) {
-      await SecureStore.deleteItemAsync(onrampTokenKey(previous.id), ONRAMP_SECURE_OPTIONS);
+      await removeOnrampTokenFromSecure(previous.id);
     }
     if (order?.statusToken && order.id) {
       await SecureStore.setItemAsync(
@@ -83,6 +100,12 @@ async function persistOnrampStatusTokenToSecure(
         order.statusToken,
         ONRAMP_SECURE_OPTIONS
       );
+      // Add to index
+      const index = await getOnrampIndex();
+      if (!index.includes(order.id)) {
+        index.push(order.id);
+        await setOnrampIndex(index);
+      }
     }
   } catch {
     // Never throw from the store write path; the poll simply won't restore
@@ -149,6 +172,16 @@ export interface TransactionState {
   setLatestOnrampOrder: (order: OnrampOrderRecord) => void;
   clearLatestOnrampOrder: () => void;
   clearTransactions: () => void;
+  /**
+   * PRIV-002 / PRIV-203 (account wipe): remove the ENTIRE persisted slice
+   * from AsyncStorage and reset the in-memory state. Unlike
+   * clearTransactions() — which deliberately retains private SPP activity
+   * rows for the disconnect/refresh flows — this leaves nothing behind:
+   * after a "wipe all local data" the plaintext AsyncStorage key
+   * 'veilpay-transaction-storage' (private activity + onramp metadata)
+   * must not exist on disk.
+   */
+  wipePersistedState: () => Promise<void>;
 }
 
 export const useTransactionStore = create<TransactionState>()(
@@ -293,6 +326,25 @@ export const useTransactionStore = create<TransactionState>()(
           transactionsError: null,
         });
       },
+
+      wipePersistedState: async () => {
+        // Reset the in-memory state first (every lane, including the private
+        // SPP rows and onramp metadata the persist slice keeps), then drop the
+        // whole persisted key. The persist write triggered by this set() is
+        // enqueued on AsyncStorage before the removeItem below, so the key
+        // ends the action removed — the literal below must match the persist
+        // `name:` option for this store.
+        set({
+          transactions: [],
+          transactionsCursor: null,
+          hasMoreTransactions: true,
+          isLoadingTransactions: false,
+          transactionsError: null,
+          latestTransakOrder: null,
+          latestOnrampOrder: null,
+        });
+        await AsyncStorage.removeItem('veilpay-transaction-storage');
+      },
     }),
     {
       name: 'veilpay-transaction-storage',
@@ -357,6 +409,39 @@ export const useTransactionStore = create<TransactionState>()(
     }
   )
 );
+
+/**
+ * Remove the onramp status token for a specific order (no longer needed or
+ * during wipe). Removes the mirror key from the index too.
+ */
+async function removeOnrampTokenFromSecure(orderId: string): Promise<void> {
+  try {
+    await SecureStore.deleteItemAsync(onrampTokenKey(orderId), ONRAMP_SECURE_OPTIONS);
+  } catch {
+    // Best-effort delete; a leftover token is bounded by wipe/index cleanup.
+  }
+  try {
+    const index = await getOnrampIndex();
+    const updated = index.filter((id) => id !== orderId);
+    if (updated.length !== index.length) {
+      await setOnrampIndex(updated);
+    }
+  } catch {
+    // Best-effort index update.
+  }
+}
+
+/**
+ * Delete all onramp status tokens from SecureStore.
+ * Used by account wipe to remove all access credentials.
+ */
+export async function clearAllOnrampTokens(): Promise<void> {
+  const index = await getOnrampIndex();
+  for (const id of index) {
+    await removeOnrampTokenFromSecure(id);
+  }
+  await SecureStore.deleteItemAsync(ONRAMP_INDEX_KEY, ONRAMP_SECURE_OPTIONS).catch(() => undefined);
+}
 
 // Helper hooks
 export const useTransactions = () => useTransactionStore((state) => state.transactions);

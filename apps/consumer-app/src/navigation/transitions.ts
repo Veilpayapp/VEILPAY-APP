@@ -112,11 +112,7 @@ const screenTransitions: Record<string, NativeStackNavigationOptions> = {
   ImportWallet: {
     ...transitionPresets.none,
   },
-  
-  SetPassword: {
-    ...transitionPresets.none,
-  },
-  
+
   BiometricSetup: {
     ...transitionPresets.none,
   },

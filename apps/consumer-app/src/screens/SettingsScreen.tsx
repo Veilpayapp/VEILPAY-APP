@@ -21,7 +21,6 @@ import { Icon, IconName } from "../components/Icon";
 import { ScreenBackButton } from "../components/ScreenBackButton";
 import { NetworkSelectorModal } from "../components/NetworkSelectorModal";
 import { SecurityWarningModal } from "../components/SecurityWarningModal";
-import { UpdatePromptModal } from "../components/UpdatePromptModal";
 import { UpdateDetailsModal } from "../components/UpdateDetailsModal";
 import { setClipboardString } from "../utils/clipboard";
 import { CurrencySelectorModal } from "../components/CurrencySelectorModal";
@@ -30,7 +29,6 @@ import { clearStoredMnemonic, getStoredMnemonic } from "../utils/transactions";
 import { wipeLocalAccountData } from "../utils/accountWipe";
 import { t } from "../i18n";
 import { useBiometrics } from "../hooks/useBiometrics";
-import { useOTAUpdates } from "../hooks/useOTAUpdates";
 import { useSettingsStore } from "../stores/settingsStore";
 import { useShallow } from "zustand/react/shallow";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -105,18 +103,8 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
   );
   const toast = useToast();
   const { isAvailable, authenticate } = useBiometrics();
-  const {
-    isProduction: updatesSupported,
-    isChecking: isCheckingUpdate,
-    isDownloading: isDownloadingUpdate,
-    error: updateError,
-    checkForUpdate,
-    downloadUpdate,
-    applyUpdate,
-  } = useOTAUpdates();
   const [showNetworkSelector, setShowNetworkSelector] = React.useState(false);
   const [showCurrencySelector, setShowCurrencySelector] = React.useState(false);
-  const [showUpdatePrompt, setShowUpdatePrompt] = React.useState(false);
   const [showUpdateDetails, setShowUpdateDetails] = React.useState(false);
   const [warningModalConfig, setWarningModalConfig] = React.useState<{
     visible: boolean;
@@ -255,36 +243,6 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
   
   const handleExportPrivateKey = () => {
     navigation.navigate(SCREENS.EXPORT_PRIVATE_KEY);
-  };
-
-  const handleCheckForUpdates = async () => {
-    // OTA checks are a no-op in dev/Expo Go — the hook guards on !__DEV__.
-    if (!updatesSupported) {
-      toast.show("Updates are only available in production builds", "info");
-      return;
-    }
-
-    if (isCheckingUpdate || isDownloadingUpdate) {
-      return;
-    }
-
-    toast.show("Checking for updates…", "info");
-    const available = await checkForUpdate();
-    if (available) {
-      setShowUpdatePrompt(true);
-    } else {
-      toast.show("You're on the latest version", "success");
-    }
-  };
-
-  const handleApplyUpdate = async () => {
-    const downloaded = await downloadUpdate();
-    if (downloaded) {
-      // reloadAsync() restarts the JS runtime; nothing after this runs.
-      await applyUpdate();
-      return;
-    }
-    // Failed download surfaces via updateError inside the modal.
   };
 
   const handleClearCache = () => {
@@ -488,20 +446,6 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
       onPress: () => setShowUpdateDetails(true),
     },
     {
-      id: "check-updates",
-      label: "Check for Updates",
-      description: isCheckingUpdate
-        ? "Checking…"
-        : isDownloadingUpdate
-          ? "Downloading update…"
-          : "Get the latest fixes and improvements",
-      iconName: "arrow-down",
-      type: "action",
-      onPress: () => {
-        void handleCheckForUpdates();
-      },
-    },
-    {
       id: "terms",
       label: "Terms of Service",
       iconName: "document",
@@ -639,14 +583,6 @@ export function SettingsScreen({ navigation, route }: SettingsScreenProps) {
         confirmText={warningModalConfig.confirmText}
         onConfirm={warningModalConfig.onConfirm}
         onCancel={() => setWarningModalConfig((prev) => ({ ...prev, visible: false }))}
-      />
-
-      <UpdatePromptModal
-        visible={showUpdatePrompt}
-        isDownloading={isDownloadingUpdate}
-        error={updateError}
-        onLater={() => setShowUpdatePrompt(false)}
-        onUpdate={handleApplyUpdate}
       />
 
       <UpdateDetailsModal

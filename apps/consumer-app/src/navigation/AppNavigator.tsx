@@ -25,7 +25,6 @@ import { BackupWalletScreen } from "../screens/BackupWalletScreen";
 import { ExportPrivateKeyScreen } from "../screens/ExportPrivateKeyScreen";
 import { TransactionHistoryScreen } from "../screens/TransactionHistoryScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
-import { SetPasswordScreen } from "../screens/SetPasswordScreen";
 import { BiometricSetupScreen } from "../screens/BiometricSetupScreen";
 import { QRScannerScreen } from "../screens/QRScannerScreen";
 import { TransactionDetailsScreen } from "../screens/TransactionDetailsScreen";
@@ -187,7 +186,6 @@ export type RootStackParamList = {
     url: string;
     title: string;
   };
-  [SCREENS.SET_PASSWORD]: undefined;
   [SCREENS.BIOMETRIC_SETUP]: undefined;
 };
 
@@ -471,11 +469,6 @@ export function AppNavigator({ initialRouteName = SCREENS.ONBOARDING }: AppNavig
           name={SCREENS.IN_APP_BROWSER}
           component={InAppBrowserScreen}
           options={{ ...getScreenTransition(SCREENS.IN_APP_BROWSER), animation: 'slide_from_bottom' }}
-        />
-        <Stack.Screen
-          name={SCREENS.SET_PASSWORD}
-          component={SetPasswordScreen}
-          options={getScreenTransition(SCREENS.SET_PASSWORD)}
         />
         <Stack.Screen
           name={SCREENS.BIOMETRIC_SETUP}

@@ -34,7 +34,6 @@ import { BiometricPrompt } from './src/components/BiometricPrompt';
 import { BootSplash } from './src/components/BootSplash';
 import { NetworkStatusBanner } from './src/components/NetworkStatusBanner';
 import { CommitmentSaveBanner } from './src/components/CommitmentSaveBanner';
-import { UpdatePromptModal } from './src/components/UpdatePromptModal';
 import { useDepositPersistenceRecovery } from './src/hooks/useDepositPersistenceRecovery';
 import { useSppBackgroundSetup } from './src/hooks/useSppBackgroundSetup';
 import { useWalletStore } from './src/stores/walletStore';
@@ -42,7 +41,7 @@ import { useSettingsStore } from './src/stores/settingsStore';
 import { useTransactionStore } from './src/stores/transactionStore';
 import { SCREENS } from './src/constants/screens';
 import { captureError, captureMessage, initSentry, setUserContext, addBreadcrumb } from './src/utils/sentry';
-import { useOTAUpdates } from './src/hooks/useOTAUpdates';
+import { initializeRpcValidation } from './src/utils/rpcValidation';
 import { usePushNotifications } from './src/hooks/usePushNotifications';
 import { useIncomingPaymentNotifications } from './src/hooks/useIncomingPaymentNotifications';
 import { registerPushDeviceToken } from './src/utils/pushNotifications';
@@ -52,13 +51,24 @@ import { useShallow } from 'zustand/react/shallow';
 import { useSessionBootstrap } from './src/hooks/useSessionBootstrap';
 import { initializePinning } from './src/utils/security';
 
-// Initialize Sentry and Security safely at module scope
+// Initialize Sentry and Security safely at module scope.
+// SEC-005: in release builds, RPC-config and SSL-pinning misconfiguration must
+// NOT pass silently. initializeRpcValidation throws on a production bundle with
+// no backend proxy configured — let that crash (fail closed) outside __DEV__.
+// initializePinning rejects the same way when EXPO_PUBLIC_SSL_PINS is unset;
+// as an async rejection it cannot unwind module init, so it is captured,
+// surfaced, and left for the release checklist until real pins ship.
 try {
+  initializeRpcValidation();
   initSentry();
-  void initializePinning();
 } catch (e) {
+  if (!__DEV__) throw e;
   console.warn('[init] Initialization failed:', e);
 }
+void initializePinning().catch((e) => {
+  console.error('[init] SSL pinning initialization failed:', e);
+  captureError(e instanceof Error ? e : new Error(String(e)), { scope: 'ssl-pinning' });
+});
 
 // Global error handler for logging
 const handleGlobalError = (error: Error, errorInfo?: React.ErrorInfo) => {
@@ -121,18 +131,7 @@ function MainApp() {
     !isConnected || !biometricsEnabled
   );
   
-  const shownUpdatePromptRef = useRef(false);
   const pushRegistrationKeyRef = useRef<string | null>(null);
-  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
-
-  const {
-    isProduction,
-    isUpdateAvailable,
-    isDownloading,
-    downloadUpdate,
-    applyUpdate,
-    error: updateError,
-  } = useOTAUpdates();
 
   const {
     token,
@@ -235,34 +234,6 @@ function MainApp() {
       chain_type: chainType || 'unknown',
     });
   }, [address, chainType, isConnected]);
-
-  // Surface the branded update prompt once per launch when an OTA is available.
-  useEffect(() => {
-    if (!isProduction || !isUpdateAvailable || shownUpdatePromptRef.current) {
-      return;
-    }
-
-    shownUpdatePromptRef.current = true;
-    setShowUpdatePrompt(true);
-  }, [isProduction, isUpdateAvailable]);
-
-  const handleApplyUpdate = async () => {
-    const downloaded = await downloadUpdate();
-    if (downloaded) {
-      // reloadAsync() tears down the JS context, so the modal never needs to
-      // be hidden explicitly on the success path.
-      await applyUpdate();
-      return;
-    }
-    // Download failed (updateError is set) — keep the modal open so the user
-    // sees the error and can retry or dismiss.
-  };
-
-  useEffect(() => {
-    if (updateError) {
-      captureError(new Error(updateError), { scope: 'ota-updates' });
-    }
-  }, [updateError]);
 
   useEffect(() => {
     if (pushError) {
@@ -379,10 +350,20 @@ function MainApp() {
     content = (
       <BiometricPrompt
         onSuccess={() => setIsBiometricUnlocked(true)}
-        onCancel={() => {
-          // If biometrics are unavailable, continue without logging the user out.
-          setBiometricsEnabled(false);
-          setIsBiometricUnlocked(true);
+        onCancel={(reason) => {
+          if (reason === 'unavailable') {
+            // Biometrics are genuinely unavailable / un-enrolled on this
+            // device — auto-disable the lock so the user is not stuck, and
+            // continue into the app without logging them out.
+            setBiometricsEnabled(false);
+            setIsBiometricUnlocked(true);
+            return;
+          }
+          // User / system cancel: the app STAYS LOCKED. isBiometricUnlocked
+          // remains false and biometrics stay enabled, so
+          // shouldShowBiometricPrompt keeps rendering the prompt above and
+          // the user can simply retry authentication. Cancelling a biometric
+          // prompt must never disable the biometric lock.
         }}
       />
     );
@@ -404,13 +385,6 @@ function MainApp() {
       <>
         <NetworkStatusBanner />
         <CommitmentSaveBanner />
-        <UpdatePromptModal
-          visible={showUpdatePrompt}
-          isDownloading={isDownloading}
-          error={updateError}
-          onLater={() => setShowUpdatePrompt(false)}
-          onUpdate={handleApplyUpdate}
-        />
         <View style={{ flex: 1, backgroundColor: '#0A0A0A' }}>
           <AppNavigator initialRouteName={initialRouteName} />
         </View>

@@ -13,12 +13,33 @@ import { Icon } from './Icon';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+/**
+ * Why `onCancel` fired. Callers must treat these differently:
+ * - 'user_cancel'  — the user (or system) dismissed the prompt. Security-
+ *   sensitive callers (e.g. the app-unlock gate in App.tsx) must STAY LOCKED.
+ * - 'unavailable'  — biometrics are genuinely unavailable / un-enrolled on
+ *   this device. Callers may auto-disable a biometric gate in this case only.
+ */
+export type BiometricCancelReason = 'user_cancel' | 'unavailable';
+
 interface BiometricPromptProps {
   /** What operation is being authorized. Drives the prompt string. */
   context?: BiometricContext;
   onSuccess: () => void;
-  onCancel?: () => void;
+  onCancel?: (reason: BiometricCancelReason) => void;
   onFail?: () => void;
+}
+
+// ─── Unavailability detection ────────────────────────────────────────────────
+
+// expo-local-authentication reports hard unavailability as 'not_enrolled' /
+// 'not_available' / 'unavailable'; useBiometrics' own early return uses
+// "not available on this device". Anything else is a transient/retryable
+// failure or a user cancel — never a reason to auto-disable the gate.
+const UNAVAILABLE_ERROR_RE = /not[ _]?enrolled|not[ _]?available|unavailable/i;
+
+function isUnavailableError(error: string | null): boolean {
+  return error !== null && UNAVAILABLE_ERROR_RE.test(error);
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -47,12 +68,20 @@ export function BiometricPrompt({
     }
 
     if (result.cancelled) {
+      // User or system dismissed the OS prompt — surface as 'user_cancel' so
+      // security-sensitive callers keep their gate locked (retryable).
       setPhase('cancelled');
-      onCancel?.();
+      onCancel?.('user_cancel');
     } else {
       setPhase('failed');
       if (!result.retryable) {
-        onFail?.();
+        if (isUnavailableError(result.error)) {
+          // Biometrics are genuinely unavailable / un-enrolled — surface as
+          // 'unavailable' so callers may auto-disable the biometric gate.
+          onCancel?.('unavailable');
+        } else {
+          onFail?.();
+        }
       }
     }
   }, [authenticate, context, onSuccess, onCancel, onFail]);
@@ -79,7 +108,7 @@ export function BiometricPrompt({
         {onCancel && (
           <Pressable
             style={({ pressed }) => [styles.primaryButton, pressed && { opacity: 0.6 }]}
-            onPress={onCancel}
+            onPress={() => onCancel?.('unavailable')}
             accessibilityRole="button"
             accessibilityLabel="Continue without biometrics"
             accessibilityHint="Proceeds to the app without biometric verification"
@@ -140,7 +169,7 @@ export function BiometricPrompt({
         {onCancel && (
           <Pressable
             style={({ pressed }) => [styles.ghostButton, pressed && { opacity: 0.6 }]}
-            onPress={onCancel}
+            onPress={() => onCancel?.('user_cancel')}
             accessibilityRole="button"
             accessibilityLabel="Cancel"
           >
@@ -172,7 +201,7 @@ export function BiometricPrompt({
       {onCancel && (
         <Pressable
           style={({ pressed }) => [styles.ghostButton, pressed && { opacity: 0.6 }]}
-          onPress={onCancel}
+          onPress={() => onCancel?.('user_cancel')}
           accessibilityRole="button"
           accessibilityLabel="Cancel"
         >

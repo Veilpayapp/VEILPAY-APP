@@ -14,7 +14,7 @@ build-artifacts/
 .env
 .env.local
 .env.*.local
-.env.example
+# .env.example is NOT ignored — it is the tracked placeholder template (root).
 env_backup/
 env_backup.zip
 

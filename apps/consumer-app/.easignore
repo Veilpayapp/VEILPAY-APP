@@ -77,6 +77,18 @@ figma-dump.json
 **/__mocks__/
 tests/
 
+# ── Bundled withdraw-circuit prover assets ────────────────────────
+# assets/circuits binaries are staged by scripts/stage-circuit-assets.js
+# and gitignored via the nested assets/circuits/.gitignore, but they MUST
+# ship in the build archive: Metro statically requires withdraw.wasm /
+# withdraw_final.zkey / snarkjs.min.umd (release prover is bundled-local,
+# no CDN fallback). Re-include explicitly in case nested gitignore rules
+# are applied while packing. Stage before `eas build`.
+!assets/circuits/withdraw.wasm
+!assets/circuits/withdraw_final.zkey
+!assets/circuits/snarkjs.min.js
+!assets/circuits/snarkjs.min.umd
+
 # ── Docs (optional; save a little + noise) ────────────────────────
 ENV_SETUP.md
 APP_LINKS_SETUP.md

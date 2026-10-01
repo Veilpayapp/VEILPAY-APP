@@ -20,7 +20,13 @@ config.resolver.nodeModulesPaths = [
 // config.resolver.disableHierarchicalLookup = true;
 
 // Keep SVG files in the asset pipeline and allow Expo to hash/cache assets.
-config.resolver.assetExts = Array.from(new Set([...config.resolver.assetExts, 'svg']));
+// wasm/zkey/umd: withdraw-circuit prover artifacts staged under
+// assets/circuits/ (withdraw.wasm, withdraw_final.zkey, snarkjs.min.umd) are
+// required() by src/components/ZkpProver.tsx via expo-asset so the release
+// prover runs off bundled files instead of the CDN.
+config.resolver.assetExts = Array.from(
+  new Set([...config.resolver.assetExts, 'svg', 'wasm', 'zkey', 'umd'])
+);
 
 // Packages that cannot be bundled by Metro because they pull in Node-only
 // sub-dependencies (ws, jayson, streams, bn.js, etc.).

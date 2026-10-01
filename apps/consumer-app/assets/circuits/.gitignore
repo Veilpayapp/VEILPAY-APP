@@ -1,0 +1,13 @@
+# Staged by scripts/stage-circuit-assets.js (~8.8MB of binaries) — do not commit.
+# Mirrors assets/spp/circuits/.gitignore: the artifacts are too big for git and
+# are (re)created locally from pinned sources whose SHA-256 digests are baked
+# into src/constants/circuit.ts and verified by the staging script.
+#
+# BUILD REQUIREMENT: Metro statically requires withdraw.wasm /
+# withdraw_final.zkey / snarkjs.min.umd from src/components/ZkpProver.tsx, so a
+# bundle (dev or release) cannot be built until these files are staged. Run
+# `node scripts/stage-circuit-assets.js` after a fresh clone.
+withdraw.wasm
+withdraw_final.zkey
+snarkjs.min.js
+snarkjs.min.umd

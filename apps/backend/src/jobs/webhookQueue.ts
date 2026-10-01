@@ -78,6 +78,27 @@ export function buildWebhookJobId(payload: WebhookDeliveryPayload, deliveryId: s
   return `wh-${deliveryId}`;
 }
 
+export interface EnqueueWebhookOptions {
+  /**
+   * D5: explicit retry attempt number (1-based), set ONLY by the manual
+   * retry endpoint. When set, the BullMQ jobId is
+   * `wh-<deliveryId>-retry-<attempt>` — a FRESH job per attempt. BullMQ
+   * dedupes jobIds, so re-using the deterministic `wh-<deliveryId>` for a
+   * retry made `add()` fail with "already exists" against the long-gone
+   * original job; the catch treated that as idempotent success and the
+   * retry endpoint answered 200 while nothing was re-delivered.
+   *
+   * First delivery and the REL-002 pending sweep MUST NOT set this: their
+   * idempotency depends on the stable `wh-<deliveryId>` id.
+   */
+  attempt?: number;
+}
+
+/** D5: per-attempt jobId for the explicit retry path (see EnqueueWebhookOptions). */
+export function buildWebhookRetryJobId(deliveryId: string, attempt: number): string {
+  return `wh-${deliveryId}-retry-${attempt}`;
+}
+
 export async function enqueueWebhookDlq(
   payload: WebhookDeliveryPayload,
   failedReason: string | undefined
@@ -104,7 +125,8 @@ export async function enqueueWebhookDlq(
 }
 
 export async function enqueueWebhook(
-  payload: WebhookDeliveryPayload
+  payload: WebhookDeliveryPayload,
+  options: EnqueueWebhookOptions = {}
 ): Promise<Job<WebhookDeliveryPayload> | null> {
   // REL-002: create outbox row first (pending), then enqueue with that id.
   let deliveryId = payload.deliveryId;
@@ -172,8 +194,13 @@ export async function enqueueWebhook(
 
   let job: Job<WebhookDeliveryPayload> | null = null;
   try {
+    // D5: the explicit retry path mints a fresh jobId per attempt so
+    // BullMQ's jobId dedupe cannot swallow the re-delivery; every other
+    // caller keeps the deterministic id (see EnqueueWebhookOptions).
     const jobId = deliveryId
-      ? buildWebhookJobId(enriched, deliveryId)
+      ? options.attempt !== undefined
+        ? buildWebhookRetryJobId(deliveryId, options.attempt)
+        : buildWebhookJobId(enriched, deliveryId)
       : `${payload.merchantId}-${payload.invoiceId}-${payload.timestamp || Date.now()}`;
     job = await webhookQueueInstance.add('webhook-delivery', enriched, {
       jobId,
@@ -184,6 +211,24 @@ export async function enqueueWebhook(
     // idempotent success for the same outbox row.
     const msg = err instanceof Error ? err.message : String(err);
     if (deliveryId && /already exists|JobId/i.test(msg)) {
+      if (options.attempt !== undefined) {
+        // D5: a duplicate on the retry path means THIS attempt's job is
+        // already queued (e.g. a double-click raced the retryCount
+        // increment). The delivery genuinely will happen — return the
+        // existing job so the retry endpoint cannot report success while
+        // masking a no-op.
+        const existing = webhookQueueInstance
+          ? await webhookQueueInstance
+              .getJob(buildWebhookRetryJobId(deliveryId, options.attempt))
+              .catch(() => null)
+          : null;
+        if (existing) {
+          logger.info(
+            `[WebhookQueue] Retry job for delivery ${deliveryId} attempt ${options.attempt} already enqueued`
+          );
+          return existing;
+        }
+      }
       logger.info(`[WebhookQueue] Job already enqueued for delivery ${deliveryId}`);
       return null;
     }

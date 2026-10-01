@@ -209,17 +209,22 @@ describe('webhookController', () => {
   });
 
   describe('retryWebhook', () => {
-    it('re-queues a failed webhook', async () => {
+    it('re-queues a failed webhook with a fresh per-attempt job (D5)', async () => {
       req.params = { id: 'webhook-1' };
       const delivery = {
         id: 'webhook-1',
         merchantId: '00000000-0000-0000-0000-000000000000',
         status: 'failed',
+        retryCount: 0,
         payload: { test: true },
       };
 
       (prisma.webhookDelivery.findUnique as jest.Mock).mockResolvedValue(delivery);
-      (prisma.webhookDelivery.update as jest.Mock).mockResolvedValue({});
+      (prisma.webhookDelivery.update as jest.Mock).mockResolvedValue({
+        ...delivery,
+        status: 'retrying',
+        retryCount: 1,
+      });
 
       await retryWebhook(req as any, res as any, next);
 
@@ -233,11 +238,43 @@ describe('webhookController', () => {
           retryCount: { increment: 1 },
         },
       });
-      expect(enqueueWebhook).toHaveBeenCalledWith(delivery.payload);
+      // D5: the retry re-queues THIS delivery row (deliveryId re-attached)
+      // with the already-incremented retryCount as the attempt number, so
+      // the queue mints a fresh per-attempt jobId instead of hitting
+      // BullMQ's duplicate-id swallow.
+      expect(enqueueWebhook).toHaveBeenCalledWith(
+        { test: true, deliveryId: 'webhook-1' },
+        { attempt: 1 }
+      );
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         message: 'Webhook re-queued for delivery',
       });
+    });
+
+    it('increments the attempt number on every subsequent retry (D5)', async () => {
+      req.params = { id: 'webhook-1' };
+      const delivery = {
+        id: 'webhook-1',
+        merchantId: '00000000-0000-0000-0000-000000000000',
+        status: 'failed',
+        retryCount: 4,
+        payload: { eventType: 'invoice.paid' },
+      };
+
+      (prisma.webhookDelivery.findUnique as jest.Mock).mockResolvedValue(delivery);
+      (prisma.webhookDelivery.update as jest.Mock).mockResolvedValue({
+        ...delivery,
+        status: 'retrying',
+        retryCount: 5,
+      });
+
+      await retryWebhook(req as any, res as any, next);
+
+      expect(enqueueWebhook).toHaveBeenCalledWith(
+        { eventType: 'invoice.paid', deliveryId: 'webhook-1' },
+        { attempt: 5 }
+      );
     });
 
     it('returns 404 if webhook not found', async () => {

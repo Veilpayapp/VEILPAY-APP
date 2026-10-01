@@ -119,17 +119,29 @@ export const retryWebhook = async (req: AuthenticatedRequest, res: Response, nex
       return;
     }
 
-    // Update DB status to retrying
-    await prisma.webhookDelivery.update({
+    // Update DB status to retrying. The post-increment retryCount is this
+    // attempt's number — each manual retry must mint a FRESH BullMQ jobId.
+    const updated = await prisma.webhookDelivery.update({
       where: { id: deliveryId },
-      data: { 
+      data: {
         status: 'retrying',
         retryCount: { increment: 1 }
       },
     });
 
-    // Re-queue the job
-    await enqueueWebhook(delivery.payload as unknown as WebhookDeliveryPayload);
+    // D5: re-deliver THIS outbox row with a per-attempt jobId
+    // (`wh-<deliveryId>-retry-<attempt>`). Re-using the deterministic
+    // `wh-<deliveryId>` id let BullMQ dedupe the add as "already exists" —
+    // the endpoint answered 200 while nothing was re-delivered. The stored
+    // payload may predate deliveryId enrichment, so re-attach it: without
+    // it enqueueWebhook would mint a duplicate outbox row instead of
+    // retrying this one.
+    const storedPayload = (delivery.payload ?? {}) as unknown as Record<string, unknown>;
+    const attempt = updated.retryCount ?? (delivery.retryCount ?? 0) + 1;
+    await enqueueWebhook(
+      { ...storedPayload, deliveryId } as unknown as WebhookDeliveryPayload,
+      { attempt }
+    );
 
     res.json({ success: true, message: 'Webhook re-queued for delivery' });
   } catch (error) {

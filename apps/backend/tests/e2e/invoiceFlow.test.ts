@@ -16,6 +16,11 @@ jest.mock('../../src/lib/prisma', () => ({
 
 jest.mock('../../src/lib/redis', () => ({
   getRedisClient: jest.fn().mockReturnValue(null), // Disables rate limiter RedisStore fallback to memory
+  // D1 split: request-path middleware reads the bounded client — mock it to
+  // null too so the session store is skipped and rate limiters use memory.
+  getBoundedRedisClient: jest.fn().mockReturnValue(null),
+  getBoundedRedisInitError: jest.fn().mockReturnValue(null),
+  disconnectBoundedRedis: jest.fn(),
 }));
 
 describe('E2E: Invoice Flow', () => {

@@ -1,11 +1,130 @@
-import rateLimit, { type RateLimitRequestHandler } from "express-rate-limit";
+import rateLimit, {
+  MemoryStore,
+  type IncrementResponse,
+  type Options,
+  type RateLimitRequestHandler,
+  type Store,
+} from "express-rate-limit";
+import type Redis from "ioredis";
 import { prisma } from "../lib/prisma";
 import { config } from "../config";
-import { getRedisClient } from "../lib/redis";
+import { getBoundedRedisClient } from "../lib/redis";
 import RedisStore from "rate-limit-redis";
 
-function getStore(prefix: string): RedisStore | undefined {
-  const client = getRedisClient();
+/**
+ * Hard ceiling on a single rate-limit store round-trip. The bounded Redis
+ * client already rejects commands via `commandTimeout`, but the store races
+ * its own deadline as defense in depth so a misconfigured client can never
+ * hang a request.
+ */
+const STORE_COMMAND_TIMEOUT_MS = 1000;
+
+/**
+ * D1: fail-over store. `getStore` used to hand the BullMQ Redis client
+ * (maxRetriesPerRequest: null) to rate-limit-redis — with Redis down every
+ * increment queued forever and every rate-limited route (including /health,
+ * pre-D2) hung. Worse, the documented "null client → memory store" fallback
+ * was unreachable: with lazyConnect the client object is non-null even while
+ * Redis is down, so `if (!client) return undefined` never fired.
+ *
+ * This wrapper keeps the RedisStore for the healthy path and degrades to the
+ * in-process MemoryStore when the bounded client is not `ready` or when a
+ * command misses its deadline. The health check itself is a synchronous
+ * status read, so it cannot hang.
+ */
+class FailoverRateLimitStore implements Store {
+  private readonly redisStore: RedisStore;
+  private readonly memoryStore = new MemoryStore();
+  private readonly client: Redis;
+  /**
+   * True while increments are being served by Redis. Guards decrement/reset
+   * routing: RedisStore.decrement is a plain DECR, so decrementing a key that
+   * was never incremented (counters live in memory) would drive it to -1 and
+   * trip express-rate-limit's positive-hits validation on the next increment.
+   */
+  private redisCountersLive = false;
+  private fallbackWarned = false;
+
+  constructor(redisStore: RedisStore, client: Redis) {
+    this.redisStore = redisStore;
+    this.client = client;
+  }
+
+  init(options: Options): void {
+    this.memoryStore.init(options);
+    // Script pre-load is best-effort: when Redis is down the loads reject and
+    // increments fall back to memory (see increment). Never surface an
+    // unhandled rejection from this fire-and-forget init.
+    void this.redisStore.init(options)?.catch(() => undefined);
+  }
+
+  async increment(key: string): Promise<IncrementResponse> {
+    if (this.client.status === "ready") {
+      try {
+        const redisIncrement = this.redisStore.increment(key);
+        // The losing side of the race below must not become an unhandled
+        // rejection when it eventually settles.
+        redisIncrement.catch(() => undefined);
+        const result = await raceStoreTimeout(redisIncrement);
+        this.redisCountersLive = true;
+        return result;
+      } catch {
+        this.warnFallbackOnce();
+      }
+    }
+    this.redisCountersLive = false;
+    return this.memoryStore.increment(key);
+  }
+
+  async decrement(key: string): Promise<void> {
+    // MemoryStore.decrement is a no-op for unknown keys, so applying it
+    // unconditionally is safe.
+    await this.memoryStore.decrement(key);
+    if (this.redisCountersLive) {
+      await this.redisStore.decrement(key).catch(() => undefined);
+    }
+  }
+
+  async resetKey(key: string): Promise<void> {
+    await this.memoryStore.resetKey(key);
+    if (this.redisCountersLive) {
+      await this.redisStore.resetKey(key).catch(() => undefined);
+    }
+  }
+
+  private warnFallbackOnce(): void {
+    if (this.fallbackWarned) return;
+    this.fallbackWarned = true;
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[RateLimiter] Redis store unavailable — serving rate limits from the in-process memory store (limits are per-instance until Redis recovers)"
+    );
+  }
+}
+
+function raceStoreTimeout(storeIncrement: Promise<IncrementResponse>): Promise<IncrementResponse> {
+  return new Promise<IncrementResponse>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`rate-limit store timed out after ${STORE_COMMAND_TIMEOUT_MS}ms`));
+    }, STORE_COMMAND_TIMEOUT_MS);
+    storeIncrement.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err: unknown) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
+function getStore(prefix: string): Store | undefined {
+  // D1: request-path middleware uses the bounded client. The BullMQ client
+  // (maxRetriesPerRequest: null) would queue every command forever while
+  // Redis is down and hang the request.
+  const client = getBoundedRedisClient();
   if (!client) return undefined; // Fallback to memory store if Redis is unavailable
   // ioredis's `call(command, ...args)` returns `Promise<unknown>`. The
   // `RedisStore.sendCommand` contract is structurally compatible — the
@@ -18,11 +137,15 @@ function getStore(prefix: string): RedisStore | undefined {
     // assertion is required here.
     return client.call(args[0], ...args.slice(1));
   };
-  return new RedisStore({
+  const redisStore = new RedisStore({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
     sendCommand: sendCommand as any,
     prefix: `rl:${prefix}:`,
   });
+  // D1: the null check above still never fires while Redis is merely down
+  // (lazyConnect keeps the client object non-null), so wrap the store with
+  // the health-aware fail-over above instead.
+  return new FailoverRateLimitStore(redisStore, client);
 }
 
 type CachedLimiterEntry = {

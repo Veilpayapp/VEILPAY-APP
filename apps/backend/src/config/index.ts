@@ -83,6 +83,13 @@ const envSchema = z.object({
     .default('MEETS_DEVICE_INTEGRITY'),
   // Max age of an attestation (ms). Older tokens are rejected as possible replays.
   PLAY_INTEGRITY_MAX_AGE_MS: z.coerce.number().int().positive().default(5 * 60 * 1000),
+
+  // ── Retention purge (PRIV-207 / INFRA-103) ──────────────────────────────
+  RETENTION_PURGE_ENABLED: z.enum(['true', 'false']).default('true'),
+  RETENTION_PURGE_INTERVAL_MS: z.coerce.number().int().positive().default(24 * 60 * 60 * 1000),
+  RETENTION_WEBHOOK_DAYS: z.coerce.number().int().min(1).default(30),
+  RETENTION_FIAT_DAYS: z.coerce.number().int().min(1).default(90),
+  RETENTION_PAYMENT_DAYS: z.coerce.number().int().min(1).default(90),
 });
 
 const env = envSchema.parse(process.env);
@@ -137,6 +144,18 @@ if (env.NODE_ENV === 'production') {
     throw new Error(
       'At least one of ALCHEMY_API_KEY or INFURA_API_KEY must be set in production. ' +
       'Free keys at https://www.alchemy.com and https://infura.io'
+    );
+  }
+
+  // ── Sentry DSN ─────────────────────────────────────────────────────────────
+  // D6: observability is a production requirement. An empty SENTRY_DSN boots
+  // Sentry as a no-op and silently drops all error telemetry exactly when it
+  // matters most. Fail closed like the CORS/RPC checks above; stays optional
+  // in development/test.
+  if (!env.SENTRY_DSN.trim()) {
+    throw new Error(
+      'SENTRY_DSN must be set in production. ' +
+      'Inject it via Doppler alongside the other production secrets.'
     );
   }
 
@@ -208,5 +227,12 @@ export const config = {
   cors: {
     origin: parseCorsOrigins(env.CORS_ORIGINS),
     credentials: true,
+  },
+  retention: {
+    enabled: env.RETENTION_PURGE_ENABLED === 'true',
+    intervalMs: env.RETENTION_PURGE_INTERVAL_MS,
+    webhookDays: env.RETENTION_WEBHOOK_DAYS,
+    fiatDays: env.RETENTION_FIAT_DAYS,
+    paymentDays: env.RETENTION_PAYMENT_DAYS,
   },
 };

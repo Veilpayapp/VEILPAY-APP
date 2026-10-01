@@ -14,6 +14,9 @@ export class StellarHorizonError extends Error {
   }
 }
 
+/** D4: hard ceiling on upstream Horizon round-trips — a hung connection must not park the verifier forever. */
+const HORIZON_FETCH_TIMEOUT_MS = 10_000;
+
 interface HorizonPayment {
   id?: string;
   transaction_hash?: string;
@@ -49,7 +52,12 @@ export async function fetchStellarPayments(
 
   let response: Response;
   try {
-    response = await fetch(url, { headers: { Accept: 'application/json' } });
+    response = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      // D4: abort the call after 10s — the rejection flows into the existing
+      // error path below instead of parking the caller forever.
+      signal: AbortSignal.timeout(HORIZON_FETCH_TIMEOUT_MS),
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     throw new StellarHorizonError(`Horizon network error: ${msg}`);
@@ -124,7 +132,12 @@ export async function verifyStellarPayment(args: {
 
   let response: Response;
   try {
-    response = await fetch(url, { headers: { Accept: 'application/json' } });
+    response = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      // D4: abort the call after 10s — the rejection flows into the existing
+      // error path below instead of parking the caller forever.
+      signal: AbortSignal.timeout(HORIZON_FETCH_TIMEOUT_MS),
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return { ok: false, error: `Horizon network error: ${msg}` };

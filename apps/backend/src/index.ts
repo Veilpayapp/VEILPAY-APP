@@ -27,7 +27,7 @@ import { relayerRoutes } from "./routes/relayer";
 import onrampRoutes from "./routes/onramp";
 import attestationRoutes from "./routes/attestation";
 import { prisma } from "./lib/prisma";
-import { getRedisClient } from "./lib/redis";
+import { getBoundedRedisClient } from "./lib/redis";
 
 Sentry.init({
   dsn: config.sentryDsn || "",
@@ -67,7 +67,10 @@ app.use(
 );
 
 // Distributed Session Middleware (Phase 6.5 groundwork)
-const redisClient = getRedisClient();
+// D1: sessions ride the bounded Redis client — with Redis down the BullMQ
+// client (maxRetriesPerRequest: null) would queue session reads/writes
+// forever and hang every request; the bounded client fails fast instead.
+const redisClient = getBoundedRedisClient();
 if (redisClient) {
   app.use(
     session({
@@ -82,6 +85,7 @@ if (redisClient) {
       cookie: {
         secure: config.nodeEnv === "production",
         httpOnly: true,
+        sameSite: "strict",
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       },
     })
@@ -89,6 +93,13 @@ if (redisClient) {
 }
 
 app.use(requestLogger);
+
+// D2: health probes mount BEFORE the global rate limiter. When Redis hangs,
+// the limiter (previously mounted first) stalled every /api/ request —
+// including /api/v1/health — so orchestrators (k8s liveness probes, LBs)
+// could not see the outage and kept routing traffic to a dead instance.
+// Health routes must stay reachable no matter what the limiter's store does.
+app.use("/api/v1/health", healthRoutes);
 
 app.use("/api/", globalRateLimiter);
 
@@ -114,7 +125,6 @@ app.get("/", (_req, res) => {
   });
 });
 
-app.use("/api/v1/health", healthRoutes);
 app.use("/api/v1/directory", directoryRoutes);
 app.use("/api/v1/invoice", invoiceRoutes);
 app.use("/api/v1/merchant", merchantRoutes);

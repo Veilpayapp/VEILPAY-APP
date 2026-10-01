@@ -20,6 +20,9 @@ export class GoldrushError extends Error {
   }
 }
 
+/** D4: hard ceiling on upstream GoldRush round-trips — a hung connection must not park the indexer/verifier forever. */
+const GOLDRUSH_FETCH_TIMEOUT_MS = 10_000;
+
 /**
  * Covalent / GoldRush chain slugs. Only chains we actually product-support are
  * listed; unknown keys fail closed rather than probing a guess slug.
@@ -152,6 +155,9 @@ export async function fetchGoldrushTransactions(
         Authorization: `Bearer ${config.rpc.goldrushApiKey}`,
         Accept: 'application/json',
       },
+      // D4: abort the call after 10s — the rejection flows into the existing
+      // GoldrushError path below instead of parking the caller forever.
+      signal: AbortSignal.timeout(GOLDRUSH_FETCH_TIMEOUT_MS),
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

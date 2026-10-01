@@ -11,8 +11,8 @@
 import { createHmac } from 'crypto';
 import { request as httpRequest, Agent as HttpAgent, type ClientRequest } from 'http';
 import { request as httpsRequest, Agent as HttpsAgent } from 'https';
-import { config } from '../config';
 import { assertSafeWebhookUrl } from '../utils/urlSafety';
+import { resolveWebhookSigningSecret } from '../lib/webhookSecret';
 
 export interface WebhookDeliveryPayload {
   eventType: 'payment.received' | 'invoice.paid' | 'invoice.expired';
@@ -33,8 +33,21 @@ export interface WebhookDeliveryResult {
   lastError?: string;
 }
 
-function signWebhookPayload(payload: string, timestamp: number): string {
-  return createHmac('sha256', config.webhookSigningSecret)
+export interface DeliverWebhookOptions {
+  /**
+   * Per-merchant webhook signing secret (Merchant.webhookSecret). When absent
+   * (merchant not yet rotated) the global WEBHOOK_SIGNING_SECRET is used as a
+   * deprecated fallback — see lib/webhookSecret.ts.
+   */
+  webhookSecret?: string | null;
+}
+
+function signWebhookPayload(
+  payload: string,
+  timestamp: number,
+  secret: string
+): string {
+  return createHmac('sha256', secret)
     .update(`${timestamp}.${payload}`)
     .digest('hex');
 }
@@ -177,7 +190,8 @@ function buildPinningAgent(
 
 export async function deliverWebhook(
   url: string,
-  payload: WebhookDeliveryPayload
+  payload: WebhookDeliveryPayload,
+  options: DeliverWebhookOptions = {}
 ): Promise<WebhookDeliveryResult> {
   // SEC-002 fix: defense-in-depth SSRF check. Re-validating on every
   // delivery closes any gap between write-time validation and on-call
@@ -192,7 +206,9 @@ export async function deliverWebhook(
 
   const timestamp = Date.now();
   const body = JSON.stringify(payload);
-  const signature = signWebhookPayload(body, timestamp);
+  // Per-merchant secret with deprecated global fallback (warns once per process).
+  const signingSecret = resolveWebhookSigningSecret(options.webhookSecret);
+  const signature = signWebhookPayload(body, timestamp, signingSecret);
 
   const protocol: 'http' | 'https' = url.startsWith('https:') ? 'https' : 'http';
   const agent = buildPinningAgent(protocol, safe.resolvedAddress, safe.family);

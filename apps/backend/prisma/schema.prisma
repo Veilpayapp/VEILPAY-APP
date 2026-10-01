@@ -13,17 +13,26 @@ model Merchant {
   businessName  String             @map("business_name") @db.VarChar(100)
   email         String             @unique @db.VarChar(255)
   webhookUrl    String?            @map("webhook_url") @db.VarChar(500)
-  apiKeyHash String @map("api_key_hash") @db.VarChar(255)
-  tier MerchantTier @default(basic) @map("tier")
-  status MerchantStatus @default(active)
+  // Per-merchant webhook signing secret (round 4). Nullable by design:
+  // merchants created before this column exists (or before they rotate)
+  // fall back to the global WEBHOOK_SIGNING_SECRET env secret — that
+  // fallback logs a deprecation warning until the merchant is rotated.
+  webhookSecret String?            @map("webhook_secret")
+  apiKeyHash    String             @map("api_key_hash") @db.VarChar(255)
+  tier          MerchantTier       @default(basic) @map("tier")
+  status        MerchantStatus     @default(active)
   createdAt     DateTime           @default(now()) @map("created_at")
   updatedAt     DateTime           @updatedAt @map("updated_at")
 
-  viewingKeys   ChainViewingKey[]
-  invoices      Invoice[]
-  payments      Payment[]
+  viewingKeys      ChainViewingKey[]
+  invoices         Invoice[]
+  payments         Payment[]
   webhookDeliveries WebhookDelivery[]
 
+  // Auth lookup (`merchant.findFirst({ where: { apiKeyHash, status } })`)
+  // previously ran as a sequential scan on every authenticated request;
+  // this index makes the api_key_hash probe an index lookup.
+  @@index([apiKeyHash])
   @@index([email])
   @@index([status])
   @@map("merchants")

@@ -3,10 +3,14 @@ import { prisma } from '../../lib/prisma';
 import { enqueueWebhook } from '../../jobs/webhookQueue';
 import { testWebhook, verifyWebhook, getFailedWebhooks, retryWebhook } from '../webhookController';
 import { createHmac } from 'crypto';
-import { config } from '../../config';
+import { logger } from '../../lib/logger';
+import { __testing__ as webhookSecretTesting } from '../../lib/webhookSecret';
 
 jest.mock('../../lib/prisma', () => ({
   prisma: {
+    merchant: {
+      findUnique: jest.fn(),
+    },
     webhookDelivery: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
@@ -19,6 +23,8 @@ jest.mock('../../jobs/webhookQueue', () => ({
   enqueueWebhook: jest.fn(),
 }));
 
+// Keep the mocked global secret at 'test-secret' — the legacy verify tests
+// below compute their expected HMACs with it.
 jest.mock('../../config', () => ({
   config: {
     webhookSigningSecret: 'test-secret',
@@ -29,9 +35,11 @@ describe('webhookController', () => {
   let req: Partial<Request> & { merchantId?: string, rawBody?: string };
   let res: Partial<Response>;
   let next: jest.Mock;
+  const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
 
   beforeEach(() => {
     jest.clearAllMocks();
+    webhookSecretTesting.resetGlobalFallbackWarning();
     req = {
       merchantId: '00000000-0000-0000-0000-000000000000',
       params: {},
@@ -160,7 +168,7 @@ describe('webhookController', () => {
     it('returns 401 on mismatched signature', () => {
       const timestamp = Date.now().toString();
       const rawBody = '{"test":true}';
-      
+
       // Use wrong secret to generate mismatching signature
       const expectedSignature = createHmac('sha256', 'wrong-secret')
         .update(`${timestamp}.${rawBody}`)
@@ -176,6 +184,175 @@ describe('webhookController', () => {
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({ error: 'Invalid signature' });
+    });
+
+    // ── Round 4: per-merchant webhook secret verification ─────────────────
+
+    it('verifies with the merchant webhookSecret when the body carries a merchantId', async () => {
+      const merchantId = '22222222-2222-2222-2222-222222222222';
+      const timestamp = Date.now().toString();
+      const rawBody = `{"merchantId":"${merchantId}","amount":"10"}`;
+      // signed with the MERCHANT secret, not the global one
+      const signature = createHmac('sha256', 'whsec_merchant_abc')
+        .update(`${timestamp}.${rawBody}`)
+        .digest('hex');
+
+      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({
+        webhookSecret: 'whsec_merchant_abc',
+      });
+
+      req.headers = {
+        'x-veilpay-signature': signature,
+        'x-veilpay-timestamp': timestamp,
+      };
+      req.rawBody = rawBody;
+
+      await verifyWebhook(req as any, res as any, next);
+
+      expect(prisma.merchant.findUnique).toHaveBeenCalledWith({
+        where: { id: merchantId },
+        select: { webhookSecret: true },
+      });
+      expect(res.json).toHaveBeenCalledWith({
+        verified: true,
+        timestamp: expect.any(String),
+      });
+      // per-merchant verification must not warn
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('rejects a global-secret signature when the merchant has a per-merchant secret', async () => {
+      const merchantId = '22222222-2222-2222-2222-222222222222';
+      const timestamp = Date.now().toString();
+      const rawBody = `{"merchantId":"${merchantId}","amount":"10"}`;
+      // signed with the GLOBAL secret while the merchant expects its own
+      const signature = createHmac('sha256', 'test-secret')
+        .update(`${timestamp}.${rawBody}`)
+        .digest('hex');
+
+      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({
+        webhookSecret: 'whsec_merchant_abc',
+      });
+
+      req.headers = {
+        'x-veilpay-signature': signature,
+        'x-veilpay-timestamp': timestamp,
+      };
+      req.rawBody = rawBody;
+
+      await verifyWebhook(req as any, res as any, next);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid signature' });
+    });
+
+    it('accepts a merchantId query param and uses that merchant secret', async () => {
+      const merchantId = '33333333-3333-3333-3333-333333333333';
+      const timestamp = Date.now().toString();
+      const rawBody = '{"note":"query-param identification"}';
+      const signature = createHmac('sha256', 'whsec_query_param')
+        .update(`${timestamp}.${rawBody}`)
+        .digest('hex');
+
+      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({
+        webhookSecret: 'whsec_query_param',
+      });
+
+      req.query = { merchantId };
+      req.headers = {
+        'x-veilpay-signature': signature,
+        'x-veilpay-timestamp': timestamp,
+      };
+      req.rawBody = rawBody;
+
+      await verifyWebhook(req as any, res as any, next);
+
+      expect(prisma.merchant.findUnique).toHaveBeenCalledWith({
+        where: { id: merchantId },
+        select: { webhookSecret: true },
+      });
+      expect(res.json).toHaveBeenCalledWith({
+        verified: true,
+        timestamp: expect.any(String),
+      });
+    });
+
+    it('falls back to the global secret (deprecated, warns once) for a merchant without a secret', async () => {
+      const merchantId = '22222222-2222-2222-2222-222222222222';
+      const timestamp = Date.now().toString();
+      const rawBody = `{"merchantId":"${merchantId}","amount":"10"}`;
+      const signature = createHmac('sha256', 'test-secret')
+        .update(`${timestamp}.${rawBody}`)
+        .digest('hex');
+
+      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({
+        webhookSecret: null,
+      });
+
+      req.headers = {
+        'x-veilpay-signature': signature,
+        'x-veilpay-timestamp': timestamp,
+      };
+      req.rawBody = rawBody;
+
+      await verifyWebhook(req as any, res as any, next);
+
+      // verified via the deprecated global fallback…
+      expect(res.json).toHaveBeenCalledWith({
+        verified: true,
+        timestamp: expect.any(String),
+      });
+      // …and the fallback warned exactly once
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(String(warnSpy.mock.calls[0])).toContain('DEPRECATED');
+    });
+
+    it('falls back to the global secret without a DB lookup when no merchant is identified', async () => {
+      const timestamp = Date.now().toString();
+      const rawBody = '{"test":true}';
+      const signature = createHmac('sha256', 'test-secret')
+        .update(`${timestamp}.${rawBody}`)
+        .digest('hex');
+
+      req.headers = {
+        'x-veilpay-signature': signature,
+        'x-veilpay-timestamp': timestamp,
+      };
+      req.rawBody = rawBody;
+
+      await verifyWebhook(req as any, res as any, next);
+
+      // legacy callers (no merchantId anywhere) never hit the DB
+      expect(prisma.merchant.findUnique).not.toHaveBeenCalled();
+      expect(res.json).toHaveBeenCalledWith({
+        verified: true,
+        timestamp: expect.any(String),
+      });
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('falls back to the global secret for an UNKNOWN merchantId without 404ing', async () => {
+      const merchantId = '44444444-4444-4444-4444-444444444444';
+      const timestamp = Date.now().toString();
+      const rawBody = `{"merchantId":"${merchantId}","amount":"10"}`;
+      const signature = createHmac('sha256', 'test-secret')
+        .update(`${timestamp}.${rawBody}`)
+        .digest('hex');
+
+      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue(null);
+
+      req.headers = {
+        'x-veilpay-signature': signature,
+        'x-veilpay-timestamp': timestamp,
+      };
+      req.rawBody = rawBody;
+
+      await verifyWebhook(req as any, res as any, next);
+
+      expect(res.json).toHaveBeenCalledWith({
+        verified: true,
+        timestamp: expect.any(String),
+      });
     });
   });
 
@@ -323,5 +500,9 @@ describe('webhookController', () => {
       await retryWebhook(req as any, res as any, next);
       expect(next).toHaveBeenCalledWith(expect.any(Error));
     });
+  });
+
+  afterAll(() => {
+    warnSpy.mockRestore();
   });
 });

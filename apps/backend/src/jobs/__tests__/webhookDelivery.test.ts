@@ -1,9 +1,12 @@
+import { createHmac } from 'crypto';
 import { deliverWebhook, __testing__, defaultHttpSender } from '../webhookDelivery';
 import type {
   WebhookSender,
   WebhookSenderArgs,
   WebhookSenderResult,
 } from '../webhookDelivery';
+import { logger } from '../../lib/logger';
+import { __testing__ as webhookSecretTesting } from '../../lib/webhookSecret';
 
 jest.mock('../../config', () => ({
   config: {
@@ -39,9 +42,12 @@ describe('webhookDelivery (SEC-002: SSRF guard + DNS-rebinding pinning)', () => 
 
   let captured: { args?: WebhookSenderArgs; respond?: WebhookSenderResult } = {};
   let sender: jest.Mock<Promise<WebhookSenderResult>, [WebhookSenderArgs]>;
+  const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
 
   beforeEach(() => {
     captured = {};
+    jest.clearAllMocks();
+    webhookSecretTesting.resetGlobalFallbackWarning();
     sender = jest.fn(async (args: WebhookSenderArgs) => {
       captured.args = args;
       return captured.respond ?? { statusCode: 200 };
@@ -188,5 +194,57 @@ describe('webhookDelivery (SEC-002: SSRF guard + DNS-rebinding pinning)', () => 
       captured2 = { addr, family };
     });
     expect(captured2).toEqual({ addr: '93.184.216.34', family: 4 });
+  });
+
+  // ── Round 4: per-merchant webhook signing ──────────────────────────────
+
+  it('signs the payload with the MERCHANT secret when one is provided', async () => {
+    await deliverWebhook('https://example.com/webhook', payload, {
+      webhookSecret: 'whsec_merchant_abc',
+    });
+    expect(sender).toHaveBeenCalledTimes(1);
+    const headers = captured.args!.headers;
+    const body = captured.args!.body;
+    const timestamp = headers['X-VeilPay-Timestamp'];
+    const expected = createHmac('sha256', 'whsec_merchant_abc')
+      .update(`${timestamp}.${body}`)
+      .digest('hex');
+    expect(headers['X-VeilPay-Signature']).toBe(expected);
+    // per-merchant signing must NOT touch the global secret NOR warn
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('a signature made with the merchant secret is NOT valid under the global secret', async () => {
+    await deliverWebhook('https://example.com/webhook', payload, {
+      webhookSecret: 'whsec_merchant_abc',
+    });
+    const headers = captured.args!.headers;
+    const body = captured.args!.body;
+    const timestamp = headers['X-VeilPay-Timestamp'];
+    const globalSig = createHmac('sha256', 'test-secret')
+      .update(`${timestamp}.${body}`)
+      .digest('hex');
+    expect(headers['X-VeilPay-Signature']).not.toBe(globalSig);
+  });
+
+  it('falls back to the global secret (with a once-per-process deprecation warning) when no merchant secret is given', async () => {
+    await deliverWebhook('https://example.com/webhook', payload);
+    const headers = captured.args!.headers;
+    const body = captured.args!.body;
+    const timestamp = headers['X-VeilPay-Timestamp'];
+    const expected = createHmac('sha256', 'test-secret')
+      .update(`${timestamp}.${body}`)
+      .digest('hex');
+    expect(headers['X-VeilPay-Signature']).toBe(expected);
+
+    // fallback warns once per process
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(String(warnSpy.mock.calls[0])).toContain('DEPRECATED');
+    await deliverWebhook('https://example.com/webhook', payload, { webhookSecret: null });
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+  });
+
+  afterAll(() => {
+    warnSpy.mockRestore();
   });
 });

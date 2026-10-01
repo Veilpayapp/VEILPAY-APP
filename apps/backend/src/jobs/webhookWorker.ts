@@ -38,7 +38,7 @@ export function initializeWebhookWorker(): boolean {
 
         const merchant = await prisma.merchant.findUnique({
           where: { id: payload.merchantId },
-          select: { webhookUrl: true },
+          select: { webhookUrl: true, webhookSecret: true },
         });
 
         if (!merchant?.webhookUrl) {
@@ -78,7 +78,11 @@ export function initializeWebhookWorker(): boolean {
             .catch(() => undefined);
         }
 
-        const result = await deliverWebhook(merchant.webhookUrl, payload);
+        // Per-merchant webhook signing secret (null → deprecated global
+        // fallback inside deliverWebhook/resolveWebhookSigningSecret).
+        const result = await deliverWebhook(merchant.webhookUrl, payload, {
+          webhookSecret: merchant.webhookSecret,
+        });
 
         const isFinalAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 3);
 

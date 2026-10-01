@@ -11,6 +11,7 @@ describe('Merchant Routes', () => {
 
     expect(routes).toContainEqual({ path: '/register', method: 'post' });
     expect(routes).toContainEqual({ path: '/keys/publish', method: 'post' });
+    expect(routes).toContainEqual({ path: '/keys/rotate', method: 'post' });
     expect(routes).toContainEqual({ path: '/:id', method: 'get' });
     expect(routes).toContainEqual({ path: '/:id/stats', method: 'get' });
     expect(routes).toContainEqual({ path: '/:id', method: 'put' });

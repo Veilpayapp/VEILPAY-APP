@@ -120,13 +120,18 @@ describe('webhookWorker', () => {
 
     it('delivers webhook successfully', async () => {
       const infoSpy = jest.spyOn(logger, 'info');
-      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({ webhookUrl: 'http://example.com' });
+      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({
+        webhookUrl: 'http://example.com',
+        webhookSecret: 'whsec_worker',
+      });
       (deliverWebhook as jest.Mock).mockResolvedValue({ success: true, statusCode: 200 });
       const job = { id: 'j-1', data: { merchantId: 'm-1', eventType: 'test' }, attemptsMade: 0, opts: { attempts: 3 } };
 
       await processor(job);
 
-      expect(deliverWebhook).toHaveBeenCalledWith('http://example.com', job.data);
+      expect(deliverWebhook).toHaveBeenCalledWith('http://example.com', job.data, {
+        webhookSecret: 'whsec_worker',
+      });
       expect(incrementWebhookDeliveryAttempt).toHaveBeenCalledWith('success');
       expect(prisma.webhookDelivery.create).toHaveBeenCalledWith(expect.objectContaining({
         data: expect.objectContaining({ status: 'delivered' }),
@@ -137,8 +142,32 @@ describe('webhookWorker', () => {
       expect(logged).not.toContain('http://example.com');
     });
 
+    it('selects webhookSecret with webhookUrl and forwards null for unrotated merchants', async () => {
+      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({
+        webhookUrl: 'http://example.com',
+        webhookSecret: null,
+      });
+      (deliverWebhook as jest.Mock).mockResolvedValue({ success: true, statusCode: 200 });
+      const job = { id: 'j-2', data: { merchantId: 'm-1', eventType: 'test' }, attemptsMade: 0, opts: { attempts: 3 } };
+
+      await processor(job);
+
+      // the lookup must fetch the per-merchant secret alongside the URL
+      expect(prisma.merchant.findUnique).toHaveBeenCalledWith({
+        where: { id: 'm-1' },
+        select: { webhookUrl: true, webhookSecret: true },
+      });
+      // unrotated merchant → null secret (deliverWebhook falls back internally)
+      expect(deliverWebhook).toHaveBeenCalledWith('http://example.com', job.data, {
+        webhookSecret: null,
+      });
+    });
+
     it('handles webhook delivery failure but not final attempt', async () => {
-      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({ webhookUrl: 'http://example.com' });
+      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({
+        webhookUrl: 'http://example.com',
+        webhookSecret: null,
+      });
       (deliverWebhook as jest.Mock).mockResolvedValue({ success: false, statusCode: 500, lastError: 'Error' });
       const job = { id: 'j-1', data: { merchantId: 'm-1', eventType: 'test' }, attemptsMade: 0, opts: { attempts: 3 } };
       
@@ -148,7 +177,10 @@ describe('webhookWorker', () => {
     });
 
     it('handles webhook delivery failure on final attempt', async () => {
-      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({ webhookUrl: 'http://example.com' });
+      (prisma.merchant.findUnique as jest.Mock).mockResolvedValue({
+        webhookUrl: 'http://example.com',
+        webhookSecret: 'whsec_worker',
+      });
       (deliverWebhook as jest.Mock).mockResolvedValue({ success: false, statusCode: 500, lastError: 'Error' });
       const job = { id: 'j-1', data: { merchantId: 'm-1', eventType: 'test' }, attemptsMade: 2, opts: { attempts: 3 } };
       

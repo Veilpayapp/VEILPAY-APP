@@ -109,6 +109,74 @@ export const registerMerchant = async (req: Request, res: Response, next: NextFu
   }
 };
 
+/**
+ * POST /api/v1/merchant/keys/rotate — API key rotation.
+ *
+ * Authenticated with the CURRENT HMAC key (authMiddleware). Mints a new `vp_`
+ * key via the same minting/hash path as registration, then atomically swaps
+ * the stored hash with a compare-and-swap updateMany keyed on
+ * `{ id, apiKeyHash: <current hash> }`:
+ *   - count === 1 → the swap won; the new plaintext key is returned exactly
+ *     ONCE (it is never persisted in plaintext and never shown again).
+ *   - count !== 1 → the row's hash no longer matches the key that
+ *     authenticated this request (a concurrent rotation or manual key change
+ *     already happened) → 409 conflict, no key material leaked.
+ *
+ * Because authMiddleware resolves merchants by the CURRENT stored hash, the
+ * OLD key starts failing auth (401) immediately after a successful rotation
+ * — there is no grace period and no revocation lag.
+ */
+export const rotateApiKey = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const merchantId = req.merchantId as string;
+
+    // The key that authenticated THIS request — authMiddleware verified its
+    // signature, so its hash is the expected current value for the CAS below.
+    const currentApiKey = req.headers["x-api-key"];
+    if (typeof currentApiKey !== "string" || currentApiKey.length === 0) {
+      res.status(401).json({ error: "Missing API key" });
+      return;
+    }
+    const currentApiKeyHash = hashApiKey(currentApiKey);
+
+    // Same minting path as registerMerchant (vp_ + randomUUID, hex-hashed).
+    const apiKey = `vp_${randomUUID().replace(/-/g, "")}`;
+    const apiKeyHash = hashApiKey(apiKey);
+
+    // Atomic compare-and-swap: only this request's key version can win.
+    const result = await prisma.merchant.updateMany({
+      where: {
+        id: merchantId,
+        apiKeyHash: currentApiKeyHash,
+      },
+      data: { apiKeyHash },
+    });
+
+    if (result.count !== 1) {
+      // CAS miss — the stored hash moved on (concurrent rotate raced us, or
+      // an operator replaced the key). The request must re-auth with
+      // whatever key is current now; we return no key material.
+      res.status(409).json({
+        error: "API key conflict: the key was already rotated. Re-authenticate with the current key and retry.",
+        code: "API_KEY_ROTATION_CONFLICT",
+      });
+      return;
+    }
+
+    res.json({
+      merchantId,
+      apiKey,
+      warning: "Store this API key now — it is shown exactly once and never again.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const publishKey = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const data = publishKeySchema.parse(req.body);

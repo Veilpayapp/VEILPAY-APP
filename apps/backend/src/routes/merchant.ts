@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import {
   registerMerchant,
   publishKey,
+  rotateApiKey,
   getMerchant,
   getMerchantStats,
   updateMerchant,
@@ -34,6 +35,9 @@ async function merchantTierLimiter(
 // email-enumeration and create-spam before the handler runs.
 router.post("/register", registrationRateLimiter, asyncHandler(registerMerchant));
 router.post("/keys/publish", authMiddleware, requireAuth, asyncHandler(merchantTierLimiter), asyncHandler(publishKey));
+// API key rotation: authenticated with the CURRENT key; atomic CAS swap
+// (409 on conflict). Registered before /:id so the static path wins.
+router.post("/keys/rotate", authMiddleware, requireAuth, asyncHandler(merchantTierLimiter), asyncHandler(rotateApiKey));
 router.get("/:id", authMiddleware, requireAuth, asyncHandler(merchantTierLimiter), asyncHandler(getMerchant));
 router.get("/:id/stats", authMiddleware, requireAuth, asyncHandler(merchantTierLimiter), asyncHandler(getMerchantStats));
 router.put("/:id", authMiddleware, requireAuth, asyncHandler(merchantTierLimiter), asyncHandler(updateMerchant));

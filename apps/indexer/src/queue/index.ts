@@ -1,5 +1,7 @@
 import { Queue, Worker, Job } from "bullmq";
 import IORedis from "ioredis";
+import { Prisma } from "@prisma/client";
+import { prisma } from "../lib/prisma";
 import { config } from "../config";
 
 const connection = new IORedis(config.redisUrl, {
@@ -10,6 +12,12 @@ export interface WebhookPayload {
   merchantId: string;
   eventType: "payment.received" | "payment.confirmed" | "invoice.expired";
   timestamp: number;
+  /**
+   * Durable outbox row id (WebhookDelivery, status=pending) created BEFORE
+   * this payload is enqueued — see enqueueWebhook. The dispatcher updates
+   * that same row to delivered/failed instead of creating post-hoc rows.
+   */
+  deliveryId?: string;
   data: {
     invoiceId?: string;
     paymentId?: string;
@@ -61,11 +69,74 @@ export const deadLetterQueue = new Queue<DeadLetterPayload>("veilpay-webhook-dlq
   },
 });
 
+/**
+ * Durable outbox (mirrors apps/backend/src/jobs/webhookQueue.ts:109-128):
+ * persist a WebhookDelivery row with status=pending BEFORE the BullMQ add,
+ * so a crash between the DB commit and the enqueue cannot silently drop a
+ * merchant notification — the stranded row is visible to the drift job.
+ *
+ * The BullMQ jobId is `wh-<deliveryId>` (backend's buildWebhookJobId), so
+ * the job identity is bound to the outbox row. This also fixes a latent
+ * dedup bug in the old `${merchantId}-${txHash}` id: two different event
+ * types for the same txHash were swallowed by BullMQ's jobId dedupe.
+ */
 export async function enqueueWebhook(payload: WebhookPayload): Promise<string> {
-  const job = await webhookQueue.add("webhook", payload, {
-    jobId: `${payload.merchantId}-${payload.data.txHash}`,
-  });
-  return job.id!;
+  let deliveryId = payload.deliveryId;
+  if (!deliveryId) {
+    try {
+      const row = await prisma.webhookDelivery.create({
+        data: {
+          merchantId: payload.merchantId,
+          eventType: payload.eventType,
+          payload: payload as unknown as Prisma.InputJsonValue,
+          status: "pending",
+          retryCount: 0,
+        },
+        select: { id: true },
+      });
+      deliveryId = row.id;
+    } catch (dbErr) {
+      // DB write failed — still try to enqueue so the merchant gets the
+      // notification (undurable but delivered beats durable but dropped).
+      console.error(
+        "[WebhookQueue] Failed to create outbox row:",
+        dbErr instanceof Error ? dbErr.message : String(dbErr)
+      );
+    }
+  }
+
+  const enriched: WebhookPayload = { ...payload, deliveryId };
+
+  try {
+    const job = await webhookQueue.add("webhook", enriched, {
+      jobId: deliveryId
+        ? `wh-${deliveryId}`
+        : `${payload.merchantId}-${payload.data.txHash}`,
+    });
+    return job.id!;
+  } catch (err) {
+    // Enqueue failed — mark the outbox row failed so the drift job reports
+    // it instead of it sitting in pending forever.
+    if (deliveryId) {
+      const msg = err instanceof Error ? err.message : String(err);
+      try {
+        await prisma.webhookDelivery.update({
+          where: { id: deliveryId },
+          data: {
+            status: "failed",
+            error: `Webhook queue add failed: ${msg}`,
+            completedAt: new Date(),
+          },
+        });
+      } catch (updateErr) {
+        console.error(
+          "[WebhookQueue] Failed to mark outbox row failed:",
+          updateErr instanceof Error ? updateErr.message : String(updateErr)
+        );
+      }
+    }
+    throw err;
+  }
 }
 
 export async function enqueueDeadLetter(payload: DeadLetterPayload): Promise<string> {

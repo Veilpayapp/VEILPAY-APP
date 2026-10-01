@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/node";
 import { startWebSocketIndexers } from "./indexers/websocket";
 import { startWebhookWorker } from "./webhook/dispatcher";
 import { startStealthScanners } from "./stealth/scanner";
+import { startDriftCheckScheduler, stopDriftCheckScheduler } from "./jobs/driftCheck";
 import { config } from "./config";
 
 // IX-C4: init Sentry before any indexer startup so boot errors, unhandled
@@ -28,6 +29,17 @@ async function main() {
   const scanners = await startStealthScanners();
   console.warn(`[Veilpay] Started ${scanners.size} stealth scanners`);
 
+  // (b) config-gated periodic drift check — 0 / unset means OFF.
+  let driftTimer: NodeJS.Timeout | null = null;
+  if (config.reconciliationDriftCheckIntervalMs > 0) {
+    driftTimer = startDriftCheckScheduler(config.reconciliationDriftCheckIntervalMs);
+    console.warn(
+      `[Veilpay] Settlement drift check enabled (every ${config.reconciliationDriftCheckIntervalMs}ms)`
+    );
+  } else {
+    console.warn("[Veilpay] Settlement drift check disabled (RECONCILIATION_DRIFT_CHECK_INTERVAL_MS=0)");
+  }
+
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   const shutdown = async () => {
     console.warn("[Veilpay] Shutting down...");
@@ -48,6 +60,8 @@ async function main() {
 
     await worker.close();
     console.warn("[Veilpay] Webhook worker stopped");
+
+    stopDriftCheckScheduler(driftTimer);
 
     process.exit(0);
   };

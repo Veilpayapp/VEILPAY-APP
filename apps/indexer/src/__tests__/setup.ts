@@ -17,6 +17,9 @@ jest.mock('../lib/prisma', () => {
         findUnique: jest.fn<any>(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         findFirst: jest.fn<any>(),
+        // (a) settlement reconciliation scanner
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        findMany: jest.fn<any>().mockResolvedValue([]),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         update: jest.fn<any>(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,6 +51,14 @@ jest.mock('../lib/prisma', () => {
       webhookDelivery: {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         create: jest.fn<any>(),
+        // (f) durable outbox: dispatcher updates the SAME row
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        update: jest.fn<any>(),
+        // (b) drift check: rows stuck undelivered
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        findMany: jest.fn<any>().mockResolvedValue([]),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        count: jest.fn<any>().mockResolvedValue(0),
       },
       processedBlock: {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

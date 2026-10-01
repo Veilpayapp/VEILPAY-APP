@@ -14,6 +14,9 @@ const envSchema = z.object({
   // a publicly-known key. Tests inject a dummy via src/__tests__/setup.ts.
   WEBHOOK_SIGNING_SECRET: z.string().min(16),
   INDEX_SOLANA: z.string().optional(),
+  // (b) periodic settlement drift check interval in ms. 0/default = OFF —
+  // the drift job only runs when explicitly enabled.
+  RECONCILIATION_DRIFT_CHECK_INTERVAL_MS: z.coerce.number().int().min(0).default(0),
   // IX-C4: Sentry DSN — empty disables Sentry outside production; required
   // in production (fail-closed, mirrors the backend's prod config block).
   SENTRY_DSN: z.string().default(""),
@@ -53,4 +56,6 @@ export const config = {
   webhookSigningSecret: env.WEBHOOK_SIGNING_SECRET,
   sentryDsn: env.SENTRY_DSN,
   indexSolana: env.INDEX_SOLANA === "true",
+  // (b) 0 means the periodic drift check is disabled.
+  reconciliationDriftCheckIntervalMs: env.RECONCILIATION_DRIFT_CHECK_INTERVAL_MS,
 };

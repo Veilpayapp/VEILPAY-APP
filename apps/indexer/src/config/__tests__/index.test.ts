@@ -15,10 +15,10 @@ describe('Config Module', () => {
     process.env = originalEnv;
   });
 
-  function loadConfig(): { config: { nodeEnv: string; databaseUrl: string; indexSolana: boolean } } {
+  function loadConfig(): { config: { nodeEnv: string; databaseUrl: string; indexSolana: boolean; reconciliationDriftCheckIntervalMs: number } } {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     return require('../index') as {
-      config: { nodeEnv: string; databaseUrl: string; indexSolana: boolean };
+      config: { nodeEnv: string; databaseUrl: string; indexSolana: boolean; reconciliationDriftCheckIntervalMs: number };
     };
   }
 
@@ -115,5 +115,32 @@ describe('Config Module', () => {
     const { config } = loadConfig();
     expect(config.nodeEnv).toBe('production');
     expect(config.indexSolana).toBe(true);
+  });
+
+  // (b) drift-check interval flag — default OFF (0), parsed from a string env var
+  it('drift check interval defaults to 0 (disabled) when unset', () => {
+    process.env.NODE_ENV = 'development';
+    process.env.WEBHOOK_SIGNING_SECRET = 'dev_only_webhook_signing_secret_0123456789';
+    delete process.env.RECONCILIATION_DRIFT_CHECK_INTERVAL_MS;
+
+    const { config } = loadConfig();
+    expect(config.reconciliationDriftCheckIntervalMs).toBe(0);
+  });
+
+  it('drift check interval parses a string env var into a number', () => {
+    process.env.NODE_ENV = 'development';
+    process.env.WEBHOOK_SIGNING_SECRET = 'dev_only_webhook_signing_secret_0123456789';
+    process.env.RECONCILIATION_DRIFT_CHECK_INTERVAL_MS = '300000';
+
+    const { config } = loadConfig();
+    expect(config.reconciliationDriftCheckIntervalMs).toBe(300000);
+  });
+
+  it('rejects a negative drift check interval', () => {
+    process.env.NODE_ENV = 'development';
+    process.env.WEBHOOK_SIGNING_SECRET = 'dev_only_webhook_signing_secret_0123456789';
+    process.env.RECONCILIATION_DRIFT_CHECK_INTERVAL_MS = '-5';
+
+    expect(() => loadConfig()).toThrow();
   });
 });

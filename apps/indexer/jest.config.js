@@ -9,6 +9,9 @@ module.exports = {
   },
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
+  // Do not run compiled .js test copies that `tsc` emits into dist/ —
+  // they are stale duplicates of the src/ suites and double every run.
+  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/dist/'],
   transform: {
     '^.+\\.tsx?$': [
       'ts-jest',

@@ -1,7 +1,16 @@
+import * as Sentry from "@sentry/node";
 import { startWebSocketIndexers } from "./indexers/websocket";
 import { startWebhookWorker } from "./webhook/dispatcher";
 import { startStealthScanners } from "./stealth/scanner";
 import { config } from "./config";
+
+// IX-C4: init Sentry before any indexer startup so boot errors, unhandled
+// rejections and the reconnect-exhaustion exit are reported. The DSN is
+// required (fail-closed) in production via the config module; an empty DSN
+// in dev/test disables Sentry (mirrors the backend's early init).
+Sentry.init({
+  dsn: config.sentryDsn || "",
+});
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 async function main() {

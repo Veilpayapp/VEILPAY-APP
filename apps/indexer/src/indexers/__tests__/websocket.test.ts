@@ -96,7 +96,7 @@ describe('EVMWebSocketIndexer', () => {
         logIndex: 0,
         type: 'commitment' as const,
         commitment: '0xcomm',
-        amount: '100',
+        amount: '1000000000000000000',
         token: '0x0000000000000000000000000000000000000000',
         timestamp: Date.now()
       };
@@ -104,7 +104,7 @@ describe('EVMWebSocketIndexer', () => {
       (prisma.payment.findUnique as jest.Mock).mockResolvedValueOnce(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       jest.spyOn(indexer as any, 'findMerchantByPayment').mockResolvedValueOnce({ id: 'm1' });
-      (prisma.payment.create as jest.Mock).mockResolvedValueOnce({ id: 'pay1' });
+      (prisma.payment.create as jest.Mock).mockResolvedValueOnce({ id: 'pay1', txHash: '0xabc' });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       jest.spyOn(indexer as any, 'matchPaymentToInvoice').mockResolvedValueOnce({ id: 'inv1' });
 
@@ -117,7 +117,7 @@ describe('EVMWebSocketIndexer', () => {
         data: expect.objectContaining({
           merchantId: 'm1',
           txHash: '0xabc',
-          amount: '100',
+          amount: '1',
           tokenSymbol: 'ETH',
           privacyLevel: 'max'
         })
@@ -137,6 +137,182 @@ describe('EVMWebSocketIndexer', () => {
       await (indexer as any).processEvent({} as any, '0xFrom', '0xTo');
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(prisma.payment.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Settlement (IX-C2: base-unit conversion, tx hash, CAS flip)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function makeIndexer(): any {
+      return new EVMWebSocketIndexer({
+        chainKey: 'ethereum',
+        poolAddress: '0xPool',
+        rpcUrl: 'ws://localhost:8545'
+      });
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function baseEvent(overrides: Record<string, any> = {}) {
+      return {
+        chainKey: 'ethereum',
+        blockNumber: 1000,
+        txHash: '0xrealTxHash',
+        logIndex: 0,
+        type: 'commitment' as const,
+        commitment: '0xcomm',
+        // 1 native ETH in base units; Invoice.amount stores human units ("1")
+        amount: '1000000000000000000',
+        token: '0x0000000000000000000000000000000000000000',
+        timestamp: Date.now(),
+        ...overrides,
+      };
+    }
+
+    it('matches the invoice when eventAmount = invoiceAmount x 10^decimals (not raw base units)', async () => {
+      const indexer = makeIndexer();
+
+      (prisma.payment.findUnique as jest.Mock).mockResolvedValueOnce(null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      jest.spyOn(indexer, 'findMerchantByPayment').mockResolvedValueOnce({ id: 'm1' });
+      (prisma.payment.create as jest.Mock).mockResolvedValueOnce({
+        id: 'pay1',
+        txHash: '0xrealTxHash',
+        amount: '1',
+        chainKey: 'ethereum',
+        merchantId: 'm1',
+        toAddress: '0xTo',
+      });
+      (prisma.invoice.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'inv1' });
+      (prisma.invoice.updateMany as jest.Mock).mockResolvedValueOnce({ count: 1 });
+
+      await indexer.processEvent(baseEvent(), '0xFrom', '0xTo');
+
+      // The invoice lookup ran with the CONVERTED human amount, never the
+      // raw base-unit string — that is why the old exact match never hit.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      const whereArg = (prisma.invoice.findFirst as jest.Mock).mock.calls[0][0].where as any;
+      expect(whereArg.amount).toBe('1');
+      expect(whereArg.amount).not.toBe('1000000000000000000');
+      expect(whereArg.status).toBe('pending');
+      expect(whereArg.merchantId).toBe('m1');
+    });
+
+    it('writes the real tx hash (not the to-address) into paymentTxHash via a pending-precondition CAS', async () => {
+      const indexer = makeIndexer();
+
+      (prisma.payment.findUnique as jest.Mock).mockResolvedValueOnce(null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      jest.spyOn(indexer, 'findMerchantByPayment').mockResolvedValueOnce({ id: 'm1' });
+      (prisma.payment.create as jest.Mock).mockResolvedValueOnce({
+        id: 'pay1',
+        txHash: '0xrealTxHash',
+        amount: '1',
+        chainKey: 'ethereum',
+        merchantId: 'm1',
+        toAddress: '0xTo',
+      });
+      (prisma.invoice.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'inv1' });
+      (prisma.invoice.updateMany as jest.Mock).mockResolvedValueOnce({ count: 1 });
+
+      await indexer.processEvent(baseEvent(), '0xFrom', '0xTo');
+
+      expect(prisma.invoice.updateMany).toHaveBeenCalledWith({
+        where: { id: 'inv1', status: 'pending' },
+        data: expect.objectContaining({
+          status: 'paid',
+          paymentTxHash: '0xrealTxHash',
+          paidAt: expect.any(Date),
+        }),
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      const callArg = (prisma.invoice.updateMany as jest.Mock).mock.calls[0][0] as any;
+      expect(callArg.data.paymentTxHash).not.toBe('0xTo');
+      // settled → webhook enqueued
+      expect(enqueueWebhook).toHaveBeenCalledTimes(1);
+    });
+
+    it('treats updateMany count === 0 as NOT settled (invoice no longer pending)', async () => {
+      const indexer = makeIndexer();
+
+      (prisma.payment.findUnique as jest.Mock).mockResolvedValueOnce(null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      jest.spyOn(indexer, 'findMerchantByPayment').mockResolvedValueOnce({ id: 'm1' });
+      (prisma.payment.create as jest.Mock).mockResolvedValueOnce({
+        id: 'pay1',
+        txHash: '0xrealTxHash',
+        amount: '1',
+        chainKey: 'ethereum',
+        merchantId: 'm1',
+        toAddress: '0xTo',
+      });
+      (prisma.invoice.findFirst as jest.Mock).mockResolvedValueOnce({ id: 'inv1' });
+      // CAS loses: another writer already flipped the invoice off pending.
+      (prisma.invoice.updateMany as jest.Mock).mockResolvedValueOnce({ count: 0 });
+
+      await indexer.processEvent(baseEvent(), '0xFrom', '0xTo');
+
+      expect(prisma.invoice.updateMany).toHaveBeenCalledTimes(1);
+      expect(enqueueWebhook).not.toHaveBeenCalled();
+    });
+
+    it('never writes a 42-char token address to tokenSymbol (unknown token → short symbol)', async () => {
+      const indexer = makeIndexer();
+
+      (prisma.payment.findUnique as jest.Mock).mockResolvedValueOnce(null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      jest.spyOn(indexer, 'findMerchantByPayment').mockResolvedValueOnce({ id: 'm1' });
+      (prisma.payment.create as jest.Mock).mockResolvedValueOnce({
+        id: 'pay1',
+        txHash: '0xrealTxHash',
+        amount: '1',
+        chainKey: 'ethereum',
+        merchantId: 'm1',
+        toAddress: '0xTo',
+      });
+      (prisma.invoice.findFirst as jest.Mock).mockResolvedValueOnce(null);
+
+      await indexer.processEvent(
+        baseEvent({ token: '0x9999999999999999999999999999999999999999' }),
+        '0xFrom',
+        '0xTo'
+      );
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      const data = (prisma.payment.create as jest.Mock).mock.calls[0][0].data as any;
+      expect(data.tokenSymbol).toBe('TOKEN');
+      expect(data.tokenSymbol.length).toBeLessThan(20);
+      expect(data.tokenSymbol).not.toMatch(/^0x[0-9a-fA-F]{40}$/);
+    });
+
+    it('maps an allowlisted USDC contract to its symbol and 6-decimal conversion', async () => {
+      const indexer = makeIndexer();
+
+      (prisma.payment.findUnique as jest.Mock).mockResolvedValueOnce(null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      jest.spyOn(indexer, 'findMerchantByPayment').mockResolvedValueOnce({ id: 'm1' });
+      (prisma.payment.create as jest.Mock).mockResolvedValueOnce({
+        id: 'pay1',
+        txHash: '0xrealTxHash',
+        amount: '1',
+        chainKey: 'ethereum',
+        merchantId: 'm1',
+        toAddress: '0xTo',
+      });
+      (prisma.invoice.findFirst as jest.Mock).mockResolvedValueOnce(null);
+
+      // 1 USDC in base units with 6 decimals.
+      await indexer.processEvent(
+        baseEvent({
+          token: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+          amount: '1000000',
+        }),
+        '0xFrom',
+        '0xTo'
+      );
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+      const data = (prisma.payment.create as jest.Mock).mock.calls[0][0].data as any;
+      expect(data.tokenSymbol).toBe('USDC');
+      expect(data.amount).toBe('1');
     });
   });
 
@@ -187,7 +363,13 @@ describe('EVMWebSocketIndexer', () => {
       jest.useRealTimers();
     });
 
-    it('should stop reconnecting after max attempts', async () => {
+    it('should exit the process (exit code 1) after max reconnect attempts', async () => {
+      // IX-C3: exhaustion must terminate the process so the supervisor's
+      // ON_FAILURE restart fires — never silently return and zombie on.
+      // process.exit is mocked or jest itself would die with the worker.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const exitSpy = jest.spyOn(process, 'exit').mockImplementation((() => undefined) as any);
+
       const indexer = new EVMWebSocketIndexer({
         chainKey: 'ethereum',
         poolAddress: '0xPool',
@@ -197,8 +379,11 @@ describe('EVMWebSocketIndexer', () => {
       (indexer as any).reconnectAttempts = 10;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       await (indexer as any).handleReconnect();
+
+      expect(exitSpy).toHaveBeenCalledWith(1);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
       expect((indexer as any).reconnectAttempts).toBe(10);
+      exitSpy.mockRestore();
     });
   });
 

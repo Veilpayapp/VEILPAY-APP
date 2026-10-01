@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import { redis } from "../lib/redis";
 import { IndexedEvent } from "./index";
 import { enqueueWebhook, WebhookPayload } from "../queue";
+import { getTokenMetadata, baseUnitsToHumanAmount } from "./tokenMetadata";
 
 const VEIL_POOL_ABI = [
   "event NewCommitment(bytes32 indexed commitment, address indexed token, uint256 amount, uint256 leafIndex)",
@@ -262,6 +263,17 @@ export class EVMWebSocketIndexer {
       return;
     }
 
+    // IX-C2 fix: resolve token metadata (symbol + decimals) from the
+    // allowlisted registry (mirrors apps/backend/src/lib/tokenRegistry.ts)
+    // so `tokenSymbol` is a short ticker — never a 42-char contract address
+    // overflowing the VarChar(20) column — and convert the BASE-UNIT event
+    // amount (e.g. 1000000000000000000 = 1 ETH) to the HUMAN units that
+    // Invoice.amount is stored in, so the invoice match can succeed.
+    // Payment.amount and the webhook payload use the same human-units
+    // convention as the backend's payment processor.
+    const tokenMeta = getTokenMetadata(event.chainKey, event.token);
+    const humanAmount = baseUnitsToHumanAmount(event.amount, tokenMeta.decimals);
+
     // IX-C1 fix: wrap payment creation + invoice update in a DB transaction
     const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const payment = await tx.payment.create({
@@ -271,9 +283,8 @@ export class EVMWebSocketIndexer {
           txHash: event.txHash,
           fromAddress,
           toAddress: toAddress || "",
-          amount: event.amount,
-          // IX-H4 fix: use actual token from event instead of hardcoded "ETH"
-          tokenSymbol: event.token === ethers.ZeroAddress ? "ETH" : event.token,
+          amount: humanAmount,
+          tokenSymbol: tokenMeta.symbol,
           privacyLevel: event.commitment ? "max" : "standard",
           commitment: event.commitment,
           nullifier: event.nullifier,
@@ -299,8 +310,8 @@ export class EVMWebSocketIndexer {
           paymentId: result.payment.id,
           chainKey: event.chainKey,
           txHash: event.txHash,
-          amount: event.amount,
-          tokenSymbol: event.token === ethers.ZeroAddress ? "ETH" : event.token,
+          amount: humanAmount,
+          tokenSymbol: tokenMeta.symbol,
           fromAddress,
           toAddress: toAddress || "",
           blockNumber: event.blockNumber,
@@ -330,8 +341,17 @@ export class EVMWebSocketIndexer {
   }
 
   // IX-H3 fix: match invoice by paymentAddress in addition to amount + merchant + chain
+  // IX-C2 fix: `payment.amount` is now HUMAN units (converted from base units
+  // via the token's decimals in processEvent), matching how Invoice.amount is
+  // stored, so this exact comparison can succeed.
   private async matchPaymentToInvoice(
-    payment: { merchantId: string; amount: string; chainKey: string; toAddress: string },
+    payment: {
+      merchantId: string;
+      amount: string;
+      chainKey: string;
+      toAddress: string;
+      txHash: string;
+    },
     tx?: Prisma.TransactionClient
   ): Promise<{ id: string } | null> {
     const db = tx || prisma;
@@ -360,14 +380,28 @@ export class EVMWebSocketIndexer {
     });
 
     if (invoice) {
-      await db.invoice.update({
-        where: { id: invoice.id },
+      // IX-C2 fix (mirrors apps/backend/src/services/paymentProcessor.ts):
+      // compare-and-swap the pending→paid flip instead of a blind update.
+      // updateMany only touches rows still in 'pending'; count === 0 means
+      // another writer already settled this invoice (race with the backend's
+      // settlement path), so this event must NOT report it as settled.
+      // paymentTxHash now stores the real transaction hash, not the
+      // to-address.
+      const updateResult = await db.invoice.updateMany({
+        where: { id: invoice.id, status: "pending" },
         data: {
           status: "paid",
-          paymentTxHash: payment.toAddress,
+          paymentTxHash: payment.txHash,
           paidAt: new Date(),
         },
       });
+
+      if (updateResult.count === 0) {
+        console.warn(
+          `[${this.chainKey}] Invoice ${invoice.id} no longer pending — not settled by payment ${payment.txHash}`
+        );
+        return null;
+      }
     }
 
     return invoice;
@@ -500,7 +534,20 @@ export class EVMWebSocketIndexer {
 
   private async handleReconnect(): Promise<void> {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error(`[${this.chainKey}] Max reconnect attempts reached`);
+      // IX-C3 fix: previously this logged and returned, leaving the process
+      // alive as a zombie that indexes nothing while the supervisor keeps
+      // it running. Exit non-zero on exhaustion so Railway's ON_FAILURE
+      // restart policy fires and the indexer comes back with fresh
+      // connections. (Transient failures below still get bounded backoff
+      // retries without exiting; the re-entrant setTimeout in the catch
+      // block re-enters here and exits once attempts are exhausted.)
+      console.error(
+        `[${this.chainKey}] Max reconnect attempts (${this.maxReconnectAttempts}) reached; exiting for supervisor restart`
+      );
+      process.exit(1);
+      // Unreachable in production — process.exit never returns. Present so
+      // tests with a mocked process.exit terminate this path instead of
+      // falling through into the retry delay below.
       return;
     }
 

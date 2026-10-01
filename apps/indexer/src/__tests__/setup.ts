@@ -1,5 +1,12 @@
 import { jest } from '@jest/globals';
 
+// IX-C5: WEBHOOK_SIGNING_SECRET is required at boot with no committed
+// default. Inject a dummy for the whole test suite unless a test file
+// explicitly overrides/deletes it (the config suite does, to assert the
+// throw). Runs in setupFilesAfterEnv, before any module loads config.
+process.env.WEBHOOK_SIGNING_SECRET =
+  process.env.WEBHOOK_SIGNING_SECRET || 'test_only_webhook_signing_secret_0123456789';
+
 jest.mock('../lib/prisma', () => {
   return {
     prisma: {
@@ -20,6 +27,9 @@ jest.mock('../lib/prisma', () => {
         findUnique: jest.fn<any>(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         update: jest.fn<any>(),
+        // IX-C2: invoice flip is a compare-and-swap updateMany in the indexer
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        updateMany: jest.fn<any>().mockResolvedValue({ count: 1 }),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         findMany: jest.fn<any>(),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -60,6 +60,29 @@ jobs:
         working-directory: apps/consumer-app
         run: npx -p eas-cli@20 eas --version
 
+      # Stage the withdraw-circuit prover assets (withdraw.wasm,
+      # withdraw_final.zkey, snarkjs.min.js/.umd) into
+      # apps/consumer-app/assets/circuits/ BEFORE the EAS build: Metro
+      # statically requires them (assetExts wasm/zkey/umd) and the release
+      # prover is bundled-local with no remote fallback.
+      #
+      # FAIL-CLOSED: the script verifies every staged byte against the
+      # SHA-256 pins baked in apps/consumer-app/src/constants/circuit.ts and
+      # exits non-zero on any mismatch, failing this build. It is idempotent
+      # (consecutive runs rewrite identical bytes).
+      #
+      # NOTE (user gate): packages/circuits/build/ is gitignored (root
+      # .gitignore `build/`), so a fresh checkout cannot source the pinned
+      # wasm/zkey from it. Until the circuit build artifacts are committed or
+      # otherwise supplied on the runner, this step fails closed by design —
+      # the pins make sure no APK is ever built with wrong or missing prover
+      # bytes. See apps/consumer-app/assets/circuits/README.md. The
+      # eas-build-post-install hook re-verifies the archived staged assets
+      # inside the EAS build itself.
+      - name: Stage circuit assets
+        working-directory: apps/consumer-app
+        run: node scripts/stage-circuit-assets.js
+
       - name: Build Android APK (EAS local)
         working-directory: apps/consumer-app
         env:

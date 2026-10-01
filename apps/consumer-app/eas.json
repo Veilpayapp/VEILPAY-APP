@@ -1,5 +1,5 @@
 {
-  "$comment": "DEPRECATED: EAS/OTA is discontinued. This config is kept for historical reference and must not be used for new builds. See app.config.js for the deprecation note.",
+  "$comment": "LIVE PIPELINE: EAS-local builds run from CI (.github/workflows/android-build.yml: `eas build --platform android --local`) and consume these build profiles. Round 3 retired OTA (expo-updates / `eas update`), NOT EAS builds — do not treat this file as deprecated. The withdraw-circuit prover assets are staged fail-closed before/during every build: by the 'Stage circuit assets' workflow step before `eas build`, and re-verified inside the build by eas-hooks/stage-circuits.js (wired via the `eas-build-post-install` npm lifecycle script in package.json; current EAS CLI has no hooks key in build profiles). Pins live in src/constants/circuit.ts.",
   "cli": {
     "version": ">= 5.0.0",
     "appVersionSource": "local"

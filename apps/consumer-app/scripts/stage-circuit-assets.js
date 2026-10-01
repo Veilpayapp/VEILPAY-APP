@@ -22,6 +22,15 @@
  *                              override: env CIRCUIT_BUILD_DIR)
  *   --offline                  never touch the network; fail if no valid staged
  *                              snarkjs.min.js copy exists locally
+ *   --verify-pins              CI mode: verify the baked pins in
+ *                              src/constants/circuit.ts are well-formed and that
+ *                              every circuit artifact PRESENT on disk (build
+ *                              outputs and/or staged assets) matches its pin.
+ *                              Absent artifacts are reported as "cannot verify"
+ *                              and do NOT fail (a fresh checkout has neither:
+ *                              packages/circuits/build and assets/circuits are
+ *                              gitignored); a PRESENT artifact that mismatches
+ *                              its pin FAILS. Read-only: writes nothing.
  *
  * Exit code 0 = staged and verified; non-zero = failure (nothing partially
  * trusted is left behind: mismatches abort before any file is replaced).
@@ -49,6 +58,7 @@ function argValue(name) {
   return null;
 }
 const OFFLINE = argv.includes('--offline');
+const VERIFY_PINS = argv.includes('--verify-pins');
 
 function fatal(msg) {
   console.error(`[stage-circuit-assets] FATAL: ${msg}`);
@@ -127,6 +137,68 @@ function downloadPinnedUmd() {
   });
 }
 
+/**
+ * --verify-pins mode (read-only): used by CI (circuits-sanity job) where a
+ * fresh checkout has NEITHER packages/circuits/build (gitignored) NOR the
+ * staged assets (gitignored). Verifies everything that CAN be verified:
+ *   1. the baked pins in src/constants/circuit.ts parse and are well-formed;
+ *   2. every circuit artifact present on disk matches its pin.
+ * Absent artifacts are reported as "cannot verify" (informational, exit 0);
+ * a present artifact that mismatches its pin fails (exit 1).
+ */
+function verifyPinsMode(pins, buildDir) {
+  console.log('[stage-circuit-assets] --verify-pins: read-only pin verification');
+  const wellFormed =
+    /^[0-9a-f]{64}$/.test(pins.wasm) &&
+    /^[0-9a-f]{64}$/.test(pins.zkey) &&
+    /^[0-9a-f]{64}$/.test(pins.umd) &&
+    /^sha384-[A-Za-z0-9+/=]+$/.test(pins.sri);
+  if (!wellFormed) {
+    fatal('baked pins are malformed (expected three 64-hex digests + one sha384 SRI)');
+  }
+  console.log(`OK pin BAKED_CIRCUIT_WASM_SHA256 = ${pins.wasm}`);
+  console.log(`OK pin BAKED_CIRCUIT_ZKEY_SHA256  = ${pins.zkey}`);
+  console.log(`OK pin BAKED_SNARKJS_SHA256      = ${pins.umd}`);
+  console.log(`OK pin BAKED_SNARKJS_SRI         = ${pins.sri}`);
+
+  const targets = [
+    { rel: 'packages/circuits/build/withdraw.wasm', p: path.join(buildDir, 'withdraw.wasm'), pin: pins.wasm },
+    { rel: 'packages/circuits/build/withdraw_final.zkey', p: path.join(buildDir, 'withdraw_final.zkey'), pin: pins.zkey },
+    { rel: 'apps/consumer-app/assets/circuits/withdraw.wasm', p: path.join(OUT_DIR, 'withdraw.wasm'), pin: pins.wasm },
+    { rel: 'apps/consumer-app/assets/circuits/withdraw_final.zkey', p: path.join(OUT_DIR, 'withdraw_final.zkey'), pin: pins.zkey },
+    { rel: 'apps/consumer-app/assets/circuits/snarkjs.min.js', p: path.join(OUT_DIR, 'snarkjs.min.js'), pin: pins.umd },
+    { rel: 'apps/consumer-app/assets/circuits/snarkjs.min.umd', p: path.join(OUT_DIR, 'snarkjs.min.umd'), pin: pins.umd },
+  ];
+  let verified = 0;
+  let absent = 0;
+  let failed = 0;
+  for (const t of targets) {
+    const bytes = readFile(t.p);
+    if (!bytes) {
+      absent++;
+      console.log(`CANNOT-VERIFY ${t.rel} — absent on this checkout (gitignored; stage locally or on the build runner)`);
+      continue;
+    }
+    const digest = sha256(bytes);
+    if (digest === t.pin) {
+      verified++;
+      console.log(`OK ${t.rel} matches pin (${bytes.length} bytes, sha256 ${digest})`);
+    } else {
+      failed++;
+      console.error(
+        `FAIL ${t.rel} digest mismatch.\n  expected (pin): ${t.pin}\n  actual:          ${digest}`
+      );
+    }
+  }
+  console.log(
+    `\nverify-pins summary: ${verified} verified, ${absent} absent (cannot verify), ${failed} mismatched`
+  );
+  if (failed > 0) {
+    fatal(`--verify-pins: ${failed} artifact(s) present on disk do not match the baked pins`);
+  }
+  console.log('verify-pins: OK (no present artifact contradicts the baked pins)');
+}
+
 async function main() {
   const pins = readBakedPins();
 
@@ -135,6 +207,11 @@ async function main() {
   const buildDir = buildDirArg
     ? path.resolve(buildDirArg)
     : path.join(REPO_ROOT, 'packages', 'circuits', 'build');
+
+  if (VERIFY_PINS) {
+    verifyPinsMode(pins, buildDir);
+    return;
+  }
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
 

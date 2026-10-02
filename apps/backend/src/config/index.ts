@@ -90,6 +90,16 @@ const envSchema = z.object({
   RETENTION_WEBHOOK_DAYS: z.coerce.number().int().min(1).default(30),
   RETENTION_FIAT_DAYS: z.coerce.number().int().min(1).default(90),
   RETENTION_PAYMENT_DAYS: z.coerce.number().int().min(1).default(90),
+
+  // ── Onramp status-polling fallback (round 5) ────────────────────────────
+  // OFF by default. When enabled, a background worker polls the provider
+  // status APIs for fiat orders stuck pending/processing longer than the
+  // stale threshold (a webhook that was lost) and applies the SAME
+  // CAS-guarded transitions as the webhook path. Status-only: amounts never
+  // come from provider payloads — server records stay the source of truth.
+  ONRAMP_STATUS_POLLING_ENABLED: z.enum(['true', 'false']).default('false'),
+  ONRAMP_STATUS_POLLING_INTERVAL_MS: z.coerce.number().int().positive().default(60_000),
+  ONRAMP_STATUS_POLLING_STALE_MINUTES: z.coerce.number().int().positive().default(30),
 });
 
 const env = envSchema.parse(process.env);
@@ -234,5 +244,10 @@ export const config = {
     webhookDays: env.RETENTION_WEBHOOK_DAYS,
     fiatDays: env.RETENTION_FIAT_DAYS,
     paymentDays: env.RETENTION_PAYMENT_DAYS,
+  },
+  onrampStatusPolling: {
+    enabled: env.ONRAMP_STATUS_POLLING_ENABLED === 'true',
+    intervalMs: env.ONRAMP_STATUS_POLLING_INTERVAL_MS,
+    staleMinutes: env.ONRAMP_STATUS_POLLING_STALE_MINUTES,
   },
 };

@@ -1,9 +1,14 @@
 import crypto, { timingSafeEqual } from 'crypto';
 
+/** Abort deadline for Onramp.money status lookups (matches Horizon/GoldRush D4). */
+const ONRAMP_FETCH_TIMEOUT_MS = 10_000;
+const ONRAMP_API_BASE_URL = 'https://onramp.money/api';
+
 /**
  * Onramp.money Service
- * Handles quote generation, URL signing, and webhook verification.
- * 
+ * Handles quote generation, URL signing, webhook verification and
+ * (best-effort, fail-closed) order status polling.
+ *
  * Loopholes Addressed:
  * - Secure signing (no secrets in frontend)
  * - Order tracking (database persistence)
@@ -161,6 +166,57 @@ export class OnrampService {
     ARS: 29,
     EGP: 31,
   };
+
+  /**
+   * Fetches an order's current status from Onramp.money's partner API.
+   * Fail-closed: any non-200, network error, abort timeout, or unexpected
+   * body shape returns null and the caller leaves the order untouched.
+   *
+   * ENDPOINT CAVEAT: Onramp.money's partner API documentation is not
+   * publicly reachable, so the path below follows their `/api/...`
+   * partner-API convention and must be confirmed against their partner docs
+   * before ONRAMP_STATUS_POLLING_ENABLED is turned on in production. A wrong
+   * path fails closed (404 → null → order untouched), which is why this is
+   * safe to ship behind the default-OFF flag.
+   *
+   * Status-polling fallback only — never called from request handlers.
+   */
+  static async fetchOrderStatus(orderId: string): Promise<{ status: string } | null> {
+    if (!this.API_KEY || !orderId) return null;
+
+    try {
+      const res = await fetch(
+        `${ONRAMP_API_BASE_URL}/v2/coin/order-status?orderId=${encodeURIComponent(orderId)}`,
+        {
+          headers: { Authorization: `Bearer ${this.API_KEY}` },
+          signal: AbortSignal.timeout(ONRAMP_FETCH_TIMEOUT_MS),
+        },
+      );
+      if (!res.ok) return null;
+
+      // Response envelope shape is not publicly documented; accept the
+      // status under the common keys so a documented shape works when the
+      // endpoint is confirmed.
+      const data: unknown = await res.json();
+      const source = Array.isArray(data) ? data[0] : data;
+      if (source === null || typeof source !== 'object') return null;
+      const record = source as Record<string, unknown>;
+      const nested =
+        record.data !== null && typeof record.data === 'object'
+          ? (record.data as Record<string, unknown>)
+          : record;
+      for (const key of ['status', 'orderStatus', 'order_status']) {
+        const value = nested[key] ?? record[key];
+        if (typeof value === 'string' && value.length > 0) {
+          return { status: value };
+        }
+      }
+      return null;
+    } catch {
+      // Includes the abort timeout (TimeoutError) — fail closed.
+      return null;
+    }
+  }
 
   /**
    * Maps a fiat currency symbol to the numeric `fiatType` id the widget expects.

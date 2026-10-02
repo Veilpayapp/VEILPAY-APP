@@ -17,6 +17,12 @@
  *      a replay attack on this endpoint and the guarantee that holds
  *      even when the provider ships no timestamp.
  *
+ * Round 5: the terminal guard is now enforced by a CAS write —
+ * `updateMany` with `status: { notIn: TERMINAL }` in the WHERE clause
+ * (mirroring paymentProcessor.ts). The prisma mock below evaluates that
+ * precondition exactly like the database would, so the properties below
+ * also prove a write whose precondition no longer matches mutates nothing.
+ *
  * This file pins both behaviors so a future refactor cannot silently
  * regress them.
  */
@@ -33,7 +39,7 @@ process.env.ONRAMP_MONEY_API_KEY = 'replay-test-key';
 const ONRAMP_SECRET = process.env.ONRAMP_MONEY_SECRET;
 
 // Single mutable order record the prisma mock returns from `findFirst`
-// and accepts mutations against via `update`. Each test reseeds it.
+// and accepts mutations against via `updateMany`. Each test reseeds it.
 type FakeOrder = {
   id: string;
   orderId: string;
@@ -45,17 +51,50 @@ type FakeOrder = {
 let fakeOrder: FakeOrder | null = null;
 const updateCalls: Array<{ where: unknown; data: unknown }> = [];
 
+/**
+ * Evaluates the `status` predicate of an updateMany WHERE clause the way
+ * Prisma does: a bare string is equality; `{ notIn: [...] }` excludes.
+ */
+function statusPredicateMatches(current: string, predicate: unknown): boolean {
+  if (typeof predicate === 'string') return current === predicate;
+  if (
+    predicate !== null &&
+    typeof predicate === 'object' &&
+    'notIn' in (predicate as Record<string, unknown>)
+  ) {
+    const notIn = (predicate as { notIn: unknown[] }).notIn;
+    return Array.isArray(notIn) && !notIn.includes(current);
+  }
+  return true;
+}
+
 jest.mock('../../lib/prisma', () => ({
   prisma: {
     fiatOrder: {
       findFirst: jest.fn(async () => fakeOrder),
-      update: jest.fn(async ({ where, data }: { where: unknown; data: unknown }) => {
-        updateCalls.push({ where, data });
-        if (fakeOrder) {
+      // Round 5: the webhook writes via `updateMany` whose WHERE clause
+      // carries the terminal-state CAS precondition (mirroring
+      // paymentProcessor.ts confirmInvoicePayment). The mock evaluates the
+      // precondition so the CAS is really exercised: a write whose
+      // precondition no longer matches the row mutates nothing and returns
+      // count 0. The old `update` primitive is deliberately NOT mocked, so
+      // a regression to the racy find-then-update fails loudly here.
+      updateMany: jest.fn(
+        async ({
+          where,
+          data,
+        }: {
+          where: { id: string; status?: unknown };
+          data: Record<string, unknown>;
+        }) => {
+          updateCalls.push({ where, data });
+          if (!fakeOrder) return { count: 0 };
+          if (fakeOrder.id !== where.id) return { count: 0 };
+          if (!statusPredicateMatches(fakeOrder.status, where.status)) return { count: 0 };
           fakeOrder = { ...fakeOrder, ...(data as Partial<FakeOrder>) };
-        }
-        return fakeOrder;
-      }),
+          return { count: 1 };
+        },
+      ),
     },
   },
 }));

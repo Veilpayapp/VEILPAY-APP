@@ -214,6 +214,10 @@ enum FiatOrderStatus {
   pending
   processing
   completed
+  // Round 5: provider refund / chargeback events previously collapsed into
+  // `failed` (or were dropped for completed orders). `refunded` is terminal
+  // and reachable ONLY from pending/processing/completed (CAS-guarded).
+  refunded
   failed
   cancelled
 }

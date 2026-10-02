@@ -1,6 +1,9 @@
 import { startChainIndexer, stopChainIndexer } from '../jobs/chainIndexer';
 import { startInvoiceExpiryWorker, stopInvoiceExpiryWorker } from '../lib/invoiceExpiry';
 import { startRetentionPurge, stopRetentionPurge } from '../jobs/retentionPurge';
+// Round 5: onramp provider status-polling fallback. The start/stop functions
+// no-op unless ONRAMP_STATUS_POLLING_ENABLED=true (config-gated, default OFF).
+import { startOnrampStatusPoller, stopOnrampStatusPoller } from './onrampOrderStatus';
 
 export interface BackgroundTask {
   name: string;
@@ -23,6 +26,11 @@ const tasks: BackgroundTask[] = [
     name: 'retentionPurge',
     start: startRetentionPurge,
     stop: stopRetentionPurge,
+  },
+  {
+    name: 'onrampStatusPoller',
+    start: startOnrampStatusPoller,
+    stop: stopOnrampStatusPoller,
   },
 ];
 

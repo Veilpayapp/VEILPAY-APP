@@ -6,6 +6,10 @@ import { MoonPayService } from '../lib/moonpay';
 import { logger } from '../lib/logger';
 import { z, ZodError } from 'zod';
 import { createStatusToken, verifyStatusToken, InvalidStatusTokenError } from '../utils/onrampStatusToken';
+import {
+  applyOnrampStatusTransition,
+  mapProviderWebhookStatus,
+} from '../services/onrampOrderStatus';
 
 /**
  * Maximum age of an Onramp.money webhook event before we reject it as a
@@ -13,17 +17,6 @@ import { createStatusToken, verifyStatusToken, InvalidStatusTokenError } from '.
  * webhook controller (`Math.abs(Date.now() - ts) > 300_000`).
  */
 const WEBHOOK_MAX_AGE_MS = 5 * 60 * 1000;
-
-/**
- * Order statuses we treat as terminal. A webhook that tries to move an
- * order out of one of these states is treated as a replay or out-of-order
- * delivery and rejected, regardless of signature freshness.
- */
-const TERMINAL_STATUSES: ReadonlySet<string> = new Set([
-  'completed',
-  'cancelled',
-  'failed',
-]);
 
 const CreateOrderSchema = z.object({
   userAddress: z.string(),
@@ -116,31 +109,6 @@ function extractEventTimestampMs(body: unknown): number | null {
     }
   }
   return null;
-}
-
-/**
- * Normalizes a MoonPay transaction status into the vocabulary understood by
- * the `nextStatus` mapping below.
- *
- * MoonPay emits several in-progress states — `pending`, `waitingPayment`,
- * `waitingAuthorization` — that are NOT failures. Without this mapping they
- * fall through the `nextStatus` chain to `'failed'`, which is a terminal state,
- * so the first in-progress webhook would permanently mark a live order failed
- * and the later `completed` event would be ignored by the terminal-state guard.
- * We map those to `'processing'` so the order stays open until a genuine
- * terminal event (`completed` / `failed`) arrives.
- */
-function normalizeMoonPayStatus(raw: unknown): string {
-  if (typeof raw !== 'string') return '';
-  switch (raw) {
-    case 'waitingPayment':
-    case 'waitingAuthorization':
-    case 'pending':
-      return 'processing';
-    default:
-      // 'completed' and 'failed' pass through unchanged.
-      return raw;
-  }
 }
 
 export const createOnrampUrl = async (req: Request, res: Response, _next: NextFunction): Promise<void> => {  try {
@@ -431,9 +399,9 @@ export const handleOnrampWebhook = async (
         gatewayOrderId = mpData.externalTransactionId || '';
         // MoonPay emits: 'completed', 'failed', 'pending', 'waitingPayment',
         // 'waitingAuthorization'. Normalize the in-progress states so the
-        // nextStatus mapping below doesn't terminalize a live order (see
-        // normalizeMoonPayStatus).
-        status = normalizeMoonPayStatus(mpData.status);
+        // status mapping below doesn't terminalize a live order (see
+        // MoonPayService.normalizeStatus).
+        status = MoonPayService.normalizeStatus(mpData.status);
         txHash = mpData.cryptoTransactionId;
         cryptoAmount = mpData.quoteCurrencyAmount;
         // MoonPay nests the event timestamp under `data` (top-level `createdAt`
@@ -498,32 +466,27 @@ export const handleOnrampWebhook = async (
       return;
     }
 
-    // Terminal-state replay guard. Even when the body carried no usable
-    // timestamp, a replayed event cannot move an order *out* of a
-    // terminal state — that's the actual harm of a replay attack on
-    // this endpoint. Returning 200 keeps the provider from retrying.
-    if (TERMINAL_STATUSES.has(existingOrder.status)) {
-      res.json({ received: true, ignored: 'order already in terminal state' });
-      return;
-    }
+    const nextStatus = mapProviderWebhookStatus(status);
 
-    const normalizedStatus = typeof status === 'string' ? status.toLowerCase() : '';
-    const nextStatus =
-      normalizedStatus === 'completed' || normalizedStatus === 'success'
-        ? 'completed'
-        : normalizedStatus === 'processing' || normalizedStatus === 'pending'
-          ? normalizedStatus
-          : normalizedStatus === 'cancelled'
-            ? 'cancelled'
-            : 'failed';
-
-    await prisma.fiatOrder.update({
-      where: { id: existingOrder.id },
-      data: {
-        status: nextStatus,
-        txHash: typeof txHash === 'string' ? txHash : existingOrder.txHash,
-        cryptoAmount: typeof cryptoAmount === 'string' ? cryptoAmount : existingOrder.cryptoAmount,
-      },
+    // Terminal-state replay guard + CAS write (round 5). The previous
+    // read-then-update had a window: two concurrent events could both read
+    // `processing`, and the slower one's write then overwrote a `completed`
+    // order with `failed`. `applyOnrampStatusTransition` carries the
+    // terminal-state precondition INSIDE the update's WHERE clause
+    // (`updateMany` + `status: { notIn: TERMINAL }`, mirroring
+    // paymentProcessor.ts), so:
+    //   - an order already in a terminal state never leaves it, except the
+    //     sanctioned `completed → refunded` (own CAS precondition);
+    //   - `completed` can NEVER be overwritten by `failed`;
+    //   - a late event whose precondition no longer matches updates zero
+    //     rows and is inert.
+    // `count === 0` means the order moved on — we respond exactly like the
+    // terminal-guard path always did (200 received/ignored) so the provider
+    // stops retrying.
+    const transition = await applyOnrampStatusTransition(existingOrder, nextStatus, {
+      txHash: typeof txHash === 'string' ? txHash : existingOrder.txHash ?? undefined,
+      cryptoAmount:
+        typeof cryptoAmount === 'string' ? cryptoAmount : existingOrder.cryptoAmount ?? undefined,
     });
 
     // eslint-disable-next-line no-console
@@ -532,8 +495,14 @@ export const handleOnrampWebhook = async (
       gatewayOrderId,
       previousStatus: existingOrder.status,
       nextStatus,
+      applied: transition === 'applied',
       txHash: typeof txHash === 'string' ? txHash : undefined,
-    }, `Order ${gatewayOrderId} updated to ${nextStatus}`);
+    }, `Order ${gatewayOrderId} ${transition === 'applied' ? `updated to ${nextStatus}` : 'left in terminal state (event ignored)'}`);
+
+    if (transition === 'ignored') {
+      res.json({ received: true, ignored: 'order already in terminal state' });
+      return;
+    }
 
     res.json({ received: true });
   } catch (error) {

@@ -4,9 +4,44 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { config } from "../config";
 
-const connection = new IORedis(config.redisUrl, {
-  maxRetriesPerRequest: null,
-});
+/**
+ * Shared BullMQ connection.
+ *
+ * Lifecycle note (jest-exit fix, round-5): the client is created with
+ * `lazyConnect: true`, so it sits in ioredis' `wait` state — no socket, no
+ * reconnect timer — until the first command. Importing this module therefore
+ * no longer holds a Node event loop open, which is what kept Jest from
+ * exiting without `--forceExit`. This is lifecycle-only: BullMQ explicitly
+ * supports lazy clients (it calls `connect()` itself when it observes
+ * status `wait` — bullmq 5.74.1 `redis-connection.js` `waitUntilReady`), and
+ * `maxRetriesPerRequest: null` — the durability requirement that commands
+ * queue forever while Redis is down — is unchanged.
+ */
+let connection: IORedis | null = null;
+
+function getQueueConnection(): IORedis {
+  if (!connection) {
+    connection = new IORedis(config.redisUrl, {
+      maxRetriesPerRequest: null,
+      lazyConnect: true,
+    });
+  }
+  return connection;
+}
+
+/**
+ * Force-close the shared queue connection so a Jest worker's event loop can
+ * drain (called from `src/__tests__/setup.ts` `afterAll`). Safe to call when
+ * the client is still in `wait` state, and idempotent. Intended for test
+ * teardown only — production never calls it; the next `getQueueConnection()`
+ * mints a fresh client.
+ */
+export function closeQueueConnection(): void {
+  if (connection) {
+    connection.disconnect();
+    connection = null;
+  }
+}
 
 export interface WebhookPayload {
   merchantId: string;
@@ -42,7 +77,7 @@ export interface DeadLetterPayload {
 }
 
 export const webhookQueue = new Queue<WebhookPayload>("veilpay-webhooks", {
-  connection,
+  connection: getQueueConnection(),
   defaultJobOptions: {
     attempts: 5,
     backoff: {
@@ -60,7 +95,7 @@ export const webhookQueue = new Queue<WebhookPayload>("veilpay-webhooks", {
 });
 
 export const deadLetterQueue = new Queue<DeadLetterPayload>("veilpay-webhook-dlq", {
-  connection,
+  connection: getQueueConnection(),
   defaultJobOptions: {
     removeOnComplete: {
       age: 30 * 24 * 3600,
@@ -166,7 +201,7 @@ export function createWebhookWorker(
   processor: (job: Job<WebhookPayload>) => Promise<void>
 ): Worker<WebhookPayload> {
   return new Worker("veilpay-webhooks", processor, {
-    connection,
+    connection: getQueueConnection(),
     concurrency: 5,
     limiter: {
       max: 100,

@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { jest, afterAll } from '@jest/globals';
 
 // IX-C5: WEBHOOK_SIGNING_SECRET is required at boot with no committed
 // default. Inject a dummy for the whole test suite unless a test file
@@ -6,6 +6,24 @@ import { jest } from '@jest/globals';
 // throw). Runs in setupFilesAfterEnv, before any module loads config.
 process.env.WEBHOOK_SIGNING_SECRET =
   process.env.WEBHOOK_SIGNING_SECRET || 'test_only_webhook_signing_secret_0123456789';
+
+// Lifecycle (jest-exit fix, round-5): the queue module holds a module-level
+// lazy ioredis client; force-close it after every file so the Jest worker's
+// event loop can drain — the suite must exit WITHOUT --forceExit. Loaded
+// lazily inside the hook (NOT as a top-level import) because imports are
+// hoisted above the env assignment above, and ../queue -> ../config would
+// throw before the secret is set.
+afterAll(() => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-var-requires
+  const queueModule = require('../queue') as any;
+  // Files that jest.mock('../queue') themselves (dispatcher/scanner/
+  // websocket tests) never load the real module, so there is no real
+  // ioredis client to close in their registry — the guard makes this
+  // hook a no-op there instead of a suite-level TypeError.
+  if (typeof queueModule.closeQueueConnection === 'function') {
+    queueModule.closeQueueConnection();
+  }
+});
 
 jest.mock('../lib/prisma', () => {
   return {

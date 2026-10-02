@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit",
     "typecheck:scripts": "tsc --noEmit -p scripts",
     "reconcile:settlements": "tsx scripts/reconcile-settlements.ts",
-    "test": "jest --runInBand --forceExit",
-    "test:coverage": "jest --coverage --runInBand --forceExit"
+    "test": "jest --runInBand",
+    "test:coverage": "jest --coverage --runInBand"
   },
   "dependencies": {
     "@prisma/client": "^5.12.0",

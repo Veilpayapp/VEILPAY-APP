@@ -3,6 +3,9 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   setupFiles: ['<rootDir>/tests/setup.ts'],
+  // Round-5 (Stream C): per-file redis teardown — runs after the framework
+  // is installed (setupFiles cannot register afterAll). See teardown.ts.
+  setupFilesAfterEnv: ['<rootDir>/tests/teardown.ts'],
   testMatch: ['**/tests/**/*.test.ts', '**/src/**/__tests__/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   coverageDirectory: 'coverage',

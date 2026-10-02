@@ -1,7 +1,31 @@
-import { enqueueWebhook, enqueueDeadLetter, getQueueStats, createWebhookWorker, webhookQueue, deadLetterQueue } from '../index';
+import { enqueueWebhook, enqueueDeadLetter, getQueueStats, createWebhookWorker, webhookQueue, deadLetterQueue, closeQueueConnection } from '../index';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Queue, Worker } from 'bullmq';
+import IORedis from 'ioredis';
+import { config } from '../../config';
 import { prisma } from '../../lib/prisma';
+
+// Lifecycle contract (round-5 jest-exit fix): the queue module's shared
+// ioredis client must be created with lazyConnect so importing it opens no
+// socket and holds no handle, while maxRetriesPerRequest stays null (BullMQ
+// durability). Mock the constructor to observe the options it was given.
+jest.mock('ioredis', () => {
+  const IORedisMock = jest.fn().mockImplementation(() => ({
+    status: 'wait',
+    disconnect: jest.fn(),
+  }));
+  return { __esModule: true, default: IORedisMock };
+});
+
+// Captured at module-eval time — before any beforeEach/jest.clearAllMocks()
+// can wipe the constructor's call record.
+const ioredisCtor = IORedis as unknown as jest.Mock;
+const ctorCallCount = ioredisCtor.mock.calls.length;
+const ctorArgs = ioredisCtor.mock.calls[0] as
+  | [string, { maxRetriesPerRequest: number | null; lazyConnect?: boolean }]
+  | undefined;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sharedClient = ioredisCtor.mock.results[0]?.value as any;
 
 function basePayload(overrides: Record<string, unknown> = {}) {
   return {
@@ -17,6 +41,38 @@ function basePayload(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+describe('Queue connection lifecycle (jest-exit contract)', () => {
+  it('creates ONE shared client for the queues and worker factory', () => {
+    // one client shared by webhookQueue, deadLetterQueue and
+    // createWebhookWorker — not three independent connections
+    expect(ctorCallCount).toBe(1);
+    expect(sharedClient).toBeDefined();
+  });
+
+  it('connects lazily (no socket at import time) without weakening BullMQ durability', () => {
+    expect(ctorArgs).toBeDefined();
+    const [url, options] = ctorArgs!;
+    expect(url).toBe(config.redisUrl);
+    // maxRetriesPerRequest: null is BullMQ's durability requirement —
+    // commands queue forever while Redis is down. Must stay null.
+    expect(options.maxRetriesPerRequest).toBeNull();
+    // lazyConnect: the client stays in 'wait' (no socket, no reconnect
+    // timer) until the first command, so importing the module cannot hold
+    // the Jest worker's event loop open.
+    expect(options.lazyConnect).toBe(true);
+  });
+
+  it('closeQueueConnection disconnects the shared client exactly once and is idempotent', () => {
+    expect(() => closeQueueConnection()).not.toThrow();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(sharedClient.disconnect as jest.Mock).toHaveBeenCalledTimes(1);
+    // second call is a no-op (connection already null), still no throw
+    expect(() => closeQueueConnection()).not.toThrow();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(sharedClient.disconnect as jest.Mock).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('Queue Module', () => {
   beforeEach(() => {

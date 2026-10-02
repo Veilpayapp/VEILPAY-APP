@@ -24,6 +24,11 @@
 //   (P1) The baked digests match the STAGED artifact bytes on disk
 //        (assets/circuits/*), re-deriving the snarkjs SRI as well — the
 //        same check scripts/stage-circuit-assets.js performs at stage time.
+//        The staged binaries are gitignored build artifacts, so P1
+//        self-skips (reported as skipped, not failed) on a fresh clone
+//        before staging — e.g. CI runners until CIRCUIT_ARTIFACTS_URL is
+//        supplied; on a staged tree it runs and must pass (same policy as
+//        withdrawRailRoundTrip.test.ts).
 //
 // The constants are read from `process.env.*` / `__DEV__` at module import
 // time, so every case re-requires the module with a fresh environment
@@ -216,6 +221,13 @@ describe('constants/circuit — release-mode integrity pins (fail closed)', () =
 describe('constants/circuit — baked pins match the staged artifact bytes', () => {
   const ASSETS_DIR = path.join(__dirname, '..', '..', '..', 'assets', 'circuits');
 
+  // Self-skip (skipped, not failed) when the gitignored staged binaries are
+  // not on disk — see the (P1) header note.
+  const stagedPresent = ['withdraw.wasm', 'withdraw_final.zkey', 'snarkjs.min.js', 'snarkjs.min.umd'].every(
+    (name) => fs.existsSync(path.join(ASSETS_DIR, name))
+  );
+  const maybeIt = stagedPresent ? it : it.skip;
+
   function requireStaged(name: string): Buffer {
     const p = path.join(ASSETS_DIR, name);
     if (!fs.existsSync(p)) {
@@ -229,12 +241,12 @@ describe('constants/circuit — baked pins match the staged artifact bytes', () 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const mod = require('../circuit') as CircuitModule;
 
-  it('BAKED_CIRCUIT_WASM_SHA256 equals sha256(assets/circuits/withdraw.wasm)', () => {
+  maybeIt('BAKED_CIRCUIT_WASM_SHA256 equals sha256(assets/circuits/withdraw.wasm)', () => {
     const digest = crypto.createHash('sha256').update(requireStaged('withdraw.wasm')).digest('hex');
     expect(digest).toBe(mod.BAKED_CIRCUIT_WASM_SHA256);
   });
 
-  it('BAKED_CIRCUIT_ZKEY_SHA256 equals sha256(assets/circuits/withdraw_final.zkey)', () => {
+  maybeIt('BAKED_CIRCUIT_ZKEY_SHA256 equals sha256(assets/circuits/withdraw_final.zkey)', () => {
     const digest = crypto
       .createHash('sha256')
       .update(requireStaged('withdraw_final.zkey'))
@@ -242,7 +254,7 @@ describe('constants/circuit — baked pins match the staged artifact bytes', () 
     expect(digest).toBe(mod.BAKED_CIRCUIT_ZKEY_SHA256);
   });
 
-  it('BAKED_SNARKJS_SHA256 equals sha256(assets/circuits/snarkjs.min.js)', () => {
+  maybeIt('BAKED_SNARKJS_SHA256 equals sha256(assets/circuits/snarkjs.min.js)', () => {
     const digest = crypto
       .createHash('sha256')
       .update(requireStaged('snarkjs.min.js'))
@@ -250,13 +262,13 @@ describe('constants/circuit — baked pins match the staged artifact bytes', () 
     expect(digest).toBe(mod.BAKED_SNARKJS_SHA256);
   });
 
-  it('snarkjs.min.umd is byte-identical to snarkjs.min.js (Metro asset copy)', () => {
+  maybeIt('snarkjs.min.umd is byte-identical to snarkjs.min.js (Metro asset copy)', () => {
     expect(requireStaged('snarkjs.min.umd').equals(requireStaged('snarkjs.min.js'))).toBe(
       true
     );
   });
 
-  it('BAKED_SNARKJS_SRI equals sha384-base64(snarkjs.min.js)', () => {
+  maybeIt('BAKED_SNARKJS_SRI equals sha384-base64(snarkjs.min.js)', () => {
     const sri =
       'sha384-' +
       crypto.createHash('sha384').update(requireStaged('snarkjs.min.js')).digest('base64');

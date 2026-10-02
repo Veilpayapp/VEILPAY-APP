@@ -607,5 +607,18 @@ additive-only; local re-verification after the reinstall: consumer typecheck exi
 consumer full coverage run 166/166 suites / 1339 tests exit 0, backend + indexer
 typechecks exit 0. Debt note: the hoisted layout masks phantom-import hygiene — the
 isolated-layout switch (now unblocked by the declared deps) stays round-6 material.
-Expected CI after this commit: workspace + circuits-sanity GREEN; contracts + Android
-Build remain red on the SPP user gate (by design, isolated).
+
+**Third latent break (run 37048593611):** the deps fix advanced the workspace job past
+consumer typecheck + version sync — then "Test consumer app" failed in
+`src/constants/__tests__/circuitPins.test.ts` (5 tests): the P1 block compares the baked
+digests against the STAGED binaries, which are gitignored, so it failed closed on the
+fresh CI checkout (user gate 3 territory — the round-trip suite handles the same absence
+by self-skipping). Fixed by extending the identical self-skip policy to the P1 block
+(verified both paths locally: staged tree 14/14 green; assets hidden 9 passed + 5
+skipped, exit 0; full coverage run re-verified 166/166 / 1339 exit 0). Once gate 3 is
+satisfied (CIRCUIT_ARTIFACTS_URL + release upload), the same CI test step can gain a
+soft supply-before-test step to un-skip the digests end-to-end.
+
+Expected CI after this commit: workspace + circuits-sanity GREEN (consumer tests run
+with 6 documented skips: the 5 P1 digest tests + the round-trip suite); contracts +
+Android Build remain red on the SPP user gate (by design, isolated).

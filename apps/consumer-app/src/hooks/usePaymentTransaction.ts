@@ -1,4 +1,4 @@
-// Public inputs: [merkleRoot, nullifierHash, recipient, amount] — see design.md §Public input ordering contract
+// Public inputs: [merkleRoot, nullifierHash, recipient, amount, token] — see design.md §Public input ordering contract
 //
 // usePaymentTransaction — single-source dispatcher for the three privacy levels.
 // =============================================================================
@@ -60,7 +60,10 @@
 //     data nor a precomputed `nullifierHash`, and the deposit-time path
 //     stash / on-chain reconstruction is deferred to tasks 11.x. Until
 //     then `'max'` throws a clear "not yet implemented" error after loading
-//     the record. This path is also hard-gated by `isMaxPrivacyWithdrawReady()`
+//     the record (but AFTER the SEC-004 check: a record that does carry a
+//     `nullifierHash` has it re-derived as `Poseidon(nullifier)` and
+//     compared before any proof work — see `validateNullifierHash`). This
+//     path is also hard-gated by `isMaxPrivacyWithdrawReady()`
 //     (DATA-002 = false), so it is unreachable in release. The dispatcher
 //     *shape* is what task 9.2 establishes — the missing inputs surface as a
 //     typed error rather than as a silent failure or a placeholder proof.
@@ -107,6 +110,10 @@ import {
 import { submitWithdraw, RelayerError } from '../services/relayerClient';
 import type { WithdrawRequest } from '../schemas/withdrawRequest';
 import {
+  validateNullifierHash,
+  NullifierHashError,
+} from '../utils/nullifierHashValidation';
+import {
   isPrivacyStackConfigured,
   STEALTH_ANNOUNCER_ADDRESS,
   VEIL_POOL_ADDRESS,
@@ -142,6 +149,52 @@ import {
 const ANNOUNCER_ABI = [
   'function announce(uint256 schemeId, address stealthAddress, bytes ephemeralPubKey, bytes metadata) external',
 ] as const;
+
+/**
+ * Serialize the snarkjs `publicSignals` array — decimal strings in the
+ * withdraw circuit's declaration order
+ *   [merkleRoot, nullifierHash, recipient, amount, token]
+ * (packages/circuits/withdraw.circom:43-47; vk nPublic = 5) — into the
+ * per-element wire formats the relayer's `WithdrawRequestSchema` expects:
+ * 0x-padded bytes32 for the two field elements, 20-byte 0x hex for the two
+ * addresses, and a normalized positive base-10 integer for the amount.
+ *
+ * Throws a plain `Error` (surfaced by the dispatcher as a proof-prep
+ * failure, not a crash) when the array cannot be the withdraw circuit's
+ * output: wrong arity, non-numeric, or negative elements.
+ */
+export function serializePublicSignalsForRelay(
+  publicSignals: unknown[],
+): string[] {
+  if (!Array.isArray(publicSignals) || publicSignals.length !== 5) {
+    throw new Error(
+      `expected 5 public signals [merkleRoot, nullifierHash, recipient, amount, token], got ${
+        Array.isArray(publicSignals) ? publicSignals.length : 'a non-array'
+      }`,
+    );
+  }
+  const toNonNegativeBigInt = (value: unknown): bigint => {
+    let n: bigint;
+    try {
+      n = BigInt(String(value));
+    } catch {
+      throw new Error(`public signal is not numeric: ${String(value)}`);
+    }
+    if (n < 0n) {
+      throw new Error(`public signal is negative: ${String(value)}`);
+    }
+    return n;
+  };
+  const toHex = (value: unknown, hexDigits: number): string =>
+    `0x${toNonNegativeBigInt(value).toString(16).padStart(hexDigits, '0')}`;
+  return [
+    toHex(publicSignals[0], 64), // merkleRoot — bytes32
+    toHex(publicSignals[1], 64), // nullifierHash — bytes32
+    toHex(publicSignals[2], 40), // recipient — address
+    toNonNegativeBigInt(publicSignals[3]).toString(), // amount — decimal
+    toHex(publicSignals[4], 40), // token — address
+  ];
+}
 
 interface PaymentTransactionParams {
   recipient: string;
@@ -644,6 +697,23 @@ export function usePaymentTransaction({
           typeof error.status === 'number' ? ` (HTTP ${error.status})` : '';
         errorMessage = `Relayer error: ${error.message}${statusSuffix}`;
         toast.show(errorMessage, 'error');
+      } else if (error instanceof NullifierHashError) {
+        // SEC-004 proof-prep failure: the commitment record's stored
+        // nullifierHash does not re-derive from its nullifier (or Poseidon
+        // could not initialize). We never reached the prover or the relayer
+        // — surface the reason as a typed failure, not a generic crash.
+        errorMessage = error.message;
+        trackEvent(ANALYTICS_EVENTS.PAYMENT_SEND_FAILED, {
+          network_key: activeNetworkKey,
+          reason: error.code.toLowerCase(),
+          message: error.message,
+          privacy_level: 'max',
+          confirmation_time_ms: Date.now() - attemptStartedAt,
+        });
+        toast.show(
+          'Cannot verify this deposit note — its nullifier hash is invalid. Do not retry this withdrawal.',
+          'error',
+        );
       } else {
         errorMessage =
           error instanceof Error ? error.message : 'Failed to send payment';
@@ -931,12 +1001,13 @@ export function usePaymentTransaction({
      * the pool's current Merkle root, and dispatch to the relayer.
      *
      * NOTE: the deposit-time Merkle path (`pathElements`, `pathIndices`)
-     * is not yet stored alongside the `CommitmentRecord`, and the
-     * consumer-app does not yet ship a Poseidon hash for the
-     * `nullifierHash = Poseidon(nullifier)` step. The dispatcher *shape*
-     * is the deliverable for task 9.2; the missing inputs surface as a
-     * typed "not yet implemented" error so task 11.x can wire them in
-     * without touching the dispatcher again.
+     * is not yet stored alongside the `CommitmentRecord`. The SEC-004
+     * nullifier-hash check IS wired: the record's stored `nullifierHash`
+     * is re-derived as `Poseidon(record.nullifier)` and compared before
+     * any proof work (see `validateNullifierHash`). The dispatcher
+     * *shape* is the deliverable for task 9.2; the missing path inputs
+     * surface as a typed "not yet implemented" error so task 11.x can
+     * wire them in without touching the dispatcher again.
      */
     async function runMaxFlow(): Promise<void> {
       if (!sourceCommitmentHash) {
@@ -971,12 +1042,12 @@ export function usePaymentTransaction({
       // Deferred (tasks 11.x, gated off): reconstruct the Merkle path
       // (`pathElements`, `pathIndices`) from chain — either by extending
       // `CommitmentRecord` to stash the deposit-time path or by reading
-      // the leaf set via an indexer call. Same for `nullifierHash`,
-      // which needs Poseidon(record.nullifier). This branch is only
-      // reachable when `isMaxPrivacyWithdrawReady()` is true; it is false
-      // (DATA-002) in shipping builds, so the throw below cannot fire in
-      // release. The typed error keeps the dispatcher's shape honest for
-      // integration until tasks 11.x wire the missing inputs.
+      // the leaf set via an indexer call. Same for a persisted
+      // `nullifierHash`. This branch is only reachable when
+      // `isMaxPrivacyWithdrawReady()` is true; it is false (DATA-002) in
+      // shipping builds, so the throw below cannot fire in release. The
+      // typed error keeps the dispatcher's shape honest for integration
+      // until tasks 11.x wire the missing inputs.
       const recordWithPath = record as typeof record & {
         pathElements?: Hex[];
         pathIndices?: number[];
@@ -992,6 +1063,14 @@ export function usePaymentTransaction({
         );
       }
 
+      // SEC-004: re-derive Poseidon(nullifier) and compare it against the
+      // commitment record's stored nullifierHash BEFORE any proof work.
+      // A mismatch means the record is corrupted or tampered — we must not
+      // build a proof for the wrong commitment. `validateNullifierHash`
+      // throws `NullifierHashError`, which the dispatcher's catch maps to
+      // a proof-prep failure (failed status + toast), never a crash.
+      await validateNullifierHash(record.nullifier, recordWithPath.nullifierHash);
+
       const proofResult = await zkpProverRef.current?.generateProof({
         nullifier: record.nullifier,
         secret: record.secret,
@@ -1001,6 +1080,7 @@ export function usePaymentTransaction({
         nullifierHash: recordWithPath.nullifierHash,
         recipient,
         amount: parsedAmount.toString(),
+        token: record.token,
       });
       if (!proofResult) {
         throw new Error('ZkpProver returned no proof');
@@ -1012,7 +1092,11 @@ export function usePaymentTransaction({
       const requestBody: WithdrawRequest = {
         nullifierHash: recordWithPath.nullifierHash,
         proof: proofResult.proof as `0x${string}`,
-        publicSignals: proofResult.publicSignals as `0x${string}`[],
+        // snarkjs emits decimal strings in the circuit's declaration
+        // order [merkleRoot, nullifierHash, recipient, amount, token];
+        // the relayer schema wants per-element bytes32 / address / decimal
+        // wire formats, so serialize before submitting.
+        publicSignals: serializePublicSignalsForRelay(proofResult.publicSignals),
         merkleRoot: record.merkleRoot,
         recipient: recipient as `0x${string}`,
         token: record.token,

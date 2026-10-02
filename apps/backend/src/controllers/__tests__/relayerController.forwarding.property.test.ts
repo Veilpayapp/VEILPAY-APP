@@ -262,11 +262,15 @@ const arbitraryWithdrawRequest = (): fc.Arbitrary<WithdrawRequest> =>
   fc.record({
     nullifierHash: arbitraryBytes32Hex(),
     proof: arbitraryHexBlob(),
+    // Public signals in the circuit's declaration order
+    // [merkleRoot, nullifierHash, recipient, amount, token] — per-element
+    // wire formats mirror the top-level request fields.
     publicSignals: fc.tuple(
-      arbitraryHexBlob(),
-      arbitraryHexBlob(),
-      arbitraryHexBlob(),
-      arbitraryHexBlob()
+      arbitraryBytes32Hex(),
+      arbitraryBytes32Hex(),
+      arbitraryAddress(),
+      arbitraryPositiveDecimal(),
+      arbitraryAddress()
     ),
     merkleRoot: arbitraryBytes32Hex(),
     recipient: arbitraryAddress(),

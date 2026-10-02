@@ -1,4 +1,4 @@
-// Public inputs: [merkleRoot, nullifierHash, recipient, amount] — see design.md §Public input ordering contract
+// Public inputs: [merkleRoot, nullifierHash, recipient, amount, token] — see design.md §Public input ordering contract
 import type { Request, Response, NextFunction } from "express";
 import { ethers } from "ethers";
 import {

@@ -247,9 +247,13 @@ const arbitraryRecord = (): fc.Arbitrary<CommitmentRecord> =>
 
 const SENTINEL_NULLIFIER_HASH: Hex = ('0x' + 'a1'.repeat(32)) as Hex;
 const SENTINEL_PROOF: Hex = ('0x' + 'b2'.repeat(64)) as Hex;
+// Public-signal sentinels in the circuit's declaration order
+// [merkleRoot, nullifierHash, recipient, amount, token] — per-element wire
+// formats: bytes32, bytes32, address, positive decimal, address.
 const SENTINEL_PUBSIG_ROOT: Hex = ('0x' + 'c3'.repeat(32)) as Hex;
-const SENTINEL_PUBSIG_RECIPIENT: Hex = ('0x' + 'd4'.repeat(32)) as Hex;
-const SENTINEL_PUBSIG_AMOUNT: Hex = ('0x' + 'e5'.repeat(32)) as Hex;
+const SENTINEL_PUBSIG_RECIPIENT: Address = ('0x' + 'd4'.repeat(20)) as Address;
+const SENTINEL_PUBSIG_AMOUNT: string = '987654321012345678';
+const SENTINEL_PUBSIG_TOKEN: Address = ('0x' + '17'.repeat(20)) as Address;
 const SENTINEL_RECIPIENT: Address = ('0x' + 'f6'.repeat(20)) as Address;
 const SENTINEL_CONTRACT: Address = ('0x' + '07'.repeat(20)) as Address;
 
@@ -307,6 +311,7 @@ describe('Sensitive-key isolation (Property 11)', () => {
             SENTINEL_NULLIFIER_HASH,
             SENTINEL_PUBSIG_RECIPIENT,
             SENTINEL_PUBSIG_AMOUNT,
+            SENTINEL_PUBSIG_TOKEN,
           ],
           merkleRoot: record.merkleRoot,
           recipient: SENTINEL_RECIPIENT,

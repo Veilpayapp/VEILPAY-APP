@@ -168,6 +168,7 @@ function validInputs() {
     nullifierHash: '0x' + '4'.repeat(64),
     recipient: '0x' + '5'.repeat(40),
     amount: '1000000',
+    token: '0x' + '6'.repeat(40),
   };
 }
 

@@ -1,4 +1,4 @@
-// Public inputs: [merkleRoot, nullifierHash, recipient, amount] — see design.md §Public input ordering contract
+// Public inputs: [merkleRoot, nullifierHash, recipient, amount, token] — see design.md §Public input ordering contract
 //
 // Veilpay — ZkpProver (WebView snarkjs bridge)
 // ============================================
@@ -266,10 +266,11 @@ const RELEASE_PENDING_HTML = `<!DOCTYPE html><html><head><meta charset="utf-8" /
 
 /**
  * Canonical input shape for `snarkjs.groth16.fullProve` against
- * `withdraw.circom`. The eight keys are exactly the circuit signals in the
- * order the circuit was declared:
+ * `withdraw.circom`. The nine keys are exactly the circuit signals in the
+ * order the circuit was declared (packages/circuits/withdraw.circom:36-47;
+ * build/verification_key.json has nPublic=5):
  *   private: nullifier, secret, pathElements, pathIndices
- *   public : merkleRoot, nullifierHash, recipient, amount
+ *   public : merkleRoot, nullifierHash, recipient, amount, token
  */
 export type ProveInputs = {
   nullifier: string;
@@ -280,6 +281,7 @@ export type ProveInputs = {
   nullifierHash: string;
   recipient: string;
   amount: string;
+  token: string;
 };
 
 /** Messages the WebView posts back to React Native. */
@@ -304,7 +306,7 @@ export interface ZkpProverRef {
 
 interface ZkpProverProps {}
 
-// The eight keys snarkjs expects, in the canonical declaration order. Used
+// The nine keys snarkjs expects, in the canonical declaration order. Used
 // by `generateProof` to fail fast on caller-side typos rather than letting
 // snarkjs throw a cryptic "circuit signal X not found" deep inside the
 // WASM runtime.
@@ -317,6 +319,7 @@ const REQUIRED_INPUT_KEYS: ReadonlyArray<keyof ProveInputs> = [
   'nullifierHash',
   'recipient',
   'amount',
+  'token',
 ];
 const REQUIRED_INPUT_KEY_SET = new Set<string>(REQUIRED_INPUT_KEYS as ReadonlyArray<string>);
 
@@ -390,8 +393,12 @@ function buildProveScript(params: {
                       throw new Error('zkey integrity check failed (sha256 mismatch)');
                     }
                   }
-                  // Public inputs: [merkleRoot, nullifierHash, recipient, amount]
-                  // — see design.md §Public input ordering contract.
+                  // Public inputs: [merkleRoot, nullifierHash, recipient,
+                  // amount, token] — see design.md §Public input ordering
+                  // contract. The full inputs object (nine keys) is
+                  // serialized verbatim into the script below, so the
+                  // public token signal reaches fullProve with the
+                  // private signals.
                   const inputs = ${JSON.stringify(inputs)};
                   const { proof, publicSignals } = await snarkjs.groth16.fullProve(
                     inputs,

@@ -4,10 +4,10 @@
 //
 // Property 12 (see design.md §Correctness Properties):
 //   For any input object `i = {nullifier, secret, pathElements, pathIndices,
-//   merkleRoot, nullifierHash, recipient, amount}` posted to `ZkpProver` via
-//   the `PROVE` message, the WebView SHALL invoke
+//   merkleRoot, nullifierHash, recipient, amount, token}` posted to
+//   `ZkpProver` via the `PROVE` message, the WebView SHALL invoke
 //   `snarkjs.groth16.fullProve(i, CIRCUIT_WASM_URL, CIRCUIT_ZKEY_URL)` with
-//   the same eight key/value pairs in the input argument; AND when
+//   the same nine key/value pairs in the input argument; AND when
 //   `fullProve` resolves with `{proof, publicSignals}`, the WebView SHALL
 //   post exactly one `PROOF_SUCCESS` message to React Native whose payload
 //   contains both `proof` and `publicSignals` unchanged.
@@ -24,7 +24,7 @@
 //
 //   1. The script that `ZkpProver.injectJavaScript`-es into the WebView
 //      hands snarkjs an input object that is structurally `===` to the
-//      one the React Native caller passed (deep equal, eight keys).
+//      one the React Native caller passed (deep equal, nine keys).
 //   2. The URLs handed to snarkjs are the configured `CIRCUIT_WASM_URL`
 //      / `CIRCUIT_ZKEY_URL`.
 //   3. The `PROOF_SUCCESS` message posted back contains the exact
@@ -123,15 +123,18 @@ type ProveInputs = {
   nullifierHash: string;
   recipient: string;
   amount: string;
+  token: string;
 };
 
 // ---------------------------------------------------------------------------
 // Generators — smart enough to constrain to the input shape the circuit
 // actually accepts (depth-20 paths, 64-char hex field elements,
-// 0x-prefixed 40-char addresses, positive decimal amount strings).
+// 0x-prefixed 40-char addresses, positive decimal amount string, and the
+// public `token` address signal the 5-signal circuit declares).
 // ---------------------------------------------------------------------------
 
 const hex64 = fc.hexaString({ minLength: 64, maxLength: 64 });
+const hex40 = fc.hexaString({ minLength: 40, maxLength: 40 });
 const proveInputsArb: fc.Arbitrary<ProveInputs> = fc.record({
   nullifier: hex64.map((h) => `0x${h}`),
   secret: hex64.map((h) => `0x${h}`),
@@ -142,16 +145,17 @@ const proveInputsArb: fc.Arbitrary<ProveInputs> = fc.record({
   pathIndices: fc.array(fc.constantFrom(0, 1), { minLength: 20, maxLength: 20 }),
   merkleRoot: hex64.map((h) => `0x${h}`),
   nullifierHash: hex64.map((h) => `0x${h}`),
-  recipient: fc
-    .hexaString({ minLength: 40, maxLength: 40 })
-    .map((h) => `0x${h}`),
+  recipient: hex40.map((h) => `0x${h}`),
   amount: fc
     .bigInt({ min: 1n, max: (1n << 128n) - 1n })
     .map((b) => b.toString()),
+  token: hex40.map((h) => `0x${h}`),
 });
 
 // snarkjs's `proof` is normally `{pi_a, pi_b, pi_c, protocol, curve}` and
-// `publicSignals` is a string array; the property cares only that whatever
+// `publicSignals` is a string array in the circuit's declaration order
+// [merkleRoot, nullifierHash, recipient, amount, token] (5 entries for the
+// shipped 5-signal circuit); the property cares only that whatever
 // structure `fullProve` resolves with comes back unchanged, so we generate
 // arbitrary JSON-compatible shapes here.
 const proofShapeArb = fc.record({
@@ -164,7 +168,7 @@ const proofShapeArb = fc.record({
 
 const publicSignalsArb = fc.array(
   fc.bigInt({ min: 0n, max: (1n << 253n) - 1n }).map((b) => b.toString()),
-  { minLength: 4, maxLength: 4 },
+  { minLength: 5, maxLength: 5 },
 );
 
 // ---------------------------------------------------------------------------
@@ -202,9 +206,24 @@ async function runInjectedScript(script: string, fakeProverOutput: {
     },
   };
 
-  const fetchMock = (url: string): Promise<{ ok: boolean; status: number }> => {
+  // The prove script pre-flights BOTH artifact sources with fetch and reads
+  // their bytes with arrayBuffer() before calling fullProve, so the fetch
+  // mock must satisfy that whole surface (the round-4 hardening added the
+  // byte-level pre-flight; a mock without arrayBuffer made the script post
+  // PROOF_ERROR instead of PROOF_SUCCESS).
+  const fetchMock = (
+    url: string
+  ): Promise<{
+    ok: boolean;
+    status: number;
+    arrayBuffer: () => Promise<ArrayBuffer>;
+  }> => {
     void url;
-    return Promise.resolve({ ok: true, status: 200 });
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+    });
   };
 
   const fakeWindow = {
@@ -224,13 +243,19 @@ async function runInjectedScript(script: string, fakeProverOutput: {
   fn(snarkjs, fetchMock, fakeWindow);
 
   // Drain microtasks until the IIFE has had a chance to await both fetches
-  // and fullProve. Two `setImmediate` flushes are enough for three serial
-  // awaits in practice; we guard with a timed loop in case the host is
-  // slow under coverage instrumentation.
-  const start = Date.now();
-  while (postedMessages.length === 0 && Date.now() - start < 1000) {
+  // and fullProve. Every await inside the script resolves on the microtask
+  // queue under these mocks (fetch / arrayBuffer / fullProve all return
+  // already-resolved promises), so a bounded spin of `await Promise.resolve()`
+  // is sufficient. NOTE: jest.setup.ts enables fake timers globally, so
+  // `setImmediate` would never fire and `Date.now()` is frozen — a drain
+  // bounded by either (the harness this property was born skipped with)
+  // hangs the test until its timeout. The iteration cap is the only sound
+  // bound under fake timers.
+  let spins = 0;
+  while (postedMessages.length === 0 && spins < 200) {
+    spins += 1;
     // eslint-disable-next-line no-await-in-loop
-    await new Promise((r) => setImmediate(r));
+    await Promise.resolve();
   }
 
   return { fullProveCalls, postedMessages };
@@ -246,7 +271,7 @@ describe('Property 12: ZkpProver postMessage protocol fidelity', () => {
     mockSetIsProving.mockReset();
   });
 
-  it.skip(
+  it(
     'forwards inputs verbatim to snarkjs.groth16.fullProve and posts proof+publicSignals unchanged',
     async () => {
       await fc.assert(
@@ -295,7 +320,7 @@ describe('Property 12: ZkpProver postMessage protocol fidelity', () => {
             );
 
             // Property 12, clause (a) — fullProve invoked exactly once
-            // with the same eight key/value pairs and the configured URLs.
+            // with the same nine key/value pairs and the configured URLs.
             expect(fullProveCalls.length).toBe(1);
             const [calledInputs, calledWasmUrl, calledZkeyUrl] =
               fullProveCalls[0];
@@ -303,7 +328,7 @@ describe('Property 12: ZkpProver postMessage protocol fidelity', () => {
             expect(calledWasmUrl).toBe(TEST_WASM_URL);
             expect(calledZkeyUrl).toBe(TEST_ZKEY_URL);
 
-            // Belt-and-braces: the eight expected keys are present and no
+            // Belt-and-braces: the nine expected keys are present and no
             // extras have leaked through the JSON round-trip.
             expect(Object.keys(calledInputs as object).sort()).toEqual(
               [
@@ -315,6 +340,7 @@ describe('Property 12: ZkpProver postMessage protocol fidelity', () => {
                 'pathIndices',
                 'recipient',
                 'secret',
+                'token',
               ],
             );
 

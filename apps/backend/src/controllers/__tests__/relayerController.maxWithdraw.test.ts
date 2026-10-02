@@ -94,11 +94,15 @@ function bodyWithAmount(amount: string): Record<string, unknown> {
   return {
     nullifierHash: '0x' + '11'.repeat(32),
     proof: '0x' + '22'.repeat(64),
+    // Public signals in the circuit's declaration order
+    // [merkleRoot, nullifierHash, recipient, amount, token] — per-element
+    // wire formats: bytes32, bytes32, address, positive decimal, address.
     publicSignals: [
       '0x' + 'aa'.repeat(32),
       '0x' + 'bb'.repeat(32),
       '0x' + 'cc'.repeat(20),
-      '0x' + 'dd'.repeat(32),
+      '1000000',
+      '0x' + 'ee'.repeat(20),
     ],
     merkleRoot: '0x' + '33'.repeat(32),
     recipient: '0x' + '44'.repeat(20),

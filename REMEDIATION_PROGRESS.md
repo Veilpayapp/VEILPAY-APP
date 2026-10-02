@@ -580,7 +580,7 @@ backend and indexer never had ESLint configs (only the consumer app did), the sh
 `.js` in ESLint 8 — CI simply had never survived "Install dependencies" far enough to
 reach the step (the 2026-09-06 runs died there in 12s).
 
-Repaired in the follow-up commit (this commit): committed the shared base
+Repaired in the follow-up commit `9ec4a0e`: committed the shared base
 `config/.eslintrc.js`; added `apps/backend/.eslintrc.js` + `apps/indexer/.eslintrc.js`
 extending it (consumer-idiom relaxations limited to the rule classes that actually fire;
 `checkLoops: false` for the deliberate `while (true)` prune loops in retentionPurge.ts);
@@ -588,5 +588,24 @@ lint scripts now `eslint src/ --ext .ts`; one dead test type removed (HandlerBag
 indexer dispatcher.test.ts — suite still 21/21). Local verification: all three lints exit 0
 with 0 errors (6/3/1577 warnings respectively — warnings don't gate), pnpm audit
 --audit-level=high clean, a11y smoke ok, typechecks/tests previously green this session.
+
+**Second latent break (run 37046632517):** the lint repair advanced the workspace job
+through Lint/Typecheck/Test for backend AND indexer (first time in repo history those
+passed on CI) plus consumer lint + a11y smoke — then died at "Typecheck consumer app" on
+TS2307: `expo-modules-core` (both native module bridges) and `expo-asset` (ZkpProver).
+Root cause: the root `.npmrc` (`node-linker=hoisted`) was untracked (gitignored
+"local-only") — CI's default ISOLATED pnpm layout doesn't hoist transitive deps, so
+undeclared imports that resolve locally via the flat tree fail on fresh runners. Same
+disease class as the eslint-config bug: local-only config silently shaping verified
+behavior. Repaired in the next commit: declared the actually-imported packages in
+consumer-app (`circomlibjs` ^0.1.7, `expo-asset` ~55.0.18, `expo-file-system` ~55.0.24,
+`expo-modules-core` ~55.0.25 — all matching versions already in the lockfile, zero
+drift), added the `expo-modules-core: "*"` peer to both native module packages,
+committed the hoisted root `.npmrc` (and un-ignored `.npmrc` in .gitignore) so CI
+installs the exact layout every local verification ran against. Lockfile diff verified
+additive-only; local re-verification after the reinstall: consumer typecheck exit 0,
+consumer full coverage run 166/166 suites / 1339 tests exit 0, backend + indexer
+typechecks exit 0. Debt note: the hoisted layout masks phantom-import hygiene — the
+isolated-layout switch (now unblocked by the declared deps) stays round-6 material.
 Expected CI after this commit: workspace + circuits-sanity GREEN; contracts + Android
 Build remain red on the SPP user gate (by design, isolated).

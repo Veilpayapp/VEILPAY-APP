@@ -9,6 +9,7 @@
   "license": "Apache-2.0",
   "peerDependencies": {
     "expo": "*",
+    "expo-modules-core": "*",
     "react": "*",
     "react-native": "*"
   }

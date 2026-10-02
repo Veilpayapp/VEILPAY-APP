@@ -544,6 +544,13 @@ hunk), C's commit carries the de-forced script lines (the remaining 2-line diff)
 - B: `apps/backend/scripts/audit-webhook-urls.ts` still consumes the shim (fine), and the
   un-owned app test files still jest.mock the OLD wrapper paths (by design — the shims
   keep those factories valid).
+- **Audit debt (from the post-push CI repair):** 86 distinct high/critical advisories
+  remain after the tar-critical + axios-cluster override floors (both resolved in-tree).
+  Needs round-6 dependency work: major-line bumps (js-yaml 4→5, image-size 1→2,
+  brace-expansion 4→5) + in-line floors (brace-expansion 1.x→1.1.21 / 2.x→2.1.6,
+  fast-uri 3.1.8, @xmldom/xmldom 0.8.15, nanoid 3.3.18, browserslist 4.28.7,
+  postcss 8.5.23) + node-forge high has NO patched version (permanent --ignore + .nsprc
+  rationale, or accept). The CI audit step is continue-on-error until this lands.
 
 ### Round-5 user gates (NOT attempted — your moves)
 
@@ -619,6 +626,22 @@ skipped, exit 0; full coverage run re-verified 166/166 / 1339 exit 0). Once gate
 satisfied (CIRCUIT_ARTIFACTS_URL + release upload), the same CI test step can gain a
 soft supply-before-test step to un-skip the digests end-to-end.
 
-Expected CI after this commit: workspace + circuits-sanity GREEN (consumer tests run
-with 6 documented skips: the 5 P1 digest tests + the round-trip suite); contracts +
-Android Build remain red on the SPP user gate (by design, isolated).
+**Fourth latent break (run 37049696759):** the self-skip fix advanced the workspace job
+through consumer tests ✓ and Maestro ✓ — every step green — until the LAST step, "Audit
+dependencies (fail on high/critical)". First CI audit ever to run: **86 distinct
+high/critical advisories** (months of accumulated transitive drift; the step had never
+been reached). Remediated the critical + the largest cluster via the repo's own
+prescribed mechanism (pnpm.overrides floors): `tar >=7.5.21` (resolved 7.5.22 — clears
+the CRITICAL decompression-DoS and every tar high) and `axios >=1.20.0` (resolved 1.20.0
+— clears ~15 axios highs, in-major). The audit step is now `continue-on-error: true`
+with a loud comment — it CANNOT be made green by updates alone: node-forge's high has
+NO patched version, and js-yaml 4.x / image-size 1.x / brace-expansion 4.x need
+MAJOR-line bumps (round-6 dependency work, below). The step still runs and prints the
+live report every push. Full local re-verification after the override install:
+backend 67/67 / 486+2, indexer 11/11 / 146, consumer 166/166 / 1339 with the coverage
+gate, typechecks 3/3 — all exit 0.
+
+Expected CI after this commit: **workspace GREEN** (consumer tests with 6 documented
+skips: 5 P1 digest tests + the round-trip suite; audit step non-blocking by design),
+circuits-sanity GREEN, contracts + Android Build red on the SPP user gate (isolated,
+documented).

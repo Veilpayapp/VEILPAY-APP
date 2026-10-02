@@ -41,11 +41,6 @@ type FailedHandler = (
   error: Error,
 ) => void;
 
-type HandlerBag = {
-  completed?: CompletedHandler;
-  failed?: FailedHandler;
-};
-
 const MERCHANT_SECRET = 'merchant_webhook_secret_0123456789';
 
 function baseJobData(overrides: Record<string, unknown> = {}): Record<string, unknown> {

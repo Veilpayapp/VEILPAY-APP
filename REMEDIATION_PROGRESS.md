@@ -567,3 +567,26 @@ hunk), C's commit carries the de-forced script lines (the remaining 2-line diff)
    groupBy, Skia removal, node-fetch, ethers/viem consolidation, Dependabot + scheduled
    audit, APK/bundle budgets), per-chain allowlist expansion, committing circuit binaries
    vs supplying, app-password product direction.
+
+### Post-push addendum (2026-10-02, same close-out session)
+
+User lifted gate 1 and instructed the push: `git push origin main` → `8cea7cc..2c01880`,
+20 commits landed (rounds 3–5). First-run CI verdict: **circuits-sanity ✓ (9s, offline
+pins + provenance hold on a fresh runner); contracts ✗ at Checkout and Android Build ✗ at
+Checkout — both the documented SPP submodule gate (`packages/vendor/spp` lacks reachable
+`05e3899…`, user gate 2); workspace ✗ at "Lint backend" — NOT round-5 damage**: the
+backend and indexer never had ESLint configs (only the consumer app did), the shared
+`config/.eslintrc.js` was never committed, and their `eslint src/` scripts expand only
+`.js` in ESLint 8 — CI simply had never survived "Install dependencies" far enough to
+reach the step (the 2026-09-06 runs died there in 12s).
+
+Repaired in the follow-up commit (this commit): committed the shared base
+`config/.eslintrc.js`; added `apps/backend/.eslintrc.js` + `apps/indexer/.eslintrc.js`
+extending it (consumer-idiom relaxations limited to the rule classes that actually fire;
+`checkLoops: false` for the deliberate `while (true)` prune loops in retentionPurge.ts);
+lint scripts now `eslint src/ --ext .ts`; one dead test type removed (HandlerBag,
+indexer dispatcher.test.ts — suite still 21/21). Local verification: all three lints exit 0
+with 0 errors (6/3/1577 warnings respectively — warnings don't gate), pnpm audit
+--audit-level=high clean, a11y smoke ok, typechecks/tests previously green this session.
+Expected CI after this commit: workspace + circuits-sanity GREEN; contracts + Android
+Build remain red on the SPP user gate (by design, isolated).

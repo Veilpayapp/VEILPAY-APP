@@ -19,7 +19,6 @@ env_backup/
 env_backup.zip
 
 # Config files (local only, never commit)
-.eslintrc.js
 .npmrc
 .prettierrc
 .prettierignore

@@ -9,7 +9,6 @@ The public Veilpay docs focus on the networks currently used by the product road
 | Ethereum | EVM | Supported |
 | Polygon | EVM | Supported |
 | Arbitrum | EVM | Supported |
-| Optimism | EVM | Supported |
 | Base | EVM | Supported |
 | BSC | EVM | Supported |
 | Solana | SVM | Supported |

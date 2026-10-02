@@ -38,7 +38,7 @@
 
 | Network Family | Supported Chains | Privacy Capabilities |
 | :--- | :--- | :--- |
-| **EVM** | Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Sepolia | Public transfers, stealth-address, encrypted-note primitives. *(Experimental privacy-pool components are in development)*. |
+| **EVM** | Ethereum, Polygon, Arbitrum, Base, BSC, Sepolia | Public transfers, stealth-address, encrypted-note primitives. *(Experimental privacy-pool components are in development)*. |
 | **Solana** | Solana Mainnet, Devnet | Public wallet, balance, and send flows. *(Privacy-pool integration is a separate roadmap track)*. |
 | **Stellar** | Stellar Mainnet, Testnet | Public XLM flows. **Private XLM** supports shielding, private send/receive, and unshielding on Stellar Mainnet. |
 
@@ -248,6 +248,17 @@ This stages the withdraw-circuit prover artifacts (`withdraw.wasm`, `withdraw_fi
 - **Release builds:** the prover loads from these bundled local files with no remote fallback, and the integrity pins are **mandatory** — a build with missing/mismatched assets fails closed.
 - **Dev builds:** remote artifact URLs remain available and pinning is relaxed, but Metro still requires the staged assets to bundle.
 - `--offline` skips the network entirely (fails if no digest-valid local copy exists).
+
+**No local circuit build? Supply the binaries from a pinned source** (nothing ~10MB-ish is committed to git):
+
+```bash
+CIRCUIT_ARTIFACTS_URL=<url-or-dir> node apps/consumer-app/scripts/supply-circuit-assets.js
+# or: pnpm --filter consumer-app circuits:supply
+```
+
+`CIRCUIT_ARTIFACTS_URL` is either an **https base URL** — e.g. the download base of a GitHub release, `https://github.com/<owner>/<repo>/releases/download/<tag>`, with assets named `withdraw.wasm`, `withdraw_final.zkey`, `snarkjs.min.js` — or a **local directory** containing them. The script verifies every fetched byte against the same baked pins **before anything is staged**, then hands off to the staging script above (which re-verifies at write time; the CDN is not used). An unset source, an unreachable source, or any digest mismatch exits 1 and stages nothing. CI (`.github/workflows/android-build.yml`) resolves sources in exactly this order: local `packages/circuits/build` outputs when present, else the supply script fed by the `CIRCUIT_ARTIFACTS_URL` GitHub repository variable — and fails closed when neither works.
+
+**One-time setup for fresh runners (the only user action):** upload the three binaries to a GitHub release — or any other pinned https source — and set the repository *variable* `CIRCUIT_ARTIFACTS_URL` to its download base URL (GitHub → Settings → Secrets and variables → Actions → Variables). The pins in [`circuit.ts`](apps/consumer-app/src/constants/circuit.ts), not the URL, guarantee the bytes. Full details: [Circuit asset supply and pinning](docs/reference/circuit-asset-supply.md).
 
 ### 5. Run the Services
 

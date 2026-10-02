@@ -27,7 +27,7 @@ This documentation is the public product and developer knowledge base for Veilpa
 
 Veilpay currently focuses on:
 
-- EVM networks: Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, and Sepolia for testing.
+- EVM networks: Ethereum, Polygon, Arbitrum, Base, BSC, and Sepolia for testing.
 - Solana mainnet and devnet flows.
 - Stellar mainnet and testnet flows.
 - Stellar Private Payments as the first native privacy-chain integration track: contracts deployed on testnet and mainnet, testnet flow verified end-to-end, and the mainnet shield/transfer/unshield flow implemented in app builds (final on-chain test pending user approval).

@@ -14,7 +14,7 @@ Veilpay uses a self-custody wallet model.
 
 | Family | Used for |
 | --- | --- |
-| EVM | Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Sepolia |
+| EVM | Ethereum, Polygon, Arbitrum, Base, BSC, Sepolia |
 | SVM | Solana and Solana Devnet |
 | XLM | Stellar and Stellar Testnet |
 

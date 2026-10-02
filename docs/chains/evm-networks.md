@@ -7,7 +7,6 @@ Veilpay supports EVM-style networks through shared address handling, EVM signing
 - Ethereum.
 - Polygon.
 - Arbitrum.
-- Optimism.
 - Base.
 - BSC.
 - Sepolia for testing.

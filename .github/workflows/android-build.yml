@@ -66,22 +66,51 @@ jobs:
       # statically requires them (assetExts wasm/zkey/umd) and the release
       # prover is bundled-local with no remote fallback.
       #
-      # FAIL-CLOSED: the script verifies every staged byte against the
-      # SHA-256 pins baked in apps/consumer-app/src/constants/circuit.ts and
-      # exits non-zero on any mismatch, failing this build. It is idempotent
-      # (consecutive runs rewrite identical bytes).
+      # FAIL-CLOSED: whichever source path runs, every staged byte is
+      # verified against the SHA-256 pins baked in
+      # apps/consumer-app/src/constants/circuit.ts and any mismatch exits
+      # non-zero, failing this build. Staging is idempotent (consecutive
+      # runs rewrite identical bytes).
       #
-      # NOTE (user gate): packages/circuits/build/ is gitignored (root
-      # .gitignore `build/`), so a fresh checkout cannot source the pinned
-      # wasm/zkey from it. Until the circuit build artifacts are committed or
-      # otherwise supplied on the runner, this step fails closed by design —
-      # the pins make sure no APK is ever built with wrong or missing prover
-      # bytes. See apps/consumer-app/assets/circuits/README.md. The
+      # Source resolution, in order:
+      #   1. LOCAL: packages/circuits/build/withdraw.wasm +
+      #      withdraw_final.zkey present on the runner (a machine that has
+      #      compiled the circuit) -> scripts/stage-circuit-assets.js.
+      #   2. SUPPLY: artifacts absent -> scripts/supply-circuit-assets.js
+      #      fetches the three pinned binaries from the GitHub Actions
+      #      repository variable CIRCUIT_ARTIFACTS_URL (set it under
+      #      Settings > Secrets and variables > Actions > Variables), e.g.
+      #      the download base of a GitHub release:
+      #      https://github.com/<owner>/<repo>/releases/download/<tag>
+      #      It verifies every downloaded byte against the same baked pins
+      #      BEFORE anything is staged, then hands off to the staging
+      #      script (which re-verifies at write time; the CDN is not used).
+      #      Unset variable, unreachable source, or digest mismatch ->
+      #      exit 1 -> this build fails. When NEITHER source works the
+      #      build fails closed.
+      #
+      # ONE-TIME USER ACTION (user gate 7): upload the three binaries
+      # (withdraw.wasm, withdraw_final.zkey, snarkjs.min.js) to a GitHub
+      # release — or any other pinned https source — and set the repository
+      # variable CIRCUIT_ARTIFACTS_URL to its download base URL. The ~10MB
+      # of binaries stay OUT of git; the pins baked in
+      # apps/consumer-app/src/constants/circuit.ts guarantee the bytes.
+      # See docs/reference/circuit-asset-supply.md and
+      # apps/consumer-app/assets/circuits/README.md. The
       # eas-build-post-install hook re-verifies the archived staged assets
       # inside the EAS build itself.
-      - name: Stage circuit assets
+      - name: Stage circuit assets (local build, else pinned supply)
         working-directory: apps/consumer-app
-        run: node scripts/stage-circuit-assets.js
+        env:
+          CIRCUIT_ARTIFACTS_URL: ${{ vars.CIRCUIT_ARTIFACTS_URL }}
+        run: |
+          if [ -f ../../packages/circuits/build/withdraw.wasm ] && [ -f ../../packages/circuits/build/withdraw_final.zkey ]; then
+            echo "local circuit build outputs found — staging from packages/circuits/build"
+            node scripts/stage-circuit-assets.js
+          else
+            echo "no local circuit build outputs — supplying the pinned binaries from CIRCUIT_ARTIFACTS_URL (fail-closed)"
+            node scripts/supply-circuit-assets.js
+          fi
 
       - name: Build Android APK (EAS local)
         working-directory: apps/consumer-app

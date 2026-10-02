@@ -75,6 +75,14 @@ node apps/consumer-app/scripts/stage-circuit-assets.js
 
 The script verifies every staged byte against the SHA-256 pins in `apps/consumer-app/src/constants/circuit.ts` and fails closed on any mismatch. Release builds require the pins; dev builds keep remote artifact URLs.
 
+Without a local circuit compile (`packages/circuits/build`), supply the three binaries from a pinned source instead:
+
+```bash
+CIRCUIT_ARTIFACTS_URL=<url-or-dir> node apps/consumer-app/scripts/supply-circuit-assets.js
+```
+
+The source is an https base URL (e.g. a GitHub release download base) or a local directory; every byte is digest-verified against the same pins before anything is staged, and a mismatch stages nothing. See the [circuit asset supply and pinning](../reference/circuit-asset-supply.md) reference for the one-time release upload and the CI wiring.
+
 ```bash
 pnpm consumer:dev
 ```

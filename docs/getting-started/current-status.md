@@ -11,7 +11,7 @@ This page distinguishes implemented, gated, and planned areas so readers do not 
 - Chain indexer (EVM + Stellar polling, Solana JSON-RPC, WebSocket stream, stealth scanner).
 - Health, readiness, and liveness routes; metrics and alerting.
 - Backend RPC proxy with per-provider budget circuit breaker.
-- EVM (Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Sepolia), Solana (mainnet/devnet), and Stellar (mainnet/testnet) wallet flows: balances, send, receive, history.
+- EVM (Ethereum, Polygon, Arbitrum, Base, BSC, Sepolia), Solana (mainnet/devnet), and Stellar (mainnet/testnet) wallet flows: balances, send, receive, history.
 - Fiat on/off ramps: Transak, MoonPay, onramp.money, Stripe shell with provider matrix and quotes.
 - WalletConnect v2 (EVM + Solana namespaces), session persistence.
 - Sentry hooks plus pino structured logging with correlation IDs.

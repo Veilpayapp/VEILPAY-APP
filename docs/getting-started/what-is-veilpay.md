@@ -26,4 +26,4 @@ Veilpay is not just a wallet UI. It is a self-custody payment stack that combine
 
 ## Public chain scope
 
-The public documentation focuses on Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Solana, and Stellar. Stellar SPP is documented as the first native privacy-chain track and remains gated by testnet, audit, and production-readiness requirements.
+The public documentation focuses on Ethereum, Polygon, Arbitrum, Base, BSC, Solana, and Stellar. Stellar SPP is documented as the first native privacy-chain track and remains gated by testnet, audit, and production-readiness requirements.

@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 /**
  * Veilpay Home Dashboard Screen (C3)
  * Main wallet dashboard with balance, actions, and transaction history
@@ -108,7 +107,7 @@ const formatTransakAmount = (value?: string, currency?: string) => {
   return currency ? `${formatted} ${currency}` : formatted;
 };
 
-const formatTransactionTime = (timestamp: number) => {
+export const formatTransactionTime = (timestamp: number) => {
   const now = Date.now();
   const diff = now - timestamp;
 
@@ -123,7 +122,7 @@ const formatTransactionTime = (timestamp: number) => {
   return new Date(timestamp).toLocaleDateString();
 };
 
-const formatAddress = (value: string) => {
+export const formatAddress = (value: string) => {
   if (!value) {
     return "0x...";
   }

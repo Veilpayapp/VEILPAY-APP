@@ -1,8 +1,8 @@
 /**
  * MAX-amount reserve math for the send screen.
  *
- * Extracted because `handleQuickAmount` is inside an `istanbul ignore file`
- * screen with no test that presses the button, and the old version reserved
+ * Extracted because `handleQuickAmount` lives in a screen with no test that
+ * presses the button, and the old version reserved
  * literally 0 on every non-EVM chain — so MAX on Stellar proposed the entire
  * balance and the signer rejected it (`amount + fee + (2 + subentries) x 0.5
  * XLM`). Three rules this holds:

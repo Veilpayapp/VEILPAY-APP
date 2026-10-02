@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 /**
  * Veilpay Receive QR Code Screen
  * Displays QR code for receiving payments

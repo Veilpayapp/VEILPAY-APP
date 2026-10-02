@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 /**
  * Veilpay Transaction History Screen
  * Displays list of past transactions with filter options

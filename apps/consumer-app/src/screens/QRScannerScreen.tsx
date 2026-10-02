@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 /**
  * Veilpay QR Scanner Screen
  * Camera-based QR code scanner for payment addresses

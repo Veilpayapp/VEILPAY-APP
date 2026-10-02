@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 import { useState, useEffect, useRef } from 'react';
 import { useWalletStore, validateAddress } from '../stores/walletStore';
 import { useTransactionStore, useTransactions } from '../stores/transactionStore';

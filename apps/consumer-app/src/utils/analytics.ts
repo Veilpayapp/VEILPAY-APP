@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 /**
  * PRIV-001: analytics minimization.
  * - Wallet addresses are hashed (SHA-256 truncated) before identify/traits.

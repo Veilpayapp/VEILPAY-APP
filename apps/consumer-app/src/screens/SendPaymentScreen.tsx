@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 /**
  * Veilpay Send Payment Screen
  * Allows users to send payments with address input, amount, and token selection

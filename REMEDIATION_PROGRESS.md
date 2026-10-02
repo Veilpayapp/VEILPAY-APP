@@ -645,3 +645,10 @@ Expected CI after this commit: **workspace GREEN** (consumer tests with 6 docume
 skips: 5 P1 digest tests + the round-trip suite; audit step non-blocking by design),
 circuits-sanity GREEN, contracts + Android Build red on the SPP user gate (isolated,
 documented).
+
+**CONFIRMED GREEN (run 37054829001, 2026-10-02 19:32):** CI workflow `completed success`
+— workspace ✓ 5m12s (every step: lint/typecheck/test x3, a11y, version sync, consumer
+coverage with the gate, maestro, audit non-blocking), circuits-sanity ✓ 7s, contracts ✗
+(continue-on-error, SPP gate). The first green CI run in the repo's recorded history.
+Android Build (EAS Backup) still ✗ at Checkout on the SPP submodule gate — user gate 2,
+unaffected by any of this.

@@ -14,6 +14,8 @@ import { join } from 'path';
  *     and reconciled against
  *     `npx prisma migrate diff --from-schema-datamodel <snapshot>
  *      --to-schema-datamodel schema.prisma --script`.
+ *   - `2_onramp_states` — the round-5 onramp lifecycle addition
+ *     (FiatOrderStatus.refunded), hand-written and reconciled the same way.
  *
  * These tests fail if anyone silently regresses the files or resurrects the
  * stale 20260714 directories.
@@ -82,12 +84,28 @@ describe('prisma migrations baseline (round 4)', () => {
     expect(
       existsSync(join(migrationsDir, '20260714010000_privacy_level_stealth_private'))
     ).toBe(false);
-    // the lock file survives; the on-disk history is exactly 0_init + 1
+    // the lock file survives; the on-disk history is exactly 0_init + 1 + 2
     const entries = readdirSync(migrationsDir)
       .filter((e) => e !== 'migration_lock.toml')
       .sort();
     expect(existsSync(join(migrationsDir, 'migration_lock.toml'))).toBe(true);
-    expect(entries).toEqual(['0_init', '1_webhook_secret_and_key_index']);
+    expect(entries).toEqual(['0_init', '1_webhook_secret_and_key_index', '2_onramp_states']);
+  });
+
+  it('2_onramp_states adds ONLY the refunded enum value (round 5)', () => {
+    const sql = readMigration('2_onramp_states');
+    expect(sql).toContain(`ALTER TYPE "FiatOrderStatus" ADD VALUE 'refunded'`);
+    // ADD VALUE must be the ONLY statement in its own migration (Postgres
+    // cannot combine it with usage of the new value; some versions disallow
+    // it inside a transaction block entirely).
+    const statements = sql
+      .split(';')
+      .map((s) => s.replace(/--[^\n]*/g, '').trim())
+      .filter((s) => s.length > 0);
+    expect(statements).toEqual([`ALTER TYPE "FiatOrderStatus" ADD VALUE 'refunded'`]);
+    // additive-only migration: nothing dropped or narrowed
+    expect(sql).not.toMatch(/\bDROP\b/i);
+    expect(sql).not.toMatch(/NOT NULL/);
   });
 
   it('migration 1 documents its offline reconciliation against prisma migrate diff', () => {

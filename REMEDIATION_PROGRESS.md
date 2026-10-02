@@ -352,3 +352,218 @@ SSRF rules, reconciliation CLI + drift flag) — folded into E's commit.
    Rebuilding cannot reproduce the pinned zkey (ceremony entropy) — the fail-closed design
    working as intended. Decide the supply mechanism.
 8. App-password product direction + Play Integrity provisioning (roadmap, unchanged).
+
+---
+
+# Round 5 — Debt cleanup + restored HIGH findings (2026-10-02)
+
+**STATUS: IN FLIGHT.** Six streams: A coverage completion (UI), B shared webhook-safety
+package + per-merchant secret seeding, C test-lifecycle truth, D circuit-artifact supply +
+CI/docs truth (+ phantom-Optimism fix), E onramp lifecycle (restored HIGH), F EVM privacy
+withdraw-rail alignment (restored HIGH, latent). Dispatched as TWO dynamic-workflow runs for
+model routing. This section is owned by the LEAD; no agent writes it.
+
+## Phase 0 — ground-state re-verification (lead-run, 2026-10-02)
+
+| Claim (from session prompt) | Disk verdict | Evidence |
+|---|---|---|
+| HEAD `3fdbb77`, 13 local commits, nothing pushed | CONFIRMED | `git rev-parse` → `3fdbb77`; `git log origin/main..HEAD` → 13; `git ls-remote origin main` → `8cea7cc` (remote UNMOVED since 2026-09-06); `gh run list --limit 5` → last origin runs 2026-09-06 (pre-round-3, all failed, expected); `gh release list` → empty. Round-4 user gates 1–8 ALL still open. `gh` authenticated (codeREDxbt). |
+| Round-3 + round-4 invariants | ALL HOLD | `initializeRpcValidation` (App.tsx:44); zero `checkForUpdateAsync` in src; `infra/doppler.json` gone; README+SECURITY exist; health index.ts:102; dispatcher apiKeyHash comments-only, `merchant.webhookSecret ?? config.webhookSigningSecret` (dispatcher.ts:60), `assertSafeWebhookUrl` (dispatcher.ts:31/:210); keys/rotate (routes/merchant.ts:40); schema.prisma:20/21/35; migrations = `0_init` + `1_webhook_secret_and_key_index` + lock; ci.yml contracts `continue-on-error` (:173) + `circuits-sanity` (:144); eas.json no DEPRECATED; `.env.example` SENTRY_DSN(:76)/RECONCILIATION_DRIFT(:84); WebhookDelivery create (queue/index.ts:87) BEFORE enqueue (:111) |
+| Circuit artifacts staged + gitignored | CONFIRMED | withdraw.wasm 2,609,423 B; withdraw_final.zkey 5,439,516 B; snarkjs.min.umd 719,304 B (+ snarkjs.min.js, README, .gitignore in dir) |
+| 11 istanbul ignore directives | CONFIRMED | 7 screens + 3 hooks + utils/analytics.ts; exact list in jest.config.js:22-30 debt comment |
+| Withdraw rail stale vs circuit | CONFIRMED | withdraw.circom public signals merkleRoot/nullifierHash/recipient/amount/**token** (:43-47), `verification_key.json` `nPublic: 5`; schemas backend withdrawRequest.ts:15 + consumer :16 both `.length(4)`; ProveInputs ZkpProver.tsx:274-283 = 8 keys, no `token`; property skip at ZkpProver.property.test.tsx:249; `validateNullifierHash` defined (nullifierHashValidation.ts:190) with ZERO call sites outside its own file; gate contracts.ts:115 = `false` |
+| Onramp racy find-then-update | CONFIRMED | onrampController.ts:490 findFirst → :505 terminal guard (read-then-act) → :520 update; TERMINAL_STATUSES :22; nextStatus normalizer :510-518 sends refund-ish/unmatched → `failed`; FiatOrderStatus enum schema.prisma:213-219 (no `refunded`); CAS precedent services/paymentProcessor.ts:89 |
+| urlSafety double copy | CONFIRMED | backend utils/urlSafety.ts (assertSafeWebhookUrl + rejectUnsafeWebhookUrl) + indexer webhook/urlSafety.ts ("keep in sync"); THREE import sites: webhookDelivery.ts:14, merchantController.ts:10, dispatcher.ts:31 |
+| Optimism phantom docs | CONFIRMED | 7 hits: README.md:41, docs/chains/evm-networks.md:10, docs/README.md:30, docs/consumer-app/wallet-model.md:17, docs/chains/supported-networks.md:12, docs/getting-started/current-status.md:14, docs/getting-started/what-is-veilpay.md:29; chains.ts registry has NO Optimism (ids 1/56/137/42161/8453/11155111 + Solana + Stellar) |
+| Quick scripts | PASS | `validate-maestro-flows` → UX-002 ok; `check-version-sync` → 1.0.4 / build 16 ok |
+| Models | RESOLVED | `new-provider-3/kimi-k3` (CodeFast Kimi) available+enabled; session = `new-provider-2/glm-5.3`. No user stop needed. |
+
+Test-suite baselines not re-run in phase 0 (round-4 matrix was green at exactly HEAD
+`3fdbb77` with a clean tree; re-established by this round's end-of-round matrix).
+
+### Deltas vs. the round-5 session prompt (disk wins)
+
+1. **Model routing mechanics:** the workflow facade has NO per-call model selection → per
+   §4.3, dispatch splits into TWO CreateWorkflow runs: run 1 = Stream A alone
+   (`subagent_model: new-provider-3/kimi-k3`); run 2 = Streams B–F (`subagent_model` UNSET =
+   session glm-5.3). No max_concurrency in either.
+2. **`merchantController.ts:10` is a THIRD urlSafety import site** (`rejectUnsafeWebhookUrl`)
+   beyond the two the prompt lists → pre-granted to Stream B (import line + call-shape only).
+3. **Two Optimism hits sit OUTSIDE Stream D's owned docs globs** (docs/README.md:30,
+   docs/consumer-app/wallet-model.md:17) → pre-granted to D (those lines only).
+4. **`src/utils/maxSendable.ts:4` stale comment** mentions "istanbul ignore file" in a doc
+   comment — would trip the acceptance grep → pre-granted to Stream A (comment reword only).
+5. **`packages/*` glob already in pnpm-workspace.yaml** — Stream B's new package needs NO
+   workspace-yaml edit; `packages/shared` is the structural precedent (`@veilpay/shared`,
+   main `./src/index.ts`, `test: jest`, `build: tsc`; apps reference `"workspace:*"`).
+6. Consumer `test:coverage` ALSO carries the duplicated `--forceExit` (package.json:19 AND
+   :22) — Stream D de-duplicates both lines.
+7. Prompt's "per-file branch numbers in the round-4 board" — the board carries per-DIR
+   numbers only (jest.config.js:21-30); Stream A re-derives per-file numbers itself.
+
+## Fleet dispatch (round 5)
+
+- Briefs (self-contained, outside the repo): `C:/Users/vahi1/.zcode/tmp/p5-fleet-briefs/stream-{a,b,c,d,e,f}.md`
+- Workflow runs:
+  - Run 1 `dwfrun-0fb617c4-cc8b-497b-9d0e-bc67df849eb1` ("VeilPay round-5 fleet — Stream A
+    (Kimi)", `subagent_model: new-provider-3/kimi-k3`) — **COMPLETE: A done.** All 11
+    directives removed (+ the granted maxSendable.ts comment reword), jest.config.js debt
+    comment updated, 9 suites extended + 2 new test files; the ONE authorized full run
+    green: 162+1 suites, 1313+1 tests, gate enforced, per-dir branches components 65.43 /
+    stores 67.53 / screens 61.93 / hooks 58.57 / utils 57.22, global 60.23% (round-4:
+    55.13%). Disclosed testability seam: two dead pure helpers exported from
+    HomeDashboardScreen.tsx (no behavior change). Claims artifact "Stream A claims report"
+    (primary). Lead verification deferred to the end-of-round matrix (full coverage run
+    re-runs there after F's property-test un-skip). No races observed; no git state
+    mutations; owned-files-only diff.
+  - Run 2 `dwfrun-f8c95cd4-111c-4918-92de-0ed0e767839d` ("VeilPay round-5 fleet — Streams
+    B–F", session model glm-5.3, `subagent_model` unset) — **COMPLETE: B done, C partial
+    (documented root-cause, accepted per brief), D done, E done, F done.** Claims artifact
+    "Round-5 fleet claims (B–F)" (primary). Lead integration done: single `pnpm install`
+    exit 0 (lockfile → landing commit), `prisma generate` clean, typechecks 3/3 clean,
+    backend full 67/67 suites / 486 passed + 2 skipped / exit 0 (worker-teardown warning
+    present per C's documented justification), indexer full 11/11 / 146 passed / self-exit
+    without --forceExit. Lead patch: tests/migrations.baseline.test.ts expects
+    2_onramp_states. Matrix items 1–5 verified; item 6 (consumer full coverage) was
+    CANCELLED mid-run by the user — close-out (matrix 6–13, commits, results append)
+    continues in a fresh session per `ROUND5_CONTINUATION_PROMPT.md` (untracked user file
+    at repo root).
+- Grants: pre-dispatch grants recorded in deltas 2–4 above. Mid-run grants:
+  - `dwfq-f8c95cd4-1` → **Stream F (glm-5.3):** the five test files whose 4-element
+    publicSignals fixtures the `.length(5)` schema change mechanically breaks —
+    `apps/consumer-app/src/services/__tests__/relayerClient.property.test.ts`,
+    `apps/consumer-app/src/stores/__tests__/sensitiveKeyIsolation.property.test.ts`,
+    `apps/backend/src/controllers/__tests__/relayerController.maxWithdraw.test.ts`,
+    `relayerController.forwarding.property.test.ts`,
+    `relayerController.revert.property.test.ts` — mechanical 5-signal shape updates ONLY
+    (per-element formats consistent with the signal order; same semantic assertions);
+    targeted green runs required; these files land in F's commit. No other stream owns
+    them (A finished without touching them; B/C/D/E lists exclude them).
+    `relayerController.validation.property.test.ts` passes as-is and stays untouched.
+
+---
+
+## Round 5 — results (lead close-out, 2026-10-02, fresh session per ROUND5_CONTINUATION_PROMPT.md)
+
+**STATUS: COMPLETE. 6/6 streams done + close-out landed.** Matrix items 6–13 were re-run
+from scratch by the close-out lead (the interrupted item-6 consumer coverage run was
+discarded and repeated cleanly); items 1–5 come from the round-5 lead's integration pass
+over the identical tree bytes — the close-out only staged/committed, no content edits —
+with items 1–3 (typechecks) and the package suite re-confirmed fresh at close-out. Seven
+local commits on main, NOT pushed. The earlier `/tmp/r5-consumer-full.log` from the
+cancelled run was ignored (garbage per the continuation prompt).
+
+### Verification matrix (close-out, sequential — ALL GREEN)
+
+| # | Check | Result |
+|---|---|---|
+| 1 | `pnpm --filter @veilpay/backend typecheck` | clean, exit 0 (re-confirmed at close-out) |
+| 2 | `pnpm --filter @veilpay/indexer typecheck` + `typecheck:scripts` | clean, exit 0 (re-confirmed at close-out) |
+| 3 | `pnpm --filter consumer-app typecheck` | clean, exit 0 (re-confirmed at close-out) |
+| 4 | `pnpm --filter @veilpay/backend test` (round-5 lead) | **67/67 suites, 486 passed + 2 skipped, exit 0, zero TS2307** (baseline 65/65, 424+2); worker-teardown warning present — accepted per C's justification below |
+| 5 | `pnpm --filter @veilpay/indexer test` (round-5 lead) | **11/11 suites, 146 passed, exit 0, real 8s, self-exits, no "Jest did not exit", no forceExit** (12→11 suites = B moved the urlSafety union into the package; net workspace test count UP) |
+| 6 | `pnpm --filter consumer-app test -- --coverage` (re-run from scratch) | **166/166 suites, 1339 tests, 0 skips, exit 0; gate enforced** — branches components 65.24 / stores 67.52 / screens 61.92 / hooks 60.21 / utils 63.06, global 60.44% (round-4: 55.13%); F's round-trip test ran a child node process with real snarkjs; the jest-worker teardown warning appears here too (same documented cause) |
+| 7 | `node scripts/validate-maestro-flows.mjs` | `UX-002 Maestro validation ok (2 critical flows, testIDs present in source)`, exit 0 |
+| 8 | `node apps/consumer-app/scripts/check-version-sync.js` | `OK: version 1.0.4 / build 16 matches changelog.ts top entry`, exit 0 |
+| 9 | Prisma offline proofs | `prisma validate` clean (dummy offline DIRECT_URL + DATABASE_URL — validate never connects); `git status --porcelain -- apps/backend/prisma/migrations` → ONLY untracked `2_onramp_states/` (0_init + 1_webhook_secret_and_key_index byte-identical, nothing modified); `prisma migrate diff` pre-round-5 schema → current schema → **exactly `ALTER TYPE "FiatOrderStatus" ADD VALUE 'refunded';`** |
+| 10 | Regression greps | round-3 ALL hold (`initializeRpcValidation` imported+called App.tsx:44/:62; zero `checkForUpdateAsync` in src; indexer secret `z.string().min(16)`, no committed default, throws on dev default; `infra/doppler.json` gone; README+SECURITY exist; `/api/v1/health` mounted before `app.use("/api/", globalRateLimiter)`; per-attempt retry jobIds webhookQueue.ts D5); round-4 ALL hold (dispatcher `apiKeyHash` comments-only, `merchant.webhookSecret ?? config.webhookSigningSecret` :60; `assertSafeWebhookUrl` :210 before the single `httpSender` egress :228 with IP pinning; WebhookDelivery create queue/index.ts:122 BEFORE `webhookQueue.add` :146; `POST /api/v1/merchant/keys/rotate` routes/merchant.ts:40; `webhookSecret String?` schema :20 + `@@index([apiKeyHash])` :35; ci.yml `contracts` continue-on-error :173 + `circuits-sanity` :144; eas.json 0 DEPRECATED; `.env.example` SENTRY_DSN :76 + RECONCILIATION_DRIFT_CHECK_INTERVAL_MS :84); round-5 additions ALL hold (CAS `notIn` onrampOrderStatus.ts:172 via `applyOnrampStatusTransition` onrampController.ts:486; `refunded` in FiatOrderStatus enum :220; `ONRAMP_STATUS_POLLING_ENABLED` default `'false'` config :100; both withdrawRequest schemas `.length(5)` backend :23 / consumer :24; `token` in ProveInputs ZkpProver.tsx:284 + REQUIRED_INPUT_KEYS :322; `validateNullifierHash` called usePaymentTransaction.ts:1072; `EVM_MAX_PRIVACY_WITHDRAW_READY` contracts.ts:115 = `false`; zero optimism in README+docs; zero istanbul-ignore in non-test consumer src; zero forceExit in indexer package.json) |
+| 11 | Shared-package truth | `grep -rn urlSafety apps/backend/src apps/indexer/src` → 22 lines, all accounted for: 3 import sites (webhookDelivery.ts, merchantController.ts, dispatcher.ts), 1 backend shim body, 4 test files with mocks; the indexer shim has ZERO content mentions (filename only); the ONLY implementation is `packages/webhook-safety/src/urlSafety.ts`. Package suite 28/28 exit 0; targeted re-runs: backend 4/4 suites / 56 tests (webhookDelivery 13 + merchantController 28 + TEST001_blockerGates 14 + tests/e2e/webhookDelivery 1 — the e2e B saw pass pre-install RE-VERIFIED green), indexer dispatcher 21/21 |
+| 12 | `git status` | every tracked change maps to the stream plan (66 tracked changes incl. 2 deletions + 15 new untracked intended files = 81 round-5 files); §0 user untracked files all present and untouched; `pnpm-lock.yaml` modified (the integration install); only the 3 expected package.json files changed (backend=B, consumer=D, indexer=B+C split) |
+| 13 | `gh run list --limit 10` | remote main still `8cea7cc` (2026-09-06, pre-round-3); local main now 20 commits ahead (13 + this round's 7); last origin runs 2026-09-06 — nothing to chase, gates stand |
+
+### Stream outcomes (round 5 — model routing per user directive)
+
+- **A — coverage completion: DONE** on CodeFast Kimi `new-provider-3/kimi-k3` (run
+  `dwfrun-0fb617c4-cc8b-497b-9d0e-bc67df849eb1`): 11 istanbul directives removed (+ the
+  granted maxSendable.ts comment reword), 9 suites extended + 2 new; the gate now sees the
+  full five-dir scope — final close-out run green (matrix 6).
+- **B — shared webhook-safety: DONE** on session `new-provider-2/glm-5.3` (run
+  `dwfrun-f8c95cd4-111c-4918-92de-0ed0e767839d`): new config-free policy-parameterized
+  `packages/webhook-safety` (28/28 union suite); both app urlSafety copies reduced to thin
+  policy-binding shims (import sites unchanged); both app urlSafety test files deleted
+  (union lives in the package); dry-run-default seed-webhook-secrets.ts (CAS on
+  `webhookSecret: null`, 16/16 mocked-prisma tests); SECURITY.md two rows.
+- **C — test lifecycle: DONE (partial by design, accepted per brief)** on session
+  `new-provider-2/glm-5.3`: indexer jest self-exits without --forceExit (lazy BullMQ-safe
+  queue connection + guarded afterAll teardown); backend warning root-caused to
+  jest-worker's fixed 500ms FORCE_EXIT_DELAY — see the justification note below.
+- **D — circuit supply + docs truth: DONE** on session `new-provider-2/glm-5.3`:
+  supply-circuit-assets.js (https/file://+local-dir sources, SHA-256 verified against the
+  baked pins BEFORE staging, fail-closed exit 1, 22 mocked tests) + android-build.yml
+  supply step keyed on `vars.CIRCUIT_ARTIFACTS_URL` + `circuits:supply` entry; duplicated
+  `--forceExit` removed from both consumer script lines; all 7 phantom-Optimism claims
+  removed; new docs/reference/circuit-asset-supply.md.
+- **E — onramp lifecycle: DONE** on session `new-provider-2/glm-5.3`: terminal-state CAS
+  write path via services/onrampOrderStatus.ts; `refunded` in FiatOrderStatus + hand-written
+  offline-verified `2_onramp_states` (ALTER TYPE ADD VALUE alone); completed never →
+  failed; config-gated DEFAULT-OFF provider status polling (10s AbortController timeouts,
+  status-only writes); 97/97 targeted tests incl. the replay property suite.
+- **F — withdraw-rail alignment: DONE** on session `new-provider-2/glm-5.3`: 5-signal
+  circuit truth ([merkleRoot, nullifierHash, recipient, amount, token], nPublic 5) wired
+  through ProveInputs, both `.length(5)` schemas, `validateNullifierHash` pre-proof, and
+  `serializePublicSignalsForRelay`; Property 12 un-skipped and green; real snarkjs
+  prove→verify→serialize→dual-schema round-trip test vs the staged artifacts; 5 granted
+  fallout files green; rail still gated OFF. Documented gap: the relayer `proof` field is
+  still a blind cast (deferred to tasks 11.x).
+
+### C warning-justification note (backend full run)
+
+The backend full run prints "A worker process has failed to exit gracefully and has been
+force exited" — this is jest-worker's fixed 500ms exit deadline (`FORCE_EXIT_DELAY` in
+jest-worker), timing-dependent and repo-wide (the same warning appears in the consumer's
+round-4 and round-5 logs). Round-3's redis.ts:125 suspicion was DISPROVEN; a guarded
+per-file redis teardown landed anyway (`apps/backend/tests/teardown.ts` via
+setupFilesAfterEnv). A warning-free green full run requires `--runInBand` (5–8x backend
+wall time) — documented, left to the user; the suite itself is green with exit 0.
+
+### Commits (local, on main, NOT pushed — per user gate)
+
+| Hash | Stream | Subject |
+|---|---|---|
+| `d958d42` | A | test(app): complete branch coverage, remove istanbul ignores |
+| `36f5782` | B | refactor(webhook): shared url-safety package + per-merchant secret seeding |
+| `7cd1390` | C | test(lifecycle): indexer jest exits without forceExit; backend clean teardown |
+| `c4ed487` | D | ci(build): pinned circuit-artifact supply; CI truth; script hygiene |
+| `fd09183` | E | feat(onramp): CAS terminal transitions, refund states, provider polling fallback |
+| `b6d8ad9` | F | fix(circuits): align EVM withdraw rail to the 5-signal circuit; un-skip proof fidelity |
+| (this commit) | landing | chore: land round-5 tree |
+
+The B/C split of `apps/indexer/package.json` executed as planned: B's commit carries only
+the `@veilpay/webhook-safety` dependency hunk (staged diff verified to be exactly that
+hunk), C's commit carries the de-forced script lines (the remaining 2-line diff).
+
+### Debt register additions (round 5)
+
+- F: the relayer withdraw request's `proof` field is still a blind cast — proof-object →
+  abi-encoded hex serialization is deferred (tasks 11.x); the local schema gate rejects
+  objects fail-closed.
+- C: killing the jest-worker teardown warning repo-wide costs `--runInBand` (5–8x backend
+  wall time) — left to the user.
+- The withdraw-rail round-trip suite self-skips on fresh clones (staged wasm/zkey are
+  gitignored) — supply/stage first.
+- B: `apps/backend/scripts/audit-webhook-urls.ts` still consumes the shim (fine), and the
+  un-owned app test files still jest.mock the OLD wrapper paths (by design — the shims
+  keep those factories valid).
+
+### Round-5 user gates (NOT attempted — your moves)
+
+1. **Push + protect** (unchanged): 20 local commits now sit unpushed (rounds 3–5); enable
+   branch protection on `main` with required CI checks once pushed.
+2. **Railway env + migration adoption** (round-4 gate 4, extended): on the EXISTING
+   database, after the round-4 resolve sequence, `prisma migrate deploy` now also applies
+   `2_onramp_states` (ALTER TYPE ADD VALUE 'refunded'). Decide whether the onramp
+   status-polling fallback should run at all (`ONRAMP_STATUS_POLLING_ENABLED`, default
+   OFF).
+3. **Circuit-binary supply for CI** (round-4 gate 7, mechanism now exists): upload the
+   three pinned binaries to a GitHub release + set the repo variable
+   `CIRCUIT_ARTIFACTS_URL` — or decide to commit the binaries instead.
+4. **Per-merchant webhook secret seeding** (post-migration): run the new
+   `apps/backend/scripts/seed-webhook-secrets.ts` (dry-run first, then `--apply`).
+5. **Withdraw-rail enablement** (unchanged): `EVM_MAX_PRIVACY_WITHDRAW_READY` stays `false`
+   until the relayer proof serialization (tasks 11.x) and Play Integrity decisions land.
+6. **Round-6 preview** (do NOT start — next session): Play Integrity provisioning, DSAR
+   tooling, retention extension (invoices / permanent_failure webhooks /
+   archive-before-delete for fiat past chargeback windows), perf/deps P2 (merchant-stats
+   groupBy, Skia removal, node-fetch, ethers/viem consolidation, Dependabot + scheduled
+   audit, APK/bundle budgets), per-chain allowlist expansion, committing circuit binaries
+   vs supplying, app-password product direction.
